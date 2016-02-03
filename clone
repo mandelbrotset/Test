@@ -11,12 +11,12 @@ git clone https://github.com/square/retrofit
 git clone https://github.com/jfeinstein10/SlidingMenu
 git clone https://github.com/square/okhttp
 git clone https://github.com/nathanmarz/storm
-git clone 
-git clone 
-git clone 
-git clone 
-git clone 
-git clone 
-git clone 
-git clone 
-git clone 
+git clone https://github.com/futurice/android-best-practices
+git clone https://github.com/loopj/android-async-http
+git clone https://github.com/greenrobot/EventBus
+git clone https://github.com/libgdx/libgdx
+git clone https://github.com/facebook/fresco
+git clone https://github.com/spring-projects/spring-framework
+git clone https://github.com/zxing/zxing
+git clone https://github.com/square/leakcanary
+git clone https://github.com/google/guava
