@@ -1,0 +1,39 @@
+#!/bin/bash
+
+cd /home/isak/Documents/Master/
+git clone https://github.com/facebook/react-native
+<<<<<<< 228a393b42e54c885bca6b48aa22dc3e52bfdde0
+git clone https://github.com/elastic/elasticsearch
+git clone https://github.com/nostra13/Android-Universal-Image-Loader
+git clone https://github.com/ReactiveX/RxJava
+git clone https://github.com/google/iosched
+git clone https://github.com/iluwatar/java-design-patterns
+git clone https://github.com/square/retrofit
+git clone https://github.com/jfeinstein10/SlidingMenu
+git clone https://github.com/square/okhttp
+git clone https://github.com/nathanmarz/storm
+=======
+>>>>>>> added the last 10
+git clone 
+git clone 
+git clone 
+git clone 
+git clone 
+git clone 
+git clone 
+git clone 
+git clone 
+<<<<<<< 228a393b42e54c885bca6b48aa22dc3e52bfdde0
+=======
+git clone https://github.com/nathanmarz/storm
+git clone https://github.com/futurice/android-best-practices
+git clone https://github.com/loopj/android-async-http
+git clone https://github.com/greenrobot/EventBus
+git clone https://github.com/libgdx/libgdx
+git clone https://github.com/facebook/fresco
+git clone https://github.com/spring-projects/spring-framework
+git clone https://github.com/zxing/zxing
+git clone https://github.com/square/leakcanary
+git clone https://github.com/google/guava
+
+>>>>>>> added the last 10
