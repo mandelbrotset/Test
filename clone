@@ -2,15 +2,15 @@
 
 cd /home/isak/Documents/Master/
 git clone https://github.com/facebook/react-native
-git clone 
-git clone 
-git clone 
-git clone 
-git clone 
-git clone 
-git clone 
-git clone 
-git clone 
+git clone https://github.com/elastic/elasticsearch
+git clone https://github.com/nostra13/Android-Universal-Image-Loader
+git clone https://github.com/ReactiveX/RxJava
+git clone https://github.com/google/iosched
+git clone https://github.com/iluwatar/java-design-patterns
+git clone https://github.com/square/retrofit
+git clone https://github.com/jfeinstein10/SlidingMenu
+git clone https://github.com/square/okhttp
+git clone https://github.com/nathanmarz/storm
 git clone 
 git clone 
 git clone 
