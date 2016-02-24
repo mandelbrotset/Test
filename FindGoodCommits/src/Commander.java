@@ -1,11 +1,26 @@
+import java.awt.List;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 
+import jxl.CellType;
+import jxl.CellView;
+import jxl.LabelCell;
+import jxl.Workbook;
+import jxl.WorkbookSettings;
+import jxl.format.CellFormat;
+import jxl.format.UnderlineStyle;
+import jxl.write.*;
+import jxl.write.biff.RowsExceededException;
 
 public class Commander {
 	
@@ -15,26 +30,115 @@ public class Commander {
 	private HashMap<String, HashSet<String>> commitToDiffPlus;
 	private HashMap<String, HashSet<String>> commitToDiffMinus;
 	private HashMap<String, HashSet<String>> commitToBooleanVariables;
-	private HashMap<String, ArrayList<String>> commitToCommitMessage;
+	private HashMap<String, String> commitToCommitMessage;
 	private ArrayList<String> goodCommits;
+	private ArrayList<Commit> commitList;
 	
+	//JXL
+	private WritableCellFormat timesBoldUnderline;
+	private WritableCellFormat times;
+	private String inputFile = "Thirst.xls";
 	
 	public Commander() {
 		commitToDiffPlus = new HashMap<String, HashSet<String>>();
 		commitToDiffMinus = new HashMap<String, HashSet<String>>();
 		commitToBooleanVariables = new HashMap<String, HashSet<String>>();
-		commitToCommitMessage = new HashMap<String, ArrayList<String>>();
+		commitToCommitMessage = new HashMap<String, String>();
 		goodCommits = new ArrayList<String>();
-		getDiffs();
+		commitList = new ArrayList<Commit>();
 		
+		getDiffs();
 		findVariableBooleans(commitToDiffPlus, true);
 		findVariableBooleans(commitToDiffMinus, false);
 		findIfsWithBooleans();
-		//printTheGoodCommits();
+		createCommits();
+		createExcelList();
+		
+		printTheGoodCommits();
 		//printTheVariables();
-		printTheCommitMessages();
+		//printTheCommitMessages();
 	}
 	
+	private String variablesToString(String commit) {
+		StringBuilder sb = new StringBuilder();
+		for(String str : commitToBooleanVariables.get(commit)) {
+			if(sb.length() != 0)
+				sb.append(", ");
+			sb.append(str);
+		}
+		
+		return sb.toString();
+	}
+	
+	private void createCommits() {
+		for(String commit : goodCommits) {
+			String message = commitToCommitMessage.get(commit);
+			Commit c = new Commit(commit, message, variablesToString(commit));
+			commitList.add(c);
+		}
+	}
+	
+	private void createExcelList() {
+		File file = new File(inputFile);
+		WorkbookSettings wbSettings = new WorkbookSettings();
+		wbSettings.setLocale(new Locale("en", "EN"));
+		try {
+			WritableWorkbook workBook = Workbook.createWorkbook(file, wbSettings);
+			workBook.createSheet("list", 0);
+			WritableSheet excelSheet = workBook.getSheet(0);
+			createLabel(excelSheet);
+			
+			fillExcelDocument(excelSheet);
+			
+			workBook.write();
+			workBook.close();
+			
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (WriteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	private void fillExcelDocument(WritableSheet sheet) throws RowsExceededException, WriteException {
+		for(int i = 0; i < commitList.size(); i++) {
+			Commit c = commitList.get(i);
+			addLabel(sheet, 0, i+1, c.getSha());
+			addLabel(sheet, 1, i+1, c.getVariables());
+			addLabel(sheet, 2, i+1, c.getMessage());
+		}
+	}
+	
+	private void createLabel(WritableSheet sheet) throws WriteException {
+		WritableFont times10pt = new WritableFont(WritableFont.TIMES, 10);
+		times = new WritableCellFormat(times10pt);
+		times.setWrap(true);
+		WritableFont times10ptBoldUnderline = new WritableFont(WritableFont.TIMES, 10, WritableFont.BOLD, false, UnderlineStyle.SINGLE);
+		timesBoldUnderline = new WritableCellFormat(times10ptBoldUnderline);
+		timesBoldUnderline.setWrap(true);
+		
+		CellView cv = new CellView();
+		cv.setFormat(times);
+		cv.setFormat(timesBoldUnderline);
+		cv.setAutosize(true);
+		
+		addCaption(sheet, 0, 0, "Commit SHA");
+		addCaption(sheet, 1, 0, "Variables");
+		addCaption(sheet, 2, 0, "Message");
+	}
+	
+	private void addLabel(WritableSheet sheet, int column, int row, String s) throws RowsExceededException, WriteException {
+		Label label = new Label(column, row, s);
+		sheet.addCell(label);
+	}
+	
+	private void addCaption(WritableSheet sheet, int column, int row, String s) throws RowsExceededException, WriteException {
+		Label label = new Label(column, row, s, timesBoldUnderline);
+		sheet.addCell(label);
+	}
 	
 	private void findVariableBooleans(HashMap<String, HashSet<String>> list, boolean plus) {
 		for(String key : list.keySet()) {
@@ -113,14 +217,8 @@ public class Commander {
 	
 	private void printTheCommitMessages() {
 		for(String commit : goodCommits) {
-			ArrayList<String> msg = commitToCommitMessage.get(commit);
-			StringBuilder sb = new StringBuilder();
-			for(String line : msg) {
-				if(sb.length() != 0)
-					sb.append("|");
-				sb.append(line);
-			}
-			System.out.println(sb);
+			String msg = commitToCommitMessage.get(commit);
+			System.out.println(msg);
 		}
 	}
 	
@@ -169,14 +267,16 @@ public class Commander {
 				//Get the commit message
 				Process msgProcess = Runtime.getRuntime().exec("bash " + SCRIPT_PATH + "getCommitMessage " + REPO + " " + commitSHA);
 				br2 = new BufferedReader(new InputStreamReader(msgProcess.getInputStream()));
-				ArrayList<String> commitMessage = new ArrayList<String>();
+				StringBuilder sb = new StringBuilder();
 				while((line = br2.readLine()) != null) {
-					commitMessage.add(line);
+					if(sb.length() != 0)
+						sb.append("\n");
+					sb.append(line);
 				}
 				
 				commitToDiffPlus.put(commitSHA, linesPlus);
 				commitToDiffMinus.put(commitSHA, linesMinus);
-				commitToCommitMessage.put(commitSHA, commitMessage);
+				commitToCommitMessage.put(commitSHA, sb.toString());
 			}
 			
 		} catch (IOException e) {
