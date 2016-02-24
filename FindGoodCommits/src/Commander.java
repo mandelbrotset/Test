@@ -23,6 +23,8 @@ public class Commander {
 		getDiffs();
 		
 		findVariableBooleans();
+		findIfsWithBooleans();
+		printTheGoodCommits();
 	}
 	
 	
@@ -49,7 +51,7 @@ public class Commander {
 					//System.out.println(endIndex);
 					variableName = fromBoolean.substring(0, endIndex);
 					if(!variableName.contains(",") && !variableName.contains(")") && isVariable(fromBoolean)) {
-						System.out.println(variableName);
+						//System.out.println(variableName);
 						variables.add(variableName);
 						//System.out.println("The line was: " + line);
 					}
@@ -73,6 +75,12 @@ public class Commander {
 				}
 			}
 			
+		}
+	}
+	
+	private void printTheGoodCommits() {
+		for(String commit : goodCommits) {
+			System.out.println(commit);
 		}
 	}
 	
