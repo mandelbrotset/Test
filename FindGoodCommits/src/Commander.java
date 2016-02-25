@@ -24,9 +24,6 @@ import jxl.write.biff.RowsExceededException;
 import java.lang.Boolean;
 
 public class Commander {
-	
-	private final String SCRIPT_PATH = "/home/patrik/Documents/Chalmers/5an/MasterThesis/Test/Test/scripts/";
-	//private final String REPO = "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/elasticsearch";
 	private String REPO;
 	
 	private HashMap<String, HashSet<String>> commitToDiffPlus;
@@ -287,7 +284,7 @@ public class Commander {
 	
 	private void getDiffs() {
 		try {
-			Process commitProcess = Runtime.getRuntime().exec("bash " + SCRIPT_PATH + "getCommits " + REPO);
+			Process commitProcess = Runtime.getRuntime().exec("bash " + "scripts/" + "getCommits " + REPO);
 			BufferedReader br1 = new BufferedReader(new InputStreamReader(commitProcess.getInputStream()));
 			
 			String commitSHA;
