@@ -184,6 +184,7 @@ public class Commander {
 				if(line.contains("boolean ") && line.endsWith(";")) {
 					int startIndex = line.indexOf("boolean") + 8;
 					String fromBoolean = line.substring(startIndex);
+					fromBoolean = fromBoolean.trim();
 					
 					int endIndex = -1;
 					if(fromBoolean.indexOf(" ") != -1)
