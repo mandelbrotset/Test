@@ -5,10 +5,10 @@ public class Conflict {
 
 	private String mergeCommit;
 	private String fileName;
-	private File leftConflict;
-	private File rightConflict;
-	private File commonAncestor;
-	private File resolution;
+	private String leftConflict;
+	private String rightConflict;
+	private String commonAncestor;
+	private String resolution;
 	
 	public Conflict() {
 		
@@ -16,15 +16,28 @@ public class Conflict {
 	
 	
 
-	public Conflict(String mergeCommit, File leftConflict, File rightConflict,
-			File commonAncestor, File resolution) {
+	public Conflict(String mergeCommit, String leftConflict, String rightConflict,
+			String commonAncestor, String resolution, File filePath) {
 		this.mergeCommit = mergeCommit;
 		this.leftConflict = leftConflict;
 		this.rightConflict = rightConflict;
 		this.commonAncestor = commonAncestor;
 		this.resolution = resolution;
 		
-		fileName = resolution.getName();
+		fileName = filePath.getName();
+		System.out.println("File name: " + fileName);
+	}
+
+
+
+	public String getMergeCommit() {
+		return mergeCommit;
+	}
+
+
+
+	public void setMergeCommit(String mergeCommit) {
+		this.mergeCommit = mergeCommit;
 	}
 
 
@@ -33,44 +46,60 @@ public class Conflict {
 		return fileName;
 	}
 
-	public String getMergeCommit() {
-		return mergeCommit;
+
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
 	}
 
-	public void setMergeCommit(String mergeCommit) {
-		this.mergeCommit = mergeCommit;
-	}
 
-	public File getLeftConflict() {
+
+	public String getLeftConflict() {
 		return leftConflict;
 	}
 
-	public void setLeftConflict(File leftConflict) {
+
+
+	public void setLeftConflict(String leftConflict) {
 		this.leftConflict = leftConflict;
 	}
 
-	public File getRightConflict() {
+
+
+	public String getRightConflict() {
 		return rightConflict;
 	}
 
-	public void setRightConflict(File rightConflict) {
+
+
+	public void setRightConflict(String rightConflict) {
 		this.rightConflict = rightConflict;
 	}
 
-	public File getCommonAncestor() {
+
+
+	public String getCommonAncestor() {
 		return commonAncestor;
 	}
 
-	public void setCommonAncestor(File commonAncestor) {
+
+
+	public void setCommonAncestor(String commonAncestor) {
 		this.commonAncestor = commonAncestor;
 	}
 
-	public File getResolution() {
+
+
+	public String getResolution() {
 		return resolution;
 	}
 
-	public void setResolution(File resolution) {
+
+
+	public void setResolution(String resolution) {
 		this.resolution = resolution;
 	}
+
+
 	
 }

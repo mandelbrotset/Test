@@ -4,4 +4,4 @@
 #$2: branch to delete
 
 cd $1
-git branch -D $2
+git branch -d $2
