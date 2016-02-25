@@ -293,7 +293,7 @@ public class Commander {
 			String commitSHA;
 			while((commitSHA = br1.readLine()) != null) {
 				boolean isJavaFile = false;
-				Process diffProcess = Runtime.getRuntime().exec("bash " + SCRIPT_PATH + "getDiff " + REPO + " " + commitSHA);
+				Process diffProcess = Runtime.getRuntime().exec("bash " + "scripts/" + "getDiff " + REPO + " " + commitSHA);
 				
 				BufferedReader br2 = new BufferedReader(new InputStreamReader(diffProcess.getInputStream()));
 				
@@ -301,7 +301,6 @@ public class Commander {
 				HashSet<String> linesPlus = new HashSet<String>();
 				HashSet<String> linesMinus = new HashSet<String>();
 				//Get all lines that starts with "-" and "+"
-				//System.out.println(commitSHA);
 				while((line = br2.readLine()) != null) {
 					if(line.startsWith("diff --git ") && line.endsWith(".java"))
 						isJavaFile = true;
@@ -317,7 +316,7 @@ public class Commander {
 				}
 				
 				//Get the commit message
-				Process msgProcess = Runtime.getRuntime().exec("bash " + SCRIPT_PATH + "getCommitMessage " + REPO + " " + commitSHA);
+				Process msgProcess = Runtime.getRuntime().exec("bash " + "scripts/" + "getCommitMessage " + REPO + " " + commitSHA);
 				br2 = new BufferedReader(new InputStreamReader(msgProcess.getInputStream()));
 				StringBuilder sb = new StringBuilder();
 				while((line = br2.readLine()) != null) {
