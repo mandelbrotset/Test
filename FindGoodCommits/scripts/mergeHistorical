@@ -1,6 +1,6 @@
 #!/bin/bash
 #Do a historical merge again to analyze the conflict
-#$1: repo
+#$1: path to repo
 #$2: left ancestral commit
 #$3: right ancestral commit
 #$4: branch name to use
