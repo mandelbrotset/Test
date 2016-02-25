@@ -21,42 +21,74 @@ import jxl.format.CellFormat;
 import jxl.format.UnderlineStyle;
 import jxl.write.*;
 import jxl.write.biff.RowsExceededException;
+import java.lang.Boolean;
 
 public class Commander {
 	
 	private final String SCRIPT_PATH = "/home/patrik/Documents/Chalmers/5an/MasterThesis/Test/Test/scripts/";
-	private final String REPO = "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/elasticsearch";
-
+	//private final String REPO = "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/elasticsearch";
+	private String REPO;
+	
 	private HashMap<String, HashSet<String>> commitToDiffPlus;
 	private HashMap<String, HashSet<String>> commitToDiffMinus;
 	private HashMap<String, HashSet<String>> commitToBooleanVariables;
 	private HashMap<String, String> commitToCommitMessage;
+	private HashMap<String, Boolean> commitToPullRequest;
 	private ArrayList<String> goodCommits;
 	private ArrayList<Commit> commitList;
 	
 	//JXL
 	private WritableCellFormat timesBoldUnderline;
 	private WritableCellFormat times;
-	private String inputFile = "Thirst.xls";
+	private int noOfSheets;
+	private WritableWorkbook workBook;
 	
-	public Commander() {
+	public Commander(String excelOutputFile) {
 		commitToDiffPlus = new HashMap<String, HashSet<String>>();
 		commitToDiffMinus = new HashMap<String, HashSet<String>>();
 		commitToBooleanVariables = new HashMap<String, HashSet<String>>();
 		commitToCommitMessage = new HashMap<String, String>();
 		goodCommits = new ArrayList<String>();
 		commitList = new ArrayList<Commit>();
+		commitToPullRequest = new HashMap<String, Boolean>();
 		
-		getDiffs();
-		findVariableBooleans(commitToDiffPlus, true);
-		findVariableBooleans(commitToDiffMinus, false);
-		findIfsWithBooleans();
-		createCommits();
-		createExcelList();
+		//Jxl
+		noOfSheets = 0;
+		createWorkBook(excelOutputFile);
 		
-		printTheGoodCommits();
-		//printTheVariables();
-		//printTheCommitMessages();
+	}
+	
+	public void createSheets(HashMap<String, String> repos) {
+		for(String repo : repos.keySet()) {
+			REPO = repos.get(repo);
+			
+			getDiffs();
+			findVariableBooleans(commitToDiffPlus, true);
+			findVariableBooleans(commitToDiffMinus, false);
+			findIfsWithBooleans();
+			findPullRequests();
+			createCommits();
+			
+			createExcelList(repo);
+			
+			commitToDiffPlus.clear();
+			commitToDiffMinus.clear();
+			commitToCommitMessage.clear();
+			commitToBooleanVariables.clear();
+			commitToPullRequest.clear();
+			goodCommits.clear();
+			commitList.clear();
+		}
+		try {
+			workBook.write();
+			workBook.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (WriteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	private String variablesToString(String commit) {
@@ -73,30 +105,32 @@ public class Commander {
 	private void createCommits() {
 		for(String commit : goodCommits) {
 			String message = commitToCommitMessage.get(commit);
-			Commit c = new Commit(commit, message, variablesToString(commit));
+			boolean isPullRequest = commitToPullRequest.get(commit);
+			Commit c = new Commit(commit, message, variablesToString(commit), isPullRequest);
 			commitList.add(c);
 		}
 	}
 	
-	private void createExcelList() {
-		File file = new File(inputFile);
-		WorkbookSettings wbSettings = new WorkbookSettings();
-		wbSettings.setLocale(new Locale("en", "EN"));
+	private void createWorkBook(String excelOutputFile) {
 		try {
-			WritableWorkbook workBook = Workbook.createWorkbook(file, wbSettings);
-			workBook.createSheet("list", 0);
-			WritableSheet excelSheet = workBook.getSheet(0);
-			createLabel(excelSheet);
-			
-			fillExcelDocument(excelSheet);
-			
-			workBook.write();
-			workBook.close();
-			
-			
+			File file = new File(excelOutputFile);
+			WorkbookSettings wbSettings = new WorkbookSettings();
+			wbSettings.setLocale(new Locale("en", "EN"));
+			workBook = Workbook.createWorkbook(file, wbSettings);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+	}
+	
+	private void createExcelList(String sheetName) {
+		try {
+			workBook.createSheet(sheetName, noOfSheets);
+			WritableSheet excelSheet = workBook.getSheet(noOfSheets);
+			createLabel(excelSheet);
+			
+			fillExcelDocument(excelSheet);
+			noOfSheets++;
 		} catch (WriteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -109,6 +143,8 @@ public class Commander {
 			addLabel(sheet, 0, i+1, c.getSha());
 			addLabel(sheet, 1, i+1, c.getVariables());
 			addLabel(sheet, 2, i+1, c.getMessage());
+			if(c.isPullRequest())
+				addLabel(sheet, 3, i+1, "X");
 		}
 	}
 	
@@ -128,6 +164,7 @@ public class Commander {
 		addCaption(sheet, 0, 0, "Commit SHA");
 		addCaption(sheet, 1, 0, "Variables");
 		addCaption(sheet, 2, 0, "Message");
+		addCaption(sheet, 3, 0, "Pull Request");
 	}
 	
 	private void addLabel(WritableSheet sheet, int column, int row, String s) throws RowsExceededException, WriteException {
@@ -196,6 +233,17 @@ public class Commander {
 		}
 	}
 	
+	private void findPullRequests() {
+		for(String commit : goodCommits) {
+			String message = commitToCommitMessage.get(commit);
+			
+			if(message.contains("Merge pull request #"))
+				commitToPullRequest.put(commit, true);
+			else
+				commitToPullRequest.put(commit, false);
+		}
+	}
+	
 	private void printTheGoodCommits() {
 		for(String commit : goodCommits) {
 			System.out.println(commit);
@@ -235,12 +283,7 @@ public class Commander {
 		}
 		
 		return true;
-	}
-	
-	private void findFunctionBooleans() {
-		
-	}
-	
+	}	
 	
 	private void getDiffs() {
 		try {
@@ -249,6 +292,7 @@ public class Commander {
 			
 			String commitSHA;
 			while((commitSHA = br1.readLine()) != null) {
+				boolean isJavaFile = false;
 				Process diffProcess = Runtime.getRuntime().exec("bash " + SCRIPT_PATH + "getDiff " + REPO + " " + commitSHA);
 				
 				BufferedReader br2 = new BufferedReader(new InputStreamReader(diffProcess.getInputStream()));
@@ -257,11 +301,19 @@ public class Commander {
 				HashSet<String> linesPlus = new HashSet<String>();
 				HashSet<String> linesMinus = new HashSet<String>();
 				//Get all lines that starts with "-" and "+"
+				//System.out.println(commitSHA);
 				while((line = br2.readLine()) != null) {
-					if(line.startsWith("+"))
-						linesPlus.add(line);
-					else if(line.startsWith("-"))
-						linesMinus.add(line);
+					if(line.startsWith("diff --git ") && line.endsWith(".java"))
+						isJavaFile = true;
+					else if(line.startsWith("diff --git "))
+						isJavaFile = false;
+							
+					if(isJavaFile) {
+						if(line.startsWith("+"))
+							linesPlus.add(line);
+						else if(line.startsWith("-"))
+							linesMinus.add(line);
+					}
 				}
 				
 				//Get the commit message

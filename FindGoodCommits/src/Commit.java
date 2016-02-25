@@ -5,11 +5,13 @@ public class Commit {
 	private String sha;
 	private String message;
 	private String variables;
+	private boolean isPullRequest;
 	
-	public Commit(String sha, String message, String variables) {
+	public Commit(String sha, String message, String variables, boolean isPullRequest) {
 		this.sha = sha;
 		this.message = message;
 		this.variables = variables;
+		this.isPullRequest = isPullRequest;
 	}
 
 	public String getSha() {
@@ -35,6 +37,16 @@ public class Commit {
 	public void setVariables(String variables) {
 		this.variables = variables;
 	}
+
+	public boolean isPullRequest() {
+		return isPullRequest;
+	}
+
+	public void setPullRequest(boolean isPullRequest) {
+		this.isPullRequest = isPullRequest;
+	}
+	
+	
 	
 
 }
