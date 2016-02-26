@@ -11,7 +11,7 @@ import java.util.Random;
 public class MergeConflicter{
 	
 	private ArrayList<String> conflictingFilePaths;
-	private final String REPO = "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/elasticsearch";
+	private String REPO;
 	private String leftCommit;
 	private String rightCommit;
 	private String mergeCommit;
@@ -28,14 +28,17 @@ public class MergeConflicter{
 	 * Does a git merge
 	 * @return true if there were conflicting files, false otherwise
 	 */
-	public boolean doMerge(String mergeCommit) {
+	public boolean doMerge(String mergeCommit, String repoPath) {
+		REPO = repoPath;
+		conflictingFilePaths.clear();
+		conflicts.clear();
 		try {
 			String ancestrals = executeCommand("getAncestralCommits " + REPO + " " + mergeCommit).readLine();
 			this.mergeCommit = mergeCommit;
 			leftCommit = ancestrals.substring(0, 7);
 			rightCommit = ancestrals.substring(8, 15);
 			
-			System.out.println("Left: " + leftCommit + " Right: " + rightCommit);
+			//System.out.println("Left: " + leftCommit + " Right: " + rightCommit);
 			
 			String branchName = "tempbranch";
 			
@@ -76,7 +79,7 @@ public class MergeConflicter{
 			String rightConflictFile = getConflictFile(rightCommit, filePath);
 			String commonAncestorFile = getCommonAncestor(filePath);
 			String resolutionFile = getConflictFile(mergeCommit, filePath);
-			Conflict conflict = new Conflict(mergeCommit, leftConflictFile, rightConflictFile, commonAncestorFile, resolutionFile, new File(filePath));
+			Conflict conflict = new Conflict(mergeCommit, leftConflictFile, rightConflictFile, commonAncestorFile, resolutionFile, new File(filePath), leftCommit, rightCommit);
 			conflicts.add(conflict);
 		}
 	}
