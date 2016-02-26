@@ -29,7 +29,7 @@ public class ConflictFileTree {
 		String repo="elasticsearch";
 			for(String commit : reposToCommits.get(repo)) {
 				if(cm.doMerge(commit, reposToReposPath.get(repo))) {
-					Conflict conflict;
+					Conflict conflict = null;
 					for(int i = 0; i < cm.getConflicts().size(); i++) {
 						conflict = cm.getConflicts().get(i);
 						String location = repo + "/" + commit + "/" + conflict.getFileName() + "/";
@@ -56,8 +56,10 @@ public class ConflictFileTree {
 						
 					}
 					//}
-					String outputLocation = repo + "/" + commit + "/" + "diff.txt";
-					writeDiffFile(reposToReposPath.get(repo), conflict.getLeftAncestorCommit(), conflict.getRightAncestorCommit(), outputLocation);
+					String outputLocation = "/home/patrik/Documents/Chalmers/5an/MasterThesis/Test/Test/" + repo + "/" + commit + "/" + "diff.txt";
+					if(conflict != null) {
+						writeDiffFile(reposToReposPath.get(repo), conflict.getLeftAncestorCommit(), conflict.getRightAncestorCommit(), outputLocation);
+					}
 				}
 			try {
 				//Clean and reset git repository
@@ -71,7 +73,13 @@ public class ConflictFileTree {
 	}
 	
 	private void writeDiffFile(String pathToRepo, String leftCommit, String rightCommit, String pathToOutput) {
-		
+		try {
+			Process p = Runtime.getRuntime().exec("bash scripts/createDiffFile " + pathToRepo + " "  + leftCommit + " " + rightCommit + " " + pathToOutput);
+			new BufferedReader(new InputStreamReader(p.getInputStream())).readLine();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	private void writeToFile(File file, String text) {
