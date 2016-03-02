@@ -78,6 +78,8 @@ public class Commander {
 			commitToCommitMessage.clear();
 			commitToBooleanVariables.clear();
 			commitToPullRequest.clear();
+			commitToSettingBoolean.clear();
+			commitToIfBoolean.clear();
 			goodCommits.clear();
 			commitList.clear();
 		}
@@ -167,7 +169,7 @@ public class Commander {
 		
 		addCaption(sheet, 0, 0, "Commit SHA");
 		addCaption(sheet, 1, 0, "Variables in ifs");
-		addCaption(sheet, 2, 0, "Variables with setting/property");
+		addCaption(sheet, 2, 0, "Variables with setting/property/config");
 		addCaption(sheet, 3, 0, "Message");
 		addCaption(sheet, 4, 0, "Pull Request");
 	}
@@ -204,6 +206,10 @@ public class Commander {
 					
 					variableName = fromBoolean.substring(0, endIndex);
 					if(!variableName.contains(",") && !variableName.contains(")") && isVariable(fromBoolean)) {
+						if(variableName.contains("["))
+							variableName = variableName.replace("[", "");
+						if(variableName.contains("]"))
+							variableName = variableName.replace("]", "");
 						variables.add(variableName);
 					}
 				}
@@ -231,17 +237,17 @@ public class Commander {
 			HashSet<String> goodVariables = new HashSet<String>();
 			for(String variable : variables) {
 				for(String line : lines) {
-					line = line.toLowerCase();
 					if(inIfs) {
-						if(line.contains(variable) && line.contains("if")) {
+						if(line.matches(".*(if).*[ ,(){}.&|=]+" + variable + "[ ,(){}.&|=]+.*")) {
 							goodCommits.add(commit);
-							goodVariables.add(variable);
+							goodVariables.add(variable + "|" + line);
 						}
 					}
 					else {
-						if(line.contains(variable.toLowerCase()) && (line.contains("setting") || line.contains("propert"))){
+						String lowerLine = line.toLowerCase();
+						if(lowerLine.matches(".*(([ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+.*(setting|propert|config).*)|(setting|propert|config).*[ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+).*")){
 							goodCommits.add(commit);
-							goodVariables.add(variable);
+							goodVariables.add(variable + "|" + line);
 						}
 					}
 					
