@@ -12,12 +12,11 @@ public class Main {
 	private static HashMap<String, String> repos;
 	
 	public static void main(String args[]) {
-		//fillRepos();
-		//analyzeRepos();
-		//createConflicts();
+		fillRepos();
+		analyzeRepos();
 		
-		ConflictFileTree cft = new ConflictFileTree("/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/");
-		cft.createTree();
+		//ConflictFileTree cft = new ConflictFileTree("/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/");
+		//cft.createTree();
 	}
 	
 	private static void analyzeRepos() {

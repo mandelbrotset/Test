@@ -29,9 +29,11 @@ public class Commander {
 	private HashMap<String, HashSet<String>> commitToDiffPlus;
 	private HashMap<String, HashSet<String>> commitToDiffMinus;
 	private HashMap<String, HashSet<String>> commitToBooleanVariables;
+	private HashMap<String, HashSet<String>> commitToSettingBoolean;
+	private HashMap<String, HashSet<String>> commitToIfBoolean;
 	private HashMap<String, String> commitToCommitMessage;
 	private HashMap<String, Boolean> commitToPullRequest;
-	private ArrayList<String> goodCommits;
+	private HashSet<String> goodCommits;
 	private ArrayList<Commit> commitList;
 	
 	//JXL
@@ -45,9 +47,11 @@ public class Commander {
 		commitToDiffMinus = new HashMap<String, HashSet<String>>();
 		commitToBooleanVariables = new HashMap<String, HashSet<String>>();
 		commitToCommitMessage = new HashMap<String, String>();
-		goodCommits = new ArrayList<String>();
+		goodCommits = new HashSet<String>();
 		commitList = new ArrayList<Commit>();
 		commitToPullRequest = new HashMap<String, Boolean>();
+		commitToSettingBoolean = new HashMap<String, HashSet<String>>();
+		commitToIfBoolean = new HashMap<String, HashSet<String>>();
 		
 		//Jxl
 		noOfSheets = 0;
@@ -62,7 +66,8 @@ public class Commander {
 			getDiffs();
 			findVariableBooleans(commitToDiffPlus, true);
 			findVariableBooleans(commitToDiffMinus, false);
-			findIfsWithBooleans();
+			findGoodBooleans(true);
+			findGoodBooleans(false);
 			findPullRequests();
 			createCommits();
 			
@@ -88,12 +93,12 @@ public class Commander {
 		}
 	}
 	
-	private String variablesToString(String commit) {
+	private String variablesToString(HashSet<String> variables) {
 		StringBuilder sb = new StringBuilder();
-		for(String str : commitToBooleanVariables.get(commit)) {
+		for(String variable : variables) {
 			if(sb.length() != 0)
 				sb.append(", ");
-			sb.append(str);
+			sb.append(variable);
 		}
 		
 		return sb.toString();
@@ -103,7 +108,8 @@ public class Commander {
 		for(String commit : goodCommits) {
 			String message = commitToCommitMessage.get(commit);
 			boolean isPullRequest = commitToPullRequest.get(commit);
-			Commit c = new Commit(commit, message, variablesToString(commit), isPullRequest);
+			Commit c = new Commit(commit, message, variablesToString(commitToIfBoolean.get(commit)),
+					variablesToString(commitToSettingBoolean.get(commit)), isPullRequest);
 			commitList.add(c);
 		}
 	}
@@ -138,10 +144,11 @@ public class Commander {
 		for(int i = 0; i < commitList.size(); i++) {
 			Commit c = commitList.get(i);
 			addLabel(sheet, 0, i+1, c.getSha());
-			addLabel(sheet, 1, i+1, c.getVariables());
-			addLabel(sheet, 2, i+1, c.getMessage());
+			addLabel(sheet, 1, i+1, c.getIfVariables());
+			addLabel(sheet, 2, i+1, c.getSettingVariables());
+			addLabel(sheet, 3, i+1, c.getMessage());
 			if(c.isPullRequest())
-				addLabel(sheet, 3, i+1, "X");
+				addLabel(sheet, 4, i+1, "X");
 		}
 	}
 	
@@ -159,9 +166,10 @@ public class Commander {
 		cv.setAutosize(true);
 		
 		addCaption(sheet, 0, 0, "Commit SHA");
-		addCaption(sheet, 1, 0, "Variables");
-		addCaption(sheet, 2, 0, "Message");
-		addCaption(sheet, 3, 0, "Pull Request");
+		addCaption(sheet, 1, 0, "Variables in ifs");
+		addCaption(sheet, 2, 0, "Variables with setting/property");
+		addCaption(sheet, 3, 0, "Message");
+		addCaption(sheet, 4, 0, "Pull Request");
 	}
 	
 	private void addLabel(WritableSheet sheet, int column, int row, String s) throws RowsExceededException, WriteException {
@@ -216,18 +224,33 @@ public class Commander {
 		
 	}
 	
-	private void findIfsWithBooleans() {
-		for(String key : commitToBooleanVariables.keySet()) {
-			HashSet<String> variables = commitToBooleanVariables.get(key);
-			HashSet<String> lines = commitToDiffPlus.get(key);
+	private void findGoodBooleans(boolean inIfs) {
+		for(String commit : commitToBooleanVariables.keySet()) {
+			HashSet<String> variables = commitToBooleanVariables.get(commit);
+			HashSet<String> lines = commitToDiffPlus.get(commit);
+			HashSet<String> goodVariables = new HashSet<String>();
 			for(String variable : variables) {
 				for(String line : lines) {
-					if(line.contains(variable) && line.contains("if"))
-						if(!goodCommits.contains(key))
-							goodCommits.add(key);
+					line = line.toLowerCase();
+					if(inIfs) {
+						if(line.contains(variable) && line.contains("if")) {
+							goodCommits.add(commit);
+							goodVariables.add(variable);
+						}
+					}
+					else {
+						if(line.contains(variable.toLowerCase()) && (line.contains("setting") || line.contains("propert"))){
+							goodCommits.add(commit);
+							goodVariables.add(variable);
+						}
+					}
+					
 				}
 			}
-			
+			if(inIfs)
+				commitToIfBoolean.put(commit, goodVariables);
+			else
+				commitToSettingBoolean.put(commit, goodVariables);
 		}
 	}
 	

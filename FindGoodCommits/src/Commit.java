@@ -4,13 +4,15 @@ import java.util.HashSet;
 public class Commit {
 	private String sha;
 	private String message;
-	private String variables;
+	private String ifVariables;
+	private String settingVariables;
 	private boolean isPullRequest;
 	
-	public Commit(String sha, String message, String variables, boolean isPullRequest) {
+	public Commit(String sha, String message, String ifVariables, String settingVariables, boolean isPullRequest) {
 		this.sha = sha;
 		this.message = message;
-		this.variables = variables;
+		this.ifVariables = ifVariables;
+		this.settingVariables = settingVariables;
 		this.isPullRequest = isPullRequest;
 	}
 
@@ -30,12 +32,12 @@ public class Commit {
 		this.message = message;
 	}
 
-	public String getVariables() {
-		return variables;
+	public String getIfVariables() {
+		return ifVariables;
 	}
 
-	public void setVariables(String variables) {
-		this.variables = variables;
+	public String getSettingVariables() {
+		return settingVariables;
 	}
 
 	public boolean isPullRequest() {
