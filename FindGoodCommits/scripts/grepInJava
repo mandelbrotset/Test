@@ -3,6 +3,4 @@
 #$1: path to directory
 #$2: string to search for
 
-cd $1
-
 grep -r $2 $1 | grep java
