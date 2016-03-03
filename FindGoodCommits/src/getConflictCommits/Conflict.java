@@ -1,3 +1,4 @@
+package getConflictCommits;
 import java.io.File;
 
 

@@ -1,3 +1,4 @@
+package findBooleans;
 import java.awt.List;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;

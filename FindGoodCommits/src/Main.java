@@ -6,17 +6,25 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import findBooleans.Commander;
+import getConflictCommits.ConflictFileTree;
+
 
 public class Main {
 	
 	private static HashMap<String, String> repos;
 	
 	public static void main(String args[]) {
-		fillRepos();
-		analyzeRepos();
-		
-		//ConflictFileTree cft = new ConflictFileTree("/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/");
-		//cft.createTree();
+		if(args[0].equals("findBooleans")) {
+			fillRepos();
+			analyzeRepos();
+		} else if(args[0].equals("getConflictCommits")) {
+			ConflictFileTree cft = new ConflictFileTree("/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/");
+			cft.createTree();
+		} else if(args[0].equals("getVariantParameter")) {
+			
+		} else
+			System.out.println("Please enter a valid command!");
 	}
 	
 	private static void analyzeRepos() {
