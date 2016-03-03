@@ -8,13 +8,21 @@ import java.util.HashMap;
 
 import findBooleans.Commander;
 import getConflictCommits.ConflictFileTree;
+import getVariantParameter.VariantParameter;
 
 
 public class Main {
 	
 	private static HashMap<String, String> repos;
 	
+	private static final String findBooleans = "findBooleans";
+	private static final String getConflictBooleans = "getConflictBooleans";
+	private static final String getVariantParameter = "getVariantParameter";
+	
 	public static void main(String args[]) {
+		args = new String[1];
+		args[0] = getVariantParameter;
+		
 		if(args[0].equals("findBooleans")) {
 			fillRepos();
 			analyzeRepos();
@@ -22,7 +30,9 @@ public class Main {
 			ConflictFileTree cft = new ConflictFileTree("/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/");
 			cft.createTree();
 		} else if(args[0].equals("getVariantParameter")) {
-			
+			String pathToRepo = "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/elasticsearch";
+			VariantParameter vp = new VariantParameter();
+			vp.findParameterIntroctionCommitSHA(pathToRepo, "discard_punctuation", "7294d27e5cddab35c1a130a43a062cd216eb0608");
 		} else
 			System.out.println("Please enter a valid command!");
 	}

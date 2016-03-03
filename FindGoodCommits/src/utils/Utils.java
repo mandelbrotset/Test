@@ -29,13 +29,13 @@ public class Utils {
 	
 	public static BufferedReader readScriptOutput(String command) throws IOException {
 		HashSet<String> parameters = new HashSet<String>();
-		Process p = Runtime.getRuntime().exec(command);
+		Process p = Runtime.getRuntime().exec("bash scripts/" + command);
 		return new BufferedReader(new InputStreamReader(p.getInputStream()));
 	}
 	
 	public static void checkoutCommit(String repo, String commit) {
 		try {
-			readScriptOutput("bash scripts/checkoutCommit " + repo + " " + commit).readLine();
+			readScriptOutput("checkoutCommit " + repo + " " + commit).readLine();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
