@@ -32,7 +32,7 @@ public class Main {
 		} else if(args[0].equals("getVariantParameter")) {
 			String pathToRepo = "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/elasticsearch";
 			VariantParameter vp = new VariantParameter();
-			vp.findParameterIntroctionCommitSHA(pathToRepo, "discard_punctuation", "7294d27e5cddab35c1a130a43a062cd216eb0608");
+			System.out.println("Commit that introduced the parameter: " + vp.findParameterIntroctionCommitSHA(pathToRepo, "INDEX_FLUSH_ON_CLOSE", "bcaf22eac3242baa1d51bdc54aa2a71959923546"));
 		} else
 			System.out.println("Please enter a valid command!");
 	}

@@ -21,22 +21,31 @@ public class VariantParameter {
 		int initialCommitNo = parameterExistsInCommit(repo, parameter, initialCommit);
 		int commonAncNo = 0;
 		String[] parents;
+		
+		int commitsBeforeIntroduction = 0;
+		int commitsAfterIntroduction = 0;
+		
 		try {
 			parents = Utils.readScriptOutput("getAncestralCommits " + repo + " " + initialCommit).readLine().split(" ");//härligt härligt men farligt
 			String commonAncestor = Utils.readScriptOutput("getCommonAncestor " + repo + " " + parents[0] + " " + parents[1]).readLine();
 			commonAncNo = parameterExistsInCommit(repo, parameter, commonAncestor);
-			System.out.println("init: " + initialCommitNo + " commonAnc: " + commonAncNo);
 			if(initialCommitNo > commonAncNo) {// och då vet vi att snart är det jul
 				String currentCommit = parents[1];
 				String prevCommit = initialCommit;
-				System.out.println("init: " + initialCommit + " commonAnc: " + commonAncNo);
+				System.out.println("init: " + initialCommitNo + " commonAnc: " + commonAncNo);
 				
 				while(parameterExistsInCommit(repo, parameter, currentCommit) > commonAncNo) {
 					prevCommit = currentCommit;
+					commitsAfterIntroduction++; // Count the commits from the introduction of the parameter to the merge commit parent
 					currentCommit = Utils.readScriptOutput("getParent " + repo + " " + currentCommit).readLine();
-					Utils.checkoutCommit(repo, currentCommit);
-					System.out.println(prevCommit);
 				}
+				commitsAfterIntroduction--; // Don't count the introduction commit to this!
+				do {
+					commitsBeforeIntroduction++; // Count the commits between the commit where the parameter was introduced and the common ancestor
+				} while(!(currentCommit = Utils.readScriptOutput("getParent " + repo + " " + currentCommit).readLine()).equals(commonAncestor));
+				
+				System.out.println("Commits before: " + commitsBeforeIntroduction + " Commits after: " + commitsAfterIntroduction);
+				
 				return prevCommit;
 			} else {
 				System.out.println("Börst är dålig på OpenArena");
@@ -55,11 +64,8 @@ public class VariantParameter {
 		try {
 			Utils.checkoutCommit(repo, commit);
 			BufferedReader br = Utils.readScriptOutput("grepInJava " + repo + " " + parameter);
-			String line;
-			while ((line = br.readLine()) != null) {
-				System.out.println(line);
+			while (br.readLine() != null) {
 				noOfExists++;
-				//return true;
 			}
 
 		} catch (IOException e) {
