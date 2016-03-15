@@ -61,20 +61,29 @@ public class Commander {
 	}
 	
 	public void createSheets(HashMap<String, String> repos) {
-		//for(String repo : repos.keySet()) {
-			//REPO = repos.get(repo);
-			REPO = "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/elasticsearch";
-			String repo = "elasticsearch";
+		int total = repos.keySet().size();
+		int progress = 0;
+		for(String repo : repos.keySet()) {
+			print("starting with repo: " + repo + ", progress: " + progress);
+			progress++;
+			REPO = repos.get(repo);
+			//String repo = "elasticsearch";
+			print("getting diffs");
 			getDiffs();
+			print("finding booleans");
 			findVariableBooleans(commitToDiffPlus, true);
 			findVariableBooleans(commitToDiffMinus, false);
+			print("finding good booleans");
 			findGoodBooleans(true);
 			findGoodBooleans(false);
+			print("finding pull requests");
 			findPullRequests();
+			print("creating commits");
 			createCommits();
-			
+			print("creating excel list");
 			createExcelList(repo);
 			
+			print("clearing");
 			commitToDiffPlus.clear();
 			commitToDiffMinus.clear();
 			commitToCommitMessage.clear();
@@ -84,9 +93,11 @@ public class Commander {
 			commitToIfBoolean.clear();
 			goodCommits.clear();
 			commitList.clear();
-		//}
+		}
 		try {
+			print("writing workbook");
 			workBook.write();
+			print("closing workbook");
 			workBook.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -237,7 +248,11 @@ public class Commander {
 	}
 	
 	private void findGoodBooleans(boolean inIfs) {
+		int total = commitToBooleanVariables.size();
+		int progress = 0;
 		for(String commit : commitToBooleanVariables.keySet()) {
+			print("findingGoodBooleans with " + inIfs + ": commit " + progress + " of " + total);
+			progress++;
 			HashSet<String> variables = commitToBooleanVariables.get(commit);
 			HashSet<String> lines = commitToDiffPlus.get(commit);
 			HashSet<String> goodVariables = new HashSet<String>();
@@ -318,13 +333,39 @@ public class Commander {
 		return true;
 	}	
 	
-	private void getDiffs() {
+	private void print(String text) {
+		System.out.println(text);
+	}
+	
+	private int countMergeCommits() {
+		Process commitProcess;
 		try {
+			commitProcess = Runtime.getRuntime().exec("bash " + "scripts/" + "getNumberOfMergeCommits " + REPO);
+			BufferedReader br1 = new BufferedReader(new InputStreamReader(commitProcess.getInputStream()));
+			String output = br1.readLine();
+			String lines = output.split(" ")[0];
+			int nrOfLines = Integer.parseInt(lines);
+			return nrOfLines;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return -1;
+	}
+	
+	private void getDiffs() {
+		print("  begin");
+		try {
+			int nrOfMergeCommits = countMergeCommits();
+			int progress = 0;
+			
+			print("  executing getCommits");
 			Process commitProcess = Runtime.getRuntime().exec("bash " + "scripts/" + "getCommits " + REPO);
 			BufferedReader br1 = new BufferedReader(new InputStreamReader(commitProcess.getInputStream()));
-			
 			String commitSHA;
+			print("  reading commits");
 			while((commitSHA = br1.readLine()) != null) {
+				print("processing commit " + progress + " of " + nrOfMergeCommits);
+				progress++;
 				boolean isJavaFile = false;
 				Process diffProcess = Runtime.getRuntime().exec("bash " + "scripts/" + "getDiff " + REPO + " " + commitSHA);
 				
@@ -334,6 +375,7 @@ public class Commander {
 				HashSet<String> linesPlus = new HashSet<String>();
 				HashSet<String> linesMinus = new HashSet<String>();
 				//Get all lines that starts with "-" and "+"
+				
 				while((line = br2.readLine()) != null) {
 					if(line.startsWith("diff --git ") && line.endsWith(".java"))
 						isJavaFile = true;
@@ -347,7 +389,6 @@ public class Commander {
 							linesMinus.add(line);
 					}
 				}
-				
 				//Get the commit message
 				Process msgProcess = Runtime.getRuntime().exec("bash " + "scripts/" + "getCommitMessage " + REPO + " " + commitSHA);
 				br2 = new BufferedReader(new InputStreamReader(msgProcess.getInputStream()));

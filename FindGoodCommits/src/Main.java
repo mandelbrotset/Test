@@ -23,7 +23,7 @@ public class Main {
 	
 	public static void main(String args[]) {
 		args = new String[1];
-		args[0] = getVariantParameter;
+		args[0] = findBooleans;
 		
 		String parameter = "threadedListener";
 		String commit = "01d6f0dc1d569f4d7e947a322129e492092724ee";
@@ -49,7 +49,7 @@ public class Main {
 	
 	private static void fillRepos() {
 		repos = new HashMap<String, String>();
-		File path = new File("/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/");
+		File path = new File("/home/isak/Documents/Master/projects/");
 		String[] directories = path.list(new FilenameFilter() {
 			  @Override
 			  public boolean accept(File current, String name) {
