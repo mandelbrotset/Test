@@ -22,6 +22,7 @@ import jxl.format.CellFormat;
 import jxl.format.UnderlineStyle;
 import jxl.write.*;
 import jxl.write.biff.RowsExceededException;
+
 import java.lang.Boolean;
 
 public class Commander {
@@ -61,11 +62,41 @@ public class Commander {
 	}
 	
 	public void createSheets(HashMap<String, String> repos) {
-		//for(String repo : repos.keySet()) {
-			//REPO = repos.get(repo);
-			REPO = "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/elasticsearch";
-			String repo = "elasticsearch";
-			getDiffs();
+		for(String repo : repos.keySet()) {
+			final HashMap<String, String> finalRepos = repos;
+			final String finalRepo = repo;
+			final Thread t = new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					REPO = finalRepos.get(finalRepo);
+					getDiffs();
+					findVariableBooleans(commitToDiffPlus, true);
+					findVariableBooleans(commitToDiffMinus, false);
+					findGoodBooleans(true);
+					findGoodBooleans(false);
+					findPullRequests();
+					createCommits();
+					
+					createExcelList(finalRepo);
+					writeToWorkbook();
+					
+					commitToDiffPlus.clear();
+					commitToDiffMinus.clear();
+					commitToCommitMessage.clear();
+					commitToBooleanVariables.clear();
+					commitToPullRequest.clear();
+					commitToSettingBoolean.clear();
+					commitToIfBoolean.clear();
+					goodCommits.clear();
+					commitList.clear();
+					
+					
+				}
+			});
+		}
+			
+			/*getDiffs();
 			findVariableBooleans(commitToDiffPlus, true);
 			findVariableBooleans(commitToDiffMinus, false);
 			findGoodBooleans(true);
@@ -84,7 +115,7 @@ public class Commander {
 			commitToIfBoolean.clear();
 			goodCommits.clear();
 			commitList.clear();
-		//}
+		}
 		try {
 			workBook.write();
 			workBook.close();
@@ -94,7 +125,7 @@ public class Commander {
 		} catch (WriteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 	}
 	
 	private String variablesToString(HashSet<String> variables) {
@@ -106,6 +137,20 @@ public class Commander {
 		}
 		
 		return sb.toString();
+	}
+	
+	private synchronized void writeToWorkbook() {
+		try {
+			workBook.write();
+			workBook.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (WriteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 	
 	private void createCommits() {
@@ -131,7 +176,7 @@ public class Commander {
 		}
 	}
 	
-	private void createExcelList(String sheetName) {
+	private synchronized void createExcelList(String sheetName) {
 		try {
 			workBook.createSheet(sheetName, noOfSheets);
 			WritableSheet excelSheet = workBook.getSheet(noOfSheets);
@@ -358,9 +403,12 @@ public class Commander {
 					sb.append(line);
 				}
 				
-				commitToDiffPlus.put(commitSHA, linesPlus);
-				commitToDiffMinus.put(commitSHA, linesMinus);
-				commitToCommitMessage.put(commitSHA, sb.toString());
+				synchronized(this) {
+					commitToDiffPlus.put(commitSHA, linesPlus);
+					commitToDiffMinus.put(commitSHA, linesMinus);
+					commitToCommitMessage.put(commitSHA, sb.toString());
+				}
+				
 			}
 			
 		} catch (IOException e) {
