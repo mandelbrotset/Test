@@ -8,6 +8,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Random;
 
+import utils.Machine;
+
 
 public class MergeConflicter{
 	
@@ -19,10 +21,13 @@ public class MergeConflicter{
 	
 	
 	private ArrayList<Conflict> conflicts;
+	
+	private Machine machine;
 
 	public MergeConflicter() {
 		conflictingFilePaths = new ArrayList<String>();
 		conflicts = new ArrayList<Conflict>();
+		machine = Machine.getInstance();
 	}
 
 	/**
@@ -46,7 +51,7 @@ public class MergeConflicter{
 			BufferedReader br = executeCommand("mergeHistorical " + REPO + " " + leftCommit + " " + rightCommit + " " + branchName);
 			
 			String line;
-			final String conflictingLinePattern = "KONFLIKT (innehåll): Sammanslagningskonflikt i ";
+			final String conflictingLinePattern = machine.getConflictMessage();
 			while((line = br.readLine()) != null) {
 				if(line.startsWith(conflictingLinePattern) && line.endsWith(".java")) {
 					String filePath = line.substring(conflictingLinePattern.length());
