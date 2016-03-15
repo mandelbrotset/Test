@@ -19,9 +19,14 @@ public class Main {
 	private static final String getConflictBooleans = "getConflictBooleans";
 	private static final String getVariantParameter = "getVariantParameter";
 	
+	
+	
 	public static void main(String args[]) {
 		args = new String[1];
 		args[0] = getVariantParameter;
+		
+		String parameter = "threadedListener";
+		String commit = "01d6f0dc1d569f4d7e947a322129e492092724ee";
 		
 		if(args[0].equals("findBooleans")) {
 			fillRepos();
@@ -32,7 +37,7 @@ public class Main {
 		} else if(args[0].equals("getVariantParameter")) {
 			String pathToRepo = "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/elasticsearch";
 			VariantParameter vp = new VariantParameter();
-			System.out.println("Commit that introduced the parameter: " + vp.findParameterIntroctionCommitSHA(pathToRepo, "INDEX_FLUSH_ON_CLOSE", "bcaf22eac3242baa1d51bdc54aa2a71959923546"));
+			System.out.println("Commit that introduced the parameter: " + vp.findParameterIntroctionCommitSHA(pathToRepo, parameter, commit));
 		} else
 			System.out.println("Please enter a valid command!");
 	}

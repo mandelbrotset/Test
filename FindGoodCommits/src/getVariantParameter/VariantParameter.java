@@ -40,11 +40,15 @@ public class VariantParameter {
 					currentCommit = Utils.readScriptOutput("getParent " + repo + " " + currentCommit).readLine();
 				}
 				commitsAfterIntroduction--; // Don't count the introduction commit to this!
-				do {
-					commitsBeforeIntroduction++; // Count the commits between the commit where the parameter was introduced and the common ancestor
-				} while(!(currentCommit = Utils.readScriptOutput("getParent " + repo + " " + currentCommit).readLine()).equals(commonAncestor));
+				if(!currentCommit.equals(commonAncestor)){
+					do {
+						commitsBeforeIntroduction++; // Count the commits between the commit where the parameter was introduced and the common ancestor
+					} while(!(currentCommit = Utils.readScriptOutput("getParent " + repo + " " + currentCommit).readLine()).equals(commonAncestor));
+				}
 				
-				System.out.println("Commits before: " + commitsBeforeIntroduction + " Commits after: " + commitsAfterIntroduction);
+				int totalCommitsInBranch = commitsBeforeIntroduction + commitsAfterIntroduction+1;
+				float introducedInBranch = ((float)(totalCommitsInBranch-commitsAfterIntroduction)/(float)totalCommitsInBranch);
+				System.out.println("Commits before: " + commitsBeforeIntroduction + " Commits after: " + commitsAfterIntroduction + "\nIntroduced at " + introducedInBranch*100 + "% of the branch life");
 				
 				return prevCommit;
 			} else {

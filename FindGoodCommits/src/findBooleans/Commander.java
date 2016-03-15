@@ -61,9 +61,10 @@ public class Commander {
 	}
 	
 	public void createSheets(HashMap<String, String> repos) {
-		for(String repo : repos.keySet()) {
-			REPO = repos.get(repo);
-			
+		//for(String repo : repos.keySet()) {
+			//REPO = repos.get(repo);
+			REPO = "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/elasticsearch";
+			String repo = "elasticsearch";
 			getDiffs();
 			findVariableBooleans(commitToDiffPlus, true);
 			findVariableBooleans(commitToDiffMinus, false);
@@ -83,7 +84,7 @@ public class Commander {
 			commitToIfBoolean.clear();
 			goodCommits.clear();
 			commitList.clear();
-		}
+		//}
 		try {
 			workBook.write();
 			workBook.close();
@@ -122,6 +123,7 @@ public class Commander {
 			File file = new File(excelOutputFile);
 			WorkbookSettings wbSettings = new WorkbookSettings();
 			wbSettings.setLocale(new Locale("en", "EN"));
+			wbSettings.setEncoding("Cp1252");
 			workBook = Workbook.createWorkbook(file, wbSettings);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -146,6 +148,9 @@ public class Commander {
 	private void fillExcelDocument(WritableSheet sheet) throws RowsExceededException, WriteException {
 		for(int i = 0; i < commitList.size(); i++) {
 			Commit c = commitList.get(i);
+			if(c.getSha().length() == 0) {
+				System.out.println("Här ska vi inte va");
+			}
 			addLabel(sheet, 0, i+1, c.getSha());
 			addLabel(sheet, 1, i+1, c.getIfVariables());
 			addLabel(sheet, 2, i+1, c.getSettingVariables());
