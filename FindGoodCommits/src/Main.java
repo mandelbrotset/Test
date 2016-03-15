@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import utils.Machine;
 import findBooleans.Commander;
 import getConflictCommits.ConflictFileTree;
 import getVariantParameter.VariantParameter;
@@ -19,11 +20,14 @@ public class Main {
 	private static final String getConflictBooleans = "getConflictBooleans";
 	private static final String getVariantParameter = "getVariantParameter";
 	
+	private static Machine machine;
 	
 	
 	public static void main(String args[]) {
 		args = new String[1];
 		args[0] = getVariantParameter;
+		
+		machine = Machine.getInstance();
 		
 		String parameter = "threadedListener";
 		String commit = "01d6f0dc1d569f4d7e947a322129e492092724ee";
@@ -32,7 +36,7 @@ public class Main {
 			fillRepos();
 			analyzeRepos();
 		} else if(args[0].equals("getConflictCommits")) {
-			ConflictFileTree cft = new ConflictFileTree("/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/");
+			ConflictFileTree cft = new ConflictFileTree(machine.getRepoPath());
 			cft.createTree();
 		} else if(args[0].equals("getVariantParameter")) {
 			String pathToRepo = "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/elasticsearch";
@@ -49,7 +53,7 @@ public class Main {
 	
 	private static void fillRepos() {
 		repos = new HashMap<String, String>();
-		File path = new File("/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/");
+		File path = new File(machine.getRepoPath());
 		String[] directories = path.list(new FilenameFilter() {
 			  @Override
 			  public boolean accept(File current, String name) {
