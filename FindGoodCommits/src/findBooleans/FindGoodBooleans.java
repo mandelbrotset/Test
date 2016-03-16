@@ -4,23 +4,22 @@ import java.util.HashSet;
 
 public class FindGoodBooleans extends Thread {
 	private boolean inIfs;
-	
+
 	public FindGoodBooleans(boolean inIfs) {
 		this.inIfs = inIfs;
 	}
-	
+
 	@Override
 	public void run() {
 		findGoodBooleans();
 		super.run();
 	}
-	
+
 	private void findGoodBooleans() {
 		int total = Commander.commitToBooleanVariables.size();
 		int progress = 0;
 		for (String commit : Commander.commitToBooleanVariables.keySet()) {
-			Commander.print("findingGoodBooleans with " + inIfs + ": commit " + progress
-					+ " of " + total);
+			Commander.print("findingGoodBooleans with " + inIfs + ": commit " + progress + " of " + total);
 			progress++;
 			HashSet<String> variables = Commander.commitToBooleanVariables.get(commit);
 			HashSet<String> lines = Commander.commitToDiffPlus.get(commit);

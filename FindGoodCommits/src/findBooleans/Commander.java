@@ -49,7 +49,9 @@ public class Commander {
 		commitToDiffMinus = new ConcurrentHashMap<String, HashSet<String>>();
 		commitToBooleanVariables = new ConcurrentHashMap<String, HashSet<String>>();
 		commitToCommitMessage = new ConcurrentHashMap<String, String>();
-		goodCommits = new HashSet<String>();
+		synchronized (goodCommits) {
+			goodCommits = new HashSet<String>();
+		}
 		commitList = new ArrayList<Commit>();
 		commitToPullRequest = new ConcurrentHashMap<String, Boolean>();
 		commitToSettingBoolean = new ConcurrentHashMap<String, HashSet<String>>();
@@ -63,67 +65,86 @@ public class Commander {
 
 	public void createSheets(ConcurrentHashMap<String, String> repos) {
 		int progress = 0;
-		//for (String repo : repos.keySet()) {
+		// for (String repo : repos.keySet()) {
 		String repo = "elasticsearch";
-			REPO = repos.get(repo);
-			print("starting with repo: " + repo + ", progress: "
-					+ progress);
-			progress++;
-			REPO = repos.get(repo);
-			// String repo = "elasticsearch";
-			print("getting diffs");
-			getDiffs();
-			print("finding booleans");
-			FindVariablesBooleans fvbt = new FindVariablesBooleans(commitToDiffPlus, true);
-			FindVariablesBooleans fvbf = new FindVariablesBooleans(commitToDiffMinus, false);
-			fvbt.start();
-			fvbf.start();
-			print("finding good booleans");
-			FindGoodBooleans fgbt = new FindGoodBooleans(true);
-			FindGoodBooleans fgbf = new FindGoodBooleans(false);
-			fgbt.start();
-			fgbf.start();
-			print("finding pull requests");
-			findPullRequests();
-			
-			print("waiting for threads to finish");
-			try {
-				fvbt.join();
-				fvbf.join();
-				fgbt.join();
-				fgbf.join();
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-			
-			print("creating commits");
-			createCommits();
-			print("creating excel list");
-			createExcelList(repo);
+		REPO = repos.get(repo);
+		print("starting with repo: " + repo + ", progress: " + progress);
+		progress++;
+		REPO = repos.get(repo);
+		// String repo = "elasticsearch";
+		print("getting diffs");
+		getDiffs();
+		print("finding booleans");
+		FindVariablesBooleans fvbt = new FindVariablesBooleans(commitToDiffPlus, true);
+		FindVariablesBooleans fvbf = new FindVariablesBooleans(commitToDiffMinus, false);
+		fvbt.start();
+		fvbf.start();
+		print("finding good booleans");
+		FindGoodBooleans fgbt = new FindGoodBooleans(true);
+		FindGoodBooleans fgbf = new FindGoodBooleans(false);
+		fgbt.start();
+		fgbf.start();
+		print("finding pull requests");
+		findPullRequests();
 
-			print("clearing");
-			commitToDiffPlus.clear();
-			commitToDiffMinus.clear();
-			commitToCommitMessage.clear();
-			commitToBooleanVariables.clear();
-			commitToPullRequest.clear();
-			commitToSettingBoolean.clear();
-			commitToIfBoolean.clear();
+		print("waiting for threads to finish");
+		try {
+			fvbt.join();
+			fvbf.join();
+			fgbt.join();
+			fgbf.join();
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+		print("creating commits");
+		createCommits();
+		print("creating excel list");
+		createExcelList(repo);
+
+		print("clearing");
+		commitToDiffPlus.clear();
+		commitToDiffMinus.clear();
+		commitToCommitMessage.clear();
+		commitToBooleanVariables.clear();
+		commitToPullRequest.clear();
+		commitToSettingBoolean.clear();
+		commitToIfBoolean.clear();
+		synchronized (goodCommits) {
 			goodCommits.clear();
-			commitList.clear();
-		//}
+		}
+		commitList.clear();
+		// }
 
-		try { 
+		try {
 			workBook.write();
-			workBook.close(); 
-			} catch (IOException e) {
-			 // TODO Auto-generated catch block
-				e.printStackTrace();
-			}catch (WriteException e) {
-				 // TODO Auto-generated catch block
-				 e.printStackTrace(); 
-			 }
+			workBook.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (WriteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		/*
+		 * getDiffs(); findVariableBooleans(commitToDiffPlus, true);
+		 * findVariableBooleans(commitToDiffMinus, false);
+		 * findGoodBooleans(true); findGoodBooleans(false); findPullRequests();
+		 * createCommits();
+		 * 
+		 * createExcelList(repo);
+		 * 
+		 * commitToDiffPlus.clear(); commitToDiffMinus.clear();
+		 * commitToCommitMessage.clear(); commitToBooleanVariables.clear();
+		 * commitToPullRequest.clear(); commitToSettingBoolean.clear();
+		 * commitToIfBoolean.clear(); goodCommits.clear(); commitList.clear(); }
+		 * try { workBook.write(); workBook.close(); } catch (IOException e) {
+		 * // TODO Auto-generated catch block e.printStackTrace(); } catch
+		 * (WriteException e) { // TODO Auto-generated catch block
+		 * e.printStackTrace(); }
+		 */
 	}
 
 	private String variablesToString(HashSet<String> variables) {
@@ -190,8 +211,7 @@ public class Commander {
 		}
 	}
 
-	private void fillExcelDocument(WritableSheet sheet)
-			throws RowsExceededException, WriteException {
+	private void fillExcelDocument(WritableSheet sheet) throws RowsExceededException, WriteException {
 		for (int i = 0; i < commitList.size(); i++) {
 			Commit c = commitList.get(i);
 			if (c.getSha().length() == 0) {
@@ -210,8 +230,7 @@ public class Commander {
 		WritableFont times10pt = new WritableFont(WritableFont.TIMES, 10);
 		times = new WritableCellFormat(times10pt);
 		times.setWrap(true);
-		WritableFont times10ptBoldUnderline = new WritableFont(
-				WritableFont.TIMES, 10, WritableFont.BOLD, false,
+		WritableFont times10ptBoldUnderline = new WritableFont(WritableFont.TIMES, 10, WritableFont.BOLD, false,
 				UnderlineStyle.SINGLE);
 		timesBoldUnderline = new WritableCellFormat(times10ptBoldUnderline);
 		timesBoldUnderline.setWrap(true);
@@ -243,19 +262,23 @@ public class Commander {
 	
 
 	private void findPullRequests() {
-		for (String commit : goodCommits) {
-			String message = commitToCommitMessage.get(commit);
+		synchronized (goodCommits) {
+			for (String commit : goodCommits) {
+				String message = commitToCommitMessage.get(commit);
 
-			if (message.contains("Merge pull request #"))
-				commitToPullRequest.put(commit, true);
-			else
-				commitToPullRequest.put(commit, false);
+				if (message.contains("Merge pull request #"))
+					commitToPullRequest.put(commit, true);
+				else
+					commitToPullRequest.put(commit, false);
+			}
 		}
 	}
 
 	private void printTheGoodCommits() {
-		for (String commit : goodCommits) {
-			System.out.println(commit);
+		synchronized (goodCommits) {
+			for (String commit : goodCommits) {
+				System.out.println(commit);
+			}
 		}
 	}
 
@@ -273,9 +296,11 @@ public class Commander {
 	}
 
 	private void printTheCommitMessages() {
-		for (String commit : goodCommits) {
-			String msg = commitToCommitMessage.get(commit);
-			System.out.println(msg);
+		synchronized (goodCommits) {
+			for (String commit : goodCommits) {
+				String msg = commitToCommitMessage.get(commit);
+				System.out.println(msg);
+			}
 		}
 	}
 
@@ -321,24 +346,19 @@ public class Commander {
 			int progress = 0;
 
 			print("  executing getCommits");
-			Process commitProcess = Runtime.getRuntime().exec(
-					"bash " + "scripts/" + "getCommits " + REPO);
-			BufferedReader br1 = new BufferedReader(new InputStreamReader(
-					commitProcess.getInputStream()));
+			Process commitProcess = Runtime.getRuntime().exec("bash " + "scripts/" + "getCommits " + REPO);
+			BufferedReader br1 = new BufferedReader(new InputStreamReader(commitProcess.getInputStream()));
 
 			String commitSHA;
 			print("  reading commits");
 			while ((commitSHA = br1.readLine()) != null) {
-				print("processing commit " + progress + " of "
-						+ nrOfMergeCommits);
+				print("processing commit " + progress + " of " + nrOfMergeCommits);
 				progress++;
 				boolean isJavaFile = false;
-				Process diffProcess = Runtime.getRuntime().exec(
-						"bash " + "scripts/" + "getDiff " + REPO + " "
-								+ commitSHA);
+				Process diffProcess = Runtime.getRuntime()
+						.exec("bash " + "scripts/" + "getDiff " + REPO + " " + commitSHA);
 
-				BufferedReader br2 = new BufferedReader(new InputStreamReader(
-						diffProcess.getInputStream()));
+				BufferedReader br2 = new BufferedReader(new InputStreamReader(diffProcess.getInputStream()));
 
 				String line;
 				HashSet<String> linesPlus = new HashSet<String>();
@@ -346,8 +366,7 @@ public class Commander {
 				// Get all lines that starts with "-" and "+"
 
 				while ((line = br2.readLine()) != null) {
-					if (line.startsWith("diff --git ")
-							&& line.endsWith(".java"))
+					if (line.startsWith("diff --git ") && line.endsWith(".java"))
 						isJavaFile = true;
 					else if (line.startsWith("diff --git "))
 						isJavaFile = false;
@@ -361,11 +380,9 @@ public class Commander {
 				}
 
 				// Get the commit message
-				Process msgProcess = Runtime.getRuntime().exec(
-						"bash " + "scripts/" + "getCommitMessage " + REPO + " "
-								+ commitSHA);
-				br2 = new BufferedReader(new InputStreamReader(
-						msgProcess.getInputStream()));
+				Process msgProcess = Runtime.getRuntime()
+						.exec("bash " + "scripts/" + "getCommitMessage " + REPO + " " + commitSHA);
+				br2 = new BufferedReader(new InputStreamReader(msgProcess.getInputStream()));
 				StringBuilder sb = new StringBuilder();
 				while ((line = br2.readLine()) != null) {
 					if (sb.length() != 0)
