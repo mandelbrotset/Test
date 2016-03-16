@@ -114,7 +114,9 @@ public class Commander {
 		synchronized (goodCommits) {
 			goodCommits.clear();
 		}
-		commitList.clear();
+		synchronized (commitList) {
+			commitList.clear();
+		}
 		// }
 
 		try {
@@ -173,14 +175,16 @@ public class Commander {
 	}
 
 	private void createCommits() {
-		for (String commit : goodCommits) {
-			String message = commitToCommitMessage.get(commit);
-			boolean isPullRequest = commitToPullRequest.get(commit);
-			Commit c = new Commit(commit, message,
-					variablesToString(commitToIfBoolean.get(commit)),
-					variablesToString(commitToSettingBoolean.get(commit)),
-					isPullRequest);
-			commitList.add(c);
+		synchronized (goodCommits) {
+			for (String commit : goodCommits) {
+				String message = commitToCommitMessage.get(commit);
+				boolean isPullRequest = commitToPullRequest.get(commit);
+				Commit c = new Commit(commit, message, variablesToString(commitToIfBoolean.get(commit)),
+						variablesToString(commitToSettingBoolean.get(commit)), isPullRequest);
+				synchronized (commitList) {
+					commitList.add(c);
+				}
+			}
 		}
 	}
 
@@ -212,17 +216,19 @@ public class Commander {
 	}
 
 	private void fillExcelDocument(WritableSheet sheet) throws RowsExceededException, WriteException {
-		for (int i = 0; i < commitList.size(); i++) {
-			Commit c = commitList.get(i);
-			if (c.getSha().length() == 0) {
-				System.out.println("Här ska vi inte va");
+		synchronized (commitList) {
+			for (int i = 0; i < commitList.size(); i++) {
+				Commit c = commitList.get(i);
+				if (c.getSha().length() == 0) {
+					System.out.println("Här ska vi inte va");
+				}
+				addLabel(sheet, 0, i + 1, c.getSha());
+				addLabel(sheet, 1, i + 1, c.getIfVariables());
+				addLabel(sheet, 2, i + 1, c.getSettingVariables());
+				addLabel(sheet, 3, i + 1, c.getMessage());
+				if (c.isPullRequest())
+					addLabel(sheet, 4, i + 1, "X");
 			}
-			addLabel(sheet, 0, i + 1, c.getSha());
-			addLabel(sheet, 1, i + 1, c.getIfVariables());
-			addLabel(sheet, 2, i + 1, c.getSettingVariables());
-			addLabel(sheet, 3, i + 1, c.getMessage());
-			if (c.isPullRequest())
-				addLabel(sheet, 4, i + 1, "X");
 		}
 	}
 
@@ -259,8 +265,6 @@ public class Commander {
 		sheet.addCell(label);
 	}
 
-	
-
 	private void findPullRequests() {
 		synchronized (goodCommits) {
 			for (String commit : goodCommits) {
@@ -283,16 +287,17 @@ public class Commander {
 	}
 
 	private void printTheVariables() {
-		for (String commit : goodCommits) {
-			StringBuilder sb = new StringBuilder();
-			for (String str : commitToBooleanVariables.get(commit)) {
-				if (sb.length() != 0)
-					sb.append(", ");
-				sb.append(str);
+		synchronized (goodCommits) {
+			for (String commit : goodCommits) {
+				StringBuilder sb = new StringBuilder();
+				for (String str : commitToBooleanVariables.get(commit)) {
+					if (sb.length() != 0)
+						sb.append(", ");
+					sb.append(str);
+				}
+				System.out.println(sb);
 			}
-			System.out.println(sb);
 		}
-
 	}
 
 	private void printTheCommitMessages() {
@@ -325,10 +330,8 @@ public class Commander {
 	private int countMergeCommits() {
 		Process commitProcess;
 		try {
-			commitProcess = Runtime.getRuntime().exec(
-					"bash " + "scripts/" + "getNumberOfMergeCommits " + REPO);
-			BufferedReader br1 = new BufferedReader(new InputStreamReader(
-					commitProcess.getInputStream()));
+			commitProcess = Runtime.getRuntime().exec("bash " + "scripts/" + "getNumberOfMergeCommits " + REPO);
+			BufferedReader br1 = new BufferedReader(new InputStreamReader(commitProcess.getInputStream()));
 			String output = br1.readLine();
 			String lines = output.split(" ")[0];
 			int nrOfLines = Integer.parseInt(lines);
