@@ -28,42 +28,35 @@ public class FindGoodBooleans extends Thread {
 				for (String line : lines) {
 					if (inIfs) {
 						if (line.matches(".*(if).*[ ,(){}.&|=]+" + variable + "[ ,(){}.&|=]+.*")) {
-							if (line.contains("//"))
+							if(line.contains("//"))
 								line = line.split("//")[0];
-
-							if (line.contains("/*"))
-								line = line.split("/*")[0];
-<<<<<<< HEAD
 							
+							if(line.contains("/*"))
+								line = line.split("/*")[0];
+							
+<<<<<<< HEAD
+							//if(!line.matches("^[A-Za-z0-9_\\.\\-(){}[] .]+$"))
+								//line = "Signs of fuck";
+							synchronized (Commander.goodCommits) {
+=======
 							if(!line.matches("^[A-Za-z0-9_\\.\\-(){}[] .]+$"))
 								line = "Signs of fuck";
-							
-							Commander.goodCommits.add(commit);
-=======
-							synchronized (Commander.goodCommits) {
+>>>>>>> 1aba30f0c07a8fc64a15f4dac1f76eb317fd51d1
 								Commander.goodCommits.add(commit);
-							}
->>>>>>> edf40f7b95753199489b06cd759a009c91a0d3d8
 							goodVariables.add(variable + "|" + line);
 						}
 					} else {
 						String lowerLine = line.toLowerCase();
-						if (lowerLine.matches(".*(([ ,(){}.]+" + variable.toLowerCase()
-								+ "[ ,(){}.]+.*(setting|propert|config).*)|(setting|propert|config).*[ ,(){}.]+"
-								+ variable.toLowerCase() + "[ ,(){}.]+).*")) {
-							if (line.contains("//"))
+						if(lowerLine.matches(".*(([ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+.*(setting|propert|config).*)|(setting|propert|config).*[ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+).*")){
+							if(line.contains("//"))
 								line = line.split("//")[0];
-
-							if (line.contains("/*"))
+							
+							if(line.contains("/*"))
 								line = line.split("/*")[0];
-<<<<<<< HEAD
 							
-							if(!line.matches("^[A-Za-z0-9_\\.\\-(){}[] .]+$"))
-								line = "Signs of fuck";
+							//if(!line.matches("^[A-Za-z0-9_\\.\\-(){}[] .]+$"))
+								//line = "Signs of fuck";
 							
-=======
-
->>>>>>> edf40f7b95753199489b06cd759a009c91a0d3d8
 							Commander.goodCommits.add(commit);
 							goodVariables.add(variable + "|" + line);
 						}

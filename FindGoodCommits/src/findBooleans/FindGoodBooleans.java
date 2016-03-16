@@ -2,6 +2,8 @@ package findBooleans;
 
 import java.util.HashSet;
 
+import utils.ConcurrentHashSet;
+
 public class FindGoodBooleans extends Thread {
 	private boolean inIfs;
 
@@ -21,37 +23,22 @@ public class FindGoodBooleans extends Thread {
 		for (String commit : Commander.commitToBooleanVariables.keySet()) {
 			Commander.print("findingGoodBooleans with " + inIfs + ": commit " + progress + " of " + total);
 			progress++;
-			HashSet<String> variables = Commander.commitToBooleanVariables.get(commit);
-			HashSet<String> lines = Commander.commitToDiffPlus.get(commit);
-			HashSet<String> goodVariables = new HashSet<String>();
+			ConcurrentHashSet<String> variables = Commander.commitToBooleanVariables.get(commit);
+			ConcurrentHashSet<String> lines = Commander.commitToDiffPlus.get(commit);
+			ConcurrentHashSet<String> goodVariables = new ConcurrentHashSet<String>();
 			for (String variable : variables) {
 				for (String line : lines) {
 					if (inIfs) {
 						if (line.matches(".*(if).*[ ,(){}.&|=]+" + variable + "[ ,(){}.&|=]+.*")) {
-							if(line.contains("//"))
-								line = line.split("//")[0];
-							
-							if(line.contains("/*"))
-								line = line.split("/*")[0];
-							
-							//if(!line.matches("^[A-Za-z0-9_\\.\\-(){}[] .]+$"))
-								//line = "Signs of fuck";
+							line = removeIllegalCharacters(line);
 						
-								Commander.goodCommits.add(commit);
-					
+							Commander.goodCommits.add(commit);
 							goodVariables.add(variable + "|" + line);
 						}
 					} else {
 						String lowerLine = line.toLowerCase();
 						if(lowerLine.matches(".*(([ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+.*(setting|propert|config).*)|(setting|propert|config).*[ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+).*")){
-							if(line.contains("//"))
-								line = line.split("//")[0];
-							
-							if(line.contains("/*"))
-								line = line.split("/*")[0];
-							
-							//if(!line.matches("^[A-Za-z0-9_\\.\\-(){}[] .]+$"))
-								//line = "Signs of fuck";
+							line = removeIllegalCharacters(line);
 							
 							Commander.goodCommits.add(commit);
 							goodVariables.add(variable + "|" + line);
@@ -65,6 +52,20 @@ public class FindGoodBooleans extends Thread {
 			else
 				Commander.commitToSettingBoolean.put(commit, goodVariables);
 		}
+	}
+	
+	private String removeIllegalCharacters(String line) {
+		String result = line;
+		if(line.contains("//"))
+			result = result.split("//")[0];
+		
+		if(line.contains("/*"))
+			result = result.split("/*")[0];
+		
+		if(!line.matches("[A-Za-z0-9_\\.\\-(){}\\[\\]&|+*/<>\"'!;@=,:?%^#$\\t .]+"))
+			result = "Signs of fuck";
+		
+		return result;
 	}
 
 }

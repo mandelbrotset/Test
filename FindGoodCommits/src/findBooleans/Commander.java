@@ -26,13 +26,15 @@ import jxl.write.biff.RowsExceededException;
 
 import java.lang.Boolean;
 
+import utils.ConcurrentHashSet;
+
 public class Commander {
 	private String REPO;
-	public static ConcurrentHashMap<String, HashSet<String>> commitToDiffPlus;
-	public static ConcurrentHashMap<String, HashSet<String>> commitToDiffMinus;
-	public static ConcurrentHashMap<String, HashSet<String>> commitToBooleanVariables;
-	public static ConcurrentHashMap<String, HashSet<String>> commitToSettingBoolean;
-	public static ConcurrentHashMap<String, HashSet<String>> commitToIfBoolean;
+	public static ConcurrentHashMap<String, ConcurrentHashSet<String>> commitToDiffPlus;
+	public static ConcurrentHashMap<String, ConcurrentHashSet<String>> commitToDiffMinus;
+	public static ConcurrentHashMap<String, ConcurrentHashSet<String>> commitToBooleanVariables;
+	public static ConcurrentHashMap<String, ConcurrentHashSet<String>> commitToSettingBoolean;
+	public static ConcurrentHashMap<String, ConcurrentHashSet<String>> commitToIfBoolean;
 	private ConcurrentHashMap<String, String> commitToCommitMessage;
 	private ConcurrentHashMap<String, Boolean> commitToPullRequest;
 	public static HashSet<String> goodCommits;
@@ -73,8 +75,10 @@ public class Commander {
 		print("getting diffs");
 		getDiffs();
 		print("finding booleans");
-		FindVariablesBooleans fvbt = new FindVariablesBooleans(commitToDiffPlus, true);
-		FindVariablesBooleans fvbf = new FindVariablesBooleans(commitToDiffMinus, false);
+		FindVariablesBooleans fvbt = new FindVariablesBooleans(
+				commitToDiffPlus, true);
+		FindVariablesBooleans fvbf = new FindVariablesBooleans(
+				commitToDiffMinus, false);
 		fvbt.start();
 		fvbf.start();
 		try {
@@ -159,7 +163,7 @@ public class Commander {
 		return sb.toString();
 	}
 
-	private synchronized void writeToWorkbook() {
+	private void writeToWorkbook() {
 		try {
 			workBook.write();
 			workBook.close();
@@ -178,11 +182,11 @@ public class Commander {
 		for (String commit : goodCommits) {
 			String message = commitToCommitMessage.get(commit);
 			boolean isPullRequest = commitToPullRequest.get(commit);
-			Commit c = new Commit(commit, message, variablesToString(commitToIfBoolean.get(commit)),
-					variablesToString(commitToSettingBoolean.get(commit)), isPullRequest);
-			synchronized (commitList) {
-				commitList.add(c);
-			}
+			Commit c = new Commit(commit, message,
+					variablesToString(commitToIfBoolean.get(commit)),
+					variablesToString(commitToSettingBoolean.get(commit)),
+					isPullRequest);
+			commitList.add(c);
 		}
 	}
 
@@ -199,7 +203,7 @@ public class Commander {
 		}
 	}
 
-	private synchronized void createExcelList(String sheetName) {
+	private void createExcelList(String sheetName) {
 		try {
 			workBook.createSheet(sheetName, noOfSheets);
 			WritableSheet excelSheet = workBook.getSheet(noOfSheets);
@@ -213,20 +217,19 @@ public class Commander {
 		}
 	}
 
-	private void fillExcelDocument(WritableSheet sheet) throws RowsExceededException, WriteException {
-		synchronized (commitList) {
-			for (int i = 0; i < commitList.size(); i++) {
-				Commit c = commitList.get(i);
-				if (c.getSha().length() == 0) {
-					System.out.println("Här ska vi inte va");
-				}
-				addLabel(sheet, 0, i + 1, c.getSha());
-				addLabel(sheet, 1, i + 1, c.getIfVariables());
-				addLabel(sheet, 2, i + 1, c.getSettingVariables());
-				addLabel(sheet, 3, i + 1, c.getMessage());
-				if (c.isPullRequest())
-					addLabel(sheet, 4, i + 1, "X");
+	private void fillExcelDocument(WritableSheet sheet)
+			throws RowsExceededException, WriteException {
+		for (int i = 0; i < commitList.size(); i++) {
+			Commit c = commitList.get(i);
+			if (c.getSha().length() == 0) {
+				System.out.println("Här ska vi inte va");
 			}
+			addLabel(sheet, 0, i + 1, c.getSha());
+			addLabel(sheet, 1, i + 1, c.getIfVariables());
+			addLabel(sheet, 2, i + 1, c.getSettingVariables());
+			addLabel(sheet, 3, i + 1, c.getMessage());
+			if (c.isPullRequest())
+				addLabel(sheet, 4, i + 1, "X");
 		}
 	}
 
@@ -234,7 +237,8 @@ public class Commander {
 		WritableFont times10pt = new WritableFont(WritableFont.TIMES, 10);
 		times = new WritableCellFormat(times10pt);
 		times.setWrap(true);
-		WritableFont times10ptBoldUnderline = new WritableFont(WritableFont.TIMES, 10, WritableFont.BOLD, false,
+		WritableFont times10ptBoldUnderline = new WritableFont(
+				WritableFont.TIMES, 10, WritableFont.BOLD, false,
 				UnderlineStyle.SINGLE);
 		timesBoldUnderline = new WritableCellFormat(times10ptBoldUnderline);
 		timesBoldUnderline.setWrap(true);
@@ -275,10 +279,8 @@ public class Commander {
 	}
 
 	private void printTheGoodCommits() {
-		synchronized (goodCommits) {
-			for (String commit : goodCommits) {
-				System.out.println(commit);
-			}
+		for (String commit : goodCommits) {
+			System.out.println(commit);
 		}
 	}
 
@@ -323,8 +325,10 @@ public class Commander {
 	private int countMergeCommits() {
 		Process commitProcess;
 		try {
-			commitProcess = Runtime.getRuntime().exec("bash " + "scripts/" + "getNumberOfMergeCommits " + REPO);
-			BufferedReader br1 = new BufferedReader(new InputStreamReader(commitProcess.getInputStream()));
+			commitProcess = Runtime.getRuntime().exec(
+					"bash " + "scripts/" + "getNumberOfMergeCommits " + REPO);
+			BufferedReader br1 = new BufferedReader(new InputStreamReader(
+					commitProcess.getInputStream()));
 			String output = br1.readLine();
 			String lines = output.split(" ")[0];
 			int nrOfLines = Integer.parseInt(lines);
@@ -342,19 +346,24 @@ public class Commander {
 			int progress = 0;
 
 			print("  executing getCommits");
-			Process commitProcess = Runtime.getRuntime().exec("bash " + "scripts/" + "getCommits " + REPO);
-			BufferedReader br1 = new BufferedReader(new InputStreamReader(commitProcess.getInputStream()));
+			Process commitProcess = Runtime.getRuntime().exec(
+					"bash " + "scripts/" + "getCommits " + REPO);
+			BufferedReader br1 = new BufferedReader(new InputStreamReader(
+					commitProcess.getInputStream()));
 
 			String commitSHA;
 			print("  reading commits");
 			while ((commitSHA = br1.readLine()) != null) {
-				print("processing commit " + progress + " of " + nrOfMergeCommits);
+				print("processing commit " + progress + " of "
+						+ nrOfMergeCommits);
 				progress++;
 				boolean isJavaFile = false;
-				Process diffProcess = Runtime.getRuntime()
-						.exec("bash " + "scripts/" + "getDiff " + REPO + " " + commitSHA);
+				Process diffProcess = Runtime.getRuntime().exec(
+						"bash " + "scripts/" + "getDiff " + REPO + " "
+								+ commitSHA);
 
-				BufferedReader br2 = new BufferedReader(new InputStreamReader(diffProcess.getInputStream()));
+				BufferedReader br2 = new BufferedReader(new InputStreamReader(
+						diffProcess.getInputStream()));
 
 				String line;
 				ConcurrentHashSet<String> linesPlus = new ConcurrentHashSet<String>();
@@ -362,7 +371,8 @@ public class Commander {
 				// Get all lines that starts with "-" and "+"
 
 				while ((line = br2.readLine()) != null) {
-					if (line.startsWith("diff --git ") && line.endsWith(".java"))
+					if (line.startsWith("diff --git ")
+							&& line.endsWith(".java"))
 						isJavaFile = true;
 					else if (line.startsWith("diff --git "))
 						isJavaFile = false;
@@ -376,9 +386,11 @@ public class Commander {
 				}
 
 				// Get the commit message
-				Process msgProcess = Runtime.getRuntime()
-						.exec("bash " + "scripts/" + "getCommitMessage " + REPO + " " + commitSHA);
-				br2 = new BufferedReader(new InputStreamReader(msgProcess.getInputStream()));
+				Process msgProcess = Runtime.getRuntime().exec(
+						"bash " + "scripts/" + "getCommitMessage " + REPO + " "
+								+ commitSHA);
+				br2 = new BufferedReader(new InputStreamReader(
+						msgProcess.getInputStream()));
 				StringBuilder sb = new StringBuilder();
 				while ((line = br2.readLine()) != null) {
 					if (sb.length() != 0)
