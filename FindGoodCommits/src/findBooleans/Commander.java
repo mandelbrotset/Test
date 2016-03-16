@@ -28,15 +28,15 @@ import java.lang.Boolean;
 
 public class Commander {
 	private String REPO;
-	private ConcurrentHashMap<String, HashSet<String>> commitToDiffPlus;
-	private ConcurrentHashMap<String, HashSet<String>> commitToDiffMinus;
+	public static ConcurrentHashMap<String, HashSet<String>> commitToDiffPlus;
+	public static ConcurrentHashMap<String, HashSet<String>> commitToDiffMinus;
 	public static ConcurrentHashMap<String, HashSet<String>> commitToBooleanVariables;
-	private ConcurrentHashMap<String, HashSet<String>> commitToSettingBoolean;
-	private ConcurrentHashMap<String, HashSet<String>> commitToIfBoolean;
+	public static ConcurrentHashMap<String, HashSet<String>> commitToSettingBoolean;
+	public static ConcurrentHashMap<String, HashSet<String>> commitToIfBoolean;
 	private ConcurrentHashMap<String, String> commitToCommitMessage;
 	private ConcurrentHashMap<String, Boolean> commitToPullRequest;
-	private HashSet<String> goodCommits;
-	private ArrayList<Commit> commitList;
+	public static HashSet<String> goodCommits;
+	public static ArrayList<Commit> commitList;
 
 	// JXL
 	private WritableCellFormat timesBoldUnderline;
@@ -79,10 +79,24 @@ public class Commander {
 			fvbt.start();
 			fvbf.start();
 			print("finding good booleans");
-			findGoodBooleans(true);
-			findGoodBooleans(false);
+			FindGoodBooleans fgbt = new FindGoodBooleans(true);
+			FindGoodBooleans fgbf = new FindGoodBooleans(false);
+			fgbt.start();
+			fgbf.start();
 			print("finding pull requests");
 			findPullRequests();
+			
+			print("waiting for threads to finish");
+			try {
+				fvbt.join();
+				fvbf.join();
+				fgbt.join();
+				fgbf.join();
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
 			print("creating commits");
 			createCommits();
 			print("creating excel list");
@@ -227,51 +241,6 @@ public class Commander {
 	}
 
 	
-	private void findGoodBooleans(boolean inIfs) {
-		int total = commitToBooleanVariables.size();
-		int progress = 0;
-		for (String commit : commitToBooleanVariables.keySet()) {
-			print("findingGoodBooleans with " + inIfs + ": commit " + progress
-					+ " of " + total);
-			progress++;
-			HashSet<String> variables = commitToBooleanVariables.get(commit);
-			HashSet<String> lines = commitToDiffPlus.get(commit);
-			HashSet<String> goodVariables = new HashSet<String>();
-			for (String variable : variables) {
-				for (String line : lines) {
-					if (inIfs) {
-						if (line.matches(".*(if).*[ ,(){}.&|=]+" + variable + "[ ,(){}.&|=]+.*")) {
-							if(line.contains("//"))
-								line = line.split("//")[0];
-							
-							if(line.contains("/*"))
-								line = line.split("/*")[0];
-							
-							goodCommits.add(commit);
-							goodVariables.add(variable + "|" + line);
-						}
-					} else {
-						String lowerLine = line.toLowerCase();
-						if(lowerLine.matches(".*(([ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+.*(setting|propert|config).*)|(setting|propert|config).*[ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+).*")){
-							if(line.contains("//"))
-								line = line.split("//")[0];
-							
-							if(line.contains("/*"))
-								line = line.split("/*")[0];
-							
-							goodCommits.add(commit);
-							goodVariables.add(variable + "|" + line);
-						}
-					}
-
-				}
-			}
-			if (inIfs)
-				commitToIfBoolean.put(commit, goodVariables);
-			else
-				commitToSettingBoolean.put(commit, goodVariables);
-		}
-	}
 
 	private void findPullRequests() {
 		for (String commit : goodCommits) {
@@ -324,7 +293,7 @@ public class Commander {
 		return true;
 	}
 
-	private void print(String text) {
+	public static void print(String text) {
 		System.out.println(text);
 	}
 
