@@ -93,9 +93,6 @@ public class Commander {
 		FindGoodBooleans fgbf = new FindGoodBooleans(false);
 		fgbt.start();
 		fgbf.start();
-		print("finding pull requests");
-		findPullRequests();
-
 		print("waiting for threads to finish");
 		try {
 			fgbt.join();
@@ -104,7 +101,10 @@ public class Commander {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-
+		
+		print("finding pull requests");
+		findPullRequests();
+		
 		print("creating commits");
 		createCommits();
 		print("creating excel list");
@@ -178,7 +178,6 @@ public class Commander {
 	}
 
 	private void createCommits() {
-
 		for (String commit : goodCommits) {
 			String message = commitToCommitMessage.get(commit);
 			boolean isPullRequest = commitToPullRequest.get(commit);
@@ -227,9 +226,9 @@ public class Commander {
 			addLabel(sheet, 0, i + 1, c.getSha());
 			addLabel(sheet, 1, i + 1, c.getIfVariables());
 			addLabel(sheet, 2, i + 1, c.getSettingVariables());
-			addLabel(sheet, 3, i + 1, c.getMessage());
+			//addLabel(sheet, 3, i + 1, c.getMessage());
 			if (c.isPullRequest())
-				addLabel(sheet, 4, i + 1, "X");
+				addLabel(sheet, 3, i + 1, "X");
 		}
 	}
 
@@ -251,8 +250,8 @@ public class Commander {
 		addCaption(sheet, 0, 0, "Commit SHA");
 		addCaption(sheet, 1, 0, "Variables in ifs");
 		addCaption(sheet, 2, 0, "Variables with setting/property/config");
-		addCaption(sheet, 3, 0, "Message");
-		addCaption(sheet, 4, 0, "Pull Request");
+		//addCaption(sheet, 3, 0, "Message");
+		addCaption(sheet, 3, 0, "Pull Request");
 	}
 
 	private void addLabel(WritableSheet sheet, int column, int row, String s)

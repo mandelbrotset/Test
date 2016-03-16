@@ -61,8 +61,8 @@ public class FindGoodBooleans extends Thread {
 		
 		if(line.contains("/*"))
 			result = result.split("/*")[0];
-		
-		if(!line.matches("[A-Za-z0-9_\\.\\-(){}\\[\\]&|+*/<>\"'!;@=,:?%^#$\\t .]+"))
+		// 椀渀最匀攀
+		if(!result.matches("[A-Za-z0-9_\\.\\-(){}\\[\\]&|+*/<>\"'!;@=,:?%^#$ .]+") || result.contains("delete_open_file"))
 			result = "Signs of fuck";
 		
 		return result;
