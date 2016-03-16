@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import utils.Machine;
 import findBooleans.Commander;
@@ -14,7 +15,7 @@ import getVariantParameter.VariantParameter;
 
 public class Main {
 	
-	private static HashMap<String, String> repos;
+	private static ConcurrentHashMap<String, String> repos;
 	
 	private static final String findBooleans = "findBooleans";
 	private static final String getConflictBooleans = "getConflictBooleans";
@@ -52,7 +53,7 @@ public class Main {
 	}
 	
 	private static void fillRepos() {
-		repos = new HashMap<String, String>();
+		repos = new ConcurrentHashMap<String, String>();
 		File path = new File(machine.getRepoPath());
 		String[] directories = path.list(new FilenameFilter() {
 			  @Override
