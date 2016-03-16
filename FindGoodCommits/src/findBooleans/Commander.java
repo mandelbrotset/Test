@@ -110,25 +110,6 @@ public class Commander {
 				 // TODO Auto-generated catch block
 				 e.printStackTrace(); 
 			 }
-			 
-		
-		/*
-		 * getDiffs(); findVariableBooleans(commitToDiffPlus, true);
-		 * findVariableBooleans(commitToDiffMinus, false);
-		 * findGoodBooleans(true); findGoodBooleans(false); findPullRequests();
-		 * createCommits();
-		 * 
-		 * createExcelList(repo);
-		 * 
-		 * commitToDiffPlus.clear(); commitToDiffMinus.clear();
-		 * commitToCommitMessage.clear(); commitToBooleanVariables.clear();
-		 * commitToPullRequest.clear(); commitToSettingBoolean.clear();
-		 * commitToIfBoolean.clear(); goodCommits.clear(); commitList.clear(); }
-		 * try { workBook.write(); workBook.close(); } catch (IOException e) {
-		 * // TODO Auto-generated catch block e.printStackTrace(); } catch
-		 * (WriteException e) { // TODO Auto-generated catch block
-		 * e.printStackTrace(); }
-		 */
 	}
 
 	private String variablesToString(HashSet<String> variables) {
