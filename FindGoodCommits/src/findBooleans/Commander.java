@@ -30,7 +30,7 @@ public class Commander {
 	private String REPO;
 	private ConcurrentHashMap<String, HashSet<String>> commitToDiffPlus;
 	private ConcurrentHashMap<String, HashSet<String>> commitToDiffMinus;
-	private ConcurrentHashMap<String, HashSet<String>> commitToBooleanVariables;
+	public static ConcurrentHashMap<String, HashSet<String>> commitToBooleanVariables;
 	private ConcurrentHashMap<String, HashSet<String>> commitToSettingBoolean;
 	private ConcurrentHashMap<String, HashSet<String>> commitToIfBoolean;
 	private ConcurrentHashMap<String, String> commitToCommitMessage;
@@ -74,8 +74,10 @@ public class Commander {
 			print("getting diffs");
 			getDiffs();
 			print("finding booleans");
-			findVariableBooleans(commitToDiffPlus, true);
-			findVariableBooleans(commitToDiffMinus, false);
+			FindVariablesBooleans fvbt = new FindVariablesBooleans(commitToDiffPlus, true);
+			FindVariablesBooleans fvbf = new FindVariablesBooleans(commitToDiffMinus, false);
+			fvbt.start();
+			fvbf.start();
 			print("finding good booleans");
 			findGoodBooleans(true);
 			findGoodBooleans(false);
@@ -243,55 +245,7 @@ public class Commander {
 		sheet.addCell(label);
 	}
 
-	private void findVariableBooleans(ConcurrentHashMap<String, HashSet<String>> list,
-			boolean plus) {
-		for (String key : list.keySet()) {
-			HashSet<String> diff = list.get(key);
-
-			String variableName;
-			HashSet<String> variables = new HashSet<String>();
-			for (String line : diff) {
-				if (line.contains("boolean ") && line.endsWith(";")) {
-					int startIndex = line.indexOf("boolean") + 8;
-					String fromBoolean = line.substring(startIndex);
-					fromBoolean = fromBoolean.trim();
-
-					int endIndex = -1;
-					if (fromBoolean.indexOf(" ") != -1)
-						endIndex = fromBoolean.indexOf(" ");
-					else if (fromBoolean.indexOf("=") != -1)
-						endIndex = fromBoolean.indexOf("=");
-					else if (fromBoolean.indexOf(";") != -1)
-						endIndex = fromBoolean.indexOf(";");
-
-					variableName = fromBoolean.substring(0, endIndex);
-					if (!variableName.contains(",")
-							&& !variableName.contains(")")
-							&& isVariable(fromBoolean)) {
-						if (variableName.contains("["))
-							variableName = variableName.replace("[", "");
-						if (variableName.contains("]"))
-							variableName = variableName.replace("]", "");
-						variables.add(variableName);
-					}
-				}
-				if (plus)
-					commitToBooleanVariables.put(key, variables);
-				else {
-					HashSet<String> set = commitToBooleanVariables.get(key);
-					if (set != null) {
-						for (String name : variables)
-							set.remove(name);
-					}
-
-				}
-
-			}
-
-		}
-
-	}
-
+	
 	private void findGoodBooleans(boolean inIfs) {
 		int total = commitToBooleanVariables.size();
 		int progress = 0;
@@ -375,7 +329,7 @@ public class Commander {
 		}
 	}
 
-	private boolean isVariable(String str) {
+	public static boolean isVariable(String str) {
 		if (str.contains("(")) {
 			if (str.contains("=")) {
 				if (str.indexOf("=") < str.indexOf("("))
