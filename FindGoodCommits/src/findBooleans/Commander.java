@@ -30,7 +30,7 @@ import java.lang.Boolean;
 public class Commander {
 	private String REPO;
 
-	private ConcurrentHashMap<String, HashSet<String>> commitToDiffPlus;
+	private HashMap<String, HashSet<String>> commitToDiffPlus;
 	private HashMap<String, HashSet<String>> commitToDiffMinus;
 	private HashMap<String, HashSet<String>> commitToBooleanVariables;
 	private HashMap<String, HashSet<String>> commitToSettingBoolean;
@@ -47,7 +47,7 @@ public class Commander {
 	private WritableWorkbook workBook;
 
 	public Commander(String excelOutputFile) {
-		commitToDiffPlus = new ConcurrentHashMap<String, HashSet<String>>();
+		commitToDiffPlus = new HashMap<String, HashSet<String>>();
 		commitToDiffMinus = new HashMap<String, HashSet<String>>();
 		commitToBooleanVariables = new HashMap<String, HashSet<String>>();
 		commitToCommitMessage = new HashMap<String, String>();
@@ -65,53 +65,53 @@ public class Commander {
 
 	public void createSheets(HashMap<String, String> repos) {
 		int progress = 0;
-		for (String repo : repos.keySet()) {
-			final HashMap<String, String> finalRepos = repos;
-			final String finalRepo = repo;
-			final int finalProgress = progress++;
-			
-			final Thread t = new Thread(new Runnable() {
+		//for (String repo : repos.keySet()) {
+		String repo = "elasticsearch";
+			REPO = repos.get(repo);
+			print("starting with repo: " + repo + ", progress: "
+					+ progress);
+			progress++;
+			REPO = repos.get(repo);
+			// String repo = "elasticsearch";
+			print("getting diffs");
+			getDiffs();
+			print("finding booleans");
+			findVariableBooleans(commitToDiffPlus, true);
+			findVariableBooleans(commitToDiffMinus, false);
+			print("finding good booleans");
+			findGoodBooleans(true);
+			findGoodBooleans(false);
+			print("finding pull requests");
+			findPullRequests();
+			print("creating commits");
+			createCommits();
+			print("creating excel list");
+			createExcelList(repo);
 
-				@Override
-				public void run() {
-					REPO = finalRepos.get(finalRepo);
-					print("starting with repo: " + finalRepo + ", progress: "
-							+ finalProgress);
-					finalProgress++;
-					REPO = finalRepos.get(finalRepo);
-					// String repo = "elasticsearch";
-					print("getting diffs");
-					getDiffs();
-					print("finding booleans");
-					findVariableBooleans(commitToDiffPlus, true);
-					findVariableBooleans(commitToDiffMinus, false);
-					print("finding good booleans");
-					findGoodBooleans(true);
-					findGoodBooleans(false);
-					print("finding pull requests");
-					findPullRequests();
-					print("creating commits");
-					createCommits();
-					print("creating excel list");
-					createExcelList(finalRepo);
+			print("clearing");
+			commitToDiffPlus.clear();
+			commitToDiffMinus.clear();
+			commitToCommitMessage.clear();
+			commitToBooleanVariables.clear();
+			commitToPullRequest.clear();
+			commitToSettingBoolean.clear();
+			commitToIfBoolean.clear();
+			goodCommits.clear();
+			commitList.clear();
+		//}
 
-					writeToWorkbook();
-
-					print("clearing");
-					commitToDiffPlus.clear();
-					commitToDiffMinus.clear();
-					commitToCommitMessage.clear();
-					commitToBooleanVariables.clear();
-					commitToPullRequest.clear();
-					commitToSettingBoolean.clear();
-					commitToIfBoolean.clear();
-					goodCommits.clear();
-					commitList.clear();
-
-				}
-			});
-		}
-
+		try { 
+			workBook.write();
+			workBook.close(); 
+			} catch (IOException e) {
+			 // TODO Auto-generated catch block
+				e.printStackTrace();
+			}catch (WriteException e) {
+				 // TODO Auto-generated catch block
+				 e.printStackTrace(); 
+			 }
+			 
+		
 		/*
 		 * getDiffs(); findVariableBooleans(commitToDiffPlus, true);
 		 * findVariableBooleans(commitToDiffMinus, false);
@@ -295,22 +295,6 @@ public class Commander {
 	}
 
 	private void findGoodBooleans(boolean inIfs) {
-<<<<<<< HEAD
-		for(String commit : commitToBooleanVariables.keySet()) {
-			HashSet<String> variables = commitToBooleanVariables.get(commit);
-			HashSet<String> lines = commitToDiffPlus.get(commit);
-			HashSet<String> goodVariables = new HashSet<String>();
-			for(String variable : variables) {
-				for(String line : lines) {
-					if(inIfs) {
-						if(line.matches(".*(if).*[ ,(){}.&|=]+" + variable + "[ ,(){}.&|=]+.*")) {
-							if(line.contains("//"))
-								line = line.split("//")[0];
-							
-							if(line.contains("/*"))
-								line = line.split("/*")[0];
-							
-=======
 		int total = commitToBooleanVariables.size();
 		int progress = 0;
 		for (String commit : commitToBooleanVariables.keySet()) {
@@ -323,15 +307,18 @@ public class Commander {
 			for (String variable : variables) {
 				for (String line : lines) {
 					if (inIfs) {
-						if (line.matches(".*(if).*[ ,(){}.&|=]+" + variable
-								+ "[ ,(){}.&|=]+.*")) {
->>>>>>> master
+						if (line.matches(".*(if).*[ ,(){}.&|=]+" + variable + "[ ,(){}.&|=]+.*")) {
+							if(line.contains("//"))
+								line = line.split("//")[0];
+							
+							if(line.contains("/*"))
+								line = line.split("/*")[0];
+							
 							goodCommits.add(commit);
 							goodVariables.add(variable + "|" + line);
 						}
 					} else {
 						String lowerLine = line.toLowerCase();
-<<<<<<< HEAD
 						if(lowerLine.matches(".*(([ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+.*(setting|propert|config).*)|(setting|propert|config).*[ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+).*")){
 							if(line.contains("//"))
 								line = line.split("//")[0];
@@ -339,14 +326,6 @@ public class Commander {
 							if(line.contains("/*"))
 								line = line.split("/*")[0];
 							
-=======
-						if (lowerLine
-								.matches(".*(([ ,(){}.]+"
-										+ variable.toLowerCase()
-										+ "[ ,(){}.]+.*(setting|propert|config).*)|(setting|propert|config).*[ ,(){}.]+"
-										+ variable.toLowerCase()
-										+ "[ ,(){}.]+).*")) {
->>>>>>> master
 							goodCommits.add(commit);
 							goodVariables.add(variable + "|" + line);
 						}
