@@ -1,5 +1,4 @@
 package findBooleans;
-
 import java.awt.List;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -13,7 +12,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
-import java.util.concurrent.ConcurrentHashMap;
 
 import jxl.CellType;
 import jxl.CellView;
@@ -29,8 +27,8 @@ import java.lang.Boolean;
 
 public class Commander {
 	private String REPO;
-
-	private ConcurrentHashMap<String, HashSet<String>> commitToDiffPlus;
+	
+	private HashMap<String, HashSet<String>> commitToDiffPlus;
 	private HashMap<String, HashSet<String>> commitToDiffMinus;
 	private HashMap<String, HashSet<String>> commitToBooleanVariables;
 	private HashMap<String, HashSet<String>> commitToSettingBoolean;
@@ -39,15 +37,15 @@ public class Commander {
 	private HashMap<String, Boolean> commitToPullRequest;
 	private HashSet<String> goodCommits;
 	private ArrayList<Commit> commitList;
-
-	// JXL
+	
+	//JXL
 	private WritableCellFormat timesBoldUnderline;
 	private WritableCellFormat times;
 	private int noOfSheets;
 	private WritableWorkbook workBook;
-
+	
 	public Commander(String excelOutputFile) {
-		commitToDiffPlus = new ConcurrentHashMap<String, HashSet<String>>();
+		commitToDiffPlus = new HashMap<String, HashSet<String>>();
 		commitToDiffMinus = new HashMap<String, HashSet<String>>();
 		commitToBooleanVariables = new HashMap<String, HashSet<String>>();
 		commitToCommitMessage = new HashMap<String, String>();
@@ -56,48 +54,34 @@ public class Commander {
 		commitToPullRequest = new HashMap<String, Boolean>();
 		commitToSettingBoolean = new HashMap<String, HashSet<String>>();
 		commitToIfBoolean = new HashMap<String, HashSet<String>>();
-
-		// Jxl
+		
+		//Jxl
 		noOfSheets = 0;
 		createWorkBook(excelOutputFile);
-
+		
 	}
-
+	
 	public void createSheets(HashMap<String, String> repos) {
-		int progress = 0;
-		for (String repo : repos.keySet()) {
+<<<<<<< HEAD
+		for(String repo : repos.keySet()) {
 			final HashMap<String, String> finalRepos = repos;
 			final String finalRepo = repo;
-			final int finalProgress = progress++;
-			
 			final Thread t = new Thread(new Runnable() {
-
+				
 				@Override
 				public void run() {
 					REPO = finalRepos.get(finalRepo);
-					print("starting with repo: " + finalRepo + ", progress: "
-							+ finalProgress);
-					finalProgress++;
-					REPO = finalRepos.get(finalRepo);
-					// String repo = "elasticsearch";
-					print("getting diffs");
 					getDiffs();
-					print("finding booleans");
 					findVariableBooleans(commitToDiffPlus, true);
 					findVariableBooleans(commitToDiffMinus, false);
-					print("finding good booleans");
 					findGoodBooleans(true);
 					findGoodBooleans(false);
-					print("finding pull requests");
 					findPullRequests();
-					print("creating commits");
 					createCommits();
-					print("creating excel list");
+					
 					createExcelList(finalRepo);
-
 					writeToWorkbook();
-
-					print("clearing");
+					
 					commitToDiffPlus.clear();
 					commitToDiffMinus.clear();
 					commitToCommitMessage.clear();
@@ -107,41 +91,73 @@ public class Commander {
 					commitToIfBoolean.clear();
 					goodCommits.clear();
 					commitList.clear();
-
+					
+					
 				}
 			});
 		}
-
-		/*
-		 * getDiffs(); findVariableBooleans(commitToDiffPlus, true);
-		 * findVariableBooleans(commitToDiffMinus, false);
-		 * findGoodBooleans(true); findGoodBooleans(false); findPullRequests();
-		 * createCommits();
-		 * 
-		 * createExcelList(repo);
-		 * 
-		 * commitToDiffPlus.clear(); commitToDiffMinus.clear();
-		 * commitToCommitMessage.clear(); commitToBooleanVariables.clear();
-		 * commitToPullRequest.clear(); commitToSettingBoolean.clear();
-		 * commitToIfBoolean.clear(); goodCommits.clear(); commitList.clear(); }
-		 * try { workBook.write(); workBook.close(); } catch (IOException e) {
-		 * // TODO Auto-generated catch block e.printStackTrace(); } catch
-		 * (WriteException e) { // TODO Auto-generated catch block
-		 * e.printStackTrace(); }
-		 */
+			
+			/*getDiffs();
+=======
+		int total = repos.keySet().size();
+		int progress = 0;
+		for(String repo : repos.keySet()) {
+			print("starting with repo: " + repo + ", progress: " + progress);
+			progress++;
+			REPO = repos.get(repo);
+			//String repo = "elasticsearch";
+			print("getting diffs");
+			getDiffs();
+			print("finding booleans");
+>>>>>>> b3c675f5f8f0f2e0996be99411209c2769ecef8c
+			findVariableBooleans(commitToDiffPlus, true);
+			findVariableBooleans(commitToDiffMinus, false);
+			print("finding good booleans");
+			findGoodBooleans(true);
+			findGoodBooleans(false);
+			print("finding pull requests");
+			findPullRequests();
+			print("creating commits");
+			createCommits();
+			print("creating excel list");
+			createExcelList(repo);
+			
+			print("clearing");
+			commitToDiffPlus.clear();
+			commitToDiffMinus.clear();
+			commitToCommitMessage.clear();
+			commitToBooleanVariables.clear();
+			commitToPullRequest.clear();
+			commitToSettingBoolean.clear();
+			commitToIfBoolean.clear();
+			goodCommits.clear();
+			commitList.clear();
+		}
+		try {
+			print("writing workbook");
+			workBook.write();
+			print("closing workbook");
+			workBook.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (WriteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
 	}
-
+	
 	private String variablesToString(HashSet<String> variables) {
 		StringBuilder sb = new StringBuilder();
-		for (String variable : variables) {
-			if (sb.length() != 0)
+		for(String variable : variables) {
+			if(sb.length() != 0)
 				sb.append(", ");
 			sb.append(variable);
 		}
-
+		
 		return sb.toString();
 	}
-
+	
 	private synchronized void writeToWorkbook() {
 		try {
 			workBook.write();
@@ -153,21 +169,19 @@ public class Commander {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
+		
 	}
-
+	
 	private void createCommits() {
-		for (String commit : goodCommits) {
+		for(String commit : goodCommits) {
 			String message = commitToCommitMessage.get(commit);
 			boolean isPullRequest = commitToPullRequest.get(commit);
-			Commit c = new Commit(commit, message,
-					variablesToString(commitToIfBoolean.get(commit)),
-					variablesToString(commitToSettingBoolean.get(commit)),
-					isPullRequest);
+			Commit c = new Commit(commit, message, variablesToString(commitToIfBoolean.get(commit)),
+					variablesToString(commitToSettingBoolean.get(commit)), isPullRequest);
 			commitList.add(c);
 		}
 	}
-
+	
 	private void createWorkBook(String excelOutputFile) {
 		try {
 			File file = new File(excelOutputFile);
@@ -180,13 +194,13 @@ public class Commander {
 			e.printStackTrace();
 		}
 	}
-
+	
 	private synchronized void createExcelList(String sheetName) {
 		try {
 			workBook.createSheet(sheetName, noOfSheets);
 			WritableSheet excelSheet = workBook.getSheet(noOfSheets);
 			createLabel(excelSheet);
-
+			
 			fillExcelDocument(excelSheet);
 			noOfSheets++;
 		} catch (WriteException e) {
@@ -194,109 +208,104 @@ public class Commander {
 			e.printStackTrace();
 		}
 	}
-
-	private void fillExcelDocument(WritableSheet sheet)
-			throws RowsExceededException, WriteException {
-		for (int i = 0; i < commitList.size(); i++) {
+	
+	private void fillExcelDocument(WritableSheet sheet) throws RowsExceededException, WriteException {
+		for(int i = 0; i < commitList.size(); i++) {
 			Commit c = commitList.get(i);
-			if (c.getSha().length() == 0) {
+			if(c.getSha().length() == 0) {
 				System.out.println("Här ska vi inte va");
 			}
-			addLabel(sheet, 0, i + 1, c.getSha());
-			addLabel(sheet, 1, i + 1, c.getIfVariables());
-			addLabel(sheet, 2, i + 1, c.getSettingVariables());
-			addLabel(sheet, 3, i + 1, c.getMessage());
-			if (c.isPullRequest())
-				addLabel(sheet, 4, i + 1, "X");
+			addLabel(sheet, 0, i+1, c.getSha());
+			addLabel(sheet, 1, i+1, c.getIfVariables());
+			addLabel(sheet, 2, i+1, c.getSettingVariables());
+			addLabel(sheet, 3, i+1, c.getMessage());
+			if(c.isPullRequest())
+				addLabel(sheet, 4, i+1, "X");
 		}
 	}
-
+	
 	private void createLabel(WritableSheet sheet) throws WriteException {
 		WritableFont times10pt = new WritableFont(WritableFont.TIMES, 10);
 		times = new WritableCellFormat(times10pt);
 		times.setWrap(true);
-		WritableFont times10ptBoldUnderline = new WritableFont(
-				WritableFont.TIMES, 10, WritableFont.BOLD, false,
-				UnderlineStyle.SINGLE);
+		WritableFont times10ptBoldUnderline = new WritableFont(WritableFont.TIMES, 10, WritableFont.BOLD, false, UnderlineStyle.SINGLE);
 		timesBoldUnderline = new WritableCellFormat(times10ptBoldUnderline);
 		timesBoldUnderline.setWrap(true);
-
+		
 		CellView cv = new CellView();
 		cv.setFormat(times);
 		cv.setFormat(timesBoldUnderline);
 		cv.setAutosize(true);
-
+		
 		addCaption(sheet, 0, 0, "Commit SHA");
 		addCaption(sheet, 1, 0, "Variables in ifs");
 		addCaption(sheet, 2, 0, "Variables with setting/property/config");
 		addCaption(sheet, 3, 0, "Message");
 		addCaption(sheet, 4, 0, "Pull Request");
 	}
-
-	private void addLabel(WritableSheet sheet, int column, int row, String s)
-			throws RowsExceededException, WriteException {
+	
+	private void addLabel(WritableSheet sheet, int column, int row, String s) throws RowsExceededException, WriteException {
 		Label label = new Label(column, row, s);
 		sheet.addCell(label);
 	}
-
-	private void addCaption(WritableSheet sheet, int column, int row, String s)
-			throws RowsExceededException, WriteException {
+	
+	private void addCaption(WritableSheet sheet, int column, int row, String s) throws RowsExceededException, WriteException {
 		Label label = new Label(column, row, s, timesBoldUnderline);
 		sheet.addCell(label);
 	}
-
-	private void findVariableBooleans(HashMap<String, HashSet<String>> list,
-			boolean plus) {
-		for (String key : list.keySet()) {
+	
+	private void findVariableBooleans(HashMap<String, HashSet<String>> list, boolean plus) {
+		for(String key : list.keySet()) {
 			HashSet<String> diff = list.get(key);
-
+			
 			String variableName;
 			HashSet<String> variables = new HashSet<String>();
-			for (String line : diff) {
-				if (line.contains("boolean ") && line.endsWith(";")) {
+			for(String line : diff) {
+				if(line.contains("boolean ") && line.endsWith(";")) {
 					int startIndex = line.indexOf("boolean") + 8;
 					String fromBoolean = line.substring(startIndex);
 					fromBoolean = fromBoolean.trim();
-
+					
 					int endIndex = -1;
-					if (fromBoolean.indexOf(" ") != -1)
+					if(fromBoolean.indexOf(" ") != -1)
 						endIndex = fromBoolean.indexOf(" ");
-					else if (fromBoolean.indexOf("=") != -1)
+					else if(fromBoolean.indexOf("=") != -1)
 						endIndex = fromBoolean.indexOf("=");
-					else if (fromBoolean.indexOf(";") != -1)
+					else if(fromBoolean.indexOf(";") != -1)
 						endIndex = fromBoolean.indexOf(";");
-
+					
 					variableName = fromBoolean.substring(0, endIndex);
-					if (!variableName.contains(",")
-							&& !variableName.contains(")")
-							&& isVariable(fromBoolean)) {
-						if (variableName.contains("["))
+					if(!variableName.contains(",") && !variableName.contains(")") && isVariable(fromBoolean)) {
+						if(variableName.contains("["))
 							variableName = variableName.replace("[", "");
-						if (variableName.contains("]"))
+						if(variableName.contains("]"))
 							variableName = variableName.replace("]", "");
 						variables.add(variableName);
 					}
 				}
-				if (plus)
+				if(plus)
 					commitToBooleanVariables.put(key, variables);
 				else {
 					HashSet<String> set = commitToBooleanVariables.get(key);
-					if (set != null) {
-						for (String name : variables)
+					if(set != null) {
+						for(String name : variables)
 							set.remove(name);
 					}
-
+						
 				}
-
+					
 			}
-
+			
 		}
-
+		
 	}
-
+	
 	private void findGoodBooleans(boolean inIfs) {
-<<<<<<< HEAD
+		int total = commitToBooleanVariables.size();
+		int progress = 0;
 		for(String commit : commitToBooleanVariables.keySet()) {
+			print("findingGoodBooleans with " + inIfs + ": commit " + progress + " of " + total);
+			progress++;
 			HashSet<String> variables = commitToBooleanVariables.get(commit);
 			HashSet<String> lines = commitToDiffPlus.get(commit);
 			HashSet<String> goodVariables = new HashSet<String>();
@@ -304,125 +313,88 @@ public class Commander {
 				for(String line : lines) {
 					if(inIfs) {
 						if(line.matches(".*(if).*[ ,(){}.&|=]+" + variable + "[ ,(){}.&|=]+.*")) {
-							if(line.contains("//"))
-								line = line.split("//")[0];
-							
-							if(line.contains("/*"))
-								line = line.split("/*")[0];
-							
-=======
-		int total = commitToBooleanVariables.size();
-		int progress = 0;
-		for (String commit : commitToBooleanVariables.keySet()) {
-			print("findingGoodBooleans with " + inIfs + ": commit " + progress
-					+ " of " + total);
-			progress++;
-			HashSet<String> variables = commitToBooleanVariables.get(commit);
-			HashSet<String> lines = commitToDiffPlus.get(commit);
-			HashSet<String> goodVariables = new HashSet<String>();
-			for (String variable : variables) {
-				for (String line : lines) {
-					if (inIfs) {
-						if (line.matches(".*(if).*[ ,(){}.&|=]+" + variable
-								+ "[ ,(){}.&|=]+.*")) {
->>>>>>> master
-							goodCommits.add(commit);
-							goodVariables.add(variable + "|" + line);
-						}
-					} else {
-						String lowerLine = line.toLowerCase();
-<<<<<<< HEAD
-						if(lowerLine.matches(".*(([ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+.*(setting|propert|config).*)|(setting|propert|config).*[ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+).*")){
-							if(line.contains("//"))
-								line = line.split("//")[0];
-							
-							if(line.contains("/*"))
-								line = line.split("/*")[0];
-							
-=======
-						if (lowerLine
-								.matches(".*(([ ,(){}.]+"
-										+ variable.toLowerCase()
-										+ "[ ,(){}.]+.*(setting|propert|config).*)|(setting|propert|config).*[ ,(){}.]+"
-										+ variable.toLowerCase()
-										+ "[ ,(){}.]+).*")) {
->>>>>>> master
 							goodCommits.add(commit);
 							goodVariables.add(variable + "|" + line);
 						}
 					}
-
+					else {
+						String lowerLine = line.toLowerCase();
+						if(lowerLine.matches(".*(([ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+.*(setting|propert|config).*)|(setting|propert|config).*[ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+).*")){
+							goodCommits.add(commit);
+							goodVariables.add(variable + "|" + line);
+						}
+					}
+					
 				}
 			}
-			if (inIfs)
+			if(inIfs)
 				commitToIfBoolean.put(commit, goodVariables);
 			else
 				commitToSettingBoolean.put(commit, goodVariables);
 		}
 	}
-
+	
 	private void findPullRequests() {
-		for (String commit : goodCommits) {
+		for(String commit : goodCommits) {
 			String message = commitToCommitMessage.get(commit);
-
-			if (message.contains("Merge pull request #"))
+			
+			if(message.contains("Merge pull request #"))
 				commitToPullRequest.put(commit, true);
 			else
 				commitToPullRequest.put(commit, false);
 		}
 	}
-
+	
 	private void printTheGoodCommits() {
-		for (String commit : goodCommits) {
+		for(String commit : goodCommits) {
 			System.out.println(commit);
 		}
 	}
-
+	
 	private void printTheVariables() {
-		for (String commit : goodCommits) {
+		for(String commit : goodCommits) {
 			StringBuilder sb = new StringBuilder();
-			for (String str : commitToBooleanVariables.get(commit)) {
-				if (sb.length() != 0)
+			for(String str : commitToBooleanVariables.get(commit)) {
+				if(sb.length() != 0)
 					sb.append(", ");
 				sb.append(str);
 			}
 			System.out.println(sb);
 		}
-
+		
 	}
-
+	
 	private void printTheCommitMessages() {
-		for (String commit : goodCommits) {
+		for(String commit : goodCommits) {
 			String msg = commitToCommitMessage.get(commit);
 			System.out.println(msg);
 		}
 	}
-
+	
 	private boolean isVariable(String str) {
-		if (str.contains("(")) {
-			if (str.contains("=")) {
-				if (str.indexOf("=") < str.indexOf("("))
+		if(str.contains("(")) {
+			if(str.contains("=")) {
+				if(str.indexOf("=") < str.indexOf("("))
 					return true;
 				else
 					return false;
-			} else
+			}
+			else
 				return false;
 		}
-
+		
 		return true;
-	}
-
+	}	
+	
 	private void print(String text) {
 		System.out.println(text);
 	}
-
+	
 	private int countMergeCommits() {
 		Process commitProcess;
 		try {
-			commitProcess = Runtime.getRuntime().exec(
-					"bash " + "scripts/" + "getNumberOfMergeCommits " + REPO);
-			BufferedReader br1 = new BufferedReader(new InputStreamReader(
-					commitProcess.getInputStream()));
+			commitProcess = Runtime.getRuntime().exec("bash " + "scripts/" + "getNumberOfMergeCommits " + REPO);
+			BufferedReader br1 = new BufferedReader(new InputStreamReader(commitProcess.getInputStream()));
 			String output = br1.readLine();
 			String lines = output.split(" ")[0];
 			int nrOfLines = Integer.parseInt(lines);
@@ -432,78 +404,66 @@ public class Commander {
 		}
 		return -1;
 	}
-
+	
 	private void getDiffs() {
 		print("  begin");
 		try {
 			int nrOfMergeCommits = countMergeCommits();
 			int progress = 0;
-
+			
 			print("  executing getCommits");
-			Process commitProcess = Runtime.getRuntime().exec(
-					"bash " + "scripts/" + "getCommits " + REPO);
-			BufferedReader br1 = new BufferedReader(new InputStreamReader(
-					commitProcess.getInputStream()));
-
+			Process commitProcess = Runtime.getRuntime().exec("bash " + "scripts/" + "getCommits " + REPO);
+			BufferedReader br1 = new BufferedReader(new InputStreamReader(commitProcess.getInputStream()));
 			String commitSHA;
 			print("  reading commits");
-			while ((commitSHA = br1.readLine()) != null) {
-				print("processing commit " + progress + " of "
-						+ nrOfMergeCommits);
+			while((commitSHA = br1.readLine()) != null) {
+				print("processing commit " + progress + " of " + nrOfMergeCommits);
 				progress++;
 				boolean isJavaFile = false;
-				Process diffProcess = Runtime.getRuntime().exec(
-						"bash " + "scripts/" + "getDiff " + REPO + " "
-								+ commitSHA);
-
-				BufferedReader br2 = new BufferedReader(new InputStreamReader(
-						diffProcess.getInputStream()));
-
+				Process diffProcess = Runtime.getRuntime().exec("bash " + "scripts/" + "getDiff " + REPO + " " + commitSHA);
+				
+				BufferedReader br2 = new BufferedReader(new InputStreamReader(diffProcess.getInputStream()));
+				
 				String line;
 				HashSet<String> linesPlus = new HashSet<String>();
 				HashSet<String> linesMinus = new HashSet<String>();
-				// Get all lines that starts with "-" and "+"
-
-				while ((line = br2.readLine()) != null) {
-					if (line.startsWith("diff --git ")
-							&& line.endsWith(".java"))
+				//Get all lines that starts with "-" and "+"
+				
+				while((line = br2.readLine()) != null) {
+					if(line.startsWith("diff --git ") && line.endsWith(".java"))
 						isJavaFile = true;
-					else if (line.startsWith("diff --git "))
+					else if(line.startsWith("diff --git "))
 						isJavaFile = false;
-
-					if (isJavaFile) {
-						if (line.startsWith("+"))
+							
+					if(isJavaFile) {
+						if(line.startsWith("+"))
 							linesPlus.add(line);
-						else if (line.startsWith("-"))
+						else if(line.startsWith("-"))
 							linesMinus.add(line);
 					}
 				}
-
-				// Get the commit message
-				Process msgProcess = Runtime.getRuntime().exec(
-						"bash " + "scripts/" + "getCommitMessage " + REPO + " "
-								+ commitSHA);
-				br2 = new BufferedReader(new InputStreamReader(
-						msgProcess.getInputStream()));
+				//Get the commit message
+				Process msgProcess = Runtime.getRuntime().exec("bash " + "scripts/" + "getCommitMessage " + REPO + " " + commitSHA);
+				br2 = new BufferedReader(new InputStreamReader(msgProcess.getInputStream()));
 				StringBuilder sb = new StringBuilder();
-				while ((line = br2.readLine()) != null) {
-					if (sb.length() != 0)
+				while((line = br2.readLine()) != null) {
+					if(sb.length() != 0)
 						sb.append("\n");
 					sb.append(line);
 				}
-
-				synchronized (this) {
+				
+				synchronized(this) {
 					commitToDiffPlus.put(commitSHA, linesPlus);
 					commitToDiffMinus.put(commitSHA, linesMinus);
 					commitToCommitMessage.put(commitSHA, sb.toString());
 				}
-
+				
 			}
-
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-
+	
 }
