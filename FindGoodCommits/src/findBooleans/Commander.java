@@ -10,7 +10,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,14 +28,13 @@ import java.lang.Boolean;
 
 public class Commander {
 	private String REPO;
-
-	private HashMap<String, HashSet<String>> commitToDiffPlus;
-	private HashMap<String, HashSet<String>> commitToDiffMinus;
-	private HashMap<String, HashSet<String>> commitToBooleanVariables;
-	private HashMap<String, HashSet<String>> commitToSettingBoolean;
-	private HashMap<String, HashSet<String>> commitToIfBoolean;
-	private HashMap<String, String> commitToCommitMessage;
-	private HashMap<String, Boolean> commitToPullRequest;
+	private ConcurrentHashMap<String, HashSet<String>> commitToDiffPlus;
+	private ConcurrentHashMap<String, HashSet<String>> commitToDiffMinus;
+	public static ConcurrentHashMap<String, HashSet<String>> commitToBooleanVariables;
+	private ConcurrentHashMap<String, HashSet<String>> commitToSettingBoolean;
+	private ConcurrentHashMap<String, HashSet<String>> commitToIfBoolean;
+	private ConcurrentHashMap<String, String> commitToCommitMessage;
+	private ConcurrentHashMap<String, Boolean> commitToPullRequest;
 	private HashSet<String> goodCommits;
 	private ArrayList<Commit> commitList;
 
@@ -47,15 +45,15 @@ public class Commander {
 	private WritableWorkbook workBook;
 
 	public Commander(String excelOutputFile) {
-		commitToDiffPlus = new HashMap<String, HashSet<String>>();
-		commitToDiffMinus = new HashMap<String, HashSet<String>>();
-		commitToBooleanVariables = new HashMap<String, HashSet<String>>();
-		commitToCommitMessage = new HashMap<String, String>();
+		commitToDiffPlus = new ConcurrentHashMap<String, HashSet<String>>();
+		commitToDiffMinus = new ConcurrentHashMap<String, HashSet<String>>();
+		commitToBooleanVariables = new ConcurrentHashMap<String, HashSet<String>>();
+		commitToCommitMessage = new ConcurrentHashMap<String, String>();
 		goodCommits = new HashSet<String>();
 		commitList = new ArrayList<Commit>();
-		commitToPullRequest = new HashMap<String, Boolean>();
-		commitToSettingBoolean = new HashMap<String, HashSet<String>>();
-		commitToIfBoolean = new HashMap<String, HashSet<String>>();
+		commitToPullRequest = new ConcurrentHashMap<String, Boolean>();
+		commitToSettingBoolean = new ConcurrentHashMap<String, HashSet<String>>();
+		commitToIfBoolean = new ConcurrentHashMap<String, HashSet<String>>();
 
 		// Jxl
 		noOfSheets = 0;
@@ -63,7 +61,7 @@ public class Commander {
 
 	}
 
-	public void createSheets(HashMap<String, String> repos) {
+	public void createSheets(ConcurrentHashMap<String, String> repos) {
 		int progress = 0;
 		//for (String repo : repos.keySet()) {
 		String repo = "elasticsearch";
@@ -76,8 +74,10 @@ public class Commander {
 			print("getting diffs");
 			getDiffs();
 			print("finding booleans");
-			findVariableBooleans(commitToDiffPlus, true);
-			findVariableBooleans(commitToDiffMinus, false);
+			FindVariablesBooleans fvbt = new FindVariablesBooleans(commitToDiffPlus, true);
+			FindVariablesBooleans fvbf = new FindVariablesBooleans(commitToDiffMinus, false);
+			fvbt.start();
+			fvbf.start();
 			print("finding good booleans");
 			findGoodBooleans(true);
 			findGoodBooleans(false);
@@ -226,55 +226,7 @@ public class Commander {
 		sheet.addCell(label);
 	}
 
-	private void findVariableBooleans(HashMap<String, HashSet<String>> list,
-			boolean plus) {
-		for (String key : list.keySet()) {
-			HashSet<String> diff = list.get(key);
-
-			String variableName;
-			HashSet<String> variables = new HashSet<String>();
-			for (String line : diff) {
-				if (line.contains("boolean ") && line.endsWith(";")) {
-					int startIndex = line.indexOf("boolean") + 8;
-					String fromBoolean = line.substring(startIndex);
-					fromBoolean = fromBoolean.trim();
-
-					int endIndex = -1;
-					if (fromBoolean.indexOf(" ") != -1)
-						endIndex = fromBoolean.indexOf(" ");
-					else if (fromBoolean.indexOf("=") != -1)
-						endIndex = fromBoolean.indexOf("=");
-					else if (fromBoolean.indexOf(";") != -1)
-						endIndex = fromBoolean.indexOf(";");
-
-					variableName = fromBoolean.substring(0, endIndex);
-					if (!variableName.contains(",")
-							&& !variableName.contains(")")
-							&& isVariable(fromBoolean)) {
-						if (variableName.contains("["))
-							variableName = variableName.replace("[", "");
-						if (variableName.contains("]"))
-							variableName = variableName.replace("]", "");
-						variables.add(variableName);
-					}
-				}
-				if (plus)
-					commitToBooleanVariables.put(key, variables);
-				else {
-					HashSet<String> set = commitToBooleanVariables.get(key);
-					if (set != null) {
-						for (String name : variables)
-							set.remove(name);
-					}
-
-				}
-
-			}
-
-		}
-
-	}
-
+	
 	private void findGoodBooleans(boolean inIfs) {
 		int total = commitToBooleanVariables.size();
 		int progress = 0;
@@ -358,7 +310,7 @@ public class Commander {
 		}
 	}
 
-	private boolean isVariable(String str) {
+	public static boolean isVariable(String str) {
 		if (str.contains("(")) {
 			if (str.contains("=")) {
 				if (str.indexOf("=") < str.indexOf("("))
