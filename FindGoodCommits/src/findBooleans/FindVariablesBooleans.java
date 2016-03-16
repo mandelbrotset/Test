@@ -3,12 +3,14 @@ package findBooleans;
 import java.util.HashSet;
 import java.util.concurrent.ConcurrentHashMap;
 
+import utils.ConcurrentHashSet;
+
 public class FindVariablesBooleans extends Thread {
 
-	private ConcurrentHashMap<String, HashSet<String>> list;
+	private ConcurrentHashMap<String, ConcurrentHashSet<String>> list;
 	private boolean plus;
 	
-	public FindVariablesBooleans(ConcurrentHashMap<String, HashSet<String>> list, boolean plus) {
+	public FindVariablesBooleans(ConcurrentHashMap<String, ConcurrentHashSet<String>> list, boolean plus) {
 		this.list = list;
 		this.plus = plus;
 	}
@@ -16,10 +18,10 @@ public class FindVariablesBooleans extends Thread {
 	private void findVariableBooleans() {
 		Commander.print("finding boolean variables in " + list.keySet().size());
 		for (String key : list.keySet()) {
-			HashSet<String> diff = list.get(key);
+			ConcurrentHashSet<String> diff = list.get(key);
 
 			String variableName;
-			HashSet<String> variables = new HashSet<String>();
+			ConcurrentHashSet<String> variables = new ConcurrentHashSet<String>();
 			for (String line : diff) {
 				if (line.contains("boolean ") && line.endsWith(";")) {
 					int startIndex = line.indexOf("boolean") + 8;

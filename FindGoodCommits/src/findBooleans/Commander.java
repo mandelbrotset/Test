@@ -45,15 +45,15 @@ public class Commander {
 	private WritableWorkbook workBook;
 
 	public Commander(String excelOutputFile) {
-		commitToDiffPlus = new ConcurrentHashMap<String, HashSet<String>>();
-		commitToDiffMinus = new ConcurrentHashMap<String, HashSet<String>>();
-		commitToBooleanVariables = new ConcurrentHashMap<String, HashSet<String>>();
+		commitToDiffPlus = new ConcurrentHashMap<String, ConcurrentHashSet<String>>();
+		commitToDiffMinus = new ConcurrentHashMap<String, ConcurrentHashSet<String>>();
+		commitToBooleanVariables = new ConcurrentHashMap<String, ConcurrentHashSet<String>>();
 		commitToCommitMessage = new ConcurrentHashMap<String, String>();
-		goodCommits = new HashSet<String>();
+		goodCommits = new ConcurrentHashSet<String>();
 		commitList = new ArrayList<Commit>();
 		commitToPullRequest = new ConcurrentHashMap<String, Boolean>();
-		commitToSettingBoolean = new ConcurrentHashMap<String, HashSet<String>>();
-		commitToIfBoolean = new ConcurrentHashMap<String, HashSet<String>>();
+		commitToSettingBoolean = new ConcurrentHashMap<String, ConcurrentHashSet<String>>();
+		commitToIfBoolean = new ConcurrentHashMap<String, ConcurrentHashSet<String>>();
 
 		// Jxl
 		noOfSheets = 0;
@@ -77,6 +77,13 @@ public class Commander {
 		FindVariablesBooleans fvbf = new FindVariablesBooleans(commitToDiffMinus, false);
 		fvbt.start();
 		fvbf.start();
+		try {
+			fvbt.join();
+			fvbf.join();
+		} catch (InterruptedException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
 		print("finding good booleans");
 		FindGoodBooleans fgbt = new FindGoodBooleans(true);
 		FindGoodBooleans fgbf = new FindGoodBooleans(false);
@@ -87,8 +94,6 @@ public class Commander {
 
 		print("waiting for threads to finish");
 		try {
-			fvbt.join();
-			fvbf.join();
 			fgbt.join();
 			fgbf.join();
 		} catch (InterruptedException e1) {
@@ -109,12 +114,8 @@ public class Commander {
 		commitToPullRequest.clear();
 		commitToSettingBoolean.clear();
 		commitToIfBoolean.clear();
-		synchronized (goodCommits) {
-			goodCommits.clear();
-		}
-		synchronized (commitList) {
-			commitList.clear();
-		}
+		goodCommits.clear();
+		commitList.clear();
 		// }
 
 		try {
@@ -173,15 +174,14 @@ public class Commander {
 	}
 
 	private void createCommits() {
-		synchronized (goodCommits) {
-			for (String commit : goodCommits) {
-				String message = commitToCommitMessage.get(commit);
-				boolean isPullRequest = commitToPullRequest.get(commit);
-				Commit c = new Commit(commit, message, variablesToString(commitToIfBoolean.get(commit)),
-						variablesToString(commitToSettingBoolean.get(commit)), isPullRequest);
-				synchronized (commitList) {
-					commitList.add(c);
-				}
+
+		for (String commit : goodCommits) {
+			String message = commitToCommitMessage.get(commit);
+			boolean isPullRequest = commitToPullRequest.get(commit);
+			Commit c = new Commit(commit, message, variablesToString(commitToIfBoolean.get(commit)),
+					variablesToString(commitToSettingBoolean.get(commit)), isPullRequest);
+			synchronized (commitList) {
+				commitList.add(c);
 			}
 		}
 	}
@@ -264,15 +264,13 @@ public class Commander {
 	}
 
 	private void findPullRequests() {
-		synchronized (goodCommits) {
-			for (String commit : goodCommits) {
-				String message = commitToCommitMessage.get(commit);
+		for (String commit : goodCommits) {
+			String message = commitToCommitMessage.get(commit);
 
-				if (message.contains("Merge pull request #"))
-					commitToPullRequest.put(commit, true);
-				else
-					commitToPullRequest.put(commit, false);
-			}
+			if (message.contains("Merge pull request #"))
+				commitToPullRequest.put(commit, true);
+			else
+				commitToPullRequest.put(commit, false);
 		}
 	}
 
@@ -285,25 +283,22 @@ public class Commander {
 	}
 
 	private void printTheVariables() {
-		synchronized (goodCommits) {
-			for (String commit : goodCommits) {
-				StringBuilder sb = new StringBuilder();
-				for (String str : commitToBooleanVariables.get(commit)) {
-					if (sb.length() != 0)
-						sb.append(", ");
-					sb.append(str);
-				}
-				System.out.println(sb);
+		for (String commit : goodCommits) {
+			StringBuilder sb = new StringBuilder();
+			for (String str : commitToBooleanVariables.get(commit)) {
+				if (sb.length() != 0)
+					sb.append(", ");
+				sb.append(str);
 			}
+			System.out.println(sb);
 		}
+
 	}
 
 	private void printTheCommitMessages() {
-		synchronized (goodCommits) {
-			for (String commit : goodCommits) {
-				String msg = commitToCommitMessage.get(commit);
-				System.out.println(msg);
-			}
+		for (String commit : goodCommits) {
+			String msg = commitToCommitMessage.get(commit);
+			System.out.println(msg);
 		}
 	}
 
@@ -362,8 +357,8 @@ public class Commander {
 				BufferedReader br2 = new BufferedReader(new InputStreamReader(diffProcess.getInputStream()));
 
 				String line;
-				HashSet<String> linesPlus = new HashSet<String>();
-				HashSet<String> linesMinus = new HashSet<String>();
+				ConcurrentHashSet<String> linesPlus = new ConcurrentHashSet<String>();
+				ConcurrentHashSet<String> linesMinus = new ConcurrentHashSet<String>();
 				// Get all lines that starts with "-" and "+"
 
 				while ((line = br2.readLine()) != null) {
@@ -391,11 +386,9 @@ public class Commander {
 					sb.append(line);
 				}
 
-				synchronized (this) {
-					commitToDiffPlus.put(commitSHA, linesPlus);
-					commitToDiffMinus.put(commitSHA, linesMinus);
-					commitToCommitMessage.put(commitSHA, sb.toString());
-				}
+				commitToDiffPlus.put(commitSHA, linesPlus);
+				commitToDiffMinus.put(commitSHA, linesMinus);
+				commitToCommitMessage.put(commitSHA, sb.toString());
 
 			}
 

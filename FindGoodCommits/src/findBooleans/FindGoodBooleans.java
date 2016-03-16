@@ -36,9 +36,9 @@ public class FindGoodBooleans extends Thread {
 							
 							//if(!line.matches("^[A-Za-z0-9_\\.\\-(){}[] .]+$"))
 								//line = "Signs of fuck";
-							synchronized (Commander.goodCommits) {
+						
 								Commander.goodCommits.add(commit);
-							}
+					
 							goodVariables.add(variable + "|" + line);
 						}
 					} else {
