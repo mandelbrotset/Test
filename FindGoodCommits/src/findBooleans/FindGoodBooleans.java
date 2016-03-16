@@ -35,6 +35,9 @@ public class FindGoodBooleans extends Thread {
 							if(line.contains("/*"))
 								line = line.split("/*")[0];
 							
+							if(!line.matches("^[A-Za-z0-9_\\.\\-(){}[] .]+$"))
+								line = "Signs of fuck";
+							
 							Commander.goodCommits.add(commit);
 							goodVariables.add(variable + "|" + line);
 						}
@@ -46,6 +49,9 @@ public class FindGoodBooleans extends Thread {
 							
 							if(line.contains("/*"))
 								line = line.split("/*")[0];
+							
+							if(!line.matches("^[A-Za-z0-9_\\.\\-(){}[] .]+$"))
+								line = "Signs of fuck";
 							
 							Commander.goodCommits.add(commit);
 							goodVariables.add(variable + "|" + line);
