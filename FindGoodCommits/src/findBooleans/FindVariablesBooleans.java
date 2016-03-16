@@ -14,6 +14,7 @@ public class FindVariablesBooleans extends Thread {
 	}
 	
 	private void findVariableBooleans() {
+		Commander.print("finding boolean variables in " + list.keySet().size());
 		for (String key : list.keySet()) {
 			HashSet<String> diff = list.get(key);
 

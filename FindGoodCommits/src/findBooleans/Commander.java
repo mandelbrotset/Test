@@ -49,9 +49,7 @@ public class Commander {
 		commitToDiffMinus = new ConcurrentHashMap<String, HashSet<String>>();
 		commitToBooleanVariables = new ConcurrentHashMap<String, HashSet<String>>();
 		commitToCommitMessage = new ConcurrentHashMap<String, String>();
-		synchronized (goodCommits) {
-			goodCommits = new HashSet<String>();
-		}
+		goodCommits = new HashSet<String>();
 		commitList = new ArrayList<Commit>();
 		commitToPullRequest = new ConcurrentHashMap<String, Boolean>();
 		commitToSettingBoolean = new ConcurrentHashMap<String, HashSet<String>>();
