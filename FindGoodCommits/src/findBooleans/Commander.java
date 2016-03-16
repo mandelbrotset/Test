@@ -85,6 +85,18 @@ public class Commander {
 			fgbf.start();
 			print("finding pull requests");
 			findPullRequests();
+			
+			print("waiting for threads to finish");
+			try {
+				fvbt.join();
+				fvbf.join();
+				fgbt.join();
+				fgbf.join();
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
 			print("creating commits");
 			createCommits();
 			print("creating excel list");
