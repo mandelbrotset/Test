@@ -31,7 +31,7 @@ public class FindGoodBooleans extends Thread {
 			ConcurrentHashSet<String> goodVariables = new ConcurrentHashSet<String>();
 			for (String line : lines) {
 				if (line.contains("getAsBoolean")) {
-					String parameterName = line.split("getAsBoolean(")[1];
+					String parameterName = line.split("getAsBoolean(")[1].split(",")[0];
 					Commander.goodCommits.add(commit);
 					goodVariables.add(parameterName + "|" + line);
 				}

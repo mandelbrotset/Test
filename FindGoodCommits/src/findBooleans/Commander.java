@@ -232,6 +232,7 @@ public class Commander {
 			if (c.getSha().length() == 0) {
 				System.out.println("Här ska vi inte va");
 			}
+			System.out.println(c.getSettingVariables());
 			addLabel(sheet, 0, i + 1, c.getSha());
 			// addLabel(sheet, 1, i + 1, c.getIfVariables());
 			addLabel(sheet, 1, i + 1, c.getSettingVariables());
