@@ -36,12 +36,13 @@ public class FindGoodBooleans extends Thread {
 							goodVariables.add(variable + "|" + line);
 						}
 					} else {
-						String lowerLine = line.toLowerCase();
-						if(lowerLine.matches(".*(([ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+.*(setting|propert|config).*)|(setting|propert|config).*[ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+).*")){
-							line = removeIllegalCharacters(line);
-							
+						//String lowerLine = line.toLowerCase();
+						//setting|propert|config
+						//".*(([ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+.*(getAsBoolean).*)|(getAsBoolean).*[ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+).*"
+						if(line.contains("getAsBoolean")){
+							String parameterName = line.split("getAsBoolean(")[1].split(",")[0];
 							Commander.goodCommits.add(commit);
-							goodVariables.add(variable + "|" + line);
+							goodVariables.add(parameterName + "|" + line);
 						}
 					}
 
@@ -62,8 +63,11 @@ public class FindGoodBooleans extends Thread {
 		if(line.contains("/*"))
 			result = result.split("/*")[0];
 		// 椀渀最匀攀
-		if(!result.matches("[A-Za-z0-9_\\.\\-(){}\\[\\]&|+*/<>\"'!;@=,:?%^#$ .]+") || result.contains("delete_open_file"))
+		if(!result.matches("[A-Za-z0-9_\\.\\-(){}\\[\\]&|+*/<>\"'!;@=,:?%^#$\\\\ .]+") || result.contains("delete_open_file")) {
+			System.out.println(line);
 			result = "Signs of fuck";
+		}
+			
 		
 		return result;
 	}

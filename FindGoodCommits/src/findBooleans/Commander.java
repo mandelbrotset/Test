@@ -156,7 +156,7 @@ public class Commander {
 		StringBuilder sb = new StringBuilder();
 		for (String variable : variables) {
 			if (sb.length() != 0)
-				sb.append(", ");
+				sb.append("\n");
 			sb.append(variable);
 		}
 
@@ -226,9 +226,9 @@ public class Commander {
 			addLabel(sheet, 0, i + 1, c.getSha());
 			addLabel(sheet, 1, i + 1, c.getIfVariables());
 			addLabel(sheet, 2, i + 1, c.getSettingVariables());
-			//addLabel(sheet, 3, i + 1, c.getMessage());
+			addLabel(sheet, 3, i + 1, c.getMessage());
 			if (c.isPullRequest())
-				addLabel(sheet, 3, i + 1, "X");
+				addLabel(sheet, 4, i + 1, "X");
 		}
 	}
 
@@ -250,8 +250,8 @@ public class Commander {
 		addCaption(sheet, 0, 0, "Commit SHA");
 		addCaption(sheet, 1, 0, "Variables in ifs");
 		addCaption(sheet, 2, 0, "Variables with setting/property/config");
-		//addCaption(sheet, 3, 0, "Message");
-		addCaption(sheet, 3, 0, "Pull Request");
+		addCaption(sheet, 3, 0, "Message");
+		addCaption(sheet, 4, 0, "Pull Request");
 	}
 
 	private void addLabel(WritableSheet sheet, int column, int row, String s)
