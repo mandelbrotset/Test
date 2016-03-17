@@ -27,6 +27,7 @@ import jxl.write.biff.RowsExceededException;
 import java.lang.Boolean;
 
 import utils.ConcurrentHashSet;
+import utils.Utils;
 
 public class Commander {
 	private String REPO;
@@ -64,10 +65,17 @@ public class Commander {
 	}
 
 	public void createSheets(ConcurrentHashMap<String, String> repos) {
+		
 		int progress = 0;
 		// for (String repo : repos.keySet()) {
 		String repo = "elasticsearch";
 		REPO = repos.get(repo);
+		try {
+			Utils.readScriptOutput("gitClean " + REPO).readLine();
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
 		print("starting with repo: " + repo + ", progress: " + progress);
 		progress++;
 		REPO = repos.get(repo);
