@@ -40,7 +40,7 @@ public class FindGoodBooleans extends Thread {
 						//setting|propert|config
 						//".*(([ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+.*(getAsBoolean).*)|(getAsBoolean).*[ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+).*"
 						if(line.contains("getAsBoolean")){
-							String parameterName = line.split("getAsBoolean(")[1].split(",")[0];
+							String parameterName = line.split("getAsBoolean(")[1];
 							Commander.goodCommits.add(commit);
 							goodVariables.add(parameterName + "|" + line);
 						}
