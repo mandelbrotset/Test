@@ -75,27 +75,27 @@ public class Commander {
 		print("getting diffs");
 		getDiffs();
 		print("finding booleans");
-		FindVariablesBooleans fvbt = new FindVariablesBooleans(
+		/*FindVariablesBooleans fvbt = new FindVariablesBooleans(
 				commitToDiffPlus, true);
 		FindVariablesBooleans fvbf = new FindVariablesBooleans(
-				commitToDiffMinus, false);
-		fvbt.start();
-		fvbf.start();
-		try {
-			fvbt.join();
+				commitToDiffMinus, false);*/
+		//fvbt.start();
+		//fvbf.start();
+		/*try {
+			//fvbt.join();
 			fvbf.join();
 		} catch (InterruptedException e2) {
 			// TODO Auto-generated catch block
 			e2.printStackTrace();
-		}
+		}*/
 		print("finding good booleans");
-		FindGoodBooleans fgbt = new FindGoodBooleans(true);
+		//FindGoodBooleans fgbt = new FindGoodBooleans(true);
 		FindGoodBooleans fgbf = new FindGoodBooleans(false);
-		fgbt.start();
+		//fgbt.start();
 		fgbf.start();
 		print("waiting for threads to finish");
 		try {
-			fgbt.join();
+			//fgbt.join();
 			fgbf.join();
 		} catch (InterruptedException e1) {
 			// TODO Auto-generated catch block
@@ -186,7 +186,8 @@ public class Commander {
 			String message = commitToCommitMessage.get(commit);
 			boolean isPullRequest = commitToPullRequest.get(commit);
 			Commit c = new Commit(commit, message,
-					variablesToString(commitToIfBoolean.get(commit)),
+					//variablesToString(commitToIfBoolean.get(commit)),
+					"",
 					variablesToString(commitToSettingBoolean.get(commit)),
 					isPullRequest);
 			commitList.add(c);

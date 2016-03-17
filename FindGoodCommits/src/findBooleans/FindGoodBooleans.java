@@ -21,31 +21,19 @@ public class FindGoodBooleans extends Thread {
 		int total = Commander.commitToBooleanVariables.size();
 		int progress = 0;
 		for (String commit : Commander.commitToBooleanVariables.keySet()) {
-			Commander.print("findingGoodBooleans with " + inIfs + ": commit " + progress + " of " + total);
+			Commander.print("findingGoodBooleans with " + inIfs + ": commit "
+					+ progress + " of " + total);
 			progress++;
-			ConcurrentHashSet<String> variables = Commander.commitToBooleanVariables.get(commit);
-			ConcurrentHashSet<String> lines = Commander.commitToDiffPlus.get(commit);
+			ConcurrentHashSet<String> variables = Commander.commitToBooleanVariables
+					.get(commit);
+			ConcurrentHashSet<String> lines = Commander.commitToDiffPlus
+					.get(commit);
 			ConcurrentHashSet<String> goodVariables = new ConcurrentHashSet<String>();
-			for (String variable : variables) {
-				for (String line : lines) {
-					if (inIfs) {
-						if (line.matches(".*(if).*[ ,(){}.&|=]+" + variable + "[ ,(){}.&|=]+.*")) {
-							line = removeIllegalCharacters(line);
-						
-							Commander.goodCommits.add(commit);
-							goodVariables.add(variable + "|" + line);
-						}
-					} else {
-						//String lowerLine = line.toLowerCase();
-						//setting|propert|config
-						//".*(([ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+.*(getAsBoolean).*)|(getAsBoolean).*[ ,(){}.]+" + variable.toLowerCase() + "[ ,(){}.]+).*"
-						if(line.contains("getAsBoolean")){
-							String parameterName = line.split("getAsBoolean(")[1];
-							Commander.goodCommits.add(commit);
-							goodVariables.add(parameterName + "|" + line);
-						}
-					}
-
+			for (String line : lines) {
+				if (line.contains("getAsBoolean")) {
+					String parameterName = line.split("getAsBoolean(")[1];
+					Commander.goodCommits.add(commit);
+					goodVariables.add(parameterName + "|" + line);
 				}
 			}
 			if (inIfs)
@@ -54,21 +42,22 @@ public class FindGoodBooleans extends Thread {
 				Commander.commitToSettingBoolean.put(commit, goodVariables);
 		}
 	}
-	
+
 	private String removeIllegalCharacters(String line) {
 		String result = line;
-		if(line.contains("//"))
+		if (line.contains("//"))
 			result = result.split("//")[0];
-		
-		if(line.contains("/*"))
+
+		if (line.contains("/*"))
 			result = result.split("/*")[0];
 		// 椀渀最匀攀
-		if(!result.matches("[A-Za-z0-9_\\.\\-(){}\\[\\]&|+*/<>\"'!;@=,:?%^#$\\\\ .]+") || result.contains("delete_open_file")) {
+		if (!result
+				.matches("[A-Za-z0-9_\\.\\-(){}\\[\\]&|+*/<>\"'!;@=,:?%^#$\\\\ .]+")
+				|| result.contains("delete_open_file")) {
 			System.out.println(line);
 			result = "Signs of fuck";
 		}
-			
-		
+
 		return result;
 	}
 
