@@ -16,7 +16,8 @@ public class Machine {
 			repoPath = "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/";
 			conflictMessage = "KONFLIKT (innehåll): Sammanslagningskonflikt i ";			
 		} else if(new File("/home/isak/").exists()) {
-			
+			repoPath = "/home/isak/Documents/Master/projects";
+			conflictMessage = "CONFLICT (content): Merge conflict in ";
 		}
 	}
 
