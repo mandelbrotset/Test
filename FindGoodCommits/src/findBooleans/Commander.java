@@ -154,6 +154,10 @@ public class Commander {
 
 	private String variablesToString(HashSet<String> variables) {
 		StringBuilder sb = new StringBuilder();
+		if (variables == null) {
+			print("fisgris");
+			return "puttepung";
+		}
 		for (String variable : variables) {
 			if (sb.length() != 0)
 				sb.append("\n");
