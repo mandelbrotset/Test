@@ -75,36 +75,34 @@ public class Commander {
 		print("getting diffs");
 		getDiffs();
 		print("finding booleans");
-		/*FindVariablesBooleans fvbt = new FindVariablesBooleans(
-				commitToDiffPlus, true);
-		FindVariablesBooleans fvbf = new FindVariablesBooleans(
-				commitToDiffMinus, false);*/
-		//fvbt.start();
-		//fvbf.start();
-		/*try {
-			//fvbt.join();
-			fvbf.join();
-		} catch (InterruptedException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
-		}*/
+		/*
+		 * FindVariablesBooleans fvbt = new FindVariablesBooleans(
+		 * commitToDiffPlus, true); FindVariablesBooleans fvbf = new
+		 * FindVariablesBooleans( commitToDiffMinus, false);
+		 */
+		// fvbt.start();
+		// fvbf.start();
+		/*
+		 * try { //fvbt.join(); fvbf.join(); } catch (InterruptedException e2) {
+		 * // TODO Auto-generated catch block e2.printStackTrace(); }
+		 */
 		print("finding good booleans");
-		//FindGoodBooleans fgbt = new FindGoodBooleans(true);
+		// FindGoodBooleans fgbt = new FindGoodBooleans(true);
 		FindGoodBooleans fgbf = new FindGoodBooleans(false);
-		//fgbt.start();
+		// fgbt.start();
 		fgbf.start();
 		print("waiting for threads to finish");
 		try {
-			//fgbt.join();
+			// fgbt.join();
 			fgbf.join();
 		} catch (InterruptedException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		
+
 		print("finding pull requests");
 		findPullRequests();
-		
+
 		print("creating commits");
 		createCommits();
 		print("creating excel list");
@@ -186,8 +184,6 @@ public class Commander {
 			String message = commitToCommitMessage.get(commit);
 			boolean isPullRequest = commitToPullRequest.get(commit);
 			Commit c = new Commit(commit, message,
-					//variablesToString(commitToIfBoolean.get(commit)),
-					"",
 					variablesToString(commitToSettingBoolean.get(commit)),
 					isPullRequest);
 			commitList.add(c);
@@ -229,11 +225,11 @@ public class Commander {
 				System.out.println("Här ska vi inte va");
 			}
 			addLabel(sheet, 0, i + 1, c.getSha());
-			addLabel(sheet, 1, i + 1, c.getIfVariables());
-			addLabel(sheet, 2, i + 1, c.getSettingVariables());
-			addLabel(sheet, 3, i + 1, c.getMessage());
+			// addLabel(sheet, 1, i + 1, c.getIfVariables());
+			addLabel(sheet, 1, i + 1, c.getSettingVariables());
+			addLabel(sheet, 2, i + 1, c.getMessage());
 			if (c.isPullRequest())
-				addLabel(sheet, 4, i + 1, "X");
+				addLabel(sheet, 3, i + 1, "X");
 		}
 	}
 
@@ -253,10 +249,10 @@ public class Commander {
 		cv.setAutosize(true);
 
 		addCaption(sheet, 0, 0, "Commit SHA");
-		addCaption(sheet, 1, 0, "Variables in ifs");
-		addCaption(sheet, 2, 0, "Variables with setting/property/config");
-		addCaption(sheet, 3, 0, "Message");
-		addCaption(sheet, 4, 0, "Pull Request");
+		// addCaption(sheet, 1, 0, "Variables in ifs");
+		addCaption(sheet, 1, 0, "getAsBoolean");
+		addCaption(sheet, 2, 0, "Message");
+		addCaption(sheet, 3, 0, "Pull Request");
 	}
 
 	private void addLabel(WritableSheet sheet, int column, int row, String s)

@@ -16,6 +16,10 @@ public class Commit {
 		this.settingVariables = settingVariables;
 		this.isPullRequest = isPullRequest;
 	}
+	
+	public Commit(String sha, String message, String settingVariables, boolean isPullRequest) {
+		this(sha, message, "", settingVariables, isPullRequest);
+	}
 
 	public String getSha() {
 		return sha;
