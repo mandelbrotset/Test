@@ -18,9 +18,9 @@ public class FindGoodBooleans extends Thread {
 	}
 
 	private void findGoodBooleans() {
-		int total = Commander.commitToBooleanVariables.size();
+		int total = Commander.commitToDiffPlus.size();
 		int progress = 0;
-		for (String commit : Commander.commitToBooleanVariables.keySet()) {
+		for (String commit : Commander.commitToDiffPlus.keySet()) {
 			Commander.print("findingGoodBooleans with " + inIfs + ": commit "
 					+ progress + " of " + total);
 			progress++;
@@ -30,8 +30,8 @@ public class FindGoodBooleans extends Thread {
 					.get(commit);
 			ConcurrentHashSet<String> goodVariables = new ConcurrentHashSet<String>();
 			for (String line : lines) {
-				if (line.contains("getAsBoolean")) {
-					String parameterName = line.split("getAsBoolean(")[1].split(",")[0];
+				if (line.contains("getAsBoolean(")) {
+					String parameterName = line.split("getAsBoolean\\(")[1].split(",")[0];
 					Commander.goodCommits.add(commit);
 					goodVariables.add(parameterName + "|" + line);
 				}

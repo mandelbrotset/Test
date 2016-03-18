@@ -82,20 +82,7 @@ public class Commander {
 		// String repo = "elasticsearch";
 		print("getting diffs");
 		getDiffs();
-		print("finding booleans");
-		/*
-		 * FindVariablesBooleans fvbt = new FindVariablesBooleans(
-		 * commitToDiffPlus, true); FindVariablesBooleans fvbf = new
-		 * FindVariablesBooleans( commitToDiffMinus, false);
-		 */
-		// fvbt.start();
-		// fvbf.start();
-		/*
-		 * try { //fvbt.join(); fvbf.join(); } catch (InterruptedException e2) {
-		 * // TODO Auto-generated catch block e2.printStackTrace(); }
-		 */
 		print("finding good booleans");
-		// FindGoodBooleans fgbt = new FindGoodBooleans(true);
 		FindGoodBooleans fgbf = new FindGoodBooleans(false);
 		// fgbt.start();
 		fgbf.start();
@@ -232,7 +219,6 @@ public class Commander {
 			if (c.getSha().length() == 0) {
 				System.out.println("Här ska vi inte va");
 			}
-			System.out.println(c.getSettingVariables());
 			addLabel(sheet, 0, i + 1, c.getSha());
 			// addLabel(sheet, 1, i + 1, c.getIfVariables());
 			addLabel(sheet, 1, i + 1, c.getSettingVariables());
