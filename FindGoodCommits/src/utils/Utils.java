@@ -33,6 +33,11 @@ public class Utils {
 		return new BufferedReader(new InputStreamReader(p.getInputStream()));
 	}
 	
+	public static BufferedReader readCommandOutput(String command) throws IOException {
+		Process p = Runtime.getRuntime().exec(command);
+		return new BufferedReader(new InputStreamReader(p.getInputStream()));
+	}
+	
 	public static void checkoutCommit(String repo, String commit) {
 		try {
 			readScriptOutput("checkoutCommit " + repo + " " + commit).readLine();
