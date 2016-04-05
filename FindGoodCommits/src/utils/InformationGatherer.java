@@ -30,7 +30,7 @@ public class InformationGatherer {
 	
 	public static String getCommitSHA(String commitPath) {
 		String[] folders = commitPath.split("/");
-		String commitSHA = folders[folders.length - 1];
+		String commitSHA = folders[folders.length - 3];
 		return commitSHA;
 	}
 	
