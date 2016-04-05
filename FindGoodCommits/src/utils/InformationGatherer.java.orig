@@ -1,14 +1,23 @@
 package utils;
 
+<<<<<<< HEAD
+import java.io.File;
+import java.util.ArrayList;
+=======
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.File;
-import java.util.ArrayList;
+>>>>>>> 25900c232f673df029b0550b7389eb91e4989536
 
 public class InformationGatherer {
 	
-	public static String getCommitMessage(String repo, String commitSHA) {
+	private String cftRepo;
+	
+	public InformationGatherer(String cftRepo) {
+		this.cftRepo = cftRepo;
+	}
+	
+	public String getCommitMessage(String repo, String commitSHA) {
 		Process msgProcess;
 		try {
 			msgProcess = Runtime.getRuntime().exec("bash " + "scripts/" + "getCommitMessage " + repo + " " + commitSHA);
@@ -28,32 +37,28 @@ public class InformationGatherer {
 		return "puttepung";
 	}
 	
-	public static String getCommitSHA(String commitPath) {
+	public String getCommitSHA(String commitPath) {
 		String[] folders = commitPath.split("/");
 		String commitSHA = folders[folders.length - 1];
 		return commitSHA;
 	}
 	
-	public static boolean isPullRequest(String repo, String commitSHA) {
-		if (getCommitMessage(repo, commitSHA).contains("Merge pull request #"))
+	public boolean isPullRequest() {
+		if (getCommitMessage().contains("Merge pull request #"))
 			return true;
 		
 		return false;
 	}
 	
-	public static ArrayList<String> getConflictFileNames(String cft, String commitSHA) {
-		return getConflictFileNames(cft + "/" + commitSHA);
-	}
-	
-	public static ArrayList<String> getConflictFileNames(String commitPath) {
+	public ArrayList<String> getConflictFileNames(String commit) {
 		ArrayList<String> javaFiles = new ArrayList<String>();
-		File repo = new File(commitPath);
+		File repo = new File(cftRepo + "/" + commit);
 		for(File javaFile : getFiles(f -> f.isDirectory(), repo))
 			javaFiles.add(javaFile.getName());
 		return null;
 	}
-		
-	private static ArrayList<File> getFiles(java.util.function.Predicate<File> tester, File folder) {
+	
+	private ArrayList<File> getFiles(java.util.function.Predicate<File> tester, File folder) {
 		ArrayList<File> listOfFiles = new ArrayList<File>();
 		for(File file : folder.listFiles()) {
 			if(tester.test(file))
