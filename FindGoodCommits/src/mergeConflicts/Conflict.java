@@ -23,7 +23,6 @@ public class Conflict {
 		this.ancFile = ancFile;
 		this.rightFile = rightFile;
 		this.commitSHA = commitSHA;
-		merge();
 	}
 	
 	public static ArrayList<Conflict> getConflicts(String leftFile, String ancFile, String rightFile, String commitSHA) {
@@ -63,9 +62,6 @@ public class Conflict {
 					}
 				}
 			}
-			conflictFile = sbConflictFile.toString();
-			leftConflict = sbLeft.toString();
-			rightConflict = sbRight.toString();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -115,7 +111,5 @@ public class Conflict {
 	public void setPullRequest(boolean isPullRequest) {
 		this.isPullRequest = isPullRequest;
 	}
-	
-	
-	
+
 }
