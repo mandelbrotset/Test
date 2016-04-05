@@ -7,7 +7,7 @@ public class ConflictAnalyzer {
 	private String cft;
 	
 	public ConflictAnalyzer() {
-		
+		wbc = new WorkBookCreator("ConflictInformation.xls");
 	}
 
 	private void gatherConflicts() {
