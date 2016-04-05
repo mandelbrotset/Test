@@ -18,14 +18,14 @@ public class Conflict {
 	private boolean isPullRequest;
 	
 	
-	private Conflict(String leftFile, String ancFile, String rightFile, String commitSHA) {
+	private Conflict(String leftFile, String ancFile, String rightFile, String commitSHA, String commitMessage, String fileName, boolean isPullRequest) {
 		this.leftFile = leftFile;
 		this.ancFile = ancFile;
 		this.rightFile = rightFile;
 		this.commitSHA = commitSHA;
 	}
 	
-	public static ArrayList<Conflict> getConflicts(String leftFile, String ancFile, String rightFile, String commitSHA) {
+	public static ArrayList<Conflict> getConflicts(String leftFile, String ancFile, String rightFile, String commitSHA, String commitMessage, String fileName, boolean isPullRequest) {
 		ArrayList<Conflict> conflicts = new ArrayList<Conflict>();
 		try {
 			BufferedReader br = Utils.readScriptOutput("mergeFiles " + leftFile + " " + ancFile + " " + rightFile);
@@ -39,7 +39,7 @@ public class Conflict {
 				sbConflictFile.append(line);
 				sbConflictFile.append("\n");
 				if (line.startsWith("<<<<<<<")) {
-					Conflict conflict = new Conflict(leftFile, ancFile, rightFile, commitSHA);
+					Conflict conflict = new Conflict(leftFile, ancFile, rightFile, commitSHA, commitMessage, fileName, isPullRequest);
 					conflicts.add(conflict);
 					readingLeft = true;
 					sbLeft = new StringBuilder();
