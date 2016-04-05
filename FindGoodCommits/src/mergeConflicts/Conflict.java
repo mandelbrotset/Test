@@ -13,6 +13,9 @@ public class Conflict {
 	private String ancFile;
 	private String rightFile;
 	private String conflictFile;
+	private String commitMessage;
+	private boolean isPullRequest;
+	
 	
 	public Conflict(String leftFile, String ancFile, String rightFile, String commitSHA) {
 		this.leftFile = leftFile;
@@ -86,6 +89,23 @@ public class Conflict {
 	public String getConflictFile() {
 		return conflictFile;
 	}
+
+	public String getCommitMessage() {
+		return commitMessage;
+	}
+
+	public void setCommitMessage(String commitMessage) {
+		this.commitMessage = commitMessage;
+	}
+
+	public boolean isPullRequest() {
+		return isPullRequest;
+	}
+
+	public void setPullRequest(boolean isPullRequest) {
+		this.isPullRequest = isPullRequest;
+	}
+	
 	
 	
 }
