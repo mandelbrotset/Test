@@ -25,12 +25,10 @@ public class WorkBookCreator {
 	private WritableCellFormat times;
 	private int noOfSheets;
 	private WritableWorkbook workBook;
-	private String outputFile;
 	private WritableSheet excelSheet;
 	private int noOfRows;
 	
 	public WorkBookCreator(String outputFile) {
-		this.outputFile = outputFile;
 		noOfSheets = 0;
 		noOfRows = 0;
 		
@@ -97,6 +95,20 @@ public class WorkBookCreator {
 			addLabel(excelSheet, i, noOfRows, text[i]);
 		}
 		noOfRows++;
+	}
+	
+	public void writeToWorkbook() {
+		try {
+			workBook.write();
+			workBook.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (WriteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
 	}
 
 }
