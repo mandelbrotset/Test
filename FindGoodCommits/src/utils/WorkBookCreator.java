@@ -30,7 +30,7 @@ public class WorkBookCreator {
 	
 	public WorkBookCreator(String outputFile) {
 		noOfSheets = 0;
-		noOfRows = 0;
+		noOfRows = 1;
 		
 		try {
 			File file = new File(outputFile);

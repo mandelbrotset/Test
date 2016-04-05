@@ -73,10 +73,6 @@ public class ConflictAnalyzer {
 	}
 	
 	private String extractTheName(String path) {
-		System.out.println("extractTheName: " + path);
-		String hej = new StringBuilder(new StringBuilder(path).reverse().toString().split("/")[0]).reverse().toString();
-		System.out.println("extractTheName: " + hej);
-		
 		return new StringBuilder(new StringBuilder(path).reverse().toString().split("/")[0]).reverse().toString();
 	}
 	
