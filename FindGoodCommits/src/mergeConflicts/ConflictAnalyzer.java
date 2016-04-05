@@ -12,7 +12,6 @@ public class ConflictAnalyzer {
 	private WorkBookCreator wbc;
 	private String cftPath;
 	private String repoPath;
-	
 	private ArrayList<Conflict> conflicts;
 	
 	public ConflictAnalyzer() {

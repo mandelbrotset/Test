@@ -20,6 +20,11 @@ public class Conflict {
 	private int leftSize = 0;
 	private int rightSize = 0;
 	private String commonConflict;
+	private static ConflictClassifier classifier;
+	static {
+		classifier = new ConflictClassifier();
+	}
+	private ArrayList<ConflictClassifier.Classifier> classifiers;
 
 	private Conflict(String leftFile, String ancFile, String rightFile, String commitSHA, String commitMessage,
 			String fileName, boolean isPullRequest) {
@@ -65,6 +70,7 @@ public class Conflict {
 					conflict.leftConflict = sbLeft.toString();
 					conflict.rightConflict = sbRight.toString();
 					conflict.commonConflict = sbCommon.toString();
+					conflict.classifiers = classifier.classify(conflict.leftConflict, conflict.commonConflict, conflict.rightConflict);
 				} else {
 					if (readingLeft) {
 						Conflict conflict = conflicts.get(conflicts.size() - 1);
@@ -140,6 +146,15 @@ public class Conflict {
 		return commonConflict;
 	}
 
-	
+	public String getClassifiers() {
+		StringBuilder sb = new StringBuilder();
+		for (ConflictClassifier.Classifier classifier : classifiers) {
+			if (sb.length() != 0) {
+				sb.append("\n");
+			}
+			sb.append(classifier.toString());
+		}
+		return sb.toString();
+	}
 	
 }
