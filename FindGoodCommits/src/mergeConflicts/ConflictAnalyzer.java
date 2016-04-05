@@ -32,6 +32,7 @@ public class ConflictAnalyzer {
 		boolean isPullRequest = InformationGatherer.isPullRequest(repoPath, commitSHA);
 		
 		ArrayList<Conflict> conflicts = Conflict.getConflicts(left, anc, right, commitSHA, commitMessage, fileName, isPullRequest);
+		
 	}
 	
 	private String extractTheName(String path) {
