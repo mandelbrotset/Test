@@ -20,7 +20,7 @@ public class Machine {
 		} else if(new File("/home/isak/").exists()) {
 			repoPath = "/home/isak/Documents/Master/projects";
 			conflictMessage = "CONFLICT (content): Merge conflict in ";
-			cftFolderPath = "Börst, will thau please input your shit he";
+			cftFolderPath = "/home/isak/Documents/Master/Test/CFT";
 		}
 	}
 

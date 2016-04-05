@@ -2,6 +2,9 @@ package mergeConflicts;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 import jxl.write.WriteException;
 import jxl.write.biff.RowsExceededException;
