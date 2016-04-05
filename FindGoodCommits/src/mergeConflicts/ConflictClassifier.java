@@ -37,8 +37,10 @@ public class ConflictClassifier {
 				extractTypeModifiers(common, commonTypeDeclaration);
 				extractTypeModifiers(right, rightTypeDeclaration);
 				
-				if (!leftTypeDeclaration.modifiers.equals(rightTypeDeclaration.modifiers)) {
-					return true;
+				if (!leftTypeDeclaration.modifiers.equals(commonTypeDeclaration.modifiers) && !rightTypeDeclaration.modifiers.equals(commonTypeDeclaration.modifiers)) {
+					if (!leftTypeDeclaration.modifiers.equals(rightTypeDeclaration.modifiers)) {
+						return true;
+					}
 				}
 			}
 		} catch (NullPointerException npe) {
