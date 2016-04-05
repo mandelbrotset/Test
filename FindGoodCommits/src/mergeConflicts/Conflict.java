@@ -38,7 +38,7 @@ public class Conflict {
 	}
 
 	public static ArrayList<Conflict> getConflicts(String leftFile, String ancFile, String rightFile, String commitSHA,
-			String commitMessage, String fileName, boolean isPullRequest) {
+			String commitMessage, String fileName, boolean isPullRequest) throws OldConflictFoundException {
 		ArrayList<Conflict> conflicts = new ArrayList<Conflict>();
 		try {
 			BufferedReader br = Utils.readScriptOutput("mergeFiles " + leftFile + " " + ancFile + " " + rightFile,
@@ -52,8 +52,7 @@ public class Conflict {
 			boolean readingRight = false;
 			while ((line = br.readLine()) != null) {
 				if (line.startsWith("<<<<<<<")) {
-					Conflict conflict = new Conflict(leftFile, ancFile, rightFile, commitSHA, commitMessage, fileName,
-							isPullRequest);
+					Conflict conflict = new Conflict(leftFile, ancFile, rightFile, commitSHA, commitMessage, fileName, isPullRequest);
 					conflicts.add(conflict);
 					readingLeft = true;
 					sbLeft = new StringBuilder();
@@ -62,6 +61,10 @@ public class Conflict {
 					readingCommon = true;
 					readingLeft = false;
 				} else if (line.startsWith("=======")) {
+					if (readingLeft) {
+						// the file has an unsolved old conflict, skip it
+						throw new OldConflictFoundException("There is no ||||||| in " + fileName + " in " + commitSHA);
+					}
 					readingCommon = false;
 					readingRight = true;
 				} else if (line.startsWith(">>>>>>>")) {
