@@ -4,4 +4,4 @@
 #$2 common ancestor
 #$3 right file
 
-git merge-file -p $1 $2 $3
+git merge-file -p --diff3 $1 $2 $3
