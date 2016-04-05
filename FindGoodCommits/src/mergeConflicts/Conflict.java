@@ -16,6 +16,7 @@ public class Conflict {
 	private String conflictFile;
 	private String commitMessage;
 	private boolean isPullRequest;
+	private String fileName;
 	
 	
 	private Conflict(String leftFile, String ancFile, String rightFile, String commitSHA, String commitMessage, String fileName, boolean isPullRequest) {
@@ -23,6 +24,9 @@ public class Conflict {
 		this.ancFile = ancFile;
 		this.rightFile = rightFile;
 		this.commitSHA = commitSHA;
+		this.isPullRequest = isPullRequest;
+		this.commitMessage = commitMessage;
+		this.fileName = fileName;
 	}
 	
 	public static ArrayList<Conflict> getConflicts(String leftFile, String ancFile, String rightFile, String commitSHA, String commitMessage, String fileName, boolean isPullRequest) {
@@ -110,6 +114,14 @@ public class Conflict {
 
 	public void setPullRequest(boolean isPullRequest) {
 		this.isPullRequest = isPullRequest;
+	}
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
 	}
 
 }
