@@ -16,6 +16,8 @@ public class Conflict {
 	private String conflictFile;
 	private String commitMessage;
 	private boolean isPullRequest;
+	private int leftSize = 0;
+	private int rightSize = 0;
 	
 	
 	private Conflict(String leftFile, String ancFile, String rightFile, String commitSHA, String commitMessage, String fileName, boolean isPullRequest) {
@@ -53,10 +55,13 @@ public class Conflict {
 					conflict.leftConflict = sbLeft.toString();
 					conflict.rightConflict = sbRight.toString();
 				} else {
+					Conflict conflict = conflicts.get(conflicts.size()-1);
 					if (readingLeft) {
+						conflict.leftSize++;
 						sbLeft.append(line);
 						sbLeft.append("\n");
 					} else if (readingRight) {
+						conflict.rightSize++;
 						sbRight.append(line);
 						sbRight.append("\n");
 					}
@@ -111,5 +116,15 @@ public class Conflict {
 	public void setPullRequest(boolean isPullRequest) {
 		this.isPullRequest = isPullRequest;
 	}
+
+	public int getLeftSize() {
+		return leftSize;
+	}
+
+	public int getRightSize() {
+		return rightSize;
+	}
+	
+	
 
 }
