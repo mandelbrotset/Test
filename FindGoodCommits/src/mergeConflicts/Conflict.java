@@ -20,8 +20,9 @@ public class Conflict {
 	private int leftSize = 0;
 	private int rightSize = 0;
 	private String commonConflict;
-	
-	private Conflict(String leftFile, String ancFile, String rightFile, String commitSHA, String commitMessage, String fileName, boolean isPullRequest) {
+
+	private Conflict(String leftFile, String ancFile, String rightFile, String commitSHA, String commitMessage,
+			String fileName, boolean isPullRequest) {
 		this.leftFile = leftFile;
 		this.ancFile = ancFile;
 		this.rightFile = rightFile;
@@ -30,11 +31,13 @@ public class Conflict {
 		this.commitMessage = commitMessage;
 		this.fileName = fileName;
 	}
-	
-	public static ArrayList<Conflict> getConflicts(String leftFile, String ancFile, String rightFile, String commitSHA, String commitMessage, String fileName, boolean isPullRequest) {
+
+	public static ArrayList<Conflict> getConflicts(String leftFile, String ancFile, String rightFile, String commitSHA,
+			String commitMessage, String fileName, boolean isPullRequest) {
 		ArrayList<Conflict> conflicts = new ArrayList<Conflict>();
 		try {
-			BufferedReader br = Utils.readScriptOutput("mergeFiles " + leftFile + " " + ancFile + " " + rightFile, true);
+			BufferedReader br = Utils.readScriptOutput("mergeFiles " + leftFile + " " + ancFile + " " + rightFile,
+					true);
 			String line;
 			StringBuilder sbLeft = new StringBuilder();
 			StringBuilder sbRight = new StringBuilder();
@@ -42,9 +45,10 @@ public class Conflict {
 			boolean readingLeft = false;
 			boolean readingCommon = false;
 			boolean readingRight = false;
-			while((line = br.readLine()) != null) {
+			while ((line = br.readLine()) != null) {
 				if (line.startsWith("<<<<<<<")) {
-					Conflict conflict = new Conflict(leftFile, ancFile, rightFile, commitSHA, commitMessage, fileName, isPullRequest);
+					Conflict conflict = new Conflict(leftFile, ancFile, rightFile, commitSHA, commitMessage, fileName,
+							isPullRequest);
 					conflicts.add(conflict);
 					readingLeft = true;
 					sbLeft = new StringBuilder();
@@ -57,13 +61,13 @@ public class Conflict {
 					readingRight = true;
 				} else if (line.startsWith(">>>>>>>")) {
 					readingRight = false;
-					Conflict conflict = conflicts.get(conflicts.size()-1); 
+					Conflict conflict = conflicts.get(conflicts.size() - 1);
 					conflict.leftConflict = sbLeft.toString();
 					conflict.rightConflict = sbRight.toString();
 					conflict.commonConflict = sbCommon.toString();
 				} else {
 					if (readingLeft) {
-						Conflict conflict = conflicts.get(conflicts.size()-1);
+						Conflict conflict = conflicts.get(conflicts.size() - 1);
 						conflict.leftSize++;
 						sbLeft.append(line);
 						sbLeft.append("\n");
@@ -71,7 +75,7 @@ public class Conflict {
 						sbCommon.append(line);
 						sbCommon.append("\n");
 					} else if (readingRight) {
-						Conflict conflict = conflicts.get(conflicts.size()-1);
+						Conflict conflict = conflicts.get(conflicts.size() - 1);
 						conflict.rightSize++;
 						sbRight.append(line);
 						sbRight.append("\n");
@@ -116,24 +120,12 @@ public class Conflict {
 		return commitMessage;
 	}
 
-	public void setCommitMessage(String commitMessage) {
-		this.commitMessage = commitMessage;
-	}
-
 	public boolean isPullRequest() {
 		return isPullRequest;
 	}
 
-	public void setPullRequest(boolean isPullRequest) {
-		this.isPullRequest = isPullRequest;
-	}
-
 	public String getFileName() {
 		return fileName;
-	}
-
-	public void setFileName(String fileName) {
-		this.fileName = fileName;
 	}
 
 	public int getLeftSize() {
@@ -143,7 +135,11 @@ public class Conflict {
 	public int getRightSize() {
 		return rightSize;
 	}
-	
-	
 
+	public String getCommonConflict() {
+		return commonConflict;
+	}
+
+	
+	
 }

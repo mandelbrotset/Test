@@ -2,9 +2,6 @@ package mergeConflicts;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 import jxl.write.WriteException;
 import jxl.write.biff.RowsExceededException;
@@ -34,7 +31,7 @@ public class ConflictAnalyzer {
 	private void writeToSheet() {
 		for(Conflict c : conflicts) {
 			try {
-				wbc.addRow(c.getCommitSHA(), c.getCommitMessage(), Boolean.toString(c.isPullRequest()), c.getFileName(), Integer.toString(c.getLeftSize()), Integer.toString(c.getRightSize()), c.getLeftConflict(), c.getRightConflict(), "To be continued...", "To be continued...");
+				wbc.addRow(c.getCommitSHA(), c.getCommitMessage(), Boolean.toString(c.isPullRequest()), c.getFileName(), Integer.toString(c.getLeftSize()), Integer.toString(c.getRightSize()), c.getLeftConflict(), c.getCommonConflict(), c.getRightConflict(), "To be continued...", "To be continued...");
 			} catch (RowsExceededException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -50,6 +47,7 @@ public class ConflictAnalyzer {
 		File cftFoler = new File(cftPath);
 		for(File commitFolder : getFiles(f -> f.isDirectory(), cftFoler)) {
 			for(File javaFolder : getFiles(f -> f.isDirectory(), commitFolder)) {
+				System.out.println("Processing " + javaFolder.getName());
 				conflicts.addAll(gatherConflicts(repoPath, javaFolder.getAbsolutePath()));
 			}
 		}
@@ -57,7 +55,7 @@ public class ConflictAnalyzer {
 	
 	private void createSheets() {
 		String name = extractTheName(cftPath);
-		wbc.createSheet(name, "Commit SHA-1", "Message", "Pull request", "File name", "Left Size", "Right Size", "Left Conflict code", "Right Conflict code", "Conflict Pattern", "Resolution Pattern");
+		wbc.createSheet(name, "Commit SHA-1", "Message", "Pull request", "File name", "Left Size", "Right Size", "Left Conflict code", "Common Ancestor code", "Right Conflict code", "Conflict Pattern", "Resolution Pattern");
 	}
 
 	private ArrayList<Conflict> gatherConflicts(String repoPath, String javaFilePath) {
