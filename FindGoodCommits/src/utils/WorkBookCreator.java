@@ -44,7 +44,7 @@ public class WorkBookCreator {
 		}
 	}
 	
-	public void createSheet(String sheetName, ArrayList<String> captions) {
+	public void createSheet(String sheetName, String... captions) {
 		try {
 			workBook.createSheet(sheetName, noOfSheets);
 			excelSheet = workBook.getSheet(noOfSheets);
@@ -57,7 +57,7 @@ public class WorkBookCreator {
 		}
 	}
 	
-	private void createLabel(WritableSheet sheet, ArrayList<String> captions) throws WriteException {
+	private void createLabel(WritableSheet sheet, String... captions) throws WriteException {
 		WritableFont times10pt = new WritableFont(WritableFont.TIMES, 10);
 		times = new WritableCellFormat(times10pt);
 		times.setWrap(true);
@@ -72,8 +72,8 @@ public class WorkBookCreator {
 		cv.setFormat(timesBoldUnderline);
 		cv.setAutosize(true);
 		
-		for(int i = 0; i < captions.size(); i++) {
-			addCaption(sheet, i, 0, captions.get(i));
+		for(int i = 0; i < captions.length; i++) {
+			addCaption(sheet, i, 0, captions[i]);
 		}
 	}
 	

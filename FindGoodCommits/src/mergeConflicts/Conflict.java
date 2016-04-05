@@ -13,6 +13,9 @@ public class Conflict {
 	private String leftFile;
 	private String ancFile;
 	private String rightFile;
+	private String conflictFile;
+	private String commitMessage;
+	private boolean isPullRequest;
 	
 	
 	private Conflict(String leftFile, String ancFile, String rightFile, String commitSHA) {
@@ -20,6 +23,7 @@ public class Conflict {
 		this.ancFile = ancFile;
 		this.rightFile = rightFile;
 		this.commitSHA = commitSHA;
+		merge();
 	}
 	
 	public static ArrayList<Conflict> getConflicts(String leftFile, String ancFile, String rightFile, String commitSHA) {
@@ -27,11 +31,14 @@ public class Conflict {
 		try {
 			BufferedReader br = Utils.readScriptOutput("mergeFiles " + leftFile + " " + ancFile + " " + rightFile);
 			String line;
+			StringBuilder sbConflictFile = new StringBuilder();
 			StringBuilder sbLeft = new StringBuilder();
 			StringBuilder sbRight = new StringBuilder();
 			boolean readingLeft = false;
 			boolean readingRight = false;
 			while((line = br.readLine()) != null) {
+				sbConflictFile.append(line);
+				sbConflictFile.append("\n");
 				if (line.startsWith("<<<<<<<")) {
 					Conflict conflict = new Conflict(leftFile, ancFile, rightFile, commitSHA);
 					conflicts.add(conflict);
@@ -56,6 +63,9 @@ public class Conflict {
 					}
 				}
 			}
+			conflictFile = sbConflictFile.toString();
+			leftConflict = sbLeft.toString();
+			rightConflict = sbRight.toString();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -85,5 +95,27 @@ public class Conflict {
 	public String getRightFile() {
 		return rightFile;
 	}
+
+	public String getConflictFile() {
+		return conflictFile;
+	}
+
+	public String getCommitMessage() {
+		return commitMessage;
+	}
+
+	public void setCommitMessage(String commitMessage) {
+		this.commitMessage = commitMessage;
+	}
+
+	public boolean isPullRequest() {
+		return isPullRequest;
+	}
+
+	public void setPullRequest(boolean isPullRequest) {
+		this.isPullRequest = isPullRequest;
+	}
+	
+	
 	
 }
