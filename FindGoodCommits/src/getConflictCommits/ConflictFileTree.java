@@ -10,6 +10,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import utils.Machine;
 import utils.Utils;
 
 public class ConflictFileTree {
@@ -22,8 +23,8 @@ public class ConflictFileTree {
 		reposToReposPath = new HashMap<String, String>();
 		fillRepos(pathToRepos);
 		fillCommits();
-		// reposToCommits.remove("test");
-		// reposToReposPath.remove("test");
+		reposToCommits.remove("test");
+		reposToReposPath.remove("test");
 	}
 
 	public void createTree() {
@@ -33,18 +34,20 @@ public class ConflictFileTree {
 		try {
 			System.out.println("Cleaning repository...");
 			Utils.readScriptOutput("gitClean " + reposToReposPath.get(repo), false);
+			Utils.readScriptOutput("gitUpdate " + reposToReposPath.get(repo), false);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		System.out.println("Building tree...");
 		for (String commit : reposToCommits.get(repo)) {
+			System.out.println("checking commit " + commit);
 			if (cm.doMerge(commit, reposToReposPath.get(repo))) {
 				System.out.println("Conflict found!");
 				Conflict conflict = null;
 				for (int i = 0; i < cm.getConflicts().size(); i++) {
 					conflict = cm.getConflicts().get(i);
-					String location = repo + "/" + commit + "/" + conflict.getFileName() + "/";
+					String location = "CFT/" + repo + "/" + commit + "/" + conflict.getFileName() + "/";
 					File dir = new File(location);
 					File leftConflict = new File(location + "left_" + conflict.getFileName());
 					File rightConflict = new File(location + "right_" + conflict.getFileName());
@@ -68,8 +71,7 @@ public class ConflictFileTree {
 
 				}
 				// }
-				String outputLocation = "/home/patrik/Documents/Chalmers/5an/MasterThesis/Test/Test/" + repo + "/"
-						+ commit + "/" + "diff.txt";
+				String outputLocation = Machine.getInstance().getCftFolderPath() + "/" + repo + "/" + commit + "/" + "diff.txt";
 				if (conflict != null) {
 					writeDiffFile(reposToReposPath.get(repo), conflict.getLeftAncestorCommit(),
 							conflict.getRightAncestorCommit(), outputLocation);
@@ -77,8 +79,7 @@ public class ConflictFileTree {
 			}
 			try {
 				// Clean and reset git repository
-				Process p = Runtime.getRuntime().exec("bash scripts/gitClean " + reposToReposPath.get(repo));
-				new BufferedReader(new InputStreamReader(p.getInputStream())).readLine();
+				Utils.readScriptOutput("gitClean " + reposToReposPath.get(repo), false);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -88,11 +89,8 @@ public class ConflictFileTree {
 
 	private void writeDiffFile(String pathToRepo, String leftCommit, String rightCommit, String pathToOutput) {
 		try {
-			Process p = Runtime.getRuntime().exec("bash scripts/createDiffFile " + pathToRepo + " " + leftCommit + " "
-					+ rightCommit + " " + pathToOutput);
-			new BufferedReader(new InputStreamReader(p.getInputStream())).readLine();
+			Utils.readScriptOutput("createDiffFile " + pathToRepo + " " + leftCommit + " " + rightCommit + " " + pathToOutput, false);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -127,8 +125,7 @@ public class ConflictFileTree {
 		for (String repo : reposToReposPath.keySet()) {
 			String repoPath = reposToReposPath.get(repo);
 			try {
-				Process commitProcess = Runtime.getRuntime().exec("bash " + "scripts/" + "getCommits " + repoPath);
-				BufferedReader br = new BufferedReader(new InputStreamReader(commitProcess.getInputStream()));
+				BufferedReader br = Utils.readScriptOutput("getCommits " + repoPath, true);
 
 				String commitSHA;
 				ArrayList<String> shas = new ArrayList<String>();

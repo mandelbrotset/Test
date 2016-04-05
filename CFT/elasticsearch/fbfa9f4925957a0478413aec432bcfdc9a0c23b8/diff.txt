@@ -14931,7 +14931,7 @@ index d4ce8cf..bc268c6 100644
          }
      }
 diff --git a/core/src/test/java/org/elasticsearch/index/query/plugin/DummyQueryParserPlugin.java b/core/src/test/java/org/elasticsearch/index/query/plugin/DummyQueryParserPlugin.java
-index c72470c..98dbf67 100644
+index c72470c..98dbf67d 100644
 --- a/core/src/test/java/org/elasticsearch/index/query/plugin/DummyQueryParserPlugin.java
 +++ b/core/src/test/java/org/elasticsearch/index/query/plugin/DummyQueryParserPlugin.java
 @@ -19,6 +19,8 @@

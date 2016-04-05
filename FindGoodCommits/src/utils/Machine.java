@@ -18,9 +18,15 @@ public class Machine {
 			conflictMessage = "KONFLIKT (innehåll): Sammanslagningskonflikt i ";
 			cftFolderPath = "/home/patrik/Documents/Chalmers/5an/MasterThesis/Test/FindGoodParameters/CFT";
 		} else if(new File("/home/isak/").exists()) {
-			repoPath = "/home/isak/Documents/Master/projects";
-			conflictMessage = "CONFLICT (content): Merge conflict in ";
-			cftFolderPath = "/home/isak/Documents/Master/Test/CFT";
+			if (new File("/home/isak/.desktop").exists()) {
+				repoPath = "/home/isak/Documents/Master/projects";
+				conflictMessage = "CONFLICT (content): Merge conflict in ";
+				cftFolderPath = "/home/isak/Documents/Master/Test/CFT";
+			} else {
+				repoPath = "/home/isak/Documents/Master/projects";
+				conflictMessage = "CONFLICT (content): Merge conflict in ";
+				cftFolderPath = "/home/isak/Documents/Master/Test/CFT";
+			}
 		}
 	}
 

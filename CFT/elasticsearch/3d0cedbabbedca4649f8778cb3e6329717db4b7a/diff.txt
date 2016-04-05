@@ -19540,7 +19540,7 @@ index 72d923e..eaa1493 100644
      }
  
 diff --git a/core/src/main/java/org/elasticsearch/search/internal/InternalScrollSearchRequest.java b/core/src/main/java/org/elasticsearch/search/internal/InternalScrollSearchRequest.java
-index 7f91813..77a490a 100644
+index 7f918138..77a490a 100644
 --- a/core/src/main/java/org/elasticsearch/search/internal/InternalScrollSearchRequest.java
 +++ b/core/src/main/java/org/elasticsearch/search/internal/InternalScrollSearchRequest.java
 @@ -42,6 +42,7 @@ public class InternalScrollSearchRequest extends TransportRequest {
@@ -27997,7 +27997,7 @@ index d4ce8cf..bc268c6 100644
          }
      }
 diff --git a/core/src/test/java/org/elasticsearch/index/query/plugin/DummyQueryParserPlugin.java b/core/src/test/java/org/elasticsearch/index/query/plugin/DummyQueryParserPlugin.java
-index c72470c..98dbf67 100644
+index c72470c..98dbf67d 100644
 --- a/core/src/test/java/org/elasticsearch/index/query/plugin/DummyQueryParserPlugin.java
 +++ b/core/src/test/java/org/elasticsearch/index/query/plugin/DummyQueryParserPlugin.java
 @@ -19,6 +19,8 @@

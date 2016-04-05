@@ -5717,7 +5717,7 @@ index 801b46f..73e2dc9 100644
      }
  
 diff --git a/core/src/main/java/org/elasticsearch/search/internal/InternalScrollSearchRequest.java b/core/src/main/java/org/elasticsearch/search/internal/InternalScrollSearchRequest.java
-index 77a490a..7f91813 100644
+index 77a490a..7f918138 100644
 --- a/core/src/main/java/org/elasticsearch/search/internal/InternalScrollSearchRequest.java
 +++ b/core/src/main/java/org/elasticsearch/search/internal/InternalScrollSearchRequest.java
 @@ -42,7 +42,6 @@ public class InternalScrollSearchRequest extends TransportRequest {

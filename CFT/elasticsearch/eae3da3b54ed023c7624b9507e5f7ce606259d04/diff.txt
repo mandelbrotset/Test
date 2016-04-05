@@ -5299,7 +5299,7 @@ index 9d465b4..6917740 100644
          }
  
 diff --git a/core/src/main/java/org/elasticsearch/index/mapper/core/NumberFieldMapper.java b/core/src/main/java/org/elasticsearch/index/mapper/core/NumberFieldMapper.java
-index 04dd1a2..ed537aa 100644
+index 04dd1a2..ed537aa7 100644
 --- a/core/src/main/java/org/elasticsearch/index/mapper/core/NumberFieldMapper.java
 +++ b/core/src/main/java/org/elasticsearch/index/mapper/core/NumberFieldMapper.java
 @@ -66,7 +66,7 @@ public abstract class NumberFieldMapper extends FieldMapper implements AllFieldM

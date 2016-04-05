@@ -5,4 +5,3 @@
 cd $1
 git reset --hard origin/HEAD
 git clean -f -x -d
-git pull origin master

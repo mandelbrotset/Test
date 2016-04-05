@@ -3971,7 +3971,7 @@ index ea3934d..fd2b257 100644
          this.searchAction = searchAction;
      }
 diff --git a/core/src/main/java/org/elasticsearch/action/search/TransportSearchAction.java b/core/src/main/java/org/elasticsearch/action/search/TransportSearchAction.java
-index bb04ae2..3177c67 100644
+index bb04ae2..3177c676 100644
 --- a/core/src/main/java/org/elasticsearch/action/search/TransportSearchAction.java
 +++ b/core/src/main/java/org/elasticsearch/action/search/TransportSearchAction.java
 @@ -58,7 +58,7 @@ public class TransportSearchAction extends HandledTransportAction<SearchRequest,

@@ -12427,7 +12427,7 @@ index f9c156e..8cb9809 100644
      @Override
 diff --git a/core/src/main/java/org/elasticsearch/search/aggregations/bucket/sampler/SamplerAggregatorFactory.java b/core/src/main/java/org/elasticsearch/search/aggregations/bucket/sampler/SamplerAggregatorFactory.java
 deleted file mode 100644
-index cce3a87..0000000
+index cce3a8738..0000000
 --- a/core/src/main/java/org/elasticsearch/search/aggregations/bucket/sampler/SamplerAggregatorFactory.java
 +++ /dev/null
 @@ -1,49 +0,0 @@
