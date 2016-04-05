@@ -52,11 +52,7 @@ public class InnerHitsQueryParserHelper {
         this.fieldDataFieldsParseElement = fieldDataFieldsParseElement;
     }
 
-<<<<<<< HEAD
     public InnerHitsSubSearchContext parse(QueryParseContext parserContext) throws IOException, QueryParsingException {
-=======
-    public Tuple<String, SubSearchContext> parse(QueryParseContext parserContext) throws IOException, QueryShardException {
->>>>>>> tempbranch
         String fieldName = null;
         XContentParser.Token token;
         String innerHitName = null;

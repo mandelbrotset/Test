@@ -19,15 +19,7 @@
 
 package org.elasticsearch.index.query;
 
-<<<<<<< HEAD
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.MultiTermQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.RegexpQuery;
-import org.apache.lucene.util.automaton.Operations;
 import org.elasticsearch.common.ParseField;
-=======
->>>>>>> tempbranch
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.xcontent.XContentParser;
 

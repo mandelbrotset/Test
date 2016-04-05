@@ -36,12 +36,9 @@ import org.elasticsearch.common.geo.builders.ShapeBuilder;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilder;
-<<<<<<< HEAD
 import org.elasticsearch.search.rescore.RescoreBuilder.Rescorer;
-=======
 import org.elasticsearch.search.aggregations.AggregatorFactory;
 import org.elasticsearch.search.aggregations.pipeline.PipelineAggregatorFactory;
->>>>>>> tempbranch
 import org.joda.time.ReadableInstant;
 
 import java.io.EOFException;
@@ -695,7 +692,7 @@ public abstract class StreamOutput extends OutputStream {
         for (T obj: list) {
             obj.writeTo(this);
         }
-     }
+    }
 
      /**
      * Writes a {@link Rescorer} to the current stream

@@ -23,43 +23,9 @@ import org.elasticsearch.search.aggregations.BaseAggregationTestCase;
 import org.elasticsearch.search.aggregations.metrics.geobounds.GeoBoundsAggregator;
 import org.elasticsearch.search.aggregations.metrics.geobounds.GeoBoundsAggregator.GeoBoundsAggregatorBuilder;
 
-<<<<<<< HEAD:core/src/main/java/org/elasticsearch/search/aggregations/metrics/MetricsAggregationBuilder.java
-import java.io.IOException;
-import java.util.Map;
-
-/**
- * Base builder for metrics aggregations.
- */
-public abstract class MetricsAggregationBuilder<B extends MetricsAggregationBuilder<B>> extends AbstractAggregationBuilder {
-
-    private Map<String, Object> metaData;
-
-    public MetricsAggregationBuilder(String name, String type) {
-        super(name, type);
-    }
-=======
 public class GeoBoundsTests extends BaseAggregationTestCase<GeoBoundsAggregator.GeoBoundsAggregatorBuilder> {
->>>>>>> tempbranch:core/src/test/java/org/elasticsearch/search/aggregations/metrics/GeoBoundsTests.java
-
-    /**
-     * Sets the meta data to be included in the metric aggregator's response
-     */
-    public B setMetaData(Map<String, Object> metaData) {
-        this.metaData = metaData;
-        return (B) this;
-    }
 
     @Override
-<<<<<<< HEAD:core/src/main/java/org/elasticsearch/search/aggregations/metrics/MetricsAggregationBuilder.java
-    public final XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
-        builder.startObject(getName());
-        if (this.metaData != null) {
-            builder.field("meta", this.metaData);
-        }
-        builder.startObject(type);
-        internalXContent(builder, params);
-        return builder.endObject().endObject();
-=======
     protected GeoBoundsAggregatorBuilder createTestAggregatorBuilder() {
         GeoBoundsAggregatorBuilder factory = new GeoBoundsAggregatorBuilder(randomAsciiOfLengthBetween(1, 20));
         String field = randomAsciiOfLengthBetween(3, 20);
@@ -71,7 +37,6 @@ public class GeoBoundsTests extends BaseAggregationTestCase<GeoBoundsAggregator.
             factory.missing("0,0");
         }
         return factory;
->>>>>>> tempbranch:core/src/test/java/org/elasticsearch/search/aggregations/metrics/GeoBoundsTests.java
     }
 
 }

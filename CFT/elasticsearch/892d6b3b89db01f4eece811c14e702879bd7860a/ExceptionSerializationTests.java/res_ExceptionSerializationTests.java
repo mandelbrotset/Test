@@ -101,11 +101,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-<<<<<<< HEAD
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-=======
 import static java.util.Collections.singleton;
->>>>>>> tempbranch
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
 public class ExceptionSerializationTests extends ESTestCase {
 

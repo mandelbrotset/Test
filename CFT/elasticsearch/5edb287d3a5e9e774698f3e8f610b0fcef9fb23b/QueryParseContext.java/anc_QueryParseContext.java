@@ -182,9 +182,7 @@ public class QueryParseContext {
     }
 
     public void addNamedQuery(String name, Query query) {
-        if (query != null) {
-            namedQueries.put(name, query);
-        }
+        namedQueries.put(name, query);
     }
 
     public ImmutableMap<String, Query> copyNamedQueries() {

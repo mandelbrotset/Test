@@ -23,16 +23,13 @@ import org.apache.lucene.util.Constants;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.ShardSearchFailure;
 import org.elasticsearch.common.settings.Settings;
-<<<<<<< HEAD:plugins/lang-groovy/src/test/java/org/elasticsearch/script/groovy/GroovySecurityTests.java
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.script.ScriptException;
-=======
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.script.ScriptService.ScriptType;
 import org.elasticsearch.script.groovy.GroovyScriptExecutionException;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
->>>>>>> tempbranch:core/src/test/java/org/elasticsearch/script/GroovySecurityIT.java
 import org.elasticsearch.test.ESIntegTestCase;
 import org.junit.Test;
 
@@ -49,20 +46,15 @@ import static org.hamcrest.CoreMatchers.instanceOf;
  * Tests for the Groovy security permissions
  */
 @ESIntegTestCase.ClusterScope(scope = ESIntegTestCase.Scope.TEST, numDataNodes = 0)
-<<<<<<< HEAD:plugins/lang-groovy/src/test/java/org/elasticsearch/script/groovy/GroovySecurityTests.java
 // TODO: refactor into unit test, or, proper REST test
 public class GroovySecurityTests extends ESIntegTestCase {
     
-=======
-public class GroovySecurityIT extends ESIntegTestCase {
-
->>>>>>> tempbranch:core/src/test/java/org/elasticsearch/script/GroovySecurityIT.java
     @Override
     public void setUp() throws Exception {
         super.setUp();
         assumeTrue("test requires security manager to be enabled", System.getSecurityManager() != null);
     }
-    
+
     @Override
     protected Collection<Class<? extends Plugin>> nodePlugins() {
         return Collections.singleton(GroovyPlugin.class);
@@ -117,7 +109,7 @@ public class GroovySecurityIT extends ESIntegTestCase {
 
         // AccessControlException[access denied ("java.io.FilePermission" "<<ALL FILES>>" "execute")]
         assertFailure("def methodName = 'ex'; Runtime.\"${'get' + 'Runtime'}\"().\"${methodName}ec\"(\"touch /tmp/gotcha2\")");
-
+        
         // test a directory we normally have access to, but the groovy script does not.
         Path dir = createTempDir();
         // TODO: figure out the necessary escaping for windows paths here :)
@@ -155,8 +147,8 @@ public class GroovySecurityIT extends ESIntegTestCase {
         for (ShardSearchFailure fail : fails) {
             assertThat(fail.getCause(), instanceOf(ScriptException.class));
             assertTrue("unexpected exception" + fail.getCause(),
-            // different casing, depending on jvm impl...
-                    fail.getCause().toString().toLowerCase(Locale.ROOT).contains("[access denied"));
+                       // different casing, depending on jvm impl...
+                       fail.getCause().toString().toLowerCase(Locale.ROOT).contains("[access denied"));
         }
     }
 }

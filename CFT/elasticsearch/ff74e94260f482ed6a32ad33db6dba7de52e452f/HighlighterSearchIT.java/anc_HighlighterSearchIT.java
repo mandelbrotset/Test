@@ -19,25 +19,22 @@
 package org.elasticsearch.search.highlight;
 
 import com.carrotsearch.randomizedtesting.generators.RandomPicks;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.index.query.*;
-<<<<<<< HEAD
-import org.elasticsearch.index.query.MatchQueryBuilder.Operator;
-import org.elasticsearch.index.query.MatchQueryBuilder.Type;
-=======
+import org.elasticsearch.index.query.BoostableQueryBuilder;
 import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
-import org.elasticsearch.index.search.MatchQuery.Type;
-import org.elasticsearch.index.search.MatchQuery;
+import org.elasticsearch.index.query.MatchQueryBuilder.Operator;
+import org.elasticsearch.index.query.MatchQueryBuilder.Type;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
->>>>>>> tempbranch
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -54,12 +51,38 @@ import java.util.Map;
 import static org.elasticsearch.client.Requests.searchRequest;
 import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.boostingQuery;
+import static org.elasticsearch.index.query.QueryBuilders.commonTermsQuery;
+import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
+import static org.elasticsearch.index.query.QueryBuilders.fuzzyQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchPhrasePrefixQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchPhraseQuery;
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
+import static org.elasticsearch.index.query.QueryBuilders.missingQuery;
+import static org.elasticsearch.index.query.QueryBuilders.multiMatchQuery;
+import static org.elasticsearch.index.query.QueryBuilders.prefixQuery;
+import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
+import static org.elasticsearch.index.query.QueryBuilders.rangeQuery;
+import static org.elasticsearch.index.query.QueryBuilders.regexpQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.elasticsearch.index.query.QueryBuilders.typeQuery;
+import static org.elasticsearch.index.query.QueryBuilders.wildcardQuery;
 import static org.elasticsearch.search.builder.SearchSourceBuilder.highlight;
 import static org.elasticsearch.search.builder.SearchSourceBuilder.searchSource;
-import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.*;
+import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertAcked;
+import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertFailures;
+import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertHighlight;
+import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertHitCount;
+import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertNoFailures;
+import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertNotHighlighted;
 import static org.elasticsearch.test.hamcrest.RegexMatcher.matches;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
 
 public class HighlighterSearchIT extends ESIntegTestCase {
 
@@ -822,10 +845,8 @@ public class HighlighterSearchIT extends ESIntegTestCase {
         ensureGreen();
 
         // Index one megabyte of "t   " over and over and over again
-        String pattern = "t   ";
-        String value = new String(new char[1024 * 256 / pattern.length()]).replace("\0", pattern);
         client().prepareIndex("test", "type1")
-                .setSource("field1", value).get();
+                .setSource("field1", Joiner.on("").join(Iterables.limit(Iterables.cycle("t   "), 1024*256))).get();
         refresh();
 
         logger.info("--> highlighting and searching on field1");
@@ -948,12 +969,12 @@ public class HighlighterSearchIT extends ESIntegTestCase {
         assertHighlight(resp, 0, "foo", 0, equalTo("junk junk <em>cats</em> junk junk"));
 
         // which can also be written by searching on the subfield
-        resp = req.setQuery(queryStringQuery("cats").field("foo").field("foo.plain", 5)).get();
+        resp = req.setQuery(queryStringQuery("cats").field("foo").field("foo.plain^5")).get();
         assertHighlight(resp, 0, "foo", 0, equalTo("junk junk <em>cats</em> junk junk"));
 
         // Speaking of two fields, you can have two fields, only one of which has matchedFields enabled
-        QueryBuilder twoFieldsQuery = queryStringQuery("cats").field("foo").field("foo.plain", 5)
-                .field("bar").field("bar.plain", 5);
+        QueryBuilder twoFieldsQuery = queryStringQuery("cats").field("foo").field("foo.plain^5")
+                .field("bar").field("bar.plain^5");
         resp = req.setQuery(twoFieldsQuery).addHighlightedField(barField).get();
         assertHighlight(resp, 0, "foo", 0, equalTo("junk junk <em>cats</em> junk junk"));
         assertHighlight(resp, 0, "bar", 0, equalTo("<em>cat</em> <em>cat</em> junk junk junk junk"));
@@ -1375,7 +1396,7 @@ public class HighlighterSearchIT extends ESIntegTestCase {
 
         logger.info("--> highlighting and searching on field1");
         SearchSourceBuilder source = searchSource()
-                .query(boostingQuery(termQuery("field2", "brown"), termQuery("field2", "foobar")).negativeBoost(0.5f))
+                .query(boostingQuery().positive(termQuery("field2", "brown")).negative(termQuery("field2", "foobar")).negativeBoost(0.5f))
                 .highlight(highlight().field("field2").order("score").preTags("<x>").postTags("</x>"));
 
         SearchResponse searchResponse = client().prepareSearch("test").setSource(source).get();
@@ -1394,7 +1415,7 @@ public class HighlighterSearchIT extends ESIntegTestCase {
 
         logger.info("--> highlighting and searching on field1");
         SearchSourceBuilder source = searchSource()
-                .query(boostingQuery(termQuery("field2", "brown"), termQuery("field2", "foobar")).negativeBoost(0.5f))
+                .query(boostingQuery().positive(termQuery("field2", "brown")).negative(termQuery("field2", "foobar")).negativeBoost(0.5f))
                 .highlight(highlight().field("field2").order("score").preTags("<x>").postTags("</x>"));
 
         SearchResponse searchResponse = client().prepareSearch("test").setSource(source).get();
@@ -1520,7 +1541,7 @@ public class HighlighterSearchIT extends ESIntegTestCase {
         refresh();
 
         SearchResponse response = client().prepareSearch("test")
-                .setQuery(QueryBuilders.matchQuery("tags", "long tag").type(MatchQuery.Type.PHRASE))
+                .setQuery(QueryBuilders.matchQuery("tags", "long tag").type(MatchQueryBuilder.Type.PHRASE))
                 .addHighlightedField(new HighlightBuilder.Field("tags")
                         .fragmentSize(-1).numOfFragments(2).fragmenter("simple")).get();
 
@@ -1528,7 +1549,7 @@ public class HighlighterSearchIT extends ESIntegTestCase {
         assertHighlight(response, 0, "tags", 1, 2, equalTo("here is another one that is very <em>long</em> <em>tag</em> and has the <em>tag</em> token near the end"));
 
         response = client().prepareSearch("test")
-                .setQuery(QueryBuilders.matchQuery("tags", "long tag").type(MatchQuery.Type.PHRASE))
+                .setQuery(QueryBuilders.matchQuery("tags", "long tag").type(MatchQueryBuilder.Type.PHRASE))
                 .addHighlightedField(new HighlightBuilder.Field("tags")
                         .fragmentSize(-1).numOfFragments(2).fragmenter("span")).get();
 
@@ -1536,7 +1557,7 @@ public class HighlighterSearchIT extends ESIntegTestCase {
         assertHighlight(response, 0, "tags", 1, 2, equalTo("here is another one that is very <em>long</em> <em>tag</em> and has the <em>tag</em> token near the end"));
 
         assertFailures(client().prepareSearch("test")
-                        .setQuery(QueryBuilders.matchQuery("tags", "long tag").type(MatchQuery.Type.PHRASE))
+                        .setQuery(QueryBuilders.matchQuery("tags", "long tag").type(MatchQueryBuilder.Type.PHRASE))
                         .addHighlightedField(new HighlightBuilder.Field("tags")
                                 .fragmentSize(-1).numOfFragments(2).fragmenter("invalid")),
                 RestStatus.BAD_REQUEST,
@@ -1591,7 +1612,7 @@ public class HighlighterSearchIT extends ESIntegTestCase {
 
         // This query used to fail when the field to highlight was absent
         SearchResponse response = client().prepareSearch("test")
-                .setQuery(QueryBuilders.matchQuery("field", "highlight").type(MatchQuery.Type.BOOLEAN))
+                .setQuery(QueryBuilders.matchQuery("field", "highlight").type(MatchQueryBuilder.Type.BOOLEAN))
                 .addHighlightedField(new HighlightBuilder.Field("highlight_field")
                         .fragmentSize(-1).numOfFragments(1).fragmenter("simple")).get();
         assertThat(response.getHits().hits()[0].highlightFields().isEmpty(), equalTo(true));
@@ -1611,7 +1632,7 @@ public class HighlighterSearchIT extends ESIntegTestCase {
         refresh();
 
         SearchResponse response = client().prepareSearch("test")
-                .setQuery(QueryBuilders.matchQuery("text", "test").type(MatchQuery.Type.BOOLEAN))
+                .setQuery(QueryBuilders.matchQuery("text", "test").type(MatchQueryBuilder.Type.BOOLEAN))
                 .addHighlightedField("text")
                 .addHighlightedField("byte")
                 .addHighlightedField("short")
@@ -1641,7 +1662,7 @@ public class HighlighterSearchIT extends ESIntegTestCase {
         refresh();
 
         SearchResponse response = client().prepareSearch("test")
-                .setQuery(QueryBuilders.matchQuery("text", "test").type(MatchQuery.Type.BOOLEAN))
+                .setQuery(QueryBuilders.matchQuery("text", "test").type(MatchQueryBuilder.Type.BOOLEAN))
                 .addHighlightedField("text").execute().actionGet();
         // PatternAnalyzer will throw an exception if it is resetted twice
         assertHitCount(response, 1l);
@@ -2308,7 +2329,7 @@ public class HighlighterSearchIT extends ESIntegTestCase {
 
         logger.info("--> highlighting and searching on field1");
         SearchSourceBuilder source = searchSource()
-                .query(boostingQuery(termQuery("field2", "brown"), termQuery("field2", "foobar")).negativeBoost(0.5f))
+                .query(boostingQuery().positive(termQuery("field2", "brown")).negative(termQuery("field2", "foobar")).negativeBoost(0.5f))
                 .highlight(highlight().field("field2").preTags("<x>").postTags("</x>"));
         SearchResponse searchResponse = client().search(searchRequest("test").source(source)).actionGet();
 
@@ -2594,10 +2615,10 @@ public class HighlighterSearchIT extends ESIntegTestCase {
         // Query string boosting the field
         phraseBoostTestCaseForClauses(highlighterType, 1f,
                 queryStringQuery("highlight words together").field("field1"),
-                queryStringQuery("\"highlight words together\"").field("field1", 100).autoGeneratePhraseQueries(true));
+                queryStringQuery("\"highlight words together\"").field("field1^100").autoGeneratePhraseQueries(true));
     }
 
-    private <P extends AbstractQueryBuilder<P>> void
+    private <P extends QueryBuilder & BoostableQueryBuilder<?>> void
             phraseBoostTestCaseForClauses(String highlighterType, float boost, QueryBuilder terms, P phrase) {
         Matcher<String> highlightedMatcher = Matchers.either(containsString("<em>highlight words together</em>")).or(
                 containsString("<em>highlight</em> <em>words</em> <em>together</em>"));
@@ -2611,10 +2632,10 @@ public class HighlighterSearchIT extends ESIntegTestCase {
         assertHighlight(response, 0, "field1", 0, 1, highlightedMatcher);
         phrase.boost(1);
         // Try with a boosting query
-        response = search.setQuery(boostingQuery(phrase, terms).boost(boost).negativeBoost(1)).get();
+        response = search.setQuery(boostingQuery().positive(phrase).negative(terms).boost(boost).negativeBoost(1)).get();
         assertHighlight(response, 0, "field1", 0, 1, highlightedMatcher);
         // Try with a boosting query using a negative boost
-        response = search.setQuery(boostingQuery(phrase, terms).boost(1).negativeBoost(1/boost)).get();
+        response = search.setQuery(boostingQuery().positive(phrase).negative(terms).boost(1).negativeBoost(1/boost)).get();
         assertHighlight(response, 0, "field1", 0, 1, highlightedMatcher);
     }
 }

@@ -28,7 +28,6 @@ import org.elasticsearch.action.RoutingMissingException;
 import org.elasticsearch.action.TimestampParsingException;
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
 import org.elasticsearch.action.search.ShardSearchFailure;
-import org.elasticsearch.client.AbstractClientHeadersTestCase;
 import org.elasticsearch.cluster.block.ClusterBlockException;
 import org.elasticsearch.cluster.metadata.SnapshotId;
 import org.elasticsearch.cluster.node.DiscoveryNode;
@@ -41,15 +40,10 @@ import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.transport.LocalTransportAddress;
 import org.elasticsearch.common.unit.ByteSizeValue;
-<<<<<<< HEAD
-import org.elasticsearch.common.util.CancellableThreadsTests;
-import org.elasticsearch.common.xcontent.*;
-=======
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentLocation;
->>>>>>> tempbranch
 import org.elasticsearch.discovery.DiscoverySettings;
 import org.elasticsearch.index.AlreadyExpiredException;
 import org.elasticsearch.index.Index;
@@ -110,9 +104,9 @@ public class ExceptionSerializationTests extends ESTestCase {
                 org.elasticsearch.test.rest.parser.RestTestParseException.class,
                 org.elasticsearch.index.query.TestQueryParsingException.class,
                 org.elasticsearch.test.rest.client.RestException.class,
-                CancellableThreadsTests.CustomException.class,
+                org.elasticsearch.common.util.CancellableThreadsTest.CustomException.class,
                 org.elasticsearch.rest.BytesRestResponseTests.WithHeadersException.class,
-                AbstractClientHeadersTestCase.InternalException.class);
+                org.elasticsearch.client.AbstractClientHeadersTests.InternalException.class);
         FileVisitor<Path> visitor = new FileVisitor<Path>() {
             private Path pkgPrefix = PathUtils.get(path).getParent();
 

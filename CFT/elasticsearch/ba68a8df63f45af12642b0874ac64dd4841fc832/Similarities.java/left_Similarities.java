@@ -19,10 +19,6 @@
 
 package org.elasticsearch.index.similarity;
 
-<<<<<<< HEAD
-import com.google.common.collect.ImmutableMap;
-=======
->>>>>>> tempbranch
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.search.similarities.DefaultSimilarity;
 
@@ -31,8 +27,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static java.util.Collections.unmodifiableMap;
-
-import java.util.Collection;
 
 /**
  * Cache of pre-defined Similarities

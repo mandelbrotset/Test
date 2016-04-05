@@ -149,7 +149,8 @@ public class SearchService extends AbstractLifecycleComponent<SearchService> imp
 
     @Inject
     public SearchService(Settings settings, ClusterSettings clusterSettings, ClusterService clusterService, IndicesService indicesService, ThreadPool threadPool,
-                         ScriptService scriptService, PageCacheRecycler pageCacheRecycler, BigArrays bigArrays, DfsPhase dfsPhase, QueryPhase queryPhase, FetchPhase fetchPhase) {
+                         ScriptService scriptService, PageCacheRecycler pageCacheRecycler, BigArrays bigArrays, DfsPhase dfsPhase, QueryPhase queryPhase, FetchPhase fetchPhase,
+                         IndicesRequestCache indicesQueryCache) {
         super(settings);
         this.parseFieldMatcher = new ParseFieldMatcher(settings);
         this.threadPool = threadPool;
@@ -161,7 +162,7 @@ public class SearchService extends AbstractLifecycleComponent<SearchService> imp
         this.dfsPhase = dfsPhase;
         this.queryPhase = queryPhase;
         this.fetchPhase = fetchPhase;
-        this.indicesQueryCache = indicesService.getIndicesRequestCache();
+        this.indicesQueryCache = indicesQueryCache;
 
         TimeValue keepAliveInterval = KEEPALIVE_INTERVAL_SETTING.get(settings);
         this.defaultKeepAlive = DEFAULT_KEEPALIVE_SETTING.get(settings).millis();

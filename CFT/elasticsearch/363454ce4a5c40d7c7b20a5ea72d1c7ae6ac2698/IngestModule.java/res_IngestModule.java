@@ -42,14 +42,11 @@ public class IngestModule extends AbstractModule {
         binder().bind(PipelineStore.class).asEagerSingleton();
         binder().bind(PipelineStoreClient.class).asEagerSingleton();
 
-<<<<<<< HEAD
         addProcessor(SimpleProcessor.TYPE, new SimpleProcessor.Factory());
         addProcessor(GeoIpProcessor.TYPE, new GeoIpProcessor.Factory());
         addProcessor(GrokProcessor.TYPE, new GrokProcessor.Factory());
-=======
-        registerProcessor(SimpleProcessor.TYPE, SimpleProcessor.Builder.Factory.class);
-        registerProcessor(DateProcessor.TYPE, DateProcessor.Builder.Factory.class);
->>>>>>> tempbranch
+
+        //TODO addProcessor(DateProcessor.TYPE, DateProcessor.Builder.Factory.class);
 
         MapBinder<String, Processor.Factory> mapBinder = MapBinder.newMapBinder(binder(), String.class, Processor.Factory.class);
         for (Map.Entry<String, Processor.Factory> entry : processors.entrySet()) {

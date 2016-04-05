@@ -28,9 +28,8 @@ import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.index.mapper.object.ObjectMapper;
-import org.elasticsearch.index.query.QueryShardContext;
-import org.elasticsearch.index.query.QueryShardException;
 import org.elasticsearch.index.query.QueryParseContext;
+import org.elasticsearch.index.query.QueryParsingException;
 import org.elasticsearch.search.internal.SearchContext;
 
 import java.io.IOException;
@@ -42,7 +41,6 @@ import java.io.IOException;
  */
 public class NestedInnerQueryParseSupport {
 
-    protected final QueryShardContext shardContext;
     protected final QueryParseContext parseContext;
 
     private BytesReference source;
@@ -62,15 +60,12 @@ public class NestedInnerQueryParseSupport {
     private ObjectMapper parentObjectMapper;
 
     public NestedInnerQueryParseSupport(XContentParser parser, SearchContext searchContext) {
-        parseContext = searchContext.queryParserService().getShardContext().parseContext();
-        shardContext = searchContext.queryParserService().getShardContext();
-        shardContext.reset(parser);
-
+        parseContext = searchContext.queryParserService().getParseContext();
+        parseContext.reset(parser);
     }
 
-    public NestedInnerQueryParseSupport(QueryShardContext context) {
-        this.parseContext = context.parseContext();
-        this.shardContext = context;
+    public NestedInnerQueryParseSupport(QueryParseContext parseContext) {
+        this.parseContext = parseContext;
     }
 
     public void query() throws IOException {
@@ -108,10 +103,10 @@ public class NestedInnerQueryParseSupport {
             return innerQuery;
         } else {
             if (path == null) {
-                throw new QueryShardException(shardContext, "[nested] requires 'path' field");
+                throw new QueryParsingException(parseContext, "[nested] requires 'path' field");
             }
             if (!queryFound) {
-                throw new QueryShardException(shardContext, "[nested] requires either 'query' or 'filter' field");
+                throw new QueryParsingException(parseContext, "[nested] requires either 'query' or 'filter' field");
             }
 
             XContentParser old = parseContext.parser();
@@ -137,10 +132,10 @@ public class NestedInnerQueryParseSupport {
             return innerFilter;
         } else {
             if (path == null) {
-                throw new QueryShardException(shardContext, "[nested] requires 'path' field");
+                throw new QueryParsingException(parseContext, "[nested] requires 'path' field");
             }
             if (!filterFound) {
-                throw new QueryShardException(shardContext, "[nested] requires either 'query' or 'filter' field");
+                throw new QueryParsingException(parseContext, "[nested] requires either 'query' or 'filter' field");
             }
 
             setPathLevel();
@@ -160,12 +155,12 @@ public class NestedInnerQueryParseSupport {
 
     public void setPath(String path) {
         this.path = path;
-        nestedObjectMapper = shardContext.getObjectMapper(path);
+        nestedObjectMapper = parseContext.getObjectMapper(path);
         if (nestedObjectMapper == null) {
-            throw new QueryShardException(shardContext, "[nested] failed to find nested object under path [" + path + "]");
+            throw new QueryParsingException(parseContext, "[nested] failed to find nested object under path [" + path + "]");
         }
         if (!nestedObjectMapper.nested().isNested()) {
-            throw new QueryShardException(shardContext, "[nested] nested object under path [" + path + "] is not of nested type");
+            throw new QueryParsingException(parseContext, "[nested] nested object under path [" + path + "] is not of nested type");
         }
     }
 
@@ -190,23 +185,18 @@ public class NestedInnerQueryParseSupport {
     }
 
     private void setPathLevel() {
-        ObjectMapper objectMapper = shardContext.nestedScope().getObjectMapper();
+        ObjectMapper objectMapper = parseContext.nestedScope().getObjectMapper();
         if (objectMapper == null) {
-            parentFilter = shardContext.bitsetFilter(Queries.newNonNestedFilter());
+            parentFilter = parseContext.bitsetFilter(Queries.newNonNestedFilter());
         } else {
-            parentFilter = shardContext.bitsetFilter(objectMapper.nestedTypeFilter());
+            parentFilter = parseContext.bitsetFilter(objectMapper.nestedTypeFilter());
         }
-<<<<<<< HEAD
         childFilter = nestedObjectMapper.nestedTypeFilter();
         parentObjectMapper = parseContext.nestedScope().nextLevel(nestedObjectMapper);
-=======
-        childFilter = shardContext.bitsetFilter(nestedObjectMapper.nestedTypeFilter());
-        parentObjectMapper = shardContext.nestedScope().nextLevel(nestedObjectMapper);
->>>>>>> tempbranch
     }
 
     private void resetPathLevel() {
-        shardContext.nestedScope().previousLevel();
+        parseContext.nestedScope().previousLevel();
     }
 
 }

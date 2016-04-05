@@ -19,7 +19,6 @@
 
 package org.elasticsearch.index.query.support;
 
-import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.join.BitDocIdSetFilter;
 import org.elasticsearch.common.bytes.BytesReference;
@@ -56,7 +55,7 @@ public class NestedInnerQueryParseSupport {
     protected boolean filterFound = false;
 
     protected BitDocIdSetFilter parentFilter;
-    protected Filter childFilter;
+    protected BitDocIdSetFilter childFilter;
 
     protected ObjectMapper nestedObjectMapper;
     private ObjectMapper parentObjectMapper;
@@ -196,13 +195,8 @@ public class NestedInnerQueryParseSupport {
         } else {
             parentFilter = shardContext.bitsetFilter(objectMapper.nestedTypeFilter());
         }
-<<<<<<< HEAD
-        childFilter = nestedObjectMapper.nestedTypeFilter();
-        parentObjectMapper = parseContext.nestedScope().nextLevel(nestedObjectMapper);
-=======
         childFilter = shardContext.bitsetFilter(nestedObjectMapper.nestedTypeFilter());
         parentObjectMapper = shardContext.nestedScope().nextLevel(nestedObjectMapper);
->>>>>>> tempbranch
     }
 
     private void resetPathLevel() {

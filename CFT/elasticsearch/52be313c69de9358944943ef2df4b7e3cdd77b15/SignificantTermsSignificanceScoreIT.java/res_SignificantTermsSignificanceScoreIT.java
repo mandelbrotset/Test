@@ -236,12 +236,8 @@ public class SignificantTermsSignificanceScoreIT extends ESIntegTestCase {
         public static class SimpleHeuristicParser implements SignificanceHeuristicParser {
 
             @Override
-<<<<<<< HEAD
             public SignificanceHeuristic parse(XContentParser parser, ParseFieldMatcher parseFieldMatcher, SearchContext context)
-                    throws IOException, QueryParsingException {
-=======
-            public SignificanceHeuristic parse(XContentParser parser, ParseFieldMatcher parseFieldMatcher) throws IOException, QueryShardException {
->>>>>>> tempbranch
+                    throws IOException, QueryShardException {
                 parser.nextToken();
                 return new SimpleHeuristic();
             }

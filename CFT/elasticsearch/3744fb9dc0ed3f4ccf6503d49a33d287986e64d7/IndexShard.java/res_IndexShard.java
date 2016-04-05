@@ -19,27 +19,11 @@
 
 package org.elasticsearch.index.shard;
 
-<<<<<<< HEAD
 import org.apache.lucene.index.CheckIndex;
 import org.apache.lucene.index.IndexCommit;
 import org.apache.lucene.index.KeepOnlyLastCommitDeletionPolicy;
 import org.apache.lucene.index.SnapshotDeletionPolicy;
 import org.apache.lucene.index.Term;
-=======
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.channels.ClosedByInterruptException;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-
-import org.apache.lucene.index.*;
->>>>>>> tempbranch
 import org.apache.lucene.search.QueryCachingPolicy;
 import org.apache.lucene.search.UsageTrackingQueryCachingPolicy;
 import org.apache.lucene.store.AlreadyClosedException;
@@ -137,7 +121,6 @@ import org.elasticsearch.search.suggest.completion.CompletionFieldStats;
 import org.elasticsearch.search.suggest.completion.CompletionStats;
 import org.elasticsearch.threadpool.ThreadPool;
 
-<<<<<<< HEAD
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.channels.ClosedByInterruptException;
@@ -150,10 +133,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-
-=======
->>>>>>> tempbranch
 
 public class IndexShard extends AbstractIndexShardComponent {
 
@@ -215,14 +196,7 @@ public class IndexShard extends AbstractIndexShardComponent {
      */
     public static final String INDEX_FLUSH_ON_CLOSE = "index.flush_on_close";
     public static final String INDEX_TRANSLOG_FLUSH_THRESHOLD_SIZE = "index.translog.flush_threshold_size";
-<<<<<<< HEAD
-    /** If we see no indexing operations after this much time for a given shard, we consider that shard inactive (default: 5 minutes). */
-    public static final String INDEX_SHARD_INACTIVE_TIME_SETTING = "index.shard.inactive_time";
-    private static final String INDICES_INACTIVE_TIME_SETTING = "indices.memory.shard_inactive_time";
-=======
-    public static final String INDEX_TRANSLOG_DISABLE_FLUSH = "index.translog.disable_flush";
     public static final String INDEX_REFRESH_INTERVAL = "index.refresh_interval";
->>>>>>> tempbranch
 
     private final ShardPath path;
 
@@ -1048,27 +1022,7 @@ public class IndexShard extends AbstractIndexShardComponent {
         }
     }
 
-<<<<<<< HEAD
-    public static final String INDEX_REFRESH_INTERVAL = "index.refresh_interval";
-
-    public void addShardFailureCallback(Callback<ShardFailure> onShardFailure) {
-        this.shardEventListener.delegates.add(onShardFailure);
-    }
-
-    /**
-     * Change the indexing and translog buffer sizes.  If {@code IndexWriter} is currently using more than
-     * the new buffering indexing size then we do a refresh to free up the heap.
-     */
-    public void updateBufferSize(ByteSizeValue shardIndexingBufferSize) {
-
-        final EngineConfig config = engineConfig;
-        final ByteSizeValue preValue = config.getIndexingBufferSize();
-
-        config.setIndexingBufferSize(shardIndexingBufferSize);
-
-=======
     public long getIndexBufferRAMBytesUsed() {
->>>>>>> tempbranch
         Engine engine = getEngineOrNull();
         if (engine == null) {
             return 0;
@@ -1091,12 +1045,7 @@ public class IndexShard extends AbstractIndexShardComponent {
         if (engineOrNull != null && System.nanoTime() - engineOrNull.getLastWriteNanos() >= inactiveTimeNS) {
             boolean wasActive = active.getAndSet(false);
             if (wasActive) {
-<<<<<<< HEAD
-                updateBufferSize(IndexingMemoryController.INACTIVE_SHARD_INDEXING_BUFFER);
-                logger.debug("marking shard as inactive (inactive_time=[{}]) indexing wise", inactiveTime);
-=======
                 logger.debug("shard is now inactive");
->>>>>>> tempbranch
                 indexEventListener.onShardInactive(this);
             }
         }
@@ -1195,19 +1144,6 @@ public class IndexShard extends AbstractIndexShardComponent {
                 logger.info("updating {} from [{}] to [{}]", EngineConfig.INDEX_GC_DELETES_SETTING, TimeValue.timeValueMillis(config.getGcDeletesInMillis()), TimeValue.timeValueMillis(gcDeletesInMillis));
                 config.setGcDeletesInMillis(gcDeletesInMillis);
                 change = true;
-            }
-
-<<<<<<< HEAD
-            final String versionMapSize = settings.get(EngineConfig.INDEX_VERSION_MAP_SIZE, config.getVersionMapSizeSetting());
-            if (config.getVersionMapSizeSetting().equals(versionMapSize) == false) {
-                config.setVersionMapSizeSetting(versionMapSize);
-=======
-            final boolean compoundOnFlush = settings.getAsBoolean(EngineConfig.INDEX_COMPOUND_ON_FLUSH, config.isCompoundOnFlush());
-            if (compoundOnFlush != config.isCompoundOnFlush()) {
-                logger.info("updating {} from [{}] to [{}]", EngineConfig.INDEX_COMPOUND_ON_FLUSH, config.isCompoundOnFlush(), compoundOnFlush);
-                config.setCompoundOnFlush(compoundOnFlush);
-                change = true;
->>>>>>> tempbranch
             }
 
             final int maxThreadCount = settings.getAsInt(MergeSchedulerConfig.MAX_THREAD_COUNT, mergeSchedulerConfig.getMaxThreadCount());

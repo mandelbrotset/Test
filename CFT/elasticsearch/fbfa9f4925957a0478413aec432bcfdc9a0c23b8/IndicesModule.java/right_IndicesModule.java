@@ -77,13 +77,6 @@ import java.util.Map;
  * Configures classes and services that are shared by indices on each node.
  */
 public class IndicesModule extends AbstractModule {
-<<<<<<< HEAD
-=======
-
-    private final ExtensionPoint.ClassSet<QueryParser> queryParsers
-        = new ExtensionPoint.ClassSet<>("query_parser", QueryParser.class);
-
->>>>>>> tempbranch
     private final Map<String, Mapper.TypeParser> mapperParsers
         = new LinkedHashMap<>();
     // Use a LinkedHashMap for metadataMappers because iteration order matters

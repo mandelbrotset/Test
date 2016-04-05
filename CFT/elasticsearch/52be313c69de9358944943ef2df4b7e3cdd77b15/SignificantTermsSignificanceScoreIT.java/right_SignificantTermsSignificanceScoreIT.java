@@ -29,7 +29,7 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.QueryShardException;
+import org.elasticsearch.index.query.QueryParsingException;
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptModule;
@@ -236,12 +236,8 @@ public class SignificantTermsSignificanceScoreIT extends ESIntegTestCase {
         public static class SimpleHeuristicParser implements SignificanceHeuristicParser {
 
             @Override
-<<<<<<< HEAD
             public SignificanceHeuristic parse(XContentParser parser, ParseFieldMatcher parseFieldMatcher, SearchContext context)
                     throws IOException, QueryParsingException {
-=======
-            public SignificanceHeuristic parse(XContentParser parser, ParseFieldMatcher parseFieldMatcher) throws IOException, QueryShardException {
->>>>>>> tempbranch
                 parser.nextToken();
                 return new SimpleHeuristic();
             }

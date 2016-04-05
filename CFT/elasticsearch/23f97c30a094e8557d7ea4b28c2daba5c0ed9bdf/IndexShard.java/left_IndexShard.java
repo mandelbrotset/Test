@@ -293,9 +293,7 @@ public class IndexShard extends AbstractIndexShardComponent implements IndexSett
         return indexFieldDataService;
     }
 
-    public MapperService mapperService() {
-        return mapperService;
-    }
+    public MapperService mapperService() { return mapperService;}
 
     public ShardSearchStats searchService() {
         return this.searchService;
@@ -440,8 +438,6 @@ public class IndexShard extends AbstractIndexShardComponent implements IndexSett
         return previousState;
     }
 
-<<<<<<< HEAD
-=======
     public Engine.Create prepareCreate(SourceToParse source, long version, VersionType versionType, Engine.Operation.Origin origin) {
         try {
             return prepareCreate(docMapper(source.type()), source, version, versionType, origin);
@@ -477,7 +473,6 @@ public class IndexShard extends AbstractIndexShardComponent implements IndexSett
         indexingService.postCreate(create);
     }
 
->>>>>>> tempbranch
     public Engine.Index prepareIndex(SourceToParse source, long version, VersionType versionType, Engine.Operation.Origin origin) {
         try {
             return prepareIndex(docMapper(source.type()), source, version, versionType, origin);
@@ -1564,7 +1559,6 @@ public class IndexShard extends AbstractIndexShardComponent implements IndexSett
     /**
      * Schedules a flush if needed but won't schedule more than one flush concurrently. The flush will be executed on the
      * Flush thread-pool asynchronously.
-     *
      * @return <code>true</code> if a new flush is scheduled otherwise <code>false</code>.
      */
     public boolean maybeFlush() {

@@ -1998,36 +1998,10 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
             assertThat(e.getDetailedMessage(), containsString("you can either define [functions] array or a single function, not both. already found [weight], now encountering [functions]."));
         }
     }
-<<<<<<< HEAD
-    
-    /** 
-=======
-
-    // https://github.com/elasticsearch/elasticsearch/issues/6722
-    public void testEmptyBoolSubClausesIsMatchAll() throws IOException {
-        String query = copyToStringFromClasspath("/org/elasticsearch/index/query/bool-query-with-empty-clauses-for-parsing.json");
-        IndexService indexService = createIndex("testidx", client().admin().indices().prepareCreate("testidx")
-                .addMapping("foo", "nested", "type=nested"));
-        SearchContext.setCurrent(createSearchContext(indexService));
-        IndexQueryParserService queryParser = indexService.queryParserService();
-        Query parsedQuery = queryParser.parse(query).query();
-        assertThat(parsedQuery, instanceOf(BooleanQuery.class));
-        BooleanQuery booleanQuery = (BooleanQuery) parsedQuery;
-        assertThat(booleanQuery.clauses().size(), equalTo(2));
-        BooleanClause booleanClause = booleanQuery.clauses().get(0);
-        assertThat(booleanClause.getOccur(), equalTo(Occur.MUST));
-        assertThat(booleanClause.getQuery(), instanceOf(MatchAllDocsQuery.class));
-        booleanClause = booleanQuery.clauses().get(1);
-        assertThat(booleanClause.getOccur(), equalTo(Occur.FILTER));
-        assertThat(booleanClause.getQuery(), instanceOf(ToParentBlockJoinQuery.class));
-        ToParentBlockJoinQuery toParentBlockJoinQuery = (ToParentBlockJoinQuery) booleanClause.getQuery();
-        assertThat(toParentBlockJoinQuery.toString(), equalTo("ToParentBlockJoinQuery (+*:* #QueryWrapperFilter(_type:__nested))"));
-        SearchContext.removeCurrent();
-    }
 
     /**
->>>>>>> tempbranch
-     * helper to extract term from TermQuery. */
+     * helper to extract term from TermQuery.
+     */
     private Term getTerm(Query query) {
         while (query instanceof QueryWrapperFilter) {
             query = ((QueryWrapperFilter) query).getQuery();

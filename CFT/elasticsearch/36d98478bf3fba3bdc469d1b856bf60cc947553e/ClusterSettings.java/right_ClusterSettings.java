@@ -59,12 +59,9 @@ import org.elasticsearch.indices.recovery.RecoverySettings;
 import org.elasticsearch.indices.store.IndicesStore;
 import org.elasticsearch.indices.ttl.IndicesTTLService;
 import org.elasticsearch.node.Node;
-<<<<<<< HEAD
 import org.elasticsearch.repositories.fs.FsRepository;
 import org.elasticsearch.repositories.uri.URLRepository;
 import org.elasticsearch.script.ScriptService;
-=======
->>>>>>> tempbranch
 import org.elasticsearch.search.SearchService;
 import org.elasticsearch.threadpool.ThreadPool;
 import org.elasticsearch.transport.Transport;
@@ -211,7 +208,6 @@ public final class ClusterSettings extends AbstractScopedSettings {
         IndexSettings.QUERY_STRING_ANALYZE_WILDCARD,
         IndexSettings.QUERY_STRING_ALLOW_LEADING_WILDCARD,
         PrimaryShardAllocator.NODE_INITIAL_SHARDS_SETTING,
-<<<<<<< HEAD
         ScriptService.SCRIPT_CACHE_SIZE_SETTING,
         IndicesFieldDataCache.INDICES_FIELDDATA_CLEAN_INTERVAL_SETTING,
         IndicesFieldDataCache.INDICES_FIELDDATA_CACHE_SIZE_KEY,
@@ -257,7 +253,4 @@ public final class ClusterSettings extends AbstractScopedSettings {
         URLRepository.REPOSITORIES_LIST_DIRECTORIES_SETTING,
         URLRepository.REPOSITORIES_URL_SETTING,
         URLRepository.SUPPORTED_PROTOCOLS_SETTING)));
-=======
-        Node.NODE_INGEST_SETTING)));
->>>>>>> tempbranch
 }

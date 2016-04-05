@@ -23,11 +23,6 @@ import com.carrotsearch.hppc.DoubleArrayList;
 import com.carrotsearch.hppc.FloatArrayList;
 import com.carrotsearch.hppc.LongArrayList;
 import com.carrotsearch.hppc.ObjectArrayList;
-<<<<<<< HEAD
-=======
-import com.google.common.collect.Iterators;
-
->>>>>>> tempbranch
 import org.apache.lucene.util.*;
 
 import java.util.*;

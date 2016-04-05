@@ -447,10 +447,10 @@ public class DecayFunctionScoreIT extends ESIntegTestCase {
         SearchResponse sr = response.actionGet();
         assertOrderedSearchHits(sr, "2", "1");
     }
-
+    
     @Test
     public void testParseDateMath() throws Exception {
-
+        
         assertAcked(prepareCreate("test").addMapping(
                 "type1",
                 jsonBuilder().startObject().startObject("type1").startObject("properties").startObject("test").field("type", "string")
@@ -471,7 +471,7 @@ public class DecayFunctionScoreIT extends ESIntegTestCase {
 
         assertNoFailures(sr);
         assertOrderedSearchHits(sr, "1", "2");
-
+        
         sr = client().search(
                 searchRequest().source(
                         searchSource().query(
@@ -832,103 +832,8 @@ public class DecayFunctionScoreIT extends ESIntegTestCase {
 //            assertThat(e.shardFailures()[0].reason(), not(containsString("did you mean [boost] instead?")));
 //
 //        } NOCOMMIT fix this
-    }
-
-<<<<<<< HEAD
-=======
-    // issue https://github.com/elasticsearch/elasticsearch/issues/6292
-    @Test
-    public void testMissingFunctionThrowsElasticsearchParseException() throws IOException {
-
-        // example from issue https://github.com/elasticsearch/elasticsearch/issues/6292
-        String doc = "{\n" +
-                "  \"text\": \"baseball bats\"\n" +
-                "}\n";
-
-        String query = "{\n" +
-                "    \"query\": {\n" +
-                "      \"function_score\": {\n" +
-                "        \"score_mode\": \"sum\",\n" +
-                "        \"boost_mode\": \"replace\",\n" +
-                "        \"functions\": [\n" +
-                "          {\n" +
-                "            \"filter\": {\n" +
-                "              \"term\": {\n" +
-                "                \"text\": \"baseball\"\n" +
-                "              }\n" +
-                "            }\n" +
-                "          }\n" +
-                "        ]\n" +
-                "      }\n" +
-                "    }\n" +
-                "}\n";
-
-        client().prepareIndex("t", "test").setSource(doc).get();
-        refresh();
-        ensureYellow("t");
-//        try {
-//            client().search(searchRequest().source(new BytesArray(query))).actionGet();
-//            fail("Should fail with SearchPhaseExecutionException");
-//        } catch (SearchPhaseExecutionException failure) {
-//            assertThat(failure.toString(), containsString("SearchParseException"));
-//            assertThat(failure.toString(), not(containsString("NullPointerException")));
-//        } NOCOMMIT fix this
-
-        query = "{\n" +
-                "    \"query\": {\n" +
-                "      \"function_score\": {\n" +
-                "        \"score_mode\": \"sum\",\n" +
-                "        \"boost_mode\": \"replace\",\n" +
-                "        \"functions\": [\n" +
-                "          {\n" +
-                "            \"filter\": {\n" +
-                "              \"term\": {\n" +
-                "                \"text\": \"baseball\"\n" +
-                "              }\n" +
-                "            },\n" +
-                "            \"weight\": 2\n" +
-                "          },\n" +
-                "          {\n" +
-                "            \"filter\": {\n" +
-                "              \"term\": {\n" +
-                "                \"text\": \"baseball\"\n" +
-                "              }\n" +
-                "            }\n" +
-                "          }\n" +
-                "        ]\n" +
-                "      }\n" +
-                "    }\n" +
-                "}";
-
-//        try {
-//            client().search(
-//                    searchRequest().source(new BytesArray(query))).actionGet();
-//            fail("Should fail with SearchPhaseExecutionException");
-//        } catch (SearchPhaseExecutionException failure) {
-//            assertThat(failure.toString(), containsString("SearchParseException"));
-//            assertThat(failure.toString(), not(containsString("NullPointerException")));
-//            assertThat(failure.toString(), containsString("an entry in functions list is missing a function"));
-//        } NOCOMMIT fix this
-
-        // next test java client
-        try {
-            client().prepareSearch("t").setQuery(QueryBuilders.functionScoreQuery(QueryBuilders.matchAllQuery(), null)).get();
-        } catch (IllegalArgumentException failure) {
-            assertThat(failure.toString(), containsString("function must not be null"));
         }
-        try {
-            client().prepareSearch("t").setQuery(QueryBuilders.functionScoreQuery().add(QueryBuilders.matchAllQuery(), null)).get();
-        } catch (IllegalArgumentException failure) {
-            assertThat(failure.toString(), containsString("function must not be null"));
-        }
-        try {
-            client().prepareSearch("t").setQuery(QueryBuilders.functionScoreQuery().add(null)).get();
-        } catch (IllegalArgumentException failure) {
-            assertThat(failure.toString(), containsString("function must not be null"));
-        }
-    }
 
->>>>>>> tempbranch
     @Test
     public void testExplainString() throws IOException, ExecutionException, InterruptedException {
         assertAcked(prepareCreate("test").addMapping(

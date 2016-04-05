@@ -18,30 +18,20 @@
  */
 package org.elasticsearch.common.unit;
 
-<<<<<<< HEAD
-=======
-import com.google.common.base.Preconditions;
-
->>>>>>> tempbranch
 import org.elasticsearch.common.ParseField;
-import org.elasticsearch.common.io.stream.StreamInput;
-import org.elasticsearch.common.io.stream.StreamOutput;
-import org.elasticsearch.common.io.stream.Writeable;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentBuilderString;
 import org.elasticsearch.common.xcontent.XContentParser;
 
 import java.io.IOException;
-import java.util.Locale;
-import java.util.Objects;
 
 /**
  * A unit class that encapsulates all in-exact search
  * parsing and conversion from similarities to edit distances
  * etc.
  */
-public final class Fuzziness implements ToXContent, Writeable<Fuzziness> {
+public final class Fuzziness implements ToXContent {
 
     public static final XContentBuilderString X_FIELD_NAME = new XContentBuilderString("fuzziness");
     public static final Fuzziness ZERO = new Fuzziness(0);
@@ -52,10 +42,6 @@ public final class Fuzziness implements ToXContent, Writeable<Fuzziness> {
 
     private final String fuzziness;
 
-    /** the prototype constant is intended for deserialization when used with
-     * {@link org.elasticsearch.common.io.stream.StreamableReader#readFrom(StreamInput)} */
-    static final Fuzziness PROTOTYPE = AUTO;
-
     private Fuzziness(int fuzziness) {
         if (fuzziness != 0 && fuzziness != 1 && fuzziness != 2) {
             throw new IllegalArgumentException("Valid edit distances are [0, 1, 2] but was [" + fuzziness + "]");
@@ -64,10 +50,7 @@ public final class Fuzziness implements ToXContent, Writeable<Fuzziness> {
     }
 
     private Fuzziness(String fuzziness) {
-        if (fuzziness == null) {
-            throw new IllegalArgumentException("fuzziness can't be null!");
-        }
-        this.fuzziness = fuzziness.toUpperCase(Locale.ROOT);
+        this.fuzziness = fuzziness;
     }
 
     /**
@@ -137,7 +120,7 @@ public final class Fuzziness implements ToXContent, Writeable<Fuzziness> {
     }
 
     public int asDistance(String text) {
-        if (this.equals(AUTO)) { //AUTO
+        if (this == AUTO) { //AUTO
             final int len = termLen(text);
             if (len <= 2) {
                 return 0;
@@ -151,7 +134,7 @@ public final class Fuzziness implements ToXContent, Writeable<Fuzziness> {
     }
 
     public TimeValue asTimeValue() {
-        if (this.equals(AUTO)) {
+        if (this == AUTO) {
             return TimeValue.timeValueMillis(1);
         } else {
             return TimeValue.parseTimeValue(fuzziness.toString(), null, "fuzziness");
@@ -159,7 +142,7 @@ public final class Fuzziness implements ToXContent, Writeable<Fuzziness> {
     }
 
     public long asLong() {
-        if (this.equals(AUTO)) {
+        if (this == AUTO) {
             return 1;
         }
         try {
@@ -170,7 +153,7 @@ public final class Fuzziness implements ToXContent, Writeable<Fuzziness> {
     }
 
     public int asInt() {
-        if (this.equals(AUTO)) {
+        if (this == AUTO) {
             return 1;
         }
         try {
@@ -181,7 +164,7 @@ public final class Fuzziness implements ToXContent, Writeable<Fuzziness> {
     }
 
     public short asShort() {
-        if (this.equals(AUTO)) {
+        if (this == AUTO) {
             return 1;
         }
         try {
@@ -192,7 +175,7 @@ public final class Fuzziness implements ToXContent, Writeable<Fuzziness> {
     }
 
     public byte asByte() {
-        if (this.equals(AUTO)) {
+        if (this == AUTO) {
             return 1;
         }
         try {
@@ -203,14 +186,14 @@ public final class Fuzziness implements ToXContent, Writeable<Fuzziness> {
     }
 
     public double asDouble() {
-        if (this.equals(AUTO)) {
+        if (this == AUTO) {
             return 1d;
         }
         return Double.parseDouble(fuzziness.toString());
     }
 
     public float asFloat() {
-        if (this.equals(AUTO)) {
+        if (this == AUTO) {
             return 1f;
         }
         return Float.parseFloat(fuzziness.toString());
@@ -222,36 +205,5 @@ public final class Fuzziness implements ToXContent, Writeable<Fuzziness> {
 
     public String asString() {
         return fuzziness.toString();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        }
-        Fuzziness other = (Fuzziness) obj;
-        return Objects.equals(fuzziness, other.fuzziness);
-    }
-
-    @Override
-    public int hashCode() {
-        return fuzziness.hashCode();
-    }
-
-    @Override
-    public void writeTo(StreamOutput out) throws IOException {
-        out.writeString(fuzziness);
-    }
-
-    @Override
-    public Fuzziness readFrom(StreamInput in) throws IOException {
-        return new Fuzziness(in.readString());
-    }
-
-    public static Fuzziness readFuzzinessFrom(StreamInput in) throws IOException {
-        return PROTOTYPE.readFrom(in);
     }
 }

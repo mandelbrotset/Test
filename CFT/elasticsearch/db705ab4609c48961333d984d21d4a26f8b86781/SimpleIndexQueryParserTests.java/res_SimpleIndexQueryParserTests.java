@@ -40,11 +40,6 @@ import org.elasticsearch.action.termvectors.MultiTermVectorsItemResponse;
 import org.elasticsearch.action.termvectors.MultiTermVectorsResponse;
 import org.elasticsearch.action.termvectors.TermVectorsRequest;
 import org.elasticsearch.action.termvectors.TermVectorsResponse;
-<<<<<<< HEAD
-import org.elasticsearch.cluster.metadata.MetaData;
-=======
-import org.elasticsearch.common.Strings;
->>>>>>> tempbranch
 import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.compress.CompressedXContent;
 import org.elasticsearch.common.lucene.search.MoreLikeThisQuery;
@@ -76,13 +71,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-<<<<<<< HEAD
-import java.util.*;
-=======
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
->>>>>>> tempbranch
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -1756,7 +1748,7 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
                 response.setExists(true);
                 Fields generatedFields = generateFields(item.fields(), item.id());
                 EnumSet<TermVectorsRequest.Flag> flags = EnumSet.of(TermVectorsRequest.Flag.Positions, TermVectorsRequest.Flag.Offsets);
-                response.setFields(generatedFields, new HashSet<String>(Arrays.asList(item.fields())), flags, generatedFields);
+                response.setFields(generatedFields, new HashSet<>(Arrays.asList(item.fields())), flags, generatedFields);
                 responses[i++] = new MultiTermVectorsItemResponse(response, null);
             }
             return new MultiTermVectorsResponse(responses);

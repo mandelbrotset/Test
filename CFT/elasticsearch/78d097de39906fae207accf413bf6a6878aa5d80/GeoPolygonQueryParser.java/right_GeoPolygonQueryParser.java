@@ -19,10 +19,6 @@
 
 package org.elasticsearch.index.query;
 
-<<<<<<< HEAD
-=======
-import com.google.common.collect.Lists;
->>>>>>> tempbranch
 import org.apache.lucene.search.Query;
 import org.elasticsearch.Version;
 import org.elasticsearch.common.geo.GeoPoint;
@@ -51,8 +47,9 @@ import java.util.List;
  * }
  * </pre>
  */
-public class GeoPolygonQueryParser extends BaseQueryParserTemp {
+public class GeoPolygonQueryParser implements QueryParser {
 
+    public static final String NAME = "geo_polygon";
     public static final String POINTS = "points";
 
     @Inject
@@ -61,20 +58,18 @@ public class GeoPolygonQueryParser extends BaseQueryParserTemp {
 
     @Override
     public String[] names() {
-        return new String[]{GeoPolygonQueryBuilder.NAME, "geoPolygon"};
+        return new String[]{NAME, "geoPolygon"};
     }
 
     @Override
-    public Query parse(QueryShardContext context) throws IOException, QueryParsingException {
-        QueryParseContext parseContext = context.parseContext();
+    public Query parse(QueryParseContext parseContext) throws IOException, QueryParsingException {
         XContentParser parser = parseContext.parser();
 
         String fieldName = null;
 
         List<GeoPoint> shell = new ArrayList<>();
 
-        float boost = AbstractQueryBuilder.DEFAULT_BOOST;
-        final boolean indexCreatedBeforeV2_0 = parseContext.shardContext().indexVersionCreated().before(Version.V_2_0_0);
+        final boolean indexCreatedBeforeV2_0 = parseContext.indexVersionCreated().before(Version.V_2_0_0);
         boolean coerce = false;
         boolean ignoreMalformed = false;
         String queryName = null;
@@ -112,8 +107,6 @@ public class GeoPolygonQueryParser extends BaseQueryParserTemp {
             } else if (token.isValue()) {
                 if ("_name".equals(currentFieldName)) {
                     queryName = parser.text();
-                } else if ("boost".equals(currentFieldName)) {
-                    boost = parser.floatValue();
                 } else if ("coerce".equals(currentFieldName) || (indexCreatedBeforeV2_0 && "normalize".equals(currentFieldName))) {
                     coerce = parser.booleanValue();
                     if (coerce == true) {
@@ -148,10 +141,10 @@ public class GeoPolygonQueryParser extends BaseQueryParserTemp {
         if (!indexCreatedBeforeV2_0 && !ignoreMalformed) {
             for (GeoPoint point : shell) {
                 if (point.lat() > 90.0 || point.lat() < -90.0) {
-                    throw new QueryParsingException(parseContext, "illegal latitude value [{}] for [{}]", point.lat(), GeoPolygonQueryBuilder.NAME);
+                    throw new QueryParsingException(parseContext, "illegal latitude value [{}] for [{}]", point.lat(), NAME);
                 }
                 if (point.lon() > 180.0 || point.lon() < -180) {
-                    throw new QueryParsingException(parseContext, "illegal longitude value [{}] for [{}]", point.lon(), GeoPolygonQueryBuilder.NAME);
+                    throw new QueryParsingException(parseContext, "illegal longitude value [{}] for [{}]", point.lon(), NAME);
                 }
             }
         }
@@ -162,7 +155,7 @@ public class GeoPolygonQueryParser extends BaseQueryParserTemp {
             }
         }
 
-        MappedFieldType fieldType = context.fieldMapper(fieldName);
+        MappedFieldType fieldType = parseContext.fieldMapper(fieldName);
         if (fieldType == null) {
             throw new QueryParsingException(parseContext, "failed to find geo_point field [" + fieldName + "]");
         }
@@ -170,17 +163,11 @@ public class GeoPolygonQueryParser extends BaseQueryParserTemp {
             throw new QueryParsingException(parseContext, "field [" + fieldName + "] is not a geo_point field");
         }
 
-        IndexGeoPointFieldData indexFieldData = context.getForField(fieldType);
+        IndexGeoPointFieldData indexFieldData = parseContext.getForField(fieldType);
         Query query = new GeoPolygonQuery(indexFieldData, shell.toArray(new GeoPoint[shell.size()]));
         if (queryName != null) {
-            context.addNamedQuery(queryName, query);
+            parseContext.addNamedQuery(queryName, query);
         }
-        query.setBoost(boost);
         return query;
-    }
-
-    @Override
-    public GeoPolygonQueryBuilder getBuilderPrototype() {
-        return GeoPolygonQueryBuilder.PROTOTYPE;
     }
 }

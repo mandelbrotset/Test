@@ -52,7 +52,9 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.BufferedWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
@@ -175,13 +177,11 @@ public class PluginManagerIT extends ESIntegTestCase {
         Path pluginDir = createTempDir().resolve("fake-plugin");
         String pluginUrl = createPlugin(pluginDir,
             "description", "fake desc",
-            "name", "fake-plugin",
             "version", "1.0",
             "elasticsearch.version", Version.CURRENT.toString(),
-            "java.version", System.getProperty("java.specification.version"),
             "jvm", "true",
             "classname", "FakePlugin");
-        assertStatus("install", USAGE);
+        assertStatus("install --url " + pluginUrl, USAGE);
     }
 
     @Test
@@ -196,7 +196,6 @@ public class PluginManagerIT extends ESIntegTestCase {
 
         String pluginUrl = createPlugin(pluginDir,
             "description", "fake desc",
-            "name", pluginName,
             "version", "1.0",
             "elasticsearch.version", Version.CURRENT.toString(),
             "java.version", System.getProperty("java.specification.version"),
@@ -208,7 +207,7 @@ public class PluginManagerIT extends ESIntegTestCase {
         Path pluginBinDir = binDir.resolve(pluginName);
 
         Path pluginConfigDir = env.configFile().resolve(pluginName);
-        assertStatusOk("install " + pluginUrl + " --verbose");
+        assertStatusOk("install " + pluginName + " --url " + pluginUrl + " --verbose");
 
         terminal.getTerminalOutput().clear();
         assertStatusOk("list");
@@ -242,7 +241,6 @@ public class PluginManagerIT extends ESIntegTestCase {
 
         String pluginUrl = createPlugin(pluginDir,
             "description", "fake desc",
-            "name", pluginName,
             "version", "1.0",
             "elasticsearch.version", Version.CURRENT.toString(),
             "java.version", System.getProperty("java.specification.version"),
@@ -252,7 +250,7 @@ public class PluginManagerIT extends ESIntegTestCase {
         Environment env = initialSettings.v2();
         Path pluginConfigDir = env.configFile().resolve(pluginName);
 
-        assertStatusOk(String.format(Locale.ROOT, "install %s --verbose", pluginUrl));
+        assertStatusOk(String.format(Locale.ROOT, "install %s --url %s --verbose", pluginName, pluginUrl));
 
         /*
         First time, our plugin contains:
@@ -279,14 +277,13 @@ public class PluginManagerIT extends ESIntegTestCase {
         Files.write(pluginDir.resolve("config").resolve("dir").resolve("subdir").resolve("testsubdir.txt"), "version1".getBytes(StandardCharsets.UTF_8));
         pluginUrl = createPlugin(pluginDir,
                 "description", "fake desc",
-                "name", pluginName,
                 "version", "2.0",
                 "elasticsearch.version", Version.CURRENT.toString(),
                 "java.version", System.getProperty("java.specification.version"),
                 "jvm", "true",
                 "classname", "FakePlugin");
 
-        assertStatusOk(String.format(Locale.ROOT, "install %s --verbose", pluginUrl));
+        assertStatusOk(String.format(Locale.ROOT, "install %s --url %s --verbose", pluginName, pluginUrl));
 
         assertFileContent(pluginConfigDir, "test.txt", "version1");
         assertFileContent(pluginConfigDir, "test.txt.new", "version2");
@@ -316,14 +313,13 @@ public class PluginManagerIT extends ESIntegTestCase {
         Files.write(pluginDir.resolve("config").resolve("dir").resolve("subdir").resolve("testsubdir.txt"), "version2".getBytes(StandardCharsets.UTF_8));
         pluginUrl = createPlugin(pluginDir,
                 "description", "fake desc",
-                "name", pluginName,
                 "version", "3.0",
                 "elasticsearch.version", Version.CURRENT.toString(),
                 "java.version", System.getProperty("java.specification.version"),
                 "jvm", "true",
                 "classname", "FakePlugin");
 
-        assertStatusOk(String.format(Locale.ROOT, "install %s --verbose", pluginUrl));
+        assertStatusOk(String.format(Locale.ROOT, "install %s --url %s --verbose", pluginName, pluginUrl));
 
         assertFileContent(pluginConfigDir, "test.txt", "version1");
         assertFileContent(pluginConfigDir, "test2.txt", "version1");
@@ -345,7 +341,6 @@ public class PluginManagerIT extends ESIntegTestCase {
         Files.createFile(pluginDir.resolve("bin").resolve("tool"));;
         String pluginUrl = createPlugin(pluginDir,
             "description", "fake desc",
-            "name", "fake-plugin",
             "version", "1.0",
             "elasticsearch.version", Version.CURRENT.toString(),
             "java.version", System.getProperty("java.specification.version"),
@@ -356,7 +351,7 @@ public class PluginManagerIT extends ESIntegTestCase {
         Path binDir = env.binFile();
         Path pluginBinDir = binDir.resolve(pluginName);
 
-        assertStatusOk(String.format(Locale.ROOT, "install %s --verbose", pluginUrl));
+        assertStatusOk(String.format(Locale.ROOT, "install %s --url %s --verbose", pluginName, pluginUrl));
         assertThatPluginIsListed(pluginName);
         assertDirectoryExists(pluginBinDir);
     }
@@ -380,13 +375,12 @@ public class PluginManagerIT extends ESIntegTestCase {
         Path pluginDir = createTempDir().resolve(pluginName);
         String pluginUrl = createPlugin(pluginDir,
             "description", "fake desc",
-            "name", pluginName,
             "version", "1.0",
             "elasticsearch.version", Version.CURRENT.toString(),
             "java.version", System.getProperty("java.specification.version"),
             "jvm", "true",
             "classname", "FakePlugin");
-        assertStatusOk(String.format(Locale.ROOT, "install %s --verbose", pluginUrl));
+        assertStatusOk(String.format(Locale.ROOT, "install %s --url %s --verbose", pluginName, pluginUrl));
         assertThatPluginIsListed(pluginName);
     }
 
@@ -397,11 +391,10 @@ public class PluginManagerIT extends ESIntegTestCase {
         Files.createDirectories(pluginDir.resolve("_site"));
         Files.createFile(pluginDir.resolve("_site").resolve("somefile"));
         String pluginUrl = createPlugin(pluginDir,
-            "description", "fake desc",
-            "name", pluginName,
-            "version", "1.0",
-            "site", "true");
-        assertStatusOk(String.format(Locale.ROOT, "install %s --verbose", pluginUrl));
+                "description", "fake desc",
+                "version", "1.0",
+                "site", "true");
+        assertStatusOk(String.format(Locale.ROOT, "install %s --url %s --verbose", pluginName, pluginUrl));
         assertThatPluginIsListed(pluginName);
         // We want to check that Plugin Manager moves content to _site
         assertFileExists(initialSettings.v2().pluginsFile().resolve(pluginName).resolve("_site"));
@@ -417,7 +410,7 @@ public class PluginManagerIT extends ESIntegTestCase {
                 "description", "fake desc",
                 "version", "1.0",
                 "site", "true");
-        assertStatus(String.format(Locale.ROOT, "install %s --verbose", pluginUrl),
+        assertStatus(String.format(Locale.ROOT, "install %s --url %s --verbose", pluginName, pluginUrl),
                 ExitStatus.IO_ERROR);
         assertThatPluginIsNotListed(pluginName);
         assertFileNotExists(initialSettings.v2().pluginsFile().resolve(pluginName).resolve("_site"));
@@ -428,7 +421,7 @@ public class PluginManagerIT extends ESIntegTestCase {
         if (pluginCoordinates == null) {
             assertStatusOk(String.format(Locale.ROOT, "install %s --verbose", pluginDescriptor));
         } else {
-            assertStatusOk(String.format(Locale.ROOT, "install %s --verbose", pluginCoordinates));
+            assertStatusOk(String.format(Locale.ROOT, "install %s --url %s --verbose", pluginDescriptor, pluginCoordinates));
         }
         assertThatPluginIsListed(pluginName);
 
@@ -505,7 +498,6 @@ public class PluginManagerIT extends ESIntegTestCase {
         Path pluginDir = createTempDir().resolve(pluginName);
         String pluginUrl = createPlugin(pluginDir,
             "description", "fake desc",
-            "name", pluginName,
             "version", "1.0.0",
             "elasticsearch.version", Version.CURRENT.toString(),
             "java.version", System.getProperty("java.specification.version"),
@@ -547,19 +539,18 @@ public class PluginManagerIT extends ESIntegTestCase {
 
     @Test
     public void testOfficialPluginName_ThrowsException() throws IOException {
-        PluginManager.checkForOfficialPlugins("analysis-icu");
-        PluginManager.checkForOfficialPlugins("analysis-kuromoji");
-        PluginManager.checkForOfficialPlugins("analysis-phonetic");
-        PluginManager.checkForOfficialPlugins("analysis-smartcn");
-        PluginManager.checkForOfficialPlugins("analysis-stempel");
-        PluginManager.checkForOfficialPlugins("cloud-aws");
-        PluginManager.checkForOfficialPlugins("cloud-azure");
-        PluginManager.checkForOfficialPlugins("cloud-gce");
-        PluginManager.checkForOfficialPlugins("delete-by-query");
-        PluginManager.checkForOfficialPlugins("lang-javascript");
-        PluginManager.checkForOfficialPlugins("lang-python");
-        PluginManager.checkForOfficialPlugins("mapper-murmur3");
-        PluginManager.checkForOfficialPlugins("mapper-size");
+        PluginManager.checkForOfficialPlugins("elasticsearch-analysis-icu");
+        PluginManager.checkForOfficialPlugins("elasticsearch-analysis-kuromoji");
+        PluginManager.checkForOfficialPlugins("elasticsearch-analysis-phonetic");
+        PluginManager.checkForOfficialPlugins("elasticsearch-analysis-smartcn");
+        PluginManager.checkForOfficialPlugins("elasticsearch-analysis-stempel");
+        PluginManager.checkForOfficialPlugins("elasticsearch-cloud-aws");
+        PluginManager.checkForOfficialPlugins("elasticsearch-cloud-azure");
+        PluginManager.checkForOfficialPlugins("elasticsearch-cloud-gce");
+        PluginManager.checkForOfficialPlugins("elasticsearch-delete-by-query");
+        PluginManager.checkForOfficialPlugins("elasticsearch-lang-javascript");
+        PluginManager.checkForOfficialPlugins("elasticsearch-lang-python");
+        PluginManager.checkForOfficialPlugins("elasticsearch-mapper-murmur3");
 
         try {
             PluginManager.checkForOfficialPlugins("elasticsearch-mapper-attachment");
@@ -571,7 +562,7 @@ public class PluginManagerIT extends ESIntegTestCase {
 
     @Test
     public void testThatBasicAuthIsRejectedOnHttp() throws Exception {
-        assertStatus(String.format(Locale.ROOT, "install http://user:pass@localhost:12345/foo.zip --verbose"), CliTool.ExitStatus.IO_ERROR);
+        assertStatus(String.format(Locale.ROOT, "install foo --url http://user:pass@localhost:12345/foo.zip --verbose"), CliTool.ExitStatus.IO_ERROR);
         assertThat(terminal.getTerminalOutput(), hasItem(containsString("Basic auth is only supported for HTTPS!")));
     }
 
@@ -608,7 +599,7 @@ public class PluginManagerIT extends ESIntegTestCase {
             Channel channel = serverBootstrap.bind(new InetSocketAddress("localhost", 0));
             int port = ((InetSocketAddress) channel.getLocalAddress()).getPort();
             // IO_ERROR because there is no real file delivered...
-            assertStatus(String.format(Locale.ROOT, "install https://user:pass@localhost:%s/foo.zip --verbose --timeout 1s", port), ExitStatus.IO_ERROR);
+            assertStatus(String.format(Locale.ROOT, "install foo --url https://user:pass@localhost:%s/foo.zip --verbose --timeout 1s", port), ExitStatus.IO_ERROR);
 
             // ensure that we did not try any other data source like download.elastic.co, in case we specified our own local URL
             assertThat(terminal.getTerminalOutput(), not(hasItem(containsString("download.elastic.co"))));

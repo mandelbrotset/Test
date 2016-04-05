@@ -37,12 +37,9 @@ import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilder;
 import org.elasticsearch.search.rescore.RescoreBuilder;
-<<<<<<< HEAD
 import org.elasticsearch.tasks.Task;
-=======
 import org.elasticsearch.search.aggregations.AggregatorFactory;
 import org.elasticsearch.search.aggregations.pipeline.PipelineAggregatorFactory;
->>>>>>> tempbranch
 import org.joda.time.ReadableInstant;
 
 import java.io.EOFException;

@@ -22,21 +22,12 @@ package org.elasticsearch.action.delete;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
-<<<<<<< HEAD
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentBuilderString;
 import org.elasticsearch.index.shard.ShardId;
-=======
-import org.elasticsearch.common.xcontent.StatusToXContent;
-import org.elasticsearch.common.xcontent.ToXContent;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentBuilderString;
->>>>>>> tempbranch
 import org.elasticsearch.rest.RestStatus;
 
 import java.io.IOException;
-
-import static org.elasticsearch.rest.RestStatus.NOT_FOUND;
 
 /**
  * The response of the delete action.
@@ -44,11 +35,7 @@ import static org.elasticsearch.rest.RestStatus.NOT_FOUND;
  * @see org.elasticsearch.action.delete.DeleteRequest
  * @see org.elasticsearch.client.Client#delete(DeleteRequest)
  */
-<<<<<<< HEAD
 public class DeleteResponse extends DocWriteResponse {
-=======
-public class DeleteResponse extends ActionWriteResponse implements StatusToXContent {
->>>>>>> tempbranch
 
     private boolean found;
 
@@ -83,7 +70,6 @@ public class DeleteResponse extends ActionWriteResponse implements StatusToXCont
 
     @Override
     public RestStatus status() {
-<<<<<<< HEAD
         if (found == false) {
             return RestStatus.NOT_FOUND;
         }
@@ -92,18 +78,10 @@ public class DeleteResponse extends ActionWriteResponse implements StatusToXCont
 
     static final class Fields {
         static final XContentBuilderString FOUND = new XContentBuilderString("found");
-=======
-        RestStatus status = getShardInfo().status();
-        if (isFound() == false) {
-            status = NOT_FOUND;
-        }
-        return status;
->>>>>>> tempbranch
     }
 
     @Override
     public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
-<<<<<<< HEAD
         builder.field(Fields.FOUND, isFound());
         super.toXContent(builder, params);
         return builder;
@@ -120,23 +98,5 @@ public class DeleteResponse extends ActionWriteResponse implements StatusToXCont
         builder.append(",found=").append(found);
         builder.append(",shards=").append(getShardInfo());
         return builder.append("]").toString();
-=======
-        ActionWriteResponse.ShardInfo shardInfo = getShardInfo();
-        builder.field(Fields.FOUND, found)
-            .field(Fields._INDEX, index)
-            .field(Fields._TYPE, type)
-            .field(Fields._ID, id)
-            .field(Fields._VERSION, version)
-            .value(shardInfo);
-        return builder;
-    }
-
-    static final class Fields {
-        static final XContentBuilderString FOUND = new XContentBuilderString("found");
-        static final XContentBuilderString _INDEX = new XContentBuilderString("_index");
-        static final XContentBuilderString _TYPE = new XContentBuilderString("_type");
-        static final XContentBuilderString _ID = new XContentBuilderString("_id");
-        static final XContentBuilderString _VERSION = new XContentBuilderString("_version");
->>>>>>> tempbranch
     }
 }

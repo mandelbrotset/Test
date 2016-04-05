@@ -36,15 +36,10 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
 
     private final Object values;
 
-<<<<<<< HEAD
     private String minimumShouldMatch;
 
     private Boolean disableCoord;
 
-    private String queryName;
-
-=======
->>>>>>> tempbranch
     private String execution;
 
     private String lookupIndex;
@@ -52,7 +47,6 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
     private String lookupId;
     private String lookupRouting;
     private String lookupPath;
-    private Boolean lookupCache;
 
     /**
      * A filter for a field based on several terms matching on any of them.
@@ -143,6 +137,8 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
 
     /**
 <<<<<<< HEAD
+     * Sets the index name to lookup the terms from.
+=======
      * Sets the minimum number of matches across the provided terms. Defaults to <tt>1</tt>.
      * @deprecated use [bool] query instead
      */
@@ -164,9 +160,7 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
 
     /**
      * Sets the filter name for the filter that can be used when searching for matched_filters per hit.
-=======
-     * Sets the index name to lookup the terms from.
->>>>>>> tempbranch
+>>>>>>> master
      */
     public TermsQueryBuilder lookupIndex(String lookupIndex) {
         this.lookupIndex = lookupIndex;
@@ -202,11 +196,6 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
         return this;
     }
 
-    public TermsQueryBuilder lookupCache(boolean lookupCache) {
-        this.lookupCache = lookupCache;
-        return this;
-    }
-
     @Override
     public void doXContent(XContentBuilder builder, Params params) throws IOException {
         builder.startObject(NAME);
@@ -220,9 +209,6 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
             if (lookupRouting != null) {
                 builder.field("routing", lookupRouting);
             }
-            if (lookupCache != null) {
-                builder.field("cache", lookupCache);
-            }
             builder.field("path", lookupPath);
             builder.endObject();
         } else {
@@ -232,7 +218,6 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
             builder.field("execution", execution);
         }
 
-<<<<<<< HEAD
         if (minimumShouldMatch != null) {
             builder.field("minimum_should_match", minimumShouldMatch);
         }
@@ -241,17 +226,8 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
             builder.field("disable_coord", disableCoord);
         }
 
-        if (boost != -1) {
-            builder.field("boost", boost);
-        }
-
-        if (queryName != null) {
-            builder.field("_name", queryName);
-        }
-
-=======
         printBoostAndQueryName(builder);
->>>>>>> tempbranch
+
         builder.endObject();
     }
 

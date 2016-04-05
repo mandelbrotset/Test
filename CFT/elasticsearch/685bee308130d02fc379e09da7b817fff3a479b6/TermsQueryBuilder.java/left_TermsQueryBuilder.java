@@ -37,11 +37,7 @@ import org.elasticsearch.common.lucene.search.Queries;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.elasticsearch.index.mapper.MappedFieldType;
-<<<<<<< HEAD
-import org.elasticsearch.indices.TermsLookup;
-=======
 import org.elasticsearch.indices.cache.query.terms.TermsLookup;
->>>>>>> tempbranch
 
 import java.io.IOException;
 import java.util.ArrayList;

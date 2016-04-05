@@ -154,10 +154,6 @@ public class TermsQueryParser extends BaseQueryParser {
                             + "] within lookup element");
                 }
             }
-<<<<<<< HEAD
-            query = Queries.applyMinimumShouldMatch(bq, minShouldMatch);
-=======
->>>>>>> tempbranch
         }
         if (termsLookup.type() == null) {
             throw new QueryParsingException(parseContext, "[terms] query lookup element requires specifying the type");

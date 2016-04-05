@@ -1572,11 +1572,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         return indexBuilders;
     }
 
-<<<<<<< HEAD
-    private SearchResponse minMaxQuery(String scoreType, int minChildren, int maxChildren) throws SearchPhaseExecutionException {
-=======
-    private SearchResponse minMaxQuery(ScoreType scoreType, int minChildren, int maxChildren, int cutoff) throws SearchPhaseExecutionException {
->>>>>>> tempbranch
+    private SearchResponse minMaxQuery(ScoreType scoreType, int minChildren, int maxChildren) throws SearchPhaseExecutionException {
         return client()
                 .prepareSearch("test")
                 .setQuery(
@@ -1587,11 +1583,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
                                                 .add(QueryBuilders.matchAllQuery(), weightFactorFunction(1))
                                                 .add(QueryBuilders.termQuery("foo", "three"), weightFactorFunction(1))
                                                 .add(QueryBuilders.termQuery("foo", "four"), weightFactorFunction(1))).scoreType(scoreType)
-<<<<<<< HEAD
                                 .minChildren(minChildren).maxChildren(maxChildren))
-=======
-                                .minChildren(minChildren).maxChildren(maxChildren).shortCircuitCutoff(cutoff))
->>>>>>> tempbranch
                 .addSort("_score", SortOrder.DESC).addSort("id", SortOrder.ASC).get();
     }
 
@@ -1600,11 +1592,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
                 .prepareSearch("test")
                 .setQuery(
                         QueryBuilders.constantScoreQuery(QueryBuilders.hasChildQuery("child", termQuery("foo", "two"))
-<<<<<<< HEAD
                                 .minChildren(minChildren).maxChildren(maxChildren)))
-=======
-                                .minChildren(minChildren).maxChildren(maxChildren).shortCircuitCutoff(cutoff)))
->>>>>>> tempbranch
                 .addSort("id", SortOrder.ASC).setTrackScores(true).get();
     }
 
@@ -1619,11 +1607,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         SearchResponse response;
 
         // Score mode = NONE
-<<<<<<< HEAD
-        response = minMaxQuery("none", 0, 0);
-=======
-        response = minMaxQuery(ScoreType.NONE, 0, 0, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.NONE, 0, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(3l));
         assertThat(response.getHits().hits()[0].id(), equalTo("2"));
@@ -1633,11 +1617,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[2].id(), equalTo("4"));
         assertThat(response.getHits().hits()[2].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("none", 1, 0);
-=======
-        response = minMaxQuery(ScoreType.NONE, 1, 0, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.NONE, 1, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(3l));
         assertThat(response.getHits().hits()[0].id(), equalTo("2"));
@@ -1647,11 +1627,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[2].id(), equalTo("4"));
         assertThat(response.getHits().hits()[2].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("none", 2, 0);
-=======
-        response = minMaxQuery(ScoreType.NONE, 2, 0, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.NONE, 2, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(2l));
         assertThat(response.getHits().hits()[0].id(), equalTo("3"));
@@ -1659,29 +1635,17 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[1].id(), equalTo("4"));
         assertThat(response.getHits().hits()[1].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("none", 3, 0);
-=======
-        response = minMaxQuery(ScoreType.NONE, 3, 0, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.NONE, 3, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(1l));
         assertThat(response.getHits().hits()[0].id(), equalTo("4"));
         assertThat(response.getHits().hits()[0].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("none", 4, 0);
+        response = minMaxQuery(ScoreType.NONE, 4, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(0l));
 
-        response = minMaxQuery("none", 0, 4);
-=======
-        response = minMaxQuery(ScoreType.NONE, 4, 0, cutoff);
-
-        assertThat(response.getHits().totalHits(), equalTo(0l));
-
-        response = minMaxQuery(ScoreType.NONE, 0, 4, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.NONE, 0, 4);
 
         assertThat(response.getHits().totalHits(), equalTo(3l));
         assertThat(response.getHits().hits()[0].id(), equalTo("2"));
@@ -1691,11 +1655,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[2].id(), equalTo("4"));
         assertThat(response.getHits().hits()[2].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("none", 0, 3);
-=======
-        response = minMaxQuery(ScoreType.NONE, 0, 3, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.NONE, 0, 3);
 
         assertThat(response.getHits().totalHits(), equalTo(3l));
         assertThat(response.getHits().hits()[0].id(), equalTo("2"));
@@ -1705,11 +1665,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[2].id(), equalTo("4"));
         assertThat(response.getHits().hits()[2].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("none", 0, 2);
-=======
-        response = minMaxQuery(ScoreType.NONE, 0, 2, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.NONE, 0, 2);
 
         assertThat(response.getHits().totalHits(), equalTo(2l));
         assertThat(response.getHits().hits()[0].id(), equalTo("2"));
@@ -1717,33 +1673,21 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[1].id(), equalTo("3"));
         assertThat(response.getHits().hits()[1].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("none", 2, 2);
-=======
-        response = minMaxQuery(ScoreType.NONE, 2, 2, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.NONE, 2, 2);
 
         assertThat(response.getHits().totalHits(), equalTo(1l));
         assertThat(response.getHits().hits()[0].id(), equalTo("3"));
         assertThat(response.getHits().hits()[0].score(), equalTo(1f));
 
         try {
-<<<<<<< HEAD
-            response = minMaxQuery("none", 3, 2);
-=======
-            response = minMaxQuery(ScoreType.NONE, 3, 2, cutoff);
->>>>>>> tempbranch
+            response = minMaxQuery(ScoreType.NONE, 3, 2);
             fail();
         } catch (SearchPhaseExecutionException e) {
             assertThat(e.toString(), containsString("[has_child] 'max_children' is less than 'min_children'"));
         }
 
         // Score mode = SUM
-<<<<<<< HEAD
-        response = minMaxQuery("sum", 0, 0);
-=======
-        response = minMaxQuery(ScoreType.SUM, 0, 0, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.SUM, 0, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(3l));
         assertThat(response.getHits().hits()[0].id(), equalTo("4"));
@@ -1753,11 +1697,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[2].id(), equalTo("2"));
         assertThat(response.getHits().hits()[2].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("sum", 1, 0);
-=======
-        response = minMaxQuery(ScoreType.SUM, 1, 0, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.SUM, 1, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(3l));
         assertThat(response.getHits().hits()[0].id(), equalTo("4"));
@@ -1767,11 +1707,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[2].id(), equalTo("2"));
         assertThat(response.getHits().hits()[2].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("sum", 2, 0);
-=======
-        response = minMaxQuery(ScoreType.SUM, 2, 0, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.SUM, 2, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(2l));
         assertThat(response.getHits().hits()[0].id(), equalTo("4"));
@@ -1779,29 +1715,17 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[1].id(), equalTo("3"));
         assertThat(response.getHits().hits()[1].score(), equalTo(3f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("sum", 3, 0);
-=======
-        response = minMaxQuery(ScoreType.SUM, 3, 0, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.SUM, 3, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(1l));
         assertThat(response.getHits().hits()[0].id(), equalTo("4"));
         assertThat(response.getHits().hits()[0].score(), equalTo(6f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("sum", 4, 0);
+        response = minMaxQuery(ScoreType.SUM, 4, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(0l));
 
-        response = minMaxQuery("sum", 0, 4);
-=======
-        response = minMaxQuery(ScoreType.SUM, 4, 0, cutoff);
-
-        assertThat(response.getHits().totalHits(), equalTo(0l));
-
-        response = minMaxQuery(ScoreType.SUM, 0, 4, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.SUM, 0, 4);
 
         assertThat(response.getHits().totalHits(), equalTo(3l));
         assertThat(response.getHits().hits()[0].id(), equalTo("4"));
@@ -1811,11 +1735,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[2].id(), equalTo("2"));
         assertThat(response.getHits().hits()[2].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("sum", 0, 3);
-=======
-        response = minMaxQuery(ScoreType.SUM, 0, 3, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.SUM, 0, 3);
 
         assertThat(response.getHits().totalHits(), equalTo(3l));
         assertThat(response.getHits().hits()[0].id(), equalTo("4"));
@@ -1825,11 +1745,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[2].id(), equalTo("2"));
         assertThat(response.getHits().hits()[2].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("sum", 0, 2);
-=======
-        response = minMaxQuery(ScoreType.SUM, 0, 2, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.SUM, 0, 2);
 
         assertThat(response.getHits().totalHits(), equalTo(2l));
         assertThat(response.getHits().hits()[0].id(), equalTo("3"));
@@ -1837,33 +1753,21 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[1].id(), equalTo("2"));
         assertThat(response.getHits().hits()[1].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("sum", 2, 2);
-=======
-        response = minMaxQuery(ScoreType.SUM, 2, 2, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.SUM, 2, 2);
 
         assertThat(response.getHits().totalHits(), equalTo(1l));
         assertThat(response.getHits().hits()[0].id(), equalTo("3"));
         assertThat(response.getHits().hits()[0].score(), equalTo(3f));
 
         try {
-<<<<<<< HEAD
-            response = minMaxQuery("sum", 3, 2);
-=======
-            response = minMaxQuery(ScoreType.SUM, 3, 2, cutoff);
->>>>>>> tempbranch
+            response = minMaxQuery(ScoreType.SUM, 3, 2);
             fail();
         } catch (SearchPhaseExecutionException e) {
             assertThat(e.toString(), containsString("[has_child] 'max_children' is less than 'min_children'"));
         }
 
         // Score mode = MAX
-<<<<<<< HEAD
-        response = minMaxQuery("max", 0, 0);
-=======
-        response = minMaxQuery(ScoreType.MAX, 0, 0, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.MAX, 0, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(3l));
         assertThat(response.getHits().hits()[0].id(), equalTo("4"));
@@ -1873,11 +1777,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[2].id(), equalTo("2"));
         assertThat(response.getHits().hits()[2].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("max", 1, 0);
-=======
-        response = minMaxQuery(ScoreType.MAX, 1, 0, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.MAX, 1, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(3l));
         assertThat(response.getHits().hits()[0].id(), equalTo("4"));
@@ -1887,11 +1787,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[2].id(), equalTo("2"));
         assertThat(response.getHits().hits()[2].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("max", 2, 0);
-=======
-        response = minMaxQuery(ScoreType.MAX, 2, 0, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.MAX, 2, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(2l));
         assertThat(response.getHits().hits()[0].id(), equalTo("4"));
@@ -1899,29 +1795,17 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[1].id(), equalTo("3"));
         assertThat(response.getHits().hits()[1].score(), equalTo(2f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("max", 3, 0);
-=======
-        response = minMaxQuery(ScoreType.MAX, 3, 0, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.MAX, 3, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(1l));
         assertThat(response.getHits().hits()[0].id(), equalTo("4"));
         assertThat(response.getHits().hits()[0].score(), equalTo(3f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("max", 4, 0);
+        response = minMaxQuery(ScoreType.MAX, 4, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(0l));
 
-        response = minMaxQuery("max", 0, 4);
-=======
-        response = minMaxQuery(ScoreType.MAX, 4, 0, cutoff);
-
-        assertThat(response.getHits().totalHits(), equalTo(0l));
-
-        response = minMaxQuery(ScoreType.MAX, 0, 4, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.MAX, 0, 4);
 
         assertThat(response.getHits().totalHits(), equalTo(3l));
         assertThat(response.getHits().hits()[0].id(), equalTo("4"));
@@ -1931,11 +1815,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[2].id(), equalTo("2"));
         assertThat(response.getHits().hits()[2].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("max", 0, 3);
-=======
-        response = minMaxQuery(ScoreType.MAX, 0, 3, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.MAX, 0, 3);
 
         assertThat(response.getHits().totalHits(), equalTo(3l));
         assertThat(response.getHits().hits()[0].id(), equalTo("4"));
@@ -1945,11 +1825,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[2].id(), equalTo("2"));
         assertThat(response.getHits().hits()[2].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("max", 0, 2);
-=======
-        response = minMaxQuery(ScoreType.MAX, 0, 2, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.MAX, 0, 2);
 
         assertThat(response.getHits().totalHits(), equalTo(2l));
         assertThat(response.getHits().hits()[0].id(), equalTo("3"));
@@ -1957,33 +1833,21 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[1].id(), equalTo("2"));
         assertThat(response.getHits().hits()[1].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("max", 2, 2);
-=======
-        response = minMaxQuery(ScoreType.MAX, 2, 2, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.MAX, 2, 2);
 
         assertThat(response.getHits().totalHits(), equalTo(1l));
         assertThat(response.getHits().hits()[0].id(), equalTo("3"));
         assertThat(response.getHits().hits()[0].score(), equalTo(2f));
 
         try {
-<<<<<<< HEAD
-            response = minMaxQuery("max", 3, 2);
-=======
-            response = minMaxQuery(ScoreType.MAX, 3, 2, cutoff);
->>>>>>> tempbranch
+            response = minMaxQuery(ScoreType.MAX, 3, 2);
             fail();
         } catch (SearchPhaseExecutionException e) {
             assertThat(e.toString(), containsString("[has_child] 'max_children' is less than 'min_children'"));
         }
 
         // Score mode = AVG
-<<<<<<< HEAD
-        response = minMaxQuery("avg", 0, 0);
-=======
-        response = minMaxQuery(ScoreType.AVG, 0, 0, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.AVG, 0, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(3l));
         assertThat(response.getHits().hits()[0].id(), equalTo("4"));
@@ -1993,11 +1857,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[2].id(), equalTo("2"));
         assertThat(response.getHits().hits()[2].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("avg", 1, 0);
-=======
-        response = minMaxQuery(ScoreType.AVG, 1, 0, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.AVG, 1, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(3l));
         assertThat(response.getHits().hits()[0].id(), equalTo("4"));
@@ -2007,11 +1867,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[2].id(), equalTo("2"));
         assertThat(response.getHits().hits()[2].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("avg", 2, 0);
-=======
-        response = minMaxQuery(ScoreType.AVG, 2, 0, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.AVG, 2, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(2l));
         assertThat(response.getHits().hits()[0].id(), equalTo("4"));
@@ -2019,29 +1875,17 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[1].id(), equalTo("3"));
         assertThat(response.getHits().hits()[1].score(), equalTo(1.5f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("avg", 3, 0);
-=======
-        response = minMaxQuery(ScoreType.AVG, 3, 0, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.AVG, 3, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(1l));
         assertThat(response.getHits().hits()[0].id(), equalTo("4"));
         assertThat(response.getHits().hits()[0].score(), equalTo(2f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("avg", 4, 0);
+        response = minMaxQuery(ScoreType.AVG, 4, 0);
 
         assertThat(response.getHits().totalHits(), equalTo(0l));
 
-        response = minMaxQuery("avg", 0, 4);
-=======
-        response = minMaxQuery(ScoreType.AVG, 4, 0, cutoff);
-
-        assertThat(response.getHits().totalHits(), equalTo(0l));
-
-        response = minMaxQuery(ScoreType.AVG, 0, 4, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.AVG, 0, 4);
 
         assertThat(response.getHits().totalHits(), equalTo(3l));
         assertThat(response.getHits().hits()[0].id(), equalTo("4"));
@@ -2051,11 +1895,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[2].id(), equalTo("2"));
         assertThat(response.getHits().hits()[2].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("avg", 0, 3);
-=======
-        response = minMaxQuery(ScoreType.AVG, 0, 3, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.AVG, 0, 3);
 
         assertThat(response.getHits().totalHits(), equalTo(3l));
         assertThat(response.getHits().hits()[0].id(), equalTo("4"));
@@ -2065,11 +1905,7 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[2].id(), equalTo("2"));
         assertThat(response.getHits().hits()[2].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("avg", 0, 2);
-=======
-        response = minMaxQuery(ScoreType.AVG, 0, 2, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.AVG, 0, 2);
 
         assertThat(response.getHits().totalHits(), equalTo(2l));
         assertThat(response.getHits().hits()[0].id(), equalTo("3"));
@@ -2077,22 +1913,14 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
         assertThat(response.getHits().hits()[1].id(), equalTo("2"));
         assertThat(response.getHits().hits()[1].score(), equalTo(1f));
 
-<<<<<<< HEAD
-        response = minMaxQuery("avg", 2, 2);
-=======
-        response = minMaxQuery(ScoreType.AVG, 2, 2, cutoff);
->>>>>>> tempbranch
+        response = minMaxQuery(ScoreType.AVG, 2, 2);
 
         assertThat(response.getHits().totalHits(), equalTo(1l));
         assertThat(response.getHits().hits()[0].id(), equalTo("3"));
         assertThat(response.getHits().hits()[0].score(), equalTo(1.5f));
 
         try {
-<<<<<<< HEAD
-            response = minMaxQuery("avg", 3, 2);
-=======
-            response = minMaxQuery(ScoreType.AVG, 3, 2, cutoff);
->>>>>>> tempbranch
+            response = minMaxQuery(ScoreType.AVG, 3, 2);
             fail();
         } catch (SearchPhaseExecutionException e) {
             assertThat(e.toString(), containsString("[has_child] 'max_children' is less than 'min_children'"));
@@ -2203,10 +2031,6 @@ public class ChildQuerySearchIT extends ESIntegTestCase {
 
     static HasChildQueryBuilder hasChildQuery(String type, QueryBuilder queryBuilder) {
         HasChildQueryBuilder hasChildQueryBuilder = QueryBuilders.hasChildQuery(type, queryBuilder);
-<<<<<<< HEAD
-=======
-        hasChildQueryBuilder.shortCircuitCutoff(randomInt(10));
->>>>>>> tempbranch
         return hasChildQueryBuilder;
     }
 

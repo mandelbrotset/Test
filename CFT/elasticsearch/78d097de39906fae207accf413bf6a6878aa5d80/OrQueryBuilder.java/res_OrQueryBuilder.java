@@ -19,16 +19,11 @@
 
 package org.elasticsearch.index.query;
 
-<<<<<<< HEAD
-=======
-import com.google.common.collect.Lists;
-
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
->>>>>>> tempbranch
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import java.io.IOException;
@@ -46,11 +41,7 @@ public class OrQueryBuilder extends AbstractQueryBuilder<OrQueryBuilder> {
 
     public static final String NAME = "or";
 
-<<<<<<< HEAD
-    private ArrayList<QueryBuilder> filters = new ArrayList<>();
-=======
-    private final ArrayList<QueryBuilder> filters = Lists.newArrayList();
->>>>>>> tempbranch
+    private final ArrayList<QueryBuilder> filters = new ArrayList<>();
 
     static final OrQueryBuilder PROTOTYPE = new OrQueryBuilder();
 

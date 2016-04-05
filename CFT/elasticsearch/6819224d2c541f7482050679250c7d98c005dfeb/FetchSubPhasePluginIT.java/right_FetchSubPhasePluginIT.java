@@ -19,11 +19,6 @@
 
 package org.elasticsearch.search.fetch;
 
-<<<<<<< HEAD
-=======
-import com.google.common.collect.ImmutableMap;
-
->>>>>>> tempbranch
 import org.apache.lucene.index.PostingsEnum;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.util.BytesRef;
@@ -31,17 +26,12 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.termvectors.TermVectorsRequest;
 import org.elasticsearch.action.termvectors.TermVectorsResponse;
 import org.elasticsearch.common.Priority;
-<<<<<<< HEAD
 import org.elasticsearch.common.bytes.BytesArray;
-=======
-import org.elasticsearch.common.xcontent.XContentBuilder;
->>>>>>> tempbranch
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.search.SearchHitField;
 import org.elasticsearch.search.SearchModule;
 import org.elasticsearch.search.SearchParseElement;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.internal.InternalSearchHit;
 import org.elasticsearch.search.internal.InternalSearchHitField;
 import org.elasticsearch.search.internal.SearchContext;
@@ -60,7 +50,7 @@ import static java.util.Collections.singletonMap;
 import static org.elasticsearch.client.Requests.indexRequest;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertSearchResponse;
-import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.Matchers.equalTo;
 
 /**
  *
@@ -96,16 +86,14 @@ public class FetchSubPhasePluginIT extends ESIntegTestCase {
 
         client().admin().indices().prepareRefresh().execute().actionGet();
 
-        XContentBuilder extSource = jsonBuilder().startObject()
+        String searchSource = jsonBuilder().startObject()
                 .field("term_vectors_fetch", "test")
-                .endObject();
-         SearchResponse response = client().prepareSearch().setSource(new SearchSourceBuilder().ext(extSource)).get();
+                .endObject().string();
+        SearchResponse response = client().prepareSearch().setSource(new BytesArray(searchSource)).get();
         assertSearchResponse(response);
         assertThat(((Map<String, Integer>) response.getHits().getAt(0).field("term_vectors_fetch").getValues().get(0)).get("i"), equalTo(2));
-        assertThat(((Map<String, Integer>) response.getHits().getAt(0).field("term_vectors_fetch").getValues().get(0)).get("am"),
-                equalTo(2));
-        assertThat(((Map<String, Integer>) response.getHits().getAt(0).field("term_vectors_fetch").getValues().get(0)).get("sam"),
-                equalTo(1));
+        assertThat(((Map<String, Integer>) response.getHits().getAt(0).field("term_vectors_fetch").getValues().get(0)).get("am"), equalTo(2));
+        assertThat(((Map<String, Integer>) response.getHits().getAt(0).field("term_vectors_fetch").getValues().get(0)).get("sam"), equalTo(1));
     }
 
     public static class FetchTermVectorsPlugin extends Plugin {

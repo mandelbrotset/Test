@@ -24,38 +24,26 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import java.io.IOException;
 
 /**
- * A filter for a field based on several terms matching on any of them.
+ * A filer for a field based on several terms matching on any of them.
  */
-public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
-
-    public static final String NAME = "terms";
-
-    static final TermsQueryBuilder PROTOTYPE = new TermsQueryBuilder(null, (Object) null);
+public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBuilder<TermsQueryBuilder> {
 
     private final String name;
 
     private final Object values;
 
-<<<<<<< HEAD
     private String minimumShouldMatch;
 
     private Boolean disableCoord;
 
     private String queryName;
 
-=======
->>>>>>> tempbranch
     private String execution;
 
-    private String lookupIndex;
-    private String lookupType;
-    private String lookupId;
-    private String lookupRouting;
-    private String lookupPath;
-    private Boolean lookupCache;
+    private float boost = -1;
 
     /**
-     * A filter for a field based on several terms matching on any of them.
+     * A filer for a field based on several terms matching on any of them.
      *
      * @param name   The field name
      * @param values The terms
@@ -65,7 +53,7 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
     }
 
     /**
-     * A filter for a field based on several terms matching on any of them.
+     * A filer for a field based on several terms matching on any of them.
      *
      * @param name   The field name
      * @param values The terms
@@ -76,7 +64,7 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
     }
 
     /**
-     * A filter for a field based on several terms matching on any of them.
+     * A filer for a field based on several terms matching on any of them.
      *
      * @param name   The field name
      * @param values The terms
@@ -87,7 +75,7 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
     }
 
     /**
-     * A filter for a field based on several terms matching on any of them.
+     * A filer for a field based on several terms matching on any of them.
      *
      * @param name   The field name
      * @param values The terms
@@ -98,7 +86,7 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
     }
 
     /**
-     * A filter for a field based on several terms matching on any of them.
+     * A filer for a field based on several terms matching on any of them.
      *
      * @param name   The field name
      * @param values The terms
@@ -109,7 +97,7 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
     }
 
     /**
-     * A filter for a field based on several terms matching on any of them.
+     * A filer for a field based on several terms matching on any of them.
      *
      * @param name   The field name
      * @param values The terms
@@ -120,7 +108,7 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
     }
 
     /**
-     * A filter for a field based on several terms matching on any of them.
+     * A filer for a field based on several terms matching on any of them.
      *
      * @param name   The field name
      * @param values The terms
@@ -142,7 +130,6 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
     }
 
     /**
-<<<<<<< HEAD
      * Sets the minimum number of matches across the provided terms. Defaults to <tt>1</tt>.
      * @deprecated use [bool] query instead
      */
@@ -164,75 +151,27 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
 
     /**
      * Sets the filter name for the filter that can be used when searching for matched_filters per hit.
-=======
-     * Sets the index name to lookup the terms from.
->>>>>>> tempbranch
      */
-    public TermsQueryBuilder lookupIndex(String lookupIndex) {
-        this.lookupIndex = lookupIndex;
+    public TermsQueryBuilder queryName(String queryName) {
+        this.queryName = queryName;
         return this;
     }
 
-    /**
-     * Sets the index type to lookup the terms from.
-     */
-    public TermsQueryBuilder lookupType(String lookupType) {
-        this.lookupType = lookupType;
-        return this;
-    }
-
-    /**
-     * Sets the doc id to lookup the terms from.
-     */
-    public TermsQueryBuilder lookupId(String lookupId) {
-        this.lookupId = lookupId;
-        return this;
-    }
-
-    /**
-     * Sets the path within the document to lookup the terms from.
-     */
-    public TermsQueryBuilder lookupPath(String lookupPath) {
-        this.lookupPath = lookupPath;
-        return this;
-    }
-
-    public TermsQueryBuilder lookupRouting(String lookupRouting) {
-        this.lookupRouting = lookupRouting;
-        return this;
-    }
-
-    public TermsQueryBuilder lookupCache(boolean lookupCache) {
-        this.lookupCache = lookupCache;
+    @Override
+    public TermsQueryBuilder boost(float boost) {
+        this.boost = boost;
         return this;
     }
 
     @Override
     public void doXContent(XContentBuilder builder, Params params) throws IOException {
-        builder.startObject(NAME);
-        if (values == null) {
-            builder.startObject(name);
-            if (lookupIndex != null) {
-                builder.field("index", lookupIndex);
-            }
-            builder.field("type", lookupType);
-            builder.field("id", lookupId);
-            if (lookupRouting != null) {
-                builder.field("routing", lookupRouting);
-            }
-            if (lookupCache != null) {
-                builder.field("cache", lookupCache);
-            }
-            builder.field("path", lookupPath);
-            builder.endObject();
-        } else {
-            builder.field(name, values);
-        }
+        builder.startObject(TermsQueryParser.NAME);
+        builder.field(name, values);
+
         if (execution != null) {
             builder.field("execution", execution);
         }
 
-<<<<<<< HEAD
         if (minimumShouldMatch != null) {
             builder.field("minimum_should_match", minimumShouldMatch);
         }
@@ -249,14 +188,6 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
             builder.field("_name", queryName);
         }
 
-=======
-        printBoostAndQueryName(builder);
->>>>>>> tempbranch
         builder.endObject();
-    }
-
-    @Override
-    public String getWriteableName() {
-        return NAME;
     }
 }

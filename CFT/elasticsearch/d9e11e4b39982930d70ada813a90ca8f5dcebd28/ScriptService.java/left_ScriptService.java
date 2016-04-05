@@ -19,15 +19,11 @@
 
 package org.elasticsearch.script;
 
-<<<<<<< HEAD
-import com.google.common.collect.ImmutableMap;
-=======
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
 
->>>>>>> tempbranch
 import org.apache.lucene.util.IOUtils;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -45,10 +41,6 @@ import org.elasticsearch.common.ParseField;
 import org.elasticsearch.common.ParseFieldMatcher;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.bytes.BytesReference;
-import org.elasticsearch.common.cache.Cache;
-import org.elasticsearch.common.cache.CacheBuilder;
-import org.elasticsearch.common.cache.RemovalListener;
-import org.elasticsearch.common.cache.RemovalNotification;
 import org.elasticsearch.common.collect.Tuple;
 import org.elasticsearch.common.component.AbstractComponent;
 import org.elasticsearch.common.inject.Inject;
@@ -81,6 +73,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.Collections.unmodifiableMap;
 
@@ -162,12 +155,12 @@ public class ScriptService extends AbstractComponent implements Closeable {
 
         this.defaultLang = settings.get(DEFAULT_SCRIPTING_LANGUAGE_SETTING, DEFAULT_LANG);
 
-        CacheBuilder<String, CompiledScript> cacheBuilder = CacheBuilder.builder();
+        CacheBuilder cacheBuilder = CacheBuilder.newBuilder();
         if (cacheMaxSize >= 0) {
-            cacheBuilder.setMaximumWeight(cacheMaxSize);
+            cacheBuilder.maximumSize(cacheMaxSize);
         }
         if (cacheExpire != null) {
-            cacheBuilder.setExpireAfterAccess(cacheExpire.nanos());
+            cacheBuilder.expireAfterAccess(cacheExpire.nanos(), TimeUnit.NANOSECONDS);
         }
         this.cache = cacheBuilder.removalListener(new ScriptCacheRemovalListener()).build();
 
@@ -310,7 +303,7 @@ public class ScriptService extends AbstractComponent implements Closeable {
         }
 
         String cacheKey = getCacheKey(scriptEngineService, type == ScriptType.INLINE ? null : name, code);
-        CompiledScript compiledScript = cache.get(cacheKey);
+        CompiledScript compiledScript = cache.getIfPresent(cacheKey);
 
         if (compiledScript == null) {
             //Either an un-cached inline script or indexed script
@@ -502,8 +495,12 @@ public class ScriptService extends AbstractComponent implements Closeable {
      * script has been removed from the cache
      */
     private class ScriptCacheRemovalListener implements RemovalListener<String, CompiledScript> {
+
         @Override
         public void onRemoval(RemovalNotification<String, CompiledScript> notification) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("notifying script services of script removal due to: [{}]", notification.getCause());
+            }
             scriptMetrics.onCacheEviction();
             for (ScriptEngineService service : scriptEngines) {
                 try {

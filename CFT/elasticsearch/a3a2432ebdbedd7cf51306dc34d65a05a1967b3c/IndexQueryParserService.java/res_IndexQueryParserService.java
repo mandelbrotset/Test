@@ -270,16 +270,8 @@ public class IndexQueryParserService extends AbstractIndexComponent {
         context.reset(parser);
         try {
             context.parseFieldMatcher(parseFieldMatcher);
-<<<<<<< HEAD
             Query query = parseInnerQuery(context);
             return new ParsedQuery(query, context.copyNamedQueries());
-=======
-            Query query = context.parseContext().parseInnerQueryBuilder().toQuery(context);
-        if (query == null) {
-            query = Queries.newMatchNoDocsQuery();
-        }
-        return new ParsedQuery(query, context.copyNamedQueries());
->>>>>>> tempbranch
         } finally {
             context.reset(null);
         }
@@ -287,7 +279,7 @@ public class IndexQueryParserService extends AbstractIndexComponent {
 
     public Query parseInnerQuery(QueryShardContext context) throws IOException {
         return toQuery(context.parseContext().parseInnerQueryBuilder(), context);
-    }
+            }
 
     public ParsedQuery toQuery(QueryBuilder<?> queryBuilder) {
         QueryShardContext context = cache.get();

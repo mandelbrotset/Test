@@ -30,14 +30,13 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.lucene.util.IOUtils;
 import org.elasticsearch.Version;
+import org.elasticsearch.client.support.Headers;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.io.PathUtils;
 import org.elasticsearch.common.logging.ESLogger;
 import org.elasticsearch.common.logging.Loggers;
-import org.elasticsearch.common.network.InetAddresses;
 import org.elasticsearch.common.network.NetworkAddress;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.util.concurrent.ThreadContext;
 import org.elasticsearch.common.util.set.Sets;
 import org.elasticsearch.test.rest.client.http.HttpRequestBuilder;
 import org.elasticsearch.test.rest.client.http.HttpResponse;
@@ -49,7 +48,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyManagementException;
@@ -81,28 +79,19 @@ public class RestClient implements Closeable {
     private final String protocol;
     private final RestSpec restSpec;
     private final CloseableHttpClient httpClient;
-<<<<<<< HEAD
     private final Headers headers;
-    private final URL[] urls;
-=======
     private final InetSocketAddress[] addresses;
->>>>>>> tempbranch
     private final Version esVersion;
-    private final ThreadContext threadContext;
 
-    public RestClient(RestSpec restSpec, Settings settings, URL[] urls) throws IOException, RestException {
-        assert urls.length > 0;
+    public RestClient(RestSpec restSpec, Settings settings, InetSocketAddress[] addresses) throws IOException, RestException {
+        assert addresses.length > 0;
         this.restSpec = restSpec;
+        this.headers = new Headers(settings);
         this.protocol = settings.get(PROTOCOL, "http");
         this.httpClient = createHttpClient(settings);
-<<<<<<< HEAD
-        this.urls = urls;
-=======
         this.addresses = addresses;
-        this.threadContext = new ThreadContext(settings);
->>>>>>> tempbranch
         this.esVersion = readAndCheckVersion();
-        logger.info("REST client initialized {}, elasticsearch version: [{}]", urls, esVersion);
+        logger.info("REST client initialized {}, elasticsearch version: [{}]", addresses, esVersion);
     }
 
     private Version readAndCheckVersion() throws IOException, RestException {
@@ -113,8 +102,8 @@ public class RestClient implements Closeable {
         assert restApi.getMethods().size() == 1;
 
         String version = null;
-        for (URL url : urls) {
-            RestResponse restResponse = new RestResponse(httpRequestBuilder(url)
+        for (InetSocketAddress address : addresses) {
+            RestResponse restResponse = new RestResponse(httpRequestBuilder(address)
                     .path(restApi.getPaths().get(0))
                     .method(restApi.getMethods().get(0)).execute());
             checkStatusCode(restResponse);
@@ -163,8 +152,6 @@ public class RestClient implements Closeable {
 
         HttpRequestBuilder httpRequestBuilder = callApiBuilder(apiName, requestParams, body);
         for (Map.Entry<String, String> header : headers.entrySet()) {
-            logger.error("Adding header " + header.getKey());
-            logger.error(" with value " + header.getValue());
             httpRequestBuilder.addHeader(header.getKey(), header.getValue());
         }
         logger.debug("calling api [{}]", apiName);
@@ -259,18 +246,17 @@ public class RestClient implements Closeable {
         return restApi;
     }
 
-    protected HttpRequestBuilder httpRequestBuilder(URL url) {
+    protected HttpRequestBuilder httpRequestBuilder(InetSocketAddress address) {
         return new HttpRequestBuilder(httpClient)
-                .addHeaders(threadContext.getHeaders())
+                .addHeaders(headers)
                 .protocol(protocol)
-                .host(url.getHost())
-                .port(url.getPort());
+                .host(NetworkAddress.formatAddress(address.getAddress())).port(address.getPort());
     }
 
     protected HttpRequestBuilder httpRequestBuilder() {
         //the address used is randomized between the available ones
-        URL url = RandomizedTest.randomFrom(urls);
-        return httpRequestBuilder(url);
+        InetSocketAddress address = RandomizedTest.randomFrom(addresses);
+        return httpRequestBuilder(address);
     }
 
     protected CloseableHttpClient createHttpClient(Settings settings) throws IOException {

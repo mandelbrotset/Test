@@ -19,36 +19,15 @@
 
 package org.elasticsearch.index.query;
 
-<<<<<<< HEAD
-import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.RandomAccessWeight;
-import org.apache.lucene.search.Weight;
-import org.apache.lucene.util.Bits;
-import org.elasticsearch.common.inject.Inject;
-import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.script.LeafSearchScript;
-import org.elasticsearch.script.Script;
-import org.elasticsearch.script.Script.ScriptField;
-import org.elasticsearch.script.ScriptContext;
-import org.elasticsearch.script.ScriptParameterParser;
-import org.elasticsearch.script.ScriptParameterParser.ScriptParameterValue;
-import org.elasticsearch.script.ScriptService;
-import org.elasticsearch.script.SearchScript;
-import org.elasticsearch.search.lookup.SearchLookup;
-=======
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.Script.ScriptField;
 import org.elasticsearch.script.ScriptParameterParser;
 import org.elasticsearch.script.ScriptParameterParser.ScriptParameterValue;
->>>>>>> tempbranch
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.Objects;
 
 import static com.google.common.collect.Maps.newHashMap;
 
@@ -125,82 +104,8 @@ public class ScriptQueryParser extends BaseQueryParser<ScriptQueryBuilder> {
                 .queryName(queryName);
     }
 
-<<<<<<< HEAD
-    static class ScriptQuery extends Query {
-
-        private final Script script;
-
-        private final SearchScript searchScript;
-
-        public ScriptQuery(Script script, ScriptService scriptService, SearchLookup searchLookup) {
-            this.script = script;
-            this.searchScript = scriptService.search(searchLookup, script, ScriptContext.Standard.SEARCH);
-        }
-
-        @Override
-        public String toString(String field) {
-            StringBuilder buffer = new StringBuilder();
-            buffer.append("ScriptFilter(");
-            buffer.append(script);
-            buffer.append(")");
-            return buffer.toString();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (!super.equals(obj))
-                return false;
-            ScriptQuery other = (ScriptQuery) obj;
-            return Objects.equals(script, other.script);
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = super.hashCode();
-            result = prime * result + Objects.hashCode(script);
-            return result;
-        }
-
-        @Override
-        public Weight createWeight(IndexSearcher searcher, boolean needsScores) throws IOException {
-            return new RandomAccessWeight(this) {
-                @Override
-                protected Bits getMatchingDocs(final LeafReaderContext context) throws IOException {
-                    final LeafSearchScript leafScript = searchScript.getLeafSearchScript(context);
-                    return new Bits() {
-
-                        @Override
-                        public boolean get(int doc) {
-                            leafScript.setDocument(doc);
-                            Object val = leafScript.run();
-                            if (val == null) {
-                                return false;
-                            }
-                            if (val instanceof Boolean) {
-                                return (Boolean) val;
-                            }
-                            if (val instanceof Number) {
-                                return ((Number) val).longValue() != 0;
-                            }
-                            throw new IllegalArgumentException("Can't handle type [" + val + "] in script filter");
-                        }
-
-                        @Override
-                        public int length() {
-                            return context.reader().maxDoc();
-                        }
-
-                    };
-                }
-            };
-        }
-=======
     @Override
     public ScriptQueryBuilder getBuilderPrototype() {
         return ScriptQueryBuilder.PROTOTYPE;
->>>>>>> tempbranch
     }
 }

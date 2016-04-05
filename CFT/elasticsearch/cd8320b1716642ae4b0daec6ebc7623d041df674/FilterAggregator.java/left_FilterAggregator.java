@@ -19,7 +19,6 @@
 package org.elasticsearch.search.aggregations.bucket.filter;
 
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Weight;
 import org.apache.lucene.util.Bits;
@@ -51,13 +50,13 @@ public class FilterAggregator extends SingleBucketAggregator {
     private final Weight filter;
 
     public FilterAggregator(String name,
-                            Weight filter,
+                            Query filter,
                             AggregatorFactories factories,
                             AggregationContext aggregationContext,
                             Aggregator parent, List<PipelineAggregator> pipelineAggregators,
                             Map<String, Object> metaData) throws IOException {
         super(name, factories, aggregationContext, parent, pipelineAggregators, metaData);
-        this.filter = filter;
+        this.filter = aggregationContext.searchContext().searcher().createNormalizedWeight(filter, false);
     }
 
     @Override
@@ -103,27 +102,11 @@ public class FilterAggregator extends SingleBucketAggregator {
             this.filter = filter;
         }
 
-        // TODO: refactor in order to initialize the factory once with its parent,
-        // the context, etc. and then have a no-arg lightweight create method
-        // (since create may be called thousands of times)
-
-        private IndexSearcher searcher;
-        private Weight weight;
-
         @Override
         public Aggregator createInternal(AggregationContext context, Aggregator parent, boolean collectsFromSingleBucket,
                 List<PipelineAggregator> pipelineAggregators, Map<String, Object> metaData) throws IOException {
-<<<<<<< HEAD
-            IndexSearcher contextSearcher = context.searchContext().searcher();
-            if (searcher != contextSearcher) {
-                searcher = contextSearcher;
-                weight = contextSearcher.createNormalizedWeight(filter, false);
-            }
-            return new FilterAggregator(name, weight, factories, context, parent, pipelineAggregators, metaData);
-=======
             Query filter = this.filter.toQuery(context.searchContext().indexShard().getQueryShardContext());
             return new FilterAggregator(name, filter, factories, context, parent, pipelineAggregators, metaData);
->>>>>>> tempbranch
         }
 
         @Override

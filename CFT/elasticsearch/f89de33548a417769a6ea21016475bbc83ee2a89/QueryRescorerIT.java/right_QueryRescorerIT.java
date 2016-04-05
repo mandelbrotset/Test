@@ -57,8 +57,6 @@ import static org.hamcrest.Matchers.*;
 public class QueryRescorerIT extends ESIntegTestCase {
 
     @Test
-    @AwaitsFix(bugUrl = "Need to fix default window size for rescorers so that they are applied")
-    // NORELEASE
     public void testEnforceWindowSize() {
         createIndex("test");
         // this
@@ -217,8 +215,6 @@ public class QueryRescorerIT extends ESIntegTestCase {
 
     // Tests a rescore window smaller than number of hits:
     @Test
-    @AwaitsFix(bugUrl = "Need to fix default window size for rescorers so that they are applied")
-    // NORELEASE
     public void testSmallRescoreWindow() throws Exception {
         Builder builder = Settings.builder();
         builder.put("index.analysis.analyzer.synonym.tokenizer", "whitespace");
@@ -290,8 +286,6 @@ public class QueryRescorerIT extends ESIntegTestCase {
 
     // Tests a rescorer that penalizes the scores:
     @Test
-    @AwaitsFix(bugUrl = "Need to fix default window size for rescorers so that they are applied")
-    // NORELEASE
     public void testRescorerMadeScoresWorse() throws Exception {
         Builder builder = Settings.builder();
         builder.put("index.analysis.analyzer.synonym.tokenizer", "whitespace");
@@ -618,19 +612,11 @@ public class QueryRescorerIT extends ESIntegTestCase {
                                 .should(QueryBuilders.functionScoreQuery(QueryBuilders.termQuery("field1", intToEnglish[2]),
                                         ScoreFunctionBuilders.weightFactorFunction(5.0f)).boostMode(CombineFunction.REPLACE))
                                 .should(QueryBuilders.functionScoreQuery(QueryBuilders.termQuery("field1", intToEnglish[3]),
-<<<<<<< HEAD:core/src/test/java/org/elasticsearch/search/functionscore/QueryRescorerIT.java
                                         ScoreFunctionBuilders.weightFactorFunction(0.2f)).boostMode(CombineFunction.REPLACE)))
                                 .setFrom(0)
                                 .setSize(10)
                                 .setRescorer(rescoreQuery)
                                 .setRescoreWindow(50).execute().actionGet();
-=======
-                                        ScoreFunctionBuilders.scriptFunction(new Script("0.2f"))).boostMode(CombineFunction.REPLACE)))
-                        .setFrom(0)
-                        .setSize(10)
-                        .setRescorer(rescoreQuery)
-                        .setRescoreWindow(50).execute().actionGet();
->>>>>>> tempbranch:plugins/lang-groovy/src/test/java/org/elasticsearch/messy/tests/QueryRescorerTests.java
 
                 assertHitCount(rescored, 4);
 
@@ -680,8 +666,6 @@ public class QueryRescorerIT extends ESIntegTestCase {
     }
 
     @Test
-    @AwaitsFix(bugUrl = "Need to fix default window size for rescorers so that they are applied")
-    // NORELEASE
     public void testMultipleRescores() throws Exception {
         int numDocs = indexRandomNumbers("keyword", 1, true);
         QueryRescorer eightIsGreat = RescoreBuilder.queryRescorer(

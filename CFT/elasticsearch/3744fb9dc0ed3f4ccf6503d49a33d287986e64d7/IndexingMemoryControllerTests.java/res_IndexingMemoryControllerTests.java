@@ -18,8 +18,6 @@
  */
 package org.elasticsearch.indices.memory;
 
-import java.util.*;
-
 import org.apache.lucene.index.DirectoryReader;
 import org.elasticsearch.action.admin.indices.forcemerge.ForceMergeResponse;
 import org.elasticsearch.common.settings.Settings;
@@ -32,16 +30,14 @@ import org.elasticsearch.index.shard.IndexShard;
 import org.elasticsearch.indices.IndicesService;
 import org.elasticsearch.test.ESSingleNodeTestCase;
 
-<<<<<<< HEAD
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-=======
->>>>>>> tempbranch
 import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_NUMBER_OF_REPLICAS;
 import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_NUMBER_OF_SHARDS;
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertNoFailures;
@@ -51,14 +47,8 @@ public class IndexingMemoryControllerTests extends ESSingleNodeTestCase {
 
     static class MockController extends IndexingMemoryController {
 
-<<<<<<< HEAD
-        final static ByteSizeValue INACTIVE = new ByteSizeValue(-1);
-
-        final Map<IndexShard, ByteSizeValue> indexingBuffers = new HashMap<>();
-=======
         // Size of each shard's indexing buffer
         final Map<IndexShard, Long> indexBufferRAMBytesUsed = new HashMap<>();
->>>>>>> tempbranch
 
         // How many bytes this shard is currently moving to disk
         final Map<IndexShard, Long> writingBytes = new HashMap<>();
@@ -74,18 +64,6 @@ public class IndexingMemoryControllerTests extends ESSingleNodeTestCase {
                     null, null, 100 * 1024 * 1024); // fix jvm mem size to 100mb
         }
 
-<<<<<<< HEAD
-        public void deleteShard(IndexShard id) {
-            indexingBuffers.remove(id);
-        }
-
-        public void assertBuffers(IndexShard id, ByteSizeValue indexing) {
-            assertThat(indexingBuffers.get(id), equalTo(indexing));
-        }
-
-        public void assertInactive(IndexShard id) {
-            assertThat(indexingBuffers.get(id), equalTo(INACTIVE));
-=======
         public void deleteShard(IndexShard shard) {
             indexBufferRAMBytesUsed.remove(shard);
             writingBytes.remove(shard);
@@ -99,7 +77,6 @@ public class IndexingMemoryControllerTests extends ESSingleNodeTestCase {
         @Override
         protected long getIndexBufferRAMBytesUsed(IndexShard shard) {
             return indexBufferRAMBytesUsed.get(shard) + writingBytes.get(shard);
->>>>>>> tempbranch
         }
 
         @Override
@@ -124,24 +101,6 @@ public class IndexingMemoryControllerTests extends ESSingleNodeTestCase {
         }
 
         @Override
-<<<<<<< HEAD
-        protected void updateShardBuffers(IndexShard shard, ByteSizeValue shardIndexingBufferSize) {
-            indexingBuffers.put(shard, shardIndexingBufferSize);
-        }
-
-        @Override
-        protected boolean checkIdle(IndexShard shard) {
-            final TimeValue inactiveTime = settings.getAsTime(IndexShard.INDEX_SHARD_INACTIVE_TIME_SETTING, TimeValue.timeValueMinutes(5));
-            Long ns = lastIndexTimeNanos.get(shard);
-            if (ns == null) {
-                return true;
-            } else if (currentTimeInNanos() - ns >= inactiveTime.nanos()) {
-                indexingBuffers.put(shard, INACTIVE);
-                activeShards.remove(shard);
-                return true;
-            } else {
-                return false;
-=======
         public void activateThrottling(IndexShard shard) {
             assertTrue(throttled.add(shard));
         }
@@ -159,7 +118,6 @@ public class IndexingMemoryControllerTests extends ESSingleNodeTestCase {
             Long actual = indexBufferRAMBytesUsed.get(shard);
             if (actual == null) {
                 actual = 0L;
->>>>>>> tempbranch
             }
             assertEquals(expectedMB * 1024 * 1024, actual.longValue());
         }
@@ -181,18 +139,11 @@ public class IndexingMemoryControllerTests extends ESSingleNodeTestCase {
         }
 
         public void simulateIndexing(IndexShard shard) {
-<<<<<<< HEAD
-            lastIndexTimeNanos.put(shard, currentTimeInNanos());
-            if (indexingBuffers.containsKey(shard) == false) {
-                // First time we are seeing this shard; start it off with inactive buffers as IndexShard does:
-                indexingBuffers.put(shard, IndexingMemoryController.INACTIVE_SHARD_INDEXING_BUFFER);
-=======
             Long bytes = indexBufferRAMBytesUsed.get(shard);
             if (bytes == null) {
                 bytes = 0L;
                 // First time we are seeing this shard:
                 writingBytes.put(shard, 0L);
->>>>>>> tempbranch
             }
             // Each doc we index takes up a megabyte!
             bytes += 1024*1024;
@@ -207,37 +158,21 @@ public class IndexingMemoryControllerTests extends ESSingleNodeTestCase {
         IndexService test = indicesService.indexService("test");
 
         MockController controller = new MockController(Settings.builder()
-<<<<<<< HEAD
-            .put(IndexingMemoryController.INDEX_BUFFER_SIZE_SETTING, "10mb").build());
-        IndexShard shard0 = test.getShard(0);
-        controller.simulateIndexing(shard0);
-        controller.assertBuffers(shard0, new ByteSizeValue(10, ByteSizeUnit.MB)); // translog is maxed at 64K
-=======
                 .put(IndexingMemoryController.INDEX_BUFFER_SIZE_SETTING, "4mb").build());
         IndexShard shard0 = test.getShard(0);
         controller.simulateIndexing(shard0);
         controller.assertBuffer(shard0, 1);
->>>>>>> tempbranch
 
         // add another shard
         IndexShard shard1 = test.getShard(1);
         controller.simulateIndexing(shard1);
-<<<<<<< HEAD
-        controller.assertBuffers(shard0, new ByteSizeValue(5, ByteSizeUnit.MB));
-        controller.assertBuffers(shard1, new ByteSizeValue(5, ByteSizeUnit.MB));
-=======
         controller.assertBuffer(shard0, 1);
         controller.assertBuffer(shard1, 1);
->>>>>>> tempbranch
 
         // remove first shard
         controller.deleteShard(shard0);
         controller.forceCheck();
-<<<<<<< HEAD
-        controller.assertBuffers(shard1, new ByteSizeValue(10, ByteSizeUnit.MB)); // translog is maxed at 64K
-=======
         controller.assertBuffer(shard1, 1);
->>>>>>> tempbranch
 
         // remove second shard
         controller.deleteShard(shard1);
@@ -246,11 +181,7 @@ public class IndexingMemoryControllerTests extends ESSingleNodeTestCase {
         // add a new one
         IndexShard shard2 = test.getShard(2);
         controller.simulateIndexing(shard2);
-<<<<<<< HEAD
-        controller.assertBuffers(shard2, new ByteSizeValue(10, ByteSizeUnit.MB)); // translog is maxed at 64K
-=======
         controller.assertBuffer(shard2, 1);
->>>>>>> tempbranch
     }
 
     public void testActiveInactive() {
@@ -260,24 +191,13 @@ public class IndexingMemoryControllerTests extends ESSingleNodeTestCase {
         IndexService test = indicesService.indexService("test");
 
         MockController controller = new MockController(Settings.builder()
-<<<<<<< HEAD
-            .put(IndexingMemoryController.INDEX_BUFFER_SIZE_SETTING, "10mb")
-            .put(IndexShard.INDEX_SHARD_INACTIVE_TIME_SETTING, "5s")
-            .build());
-=======
                 .put(IndexingMemoryController.INDEX_BUFFER_SIZE_SETTING, "5mb")
                 .build());
->>>>>>> tempbranch
 
         IndexShard shard0 = test.getShard(0);
         controller.simulateIndexing(shard0);
         IndexShard shard1 = test.getShard(1);
         controller.simulateIndexing(shard1);
-<<<<<<< HEAD
-        controller.assertBuffers(shard0, new ByteSizeValue(5, ByteSizeUnit.MB));
-        controller.assertBuffers(shard1, new ByteSizeValue(5, ByteSizeUnit.MB));
-=======
->>>>>>> tempbranch
 
         controller.assertBuffer(shard0, 1);
         controller.assertBuffer(shard1, 1);
@@ -290,63 +210,17 @@ public class IndexingMemoryControllerTests extends ESSingleNodeTestCase {
 
         // index into one shard only, crosses the 5mb limit, so shard1 is refreshed
         controller.simulateIndexing(shard0);
-<<<<<<< HEAD
-        controller.assertBuffers(shard0, new ByteSizeValue(10, ByteSizeUnit.MB));
-        controller.assertInactive(shard1);
-
-        controller.incrementTimeSec(3); // increment but not enough to become inactive
-        controller.forceCheck();
-        controller.assertBuffers(shard0, new ByteSizeValue(10, ByteSizeUnit.MB));
-        controller.assertInactive(shard1);
-
-        controller.incrementTimeSec(3); // increment some more
-        controller.forceCheck();
-        controller.assertInactive(shard0);
-        controller.assertInactive(shard1);
-=======
         controller.simulateIndexing(shard0);
         controller.assertBuffer(shard0, 0);
         controller.assertBuffer(shard1, 2);
->>>>>>> tempbranch
 
         controller.simulateIndexing(shard1);
-<<<<<<< HEAD
-        controller.assertInactive(shard0);
-        controller.assertBuffers(shard1, new ByteSizeValue(10, ByteSizeUnit.MB));
-    }
-
-    public void testMinShardBufferSizes() {
-        MockController controller = new MockController(Settings.builder()
-            .put(IndexingMemoryController.INDEX_BUFFER_SIZE_SETTING, "10mb")
-            .put(IndexingMemoryController.MIN_SHARD_INDEX_BUFFER_SIZE_SETTING, "6mb")
-            .put(IndexingMemoryController.MIN_SHARD_TRANSLOG_BUFFER_SIZE_SETTING, "40kb").build());
-
-        assertTwoActiveShards(controller, new ByteSizeValue(6, ByteSizeUnit.MB), new ByteSizeValue(40, ByteSizeUnit.KB));
-    }
-
-    public void testMaxShardBufferSizes() {
-        MockController controller = new MockController(Settings.builder()
-            .put(IndexingMemoryController.INDEX_BUFFER_SIZE_SETTING, "10mb")
-            .put(IndexingMemoryController.MAX_SHARD_INDEX_BUFFER_SIZE_SETTING, "3mb")
-            .put(IndexingMemoryController.MAX_SHARD_TRANSLOG_BUFFER_SIZE_SETTING, "10kb").build());
-
-        assertTwoActiveShards(controller, new ByteSizeValue(3, ByteSizeUnit.MB), new ByteSizeValue(10, ByteSizeUnit.KB));
-    }
-
-    public void testRelativeBufferSizes() {
-        MockController controller = new MockController(Settings.builder()
-            .put(IndexingMemoryController.INDEX_BUFFER_SIZE_SETTING, "50%")
-            .build());
-
-        assertThat(controller.indexingBufferSize(), equalTo(new ByteSizeValue(50, ByteSizeUnit.MB)));
-=======
         controller.simulateIndexing(shard1);
         controller.assertBuffer(shard1, 4);
         controller.simulateIndexing(shard1);
         controller.simulateIndexing(shard1);
         // shard1 crossed 5 mb and is now cleared:
         controller.assertBuffer(shard1, 0);
->>>>>>> tempbranch
     }
 
     public void testMinBufferSizes() {
@@ -359,13 +233,8 @@ public class IndexingMemoryControllerTests extends ESSingleNodeTestCase {
 
     public void testMaxBufferSizes() {
         MockController controller = new MockController(Settings.builder()
-<<<<<<< HEAD
-            .put(IndexingMemoryController.INDEX_BUFFER_SIZE_SETTING, "90%")
-            .put(IndexingMemoryController.MAX_INDEX_BUFFER_SIZE_SETTING, "6mb").build());
-=======
                 .put(IndexingMemoryController.INDEX_BUFFER_SIZE_SETTING, "90%")
                 .put(IndexingMemoryController.MAX_INDEX_BUFFER_SIZE_SETTING, "6mb").build());
->>>>>>> tempbranch
 
         assertThat(controller.indexingBufferSize(), equalTo(new ByteSizeValue(6, ByteSizeUnit.MB)));
     }
@@ -386,10 +255,6 @@ public class IndexingMemoryControllerTests extends ESSingleNodeTestCase {
         controller.assertBuffer(shard0, 3);
         controller.simulateIndexing(shard1);
         controller.simulateIndexing(shard1);
-<<<<<<< HEAD
-        controller.assertBuffers(shard0, indexBufferSize);
-        controller.assertBuffers(shard1, indexBufferSize);
-=======
 
         // We are now using 5 MB, so we should be writing shard0 since it's using the most heap:
         controller.assertWriting(shard0, 3);
@@ -501,6 +366,5 @@ public class IndexingMemoryControllerTests extends ESSingleNodeTestCase {
                 }
             }
         });
->>>>>>> tempbranch
     }
 }

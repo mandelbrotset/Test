@@ -39,8 +39,10 @@ import java.util.Map;
  * In the simplest case, parse template string and variables from the request,
  * compile the template and execute the template against the given variables.
  * */
-public class TemplateQueryParser extends BaseQueryParserTemp {
+public class TemplateQueryParser implements QueryParser {
 
+    /** Name to reference this type of query. */
+    public static final String NAME = "template";
     /** Name of query parameter containing the template string. */
     public static final String QUERY = "query";
 
@@ -60,7 +62,7 @@ public class TemplateQueryParser extends BaseQueryParserTemp {
 
     @Override
     public String[] names() {
-        return new String[] {TemplateQueryBuilder.NAME};
+        return new String[] { NAME };
     }
 
     /**
@@ -68,17 +70,12 @@ public class TemplateQueryParser extends BaseQueryParserTemp {
      * values. Handles both submitting the template as part of the request as
      * well as referencing only the template name.
      *
-<<<<<<< HEAD
      * @param parseContext
-=======
-     * @param context
->>>>>>> tempbranch
      *            parse context containing the templated query.
      */
     @Override
     @Nullable
-    public Query parse(QueryShardContext context) throws IOException {
-        QueryParseContext parseContext = context.parseContext();
+    public Query parse(QueryParseContext parseContext) throws IOException {
         XContentParser parser = parseContext.parser();
         Template template = parse(parser, parseContext.parseFieldMatcher());
         ExecutableScript executable = this.scriptService.executable(template, ScriptContext.Standard.SEARCH, SearchContext.current());
@@ -86,9 +83,9 @@ public class TemplateQueryParser extends BaseQueryParserTemp {
         BytesReference querySource = (BytesReference) executable.run();
 
         try (XContentParser qSourceParser = XContentFactory.xContent(querySource).createParser(querySource)) {
-            final QueryShardContext contextCopy = new QueryShardContext(context.index(), context.indexQueryParserService());
-            contextCopy.reset(qSourceParser);
-            return contextCopy.parseContext().parseInnerQuery();
+            final QueryParseContext context = new QueryParseContext(parseContext.index(), parseContext.indexQueryParserService());
+            context.reset(qSourceParser);
+            return context.parseInnerQuery();
         }
     }
 
@@ -116,10 +113,5 @@ public class TemplateQueryParser extends BaseQueryParserTemp {
 
     public static Template parse(XContentParser parser, Map<String, ScriptService.ScriptType> parameterMap, ParseFieldMatcher parseFieldMatcher) throws IOException {
         return Template.parse(parser, parameterMap, parseFieldMatcher);
-    }
-
-    @Override
-    public TemplateQueryBuilder getBuilderPrototype() {
-        return TemplateQueryBuilder.PROTOTYPE;
     }
 }

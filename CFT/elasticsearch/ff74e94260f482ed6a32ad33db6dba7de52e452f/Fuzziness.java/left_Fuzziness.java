@@ -18,11 +18,8 @@
  */
 package org.elasticsearch.common.unit;
 
-<<<<<<< HEAD
-=======
 import com.google.common.base.Preconditions;
 
->>>>>>> tempbranch
 import org.elasticsearch.common.ParseField;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
@@ -57,9 +54,7 @@ public final class Fuzziness implements ToXContent, Writeable<Fuzziness> {
     static final Fuzziness PROTOTYPE = AUTO;
 
     private Fuzziness(int fuzziness) {
-        if (fuzziness != 0 && fuzziness != 1 && fuzziness != 2) {
-            throw new IllegalArgumentException("Valid edit distances are [0, 1, 2] but was [" + fuzziness + "]");
-        }
+        Preconditions.checkArgument(fuzziness >= 0 && fuzziness <= 2, "Valid edit distances are [0, 1, 2] but was [" + fuzziness + "]");
         this.fuzziness = Integer.toString(fuzziness);
     }
 

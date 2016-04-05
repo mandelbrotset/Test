@@ -38,6 +38,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static org.elasticsearch.cloud.azure.AzureModule.isSnapshotReady;
+
 /**
  *
  */
@@ -71,13 +73,9 @@ public class CloudAzurePlugin extends Plugin {
     }
 
     public void onModule(RepositoriesModule module) {
-<<<<<<< HEAD
         if (isSnapshotReady(settings, logger)) {
             module.registerRepository(AzureRepository.TYPE, AzureRepository.class, BlobStoreIndexShardRepository.class);
         }
-=======
-        module.registerRepository(AzureRepository.TYPE, AzureRepositoryModule.class);
->>>>>>> tempbranch
     }
 
     public void onModule(DiscoveryModule discoveryModule) {

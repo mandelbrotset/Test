@@ -150,13 +150,8 @@ public class TransportClient extends AbstractClient {
                         // noop
                     }
                 });
-<<<<<<< HEAD
-                modules.add(new ActionModule(true));
+                modules.add(new ActionModule(settings, true));
                 modules.add(new CircuitBreakerModule(settings));
-=======
-                modules.add(new ActionModule(this.settings, true));
-                modules.add(new CircuitBreakerModule(this.settings));
->>>>>>> tempbranch
 
                 pluginsService.processModules(modules);
 

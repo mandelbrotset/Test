@@ -19,16 +19,7 @@
 
 package org.elasticsearch.index.query;
 
-<<<<<<< HEAD
-import org.apache.lucene.queries.TermsQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.util.BytesRef;
 import org.elasticsearch.common.inject.Inject;
-import org.elasticsearch.common.lucene.search.Queries;
-import org.elasticsearch.common.util.iterable.Iterables;
-=======
-import org.elasticsearch.common.inject.Inject;
->>>>>>> tempbranch
 import org.elasticsearch.common.xcontent.XContentParser;
 
 import java.io.IOException;

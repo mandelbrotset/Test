@@ -19,19 +19,13 @@
 
 package org.elasticsearch.index.query.functionscore.fieldvaluefactor;
 
-import org.apache.lucene.document.FieldType;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.common.lucene.search.function.FieldValueFactorFunction;
 import org.elasticsearch.common.lucene.search.function.ScoreFunction;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.index.fielddata.IndexNumericFieldData;
-<<<<<<< HEAD
-import org.elasticsearch.index.fielddata.plain.DoubleArrayIndexFieldData;
 import org.elasticsearch.index.mapper.FieldMapper;
-=======
->>>>>>> tempbranch
 import org.elasticsearch.index.mapper.MappedFieldType;
-import org.elasticsearch.index.query.QueryShardContext;
 import org.elasticsearch.index.query.QueryParseContext;
 import org.elasticsearch.index.query.QueryParsingException;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionParser;
@@ -58,8 +52,7 @@ public class FieldValueFactorFunctionParser implements ScoreFunctionParser {
     public static String[] NAMES = { "field_value_factor", "fieldValueFactor" };
 
     @Override
-    public ScoreFunction parse(QueryShardContext context, XContentParser parser) throws IOException, QueryParsingException {
-        QueryParseContext parseContext = context.parseContext();
+    public ScoreFunction parse(QueryParseContext parseContext, XContentParser parser) throws IOException, QueryParsingException {
 
         String currentFieldName = null;
         String field = null;
@@ -93,15 +86,11 @@ public class FieldValueFactorFunctionParser implements ScoreFunctionParser {
 
         SearchContext searchContext = SearchContext.current();
         MappedFieldType fieldType = searchContext.mapperService().smartNameFieldType(field);
-        IndexNumericFieldData fieldData = null;
         if (fieldType == null) {
-            if(missing == null) {
-                throw new ElasticsearchException("Unable to find a field mapper for field [" + field + "]. No 'missing' value defined.");
-            }
-        } else {
-            fieldData = searchContext.fieldData().getForField(fieldType);
+            throw new ElasticsearchException("Unable to find a field mapper for field [" + field + "]");
         }
-        return new FieldValueFactorFunction(field, boostFactor, modifier, missing, fieldData);
+        return new FieldValueFactorFunction(field, boostFactor, modifier, missing,
+                (IndexNumericFieldData)searchContext.fieldData().getForField(fieldType));
     }
 
     @Override

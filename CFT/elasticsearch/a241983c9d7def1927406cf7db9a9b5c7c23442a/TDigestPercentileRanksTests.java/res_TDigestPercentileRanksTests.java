@@ -404,13 +404,8 @@ public class TDigestPercentileRanksTests extends AbstractNumericTestCase {
         SearchResponse searchResponse = client().prepareSearch("idx")
                 .setQuery(matchAllQuery())
                 .addAggregation(
-<<<<<<< HEAD
                         histogram("histo").field("value").interval(2L)
-                            .subAggregation(randomCompression(percentileRanks("percentile_ranks").percentiles(99)))
-=======
-                        histogram("histo").field("value").interval(2l)
                             .subAggregation(randomCompression(percentileRanks("percentile_ranks").values(99)))
->>>>>>> tempbranch
                             .order(Order.aggregation("percentile_ranks", "99", asc)))
                 .execute().actionGet();
 

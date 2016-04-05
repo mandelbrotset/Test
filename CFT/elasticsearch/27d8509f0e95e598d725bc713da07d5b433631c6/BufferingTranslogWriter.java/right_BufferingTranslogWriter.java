@@ -142,7 +142,6 @@ public final class BufferingTranslogWriter extends TranslogWriter {
         }
     }
 
-<<<<<<< HEAD
 
     public void updateBufferSize(int bufferSize) {
         try (ReleasableLock lock = writeLock.acquire()) {
@@ -156,8 +155,6 @@ public final class BufferingTranslogWriter extends TranslogWriter {
         }
     }
 
-=======
->>>>>>> tempbranch
     class WrapperOutputStream extends OutputStream {
 
         @Override

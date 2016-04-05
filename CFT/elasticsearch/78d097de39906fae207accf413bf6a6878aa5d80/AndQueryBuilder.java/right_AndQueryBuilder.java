@@ -19,51 +19,30 @@
 
 package org.elasticsearch.index.query;
 
-<<<<<<< HEAD
-=======
-import com.google.common.collect.Lists;
-
-import org.apache.lucene.search.BooleanClause.Occur;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.Query;
-import org.elasticsearch.common.io.stream.StreamInput;
-import org.elasticsearch.common.io.stream.StreamOutput;
->>>>>>> tempbranch
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
 
 /**
  * A filter that matches documents matching boolean combinations of other filters.
  * @deprecated Use {@link BoolQueryBuilder} instead
  */
 @Deprecated
-public class AndQueryBuilder extends AbstractQueryBuilder<AndQueryBuilder> {
+public class AndQueryBuilder extends QueryBuilder {
 
-    public static final String NAME = "and";
-
-<<<<<<< HEAD
     private ArrayList<QueryBuilder> filters = new ArrayList<>();
-=======
-    private final ArrayList<QueryBuilder> filters = Lists.newArrayList();
->>>>>>> tempbranch
 
-    static final AndQueryBuilder PROTOTYPE = new AndQueryBuilder();
+    private String queryName;
 
-    /**
-     * @param filters nested filters, no <tt>null</tt> values are allowed
-     */
     public AndQueryBuilder(QueryBuilder... filters) {
-        Collections.addAll(this.filters, filters);
+        for (QueryBuilder filter : filters) {
+            this.filters.add(filter);
+        }
     }
 
     /**
      * Adds a filter to the list of filters to "and".
-     * @param filterBuilder nested filter, no <tt>null</tt> value allowed
      */
     public AndQueryBuilder add(QueryBuilder filterBuilder) {
         filters.add(filterBuilder);
@@ -71,79 +50,24 @@ public class AndQueryBuilder extends AbstractQueryBuilder<AndQueryBuilder> {
     }
 
     /**
-     * @return the list of queries added to "and".
+     * Sets the filter name for the filter that can be used when searching for matched_filters per hit.
      */
-    public List<QueryBuilder> innerQueries() {
-        return this.filters;
+    public AndQueryBuilder queryName(String queryName) {
+        this.queryName = queryName;
+        return this;
     }
 
     @Override
     protected void doXContent(XContentBuilder builder, Params params) throws IOException {
-        builder.startObject(NAME);
+        builder.startObject(AndQueryParser.NAME);
         builder.startArray("filters");
         for (QueryBuilder filter : filters) {
             filter.toXContent(builder, params);
         }
         builder.endArray();
-        printBoostAndQueryName(builder);
+        if (queryName != null) {
+            builder.field("_name", queryName);
+        }
         builder.endObject();
-    }
-
-    @Override
-    protected Query doToQuery(QueryShardContext context) throws IOException {
-        if (filters.isEmpty()) {
-            // no filters provided, this should be ignored upstream
-            return null;
-        }
-
-        BooleanQuery query = new BooleanQuery();
-        for (QueryBuilder f : filters) {
-            Query innerQuery = f.toFilter(context);
-            // ignore queries that are null
-            if (innerQuery != null) {
-                query.add(innerQuery, Occur.MUST);
-            }
-        }
-        if (query.clauses().isEmpty()) {
-            // no inner lucene query exists, ignore upstream
-            return null;
-        }
-        return query;
-    }
-
-    @Override
-    public QueryValidationException validate() {
-        return validateInnerQueries(filters, null);
-    }
-
-    @Override
-    public String getWriteableName() {
-        return NAME;
-    }
-
-    @Override
-    protected int doHashCode() {
-        return Objects.hash(filters);
-    }
-
-    @Override
-    protected boolean doEquals(AndQueryBuilder other) {
-        return Objects.equals(filters, other.filters);
-    }
-
-    @Override
-    protected AndQueryBuilder doReadFrom(StreamInput in) throws IOException {
-        AndQueryBuilder andQueryBuilder = new AndQueryBuilder();
-        List<QueryBuilder> queryBuilders = readQueries(in);
-        for (QueryBuilder queryBuilder : queryBuilders) {
-            andQueryBuilder.add(queryBuilder);
-        }
-        return andQueryBuilder;
-
-    }
-
-    @Override
-    protected void doWriteTo(StreamOutput out) throws IOException {
-        writeQueries(out, filters);
     }
 }

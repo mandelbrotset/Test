@@ -24,7 +24,6 @@ import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.common.lucene.search.function.FiltersFunctionScoreQuery;
@@ -49,24 +48,11 @@ import java.util.concurrent.ExecutionException;
 import static org.elasticsearch.client.Requests.indexRequest;
 import static org.elasticsearch.client.Requests.searchRequest;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
-import static org.elasticsearch.index.query.QueryBuilders.functionScoreQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
-import static org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders.exponentialDecayFunction;
-import static org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders.gaussDecayFunction;
-import static org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders.linearDecayFunction;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders.*;
 import static org.elasticsearch.search.builder.SearchSourceBuilder.searchSource;
-import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertAcked;
-import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertNoFailures;
-import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertOrderedSearchHits;
-import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertSearchHits;
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.closeTo;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.isOneOf;
-import static org.hamcrest.Matchers.lessThan;
-import static org.hamcrest.Matchers.not;
+import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.*;
+import static org.hamcrest.Matchers.*;
 
 
 public class DecayFunctionScoreIT extends ESIntegTestCase {
@@ -447,10 +433,10 @@ public class DecayFunctionScoreIT extends ESIntegTestCase {
         SearchResponse sr = response.actionGet();
         assertOrderedSearchHits(sr, "2", "1");
     }
-
+    
     @Test
     public void testParseDateMath() throws Exception {
-
+        
         assertAcked(prepareCreate("test").addMapping(
                 "type1",
                 jsonBuilder().startObject().startObject("type1").startObject("properties").startObject("test").field("type", "string")
@@ -471,7 +457,7 @@ public class DecayFunctionScoreIT extends ESIntegTestCase {
 
         assertNoFailures(sr);
         assertOrderedSearchHits(sr, "1", "2");
-
+        
         sr = client().search(
                 searchRequest().source(
                         searchSource().query(
@@ -596,9 +582,9 @@ public class DecayFunctionScoreIT extends ESIntegTestCase {
         List<IndexRequestBuilder> indexBuilders = new ArrayList<>();
 
         for (int i = 0; i < numDocs; i++) {
-            double lat = 100 + (int) (10.0 * (i) / (numDocs));
+            double lat = 100 + (int) (10.0 * (float) (i) / (float) (numDocs));
             double lon = 100;
-            int day = (int) (29.0 * (i) / (numDocs)) + 1;
+            int day = (int) (29.0 * (float) (i) / (float) (numDocs)) + 1;
             String dayString = day < 10 ? "0" + Integer.toString(day) : Integer.toString(day);
             String date = "2013-05-" + dayString;
 
@@ -786,7 +772,7 @@ public class DecayFunctionScoreIT extends ESIntegTestCase {
 
         assertThat(sh.getAt(0).getId(), equalTo("2"));
         assertThat(sh.getAt(1).getId(), equalTo("1"));
-        assertThat(1.0 - sh.getAt(0).getScore(), closeTo((1.0 - sh.getAt(1).getScore())/3.0, 1.e-6d));
+        assertThat((double)(1.0 - sh.getAt(0).getScore()), closeTo((double)((1.0 - sh.getAt(1).getScore())/3.0), 1.e-6d));
         response = client().search(
                 searchRequest().source(
                         searchSource().query(
@@ -794,7 +780,7 @@ public class DecayFunctionScoreIT extends ESIntegTestCase {
         sr = response.actionGet();
         assertSearchHits(sr, "1", "2");
         sh = sr.getHits();
-        assertThat((double) (sh.getAt(0).getScore()), closeTo((sh.getAt(1).getScore()), 1.e-6d));
+        assertThat((double) (sh.getAt(0).getScore()), closeTo((double) (sh.getAt(1).getScore()), 1.e-6d));
     }
 
     @Test
@@ -811,124 +797,33 @@ public class DecayFunctionScoreIT extends ESIntegTestCase {
 
         XContentBuilder query = XContentFactory.jsonBuilder();
         // query that contains a single function and a functions[] array
-        query.startObject().startObject("query").startObject("function_score").field("weight", "1").startArray("functions").startObject().startObject("script_score").field("script", "3").endObject().endObject().endArray().endObject().endObject().endObject();
-//        try {
-//            client().search(searchRequest().source(query.bytes())).actionGet();
-//            fail("Search should result in SearchPhaseExecutionException");
-//        } catch (SearchPhaseExecutionException e) {
-//            logger.info(e.shardFailures()[0].reason());
-//            assertThat(e.shardFailures()[0].reason(), containsString("already found [weight], now encountering [functions]."));
-//        }
-//
-//        query = XContentFactory.jsonBuilder();
-//        // query that contains a single function (but not boost factor) and a functions[] array
-//        query.startObject().startObject("query").startObject("function_score").startObject("random_score").field("seed", 3).endObject().startArray("functions").startObject().startObject("random_score").field("seed", 3).endObject().endObject().endArray().endObject().endObject().endObject();
-//        try {
-//            client().search(searchRequest().source(query.bytes())).actionGet();
-//            fail("Search should result in SearchPhaseExecutionException");
-//        } catch (SearchPhaseExecutionException e) {
-//            logger.info(e.shardFailures()[0].reason());
-//            assertThat(e.shardFailures()[0].reason(), containsString("already found [random_score], now encountering [functions]"));
-//            assertThat(e.shardFailures()[0].reason(), not(containsString("did you mean [boost] instead?")));
-//
-//        } NOCOMMIT fix this
-    }
-
-<<<<<<< HEAD
-=======
-    // issue https://github.com/elasticsearch/elasticsearch/issues/6292
-    @Test
-    public void testMissingFunctionThrowsElasticsearchParseException() throws IOException {
-
-        // example from issue https://github.com/elasticsearch/elasticsearch/issues/6292
-        String doc = "{\n" +
-                "  \"text\": \"baseball bats\"\n" +
-                "}\n";
-
-        String query = "{\n" +
-                "    \"query\": {\n" +
-                "      \"function_score\": {\n" +
-                "        \"score_mode\": \"sum\",\n" +
-                "        \"boost_mode\": \"replace\",\n" +
-                "        \"functions\": [\n" +
-                "          {\n" +
-                "            \"filter\": {\n" +
-                "              \"term\": {\n" +
-                "                \"text\": \"baseball\"\n" +
-                "              }\n" +
-                "            }\n" +
-                "          }\n" +
-                "        ]\n" +
-                "      }\n" +
-                "    }\n" +
-                "}\n";
-
-        client().prepareIndex("t", "test").setSource(doc).get();
-        refresh();
-        ensureYellow("t");
-//        try {
-//            client().search(searchRequest().source(new BytesArray(query))).actionGet();
-//            fail("Should fail with SearchPhaseExecutionException");
-//        } catch (SearchPhaseExecutionException failure) {
-//            assertThat(failure.toString(), containsString("SearchParseException"));
-//            assertThat(failure.toString(), not(containsString("NullPointerException")));
-//        } NOCOMMIT fix this
-
-        query = "{\n" +
-                "    \"query\": {\n" +
-                "      \"function_score\": {\n" +
-                "        \"score_mode\": \"sum\",\n" +
-                "        \"boost_mode\": \"replace\",\n" +
-                "        \"functions\": [\n" +
-                "          {\n" +
-                "            \"filter\": {\n" +
-                "              \"term\": {\n" +
-                "                \"text\": \"baseball\"\n" +
-                "              }\n" +
-                "            },\n" +
-                "            \"weight\": 2\n" +
-                "          },\n" +
-                "          {\n" +
-                "            \"filter\": {\n" +
-                "              \"term\": {\n" +
-                "                \"text\": \"baseball\"\n" +
-                "              }\n" +
-                "            }\n" +
-                "          }\n" +
-                "        ]\n" +
-                "      }\n" +
-                "    }\n" +
-                "}";
-
-//        try {
-//            client().search(
-//                    searchRequest().source(new BytesArray(query))).actionGet();
-//            fail("Should fail with SearchPhaseExecutionException");
-//        } catch (SearchPhaseExecutionException failure) {
-//            assertThat(failure.toString(), containsString("SearchParseException"));
-//            assertThat(failure.toString(), not(containsString("NullPointerException")));
-//            assertThat(failure.toString(), containsString("an entry in functions list is missing a function"));
-//        } NOCOMMIT fix this
-
-        // next test java client
+        query.startObject().startObject("function_score").field("weight", "1").startArray("functions").startObject().startObject("script_score").field("script", "3").endObject().endObject().endArray().endObject().endObject();
         try {
-            client().prepareSearch("t").setQuery(QueryBuilders.functionScoreQuery(QueryBuilders.matchAllQuery(), null)).get();
-        } catch (IllegalArgumentException failure) {
-            assertThat(failure.toString(), containsString("function must not be null"));
+            client().search(
+                    searchRequest().source(
+                            searchSource().query(query))).actionGet();
+            fail("Search should result in SearchPhaseExecutionException");
+        } catch (SearchPhaseExecutionException e) {
+            logger.info(e.shardFailures()[0].reason());
+            assertThat(e.shardFailures()[0].reason(), containsString("already found [weight], now encountering [functions]."));
         }
+
+        query = XContentFactory.jsonBuilder();
+        // query that contains a single function (but not boost factor) and a functions[] array
+        query.startObject().startObject("function_score").startObject("random_score").field("seed", 3).endObject().startArray("functions").startObject().startObject("random_score").field("seed", 3).endObject().endObject().endArray().endObject().endObject();
         try {
-            client().prepareSearch("t").setQuery(QueryBuilders.functionScoreQuery().add(QueryBuilders.matchAllQuery(), null)).get();
-        } catch (IllegalArgumentException failure) {
-            assertThat(failure.toString(), containsString("function must not be null"));
-        }
-        try {
-            client().prepareSearch("t").setQuery(QueryBuilders.functionScoreQuery().add(null)).get();
-        } catch (IllegalArgumentException failure) {
-            assertThat(failure.toString(), containsString("function must not be null"));
+            client().search(
+                    searchRequest().source(
+                            searchSource().query(query))).actionGet();
+            fail("Search should result in SearchPhaseExecutionException");
+        } catch (SearchPhaseExecutionException e) {
+            logger.info(e.shardFailures()[0].reason());
+            assertThat(e.shardFailures()[0].reason(), containsString("already found [random_score], now encountering [functions]"));
+            assertThat(e.shardFailures()[0].reason(), not(containsString("did you mean [boost] instead?")));
+
         }
     }
 
->>>>>>> tempbranch
     @Test
     public void testExplainString() throws IOException, ExecutionException, InterruptedException {
         assertAcked(prepareCreate("test").addMapping(

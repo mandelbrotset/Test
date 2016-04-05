@@ -29,7 +29,6 @@ import org.elasticsearch.script.ExecutableScript;
 import org.elasticsearch.script.ScriptContext;
 import org.elasticsearch.script.ScriptService;
 import org.elasticsearch.script.Template;
-import org.elasticsearch.search.internal.SearchContext;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -68,11 +67,7 @@ public class TemplateQueryParser extends BaseQueryParserTemp {
      * values. Handles both submitting the template as part of the request as
      * well as referencing only the template name.
      *
-<<<<<<< HEAD
-     * @param parseContext
-=======
      * @param context
->>>>>>> tempbranch
      *            parse context containing the templated query.
      */
     @Override
@@ -81,7 +76,7 @@ public class TemplateQueryParser extends BaseQueryParserTemp {
         QueryParseContext parseContext = context.parseContext();
         XContentParser parser = parseContext.parser();
         Template template = parse(parser, parseContext.parseFieldMatcher());
-        ExecutableScript executable = this.scriptService.executable(template, ScriptContext.Standard.SEARCH, SearchContext.current());
+        ExecutableScript executable = this.scriptService.executable(template, ScriptContext.Standard.SEARCH);
 
         BytesReference querySource = (BytesReference) executable.run();
 

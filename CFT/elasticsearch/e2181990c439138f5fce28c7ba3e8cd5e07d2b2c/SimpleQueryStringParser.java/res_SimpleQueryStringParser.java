@@ -20,17 +20,9 @@
 package org.elasticsearch.index.query;
 
 import org.elasticsearch.common.Strings;
-<<<<<<< HEAD
 import org.elasticsearch.common.inject.Inject;
-import org.elasticsearch.common.lucene.search.Queries;
-import org.elasticsearch.common.regex.Regex;
-import org.elasticsearch.common.util.LocaleUtils;
 import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.index.mapper.MappedFieldType;
 
-=======
-import org.elasticsearch.common.xcontent.XContentParser;
->>>>>>> tempbranch
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
@@ -67,8 +59,7 @@ import java.util.Map;
  * {@code fields} - fields to search, defaults to _all if not set, allows
  * boosting a field with ^n
  */
-<<<<<<< HEAD
-public class SimpleQueryStringParser implements QueryParser {
+public class SimpleQueryStringParser extends BaseQueryParser {
 
     public static final String NAME = "simple_query_string";
 
@@ -76,9 +67,6 @@ public class SimpleQueryStringParser implements QueryParser {
     public SimpleQueryStringParser() {
 
     }
-=======
-public class SimpleQueryStringParser extends BaseQueryParser {
->>>>>>> tempbranch
 
     @Override
     public String[] names() {
@@ -86,7 +74,7 @@ public class SimpleQueryStringParser extends BaseQueryParser {
     }
 
     @Override
-    public QueryBuilder fromXContent(QueryParseContext parseContext) throws IOException, QueryParsingException {
+    public SimpleQueryStringBuilder fromXContent(QueryParseContext parseContext) throws IOException, QueryParsingException {
         XContentParser parser = parseContext.parser();
 
         String currentFieldName = null;
@@ -128,13 +116,7 @@ public class SimpleQueryStringParser extends BaseQueryParser {
                         fieldsAndWeights.put(fField, fBoost);
                     }
                 } else {
-<<<<<<< HEAD
                     throw new QueryParsingException(parseContext, "[" + NAME + "] query does not support [" + currentFieldName + "]");
-=======
-                    throw new QueryParsingException(parseContext,
- "[" + SimpleQueryStringBuilder.NAME + "] query does not support [" + currentFieldName
- + "]");
->>>>>>> tempbranch
                 }
             } else if (token.isValue()) {
                 if ("query".equals(currentFieldName)) {
@@ -142,16 +124,7 @@ public class SimpleQueryStringParser extends BaseQueryParser {
                 } else if ("boost".equals(currentFieldName)) {
                     boost = parser.floatValue();
                 } else if ("analyzer".equals(currentFieldName)) {
-<<<<<<< HEAD
-                    analyzer = parseContext.analysisService().analyzer(parser.text());
-                    if (analyzer == null) {
-                        throw new QueryParsingException(parseContext, "[" + NAME + "] analyzer [" + parser.text() + "] not found");
-                    }
-=======
                     analyzerName = parser.text();
-                } else if ("field".equals(currentFieldName)) {
-                    field = parser.text();
->>>>>>> tempbranch
                 } else if ("default_operator".equals(currentFieldName) || "defaultOperator".equals(currentFieldName)) {
                     defaultOperator = Operator.fromString(parser.text());
                 } else if ("flags".equals(currentFieldName)) {
@@ -189,31 +162,10 @@ public class SimpleQueryStringParser extends BaseQueryParser {
             throw new QueryParsingException(parseContext, "[" + SimpleQueryStringBuilder.NAME + "] query text missing");
         }
 
-<<<<<<< HEAD
-        // Use standard analyzer by default
-        if (analyzer == null) {
-            analyzer = parseContext.mapperService().searchAnalyzer();
-        }
-
-        if (fieldsAndWeights == null) {
-            fieldsAndWeights = Collections.singletonMap(parseContext.defaultField(), 1.0F);
-        }
-        SimpleQueryParser sqp = new SimpleQueryParser(analyzer, fieldsAndWeights, flags, sqsSettings);
-
-        if (defaultOperator != null) {
-            sqp.setDefaultOperator(defaultOperator);
-        }
-=======
-        // Support specifying only a field instead of a map
-        if (field == null) {
-            field = currentFieldName;
-        }
-
         SimpleQueryStringBuilder qb = new SimpleQueryStringBuilder(queryBody);
         qb.boost(boost).fields(fieldsAndWeights).analyzer(analyzerName).queryName(queryName).minimumShouldMatch(minimumShouldMatch);
         qb.flags(flags).defaultOperator(defaultOperator).locale(locale).lowercaseExpandedTerms(lowercaseExpandedTerms);
         qb.lenient(lenient).analyzeWildcard(analyzeWildcard).boost(boost);
->>>>>>> tempbranch
 
         return qb;
     }

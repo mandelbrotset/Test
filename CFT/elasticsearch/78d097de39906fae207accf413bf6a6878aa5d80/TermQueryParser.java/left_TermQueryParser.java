@@ -19,19 +19,8 @@
 
 package org.elasticsearch.index.query;
 
-<<<<<<< HEAD
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
-import org.elasticsearch.common.ParseField;
-=======
->>>>>>> tempbranch
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.xcontent.XContentParser;
-<<<<<<< HEAD
-import org.elasticsearch.index.mapper.MappedFieldType;
-=======
->>>>>>> tempbranch
 
 import java.io.IOException;
 
@@ -39,9 +28,6 @@ import java.io.IOException;
  * Parser for the term query
  */
 public class TermQueryParser extends BaseQueryParser<TermQueryBuilder> {
-
-    private static final ParseField NAME_FIELD = new ParseField("_name").withAllDeprecated("query name is not supported in short version of term query");
-    private static final ParseField BOOST_FIELD = new ParseField("boost").withAllDeprecated("boost is not supported in short version of term query");
 
     @Inject
     public TermQueryParser() {
@@ -91,9 +77,9 @@ public class TermQueryParser extends BaseQueryParser<TermQueryBuilder> {
                     }
                 }
             } else if (token.isValue()) {
-                if (parseContext.parseFieldMatcher().match(currentFieldName, NAME_FIELD)) {
+                if ("_name".equals(currentFieldName)) {
                     queryName = parser.text();
-                } else if (parseContext.parseFieldMatcher().match(currentFieldName, BOOST_FIELD)) {
+                } else if ("boost".equals(currentFieldName)) {
                     boost = parser.floatValue();
                 } else {
                     if (fieldName != null) {

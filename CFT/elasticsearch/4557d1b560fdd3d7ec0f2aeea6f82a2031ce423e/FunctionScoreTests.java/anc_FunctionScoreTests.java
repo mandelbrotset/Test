@@ -19,29 +19,24 @@
 
 package org.elasticsearch.messy.tests;
 
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
-<<<<<<< HEAD
-=======
 import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.geo.GeoPoint;
->>>>>>> tempbranch
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
+import org.elasticsearch.common.lucene.search.function.FieldValueFactorFunction;
 import org.elasticsearch.common.lucene.search.function.FiltersFunctionScoreQuery;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.query.MatchAllQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
-<<<<<<< HEAD
-=======
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilder;
-import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 import org.elasticsearch.index.query.functionscore.weight.WeightBuilder;
->>>>>>> tempbranch
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.groovy.GroovyPlugin;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.test.ESIntegTestCase;
 import org.junit.Test;
 
@@ -54,28 +49,39 @@ import java.util.concurrent.ExecutionException;
 
 import static org.elasticsearch.client.Requests.searchRequest;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.functionScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders.exponentialDecayFunction;
+import static org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders.fieldValueFactorFunction;
+import static org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders.gaussDecayFunction;
+import static org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders.linearDecayFunction;
+import static org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders.randomFunction;
 import static org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders.scriptFunction;
+import static org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders.weightFactorFunction;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.terms;
 import static org.elasticsearch.search.builder.SearchSourceBuilder.searchSource;
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertAcked;
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertSearchResponse;
+import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 
 public class FunctionScoreTests extends ESIntegTestCase {
 
     static final String TYPE = "type";
     static final String INDEX = "index";
+    static final String TEXT_FIELD = "text_field";
+    static final String DOUBLE_FIELD = "double_field";
+    static final String GEO_POINT_FIELD = "geo_point_field";
+    static final XContentBuilder SIMPLE_DOC;
+    static final XContentBuilder MAPPING_WITH_DOUBLE_AND_GEO_POINT_AND_TEXT_FIELD;
 
     @Override
     protected Collection<Class<? extends Plugin>> nodePlugins() {
         return Collections.singleton(GroovyPlugin.class);
     }
-<<<<<<< HEAD
-
-=======
     
     @Test
     public void testExplainQueryOnlyOnce() throws IOException, ExecutionException, InterruptedException {
@@ -267,13 +273,13 @@ public class FunctionScoreTests extends ESIntegTestCase {
         double expectedScore;
         switch(scoreMode) {
             case MULTIPLY:
-            expectedScore = 1.0;
+                expectedScore = 1.0;
                 break;
             case MAX:
-            expectedScore = Float.MAX_VALUE * -1.0;
+                expectedScore = Float.MAX_VALUE * -1.0;
                 break;
             case MIN:
-            expectedScore = Float.MAX_VALUE;
+                expectedScore = Float.MAX_VALUE;
                 break;
             default:
                 expectedScore = 0.0;
@@ -286,19 +292,19 @@ public class FunctionScoreTests extends ESIntegTestCase {
             weightSum += weights[i];
             switch(scoreMode) {
                 case AVG:
-                expectedScore += functionScore;
+                    expectedScore += functionScore;
                     break;
                 case MAX:
-                expectedScore = Math.max(functionScore, expectedScore);
+                    expectedScore = Math.max(functionScore, expectedScore);
                     break;
                 case MIN:
-                expectedScore = Math.min(functionScore, expectedScore);
+                    expectedScore = Math.min(functionScore, expectedScore);
                     break;
                 case SUM:
-                expectedScore += functionScore;
+                    expectedScore += functionScore;
                     break;
                 case MULTIPLY:
-                expectedScore *= functionScore;
+                    expectedScore *= functionScore;
                     break;
                 default:
                     throw new UnsupportedOperationException();
@@ -382,13 +388,32 @@ public class FunctionScoreTests extends ESIntegTestCase {
 
         index(INDEX, TYPE, "1", SIMPLE_DOC);
         refresh();
+        String query =jsonBuilder().startObject()
+                .startObject("query")
+                .startObject("function_score")
+                .startArray("functions")
+                .startObject()
+                .field("weight",2)
+                .endObject()
+                .endArray()
+                .endObject()
+                .endObject()
+                .endObject().string();
         SearchResponse response = client().search(
-                searchRequest().source(new SearchSourceBuilder().query(QueryBuilders.functionScoreQuery(ScoreFunctionBuilders.weightFactorFunction(2.0f))))
+                searchRequest().source(new BytesArray(query))
                 ).actionGet();
         assertSearchResponse(response);
         assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
+
+        query =jsonBuilder().startObject()
+                .startObject("query")
+                .startObject("function_score")
+                .field("weight",2)
+                .endObject()
+                .endObject()
+                .endObject().string();
         response = client().search(
-                searchRequest().source(new SearchSourceBuilder().query(QueryBuilders.functionScoreQuery(ScoreFunctionBuilders.weightFactorFunction(2.0f))))
+                searchRequest().source(new BytesArray(query))
         ).actionGet();
         assertSearchResponse(response);
         assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
@@ -402,8 +427,7 @@ public class FunctionScoreTests extends ESIntegTestCase {
         ).actionGet();
         assertSearchResponse(response);
         assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
-    } 
->>>>>>> tempbranch
+    }
 
     @Test
     public void testScriptScoresNested() throws IOException {
@@ -419,7 +443,7 @@ public class FunctionScoreTests extends ESIntegTestCase {
                                                 functionScoreQuery(scriptFunction(new Script("1"))),
                                                 scriptFunction(new Script("_score.doubleValue()"))),
                                         scriptFunction(new Script("_score.doubleValue()"))
-                                        )
+                                )
                         )
                 )
         ).actionGet();
@@ -467,7 +491,7 @@ public class FunctionScoreTests extends ESIntegTestCase {
                                 new FunctionScoreQueryBuilder.FilterFunctionBuilder(scriptFunction(new Script(Float.toString(score)))),
                                 new FunctionScoreQueryBuilder.FilterFunctionBuilder(scriptFunction(new Script(Float.toString(score))))
                         }).scoreMode(FiltersFunctionScoreQuery.ScoreMode.AVG).setMinScore(minScore)))
-        ).actionGet();
+                ).actionGet();
         if (score < minScore) {
             assertThat(searchResponse.getHits().getTotalHits(), is(0l));
         } else {
@@ -529,7 +553,7 @@ public class FunctionScoreTests extends ESIntegTestCase {
         float termQueryScore = 0.19178301f;
         for (CombineFunction combineFunction : CombineFunction.values()) {
             testMinScoreApplied(combineFunction, termQueryScore);
-    }
+        }
     }
 
     protected void testMinScoreApplied(CombineFunction boostMode, float expectedScore) throws InterruptedException, ExecutionException {

@@ -89,17 +89,12 @@ public class FiltersParser implements Aggregator.Parser {
                         if (token == XContentParser.Token.FIELD_NAME) {
                             key = parser.currentName();
                         } else {
-<<<<<<< HEAD
-                            ParsedQuery filter = context.getQueryShardContext().parseInnerFilter(parser);
-                            filters.add(new FiltersAggregator.KeyedFilter(key, filter == null ? Queries.newMatchAllQuery() : filter.query()));
-=======
                             QueryParseContext queryParseContext = new QueryParseContext(queriesRegistry);
                             queryParseContext.reset(parser);
                             queryParseContext.parseFieldMatcher(context.parseFieldMatcher());
                             QueryBuilder<?> filter = queryParseContext.parseInnerQueryBuilder();
                             keyedFilters
                                     .add(new FiltersAggregator.KeyedFilter(key, filter == null ? QueryBuilders.matchAllQuery() : filter));
->>>>>>> tempbranch
                         }
                     }
                 } else {
@@ -110,18 +105,11 @@ public class FiltersParser implements Aggregator.Parser {
                 if (context.parseFieldMatcher().match(currentFieldName, FILTERS_FIELD)) {
                     nonKeyedFilters = new ArrayList<>();
                     while ((token = parser.nextToken()) != XContentParser.Token.END_ARRAY) {
-<<<<<<< HEAD
-                        ParsedQuery filter = context.getQueryShardContext().parseInnerFilter(parser);
-                        filters.add(new FiltersAggregator.KeyedFilter(String.valueOf(idx), filter == null ? Queries.newMatchAllQuery()
-                                : filter.query()));
-                        idx++;
-=======
                         QueryParseContext queryParseContext = new QueryParseContext(queriesRegistry);
                         queryParseContext.reset(parser);
                         queryParseContext.parseFieldMatcher(context.parseFieldMatcher());
                         QueryBuilder<?> filter = queryParseContext.parseInnerQueryBuilder();
                         nonKeyedFilters.add(filter == null ? QueryBuilders.matchAllQuery() : filter);
->>>>>>> tempbranch
                     }
                 } else {
                     throw new ParsingException(parser.getTokenLocation(),

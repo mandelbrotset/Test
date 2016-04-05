@@ -19,15 +19,6 @@
 
 package org.elasticsearch.index.query;
 
-<<<<<<< HEAD
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.MultiTermQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.RegexpQuery;
-import org.apache.lucene.util.automaton.Operations;
-import org.elasticsearch.common.ParseField;
-=======
->>>>>>> tempbranch
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.xcontent.XContentParser;
 
@@ -37,8 +28,6 @@ import java.io.IOException;
  * Parser for regexp query
  */
 public class RegexpQueryParser extends BaseQueryParser<RegexpQueryBuilder> {
-
-    private static final ParseField NAME_FIELD = new ParseField("_name").withAllDeprecated("query name is not supported in short version of regexp query");
 
     @Inject
     public RegexpQueryParser() {
@@ -95,7 +84,7 @@ public class RegexpQueryParser extends BaseQueryParser<RegexpQueryBuilder> {
                     }
                 }
             } else {
-                if (parseContext.parseFieldMatcher().match(currentFieldName, NAME_FIELD)) {
+                if ("_name".equals(currentFieldName)) {
                     queryName = parser.text();
                 } else {
                     fieldName = currentFieldName;

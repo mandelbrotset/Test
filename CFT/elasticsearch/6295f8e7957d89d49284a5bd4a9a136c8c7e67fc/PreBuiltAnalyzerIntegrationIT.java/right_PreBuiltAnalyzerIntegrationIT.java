@@ -24,17 +24,12 @@ import org.apache.lucene.analysis.Analyzer;
 import org.elasticsearch.Version;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.test.ESBackcompatTestCase;
 import org.elasticsearch.test.ESIntegTestCase;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
-<<<<<<< HEAD
 import java.util.ArrayList;
-=======
-import java.util.Collection;
->>>>>>> tempbranch
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -49,8 +44,11 @@ import static org.hamcrest.Matchers.notNullValue;
 public class PreBuiltAnalyzerIntegrationIT extends ESIntegTestCase {
 
     @Override
-    protected Collection<Class<? extends Plugin>> nodePlugins() {
-        return pluginList(DummyAnalysisPlugin.class);
+    protected Settings nodeSettings(int nodeOrdinal) {
+        return Settings.settingsBuilder()
+                .put(super.nodeSettings(nodeOrdinal))
+                .put("plugin.types", DummyAnalysisPlugin.class.getName())
+            .build();
     }
 
     @Test

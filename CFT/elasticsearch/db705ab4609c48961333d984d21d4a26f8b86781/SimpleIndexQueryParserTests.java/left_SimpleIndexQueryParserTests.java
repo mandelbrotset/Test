@@ -21,15 +21,41 @@ package org.elasticsearch.index.query;
 
 import com.google.common.collect.Sets;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.Fields;
+import org.apache.lucene.index.MultiFields;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.Terms;
+import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.index.memory.MemoryIndex;
 import org.apache.lucene.queries.BoostingQuery;
 import org.apache.lucene.queries.ExtendedCommonTermsQuery;
 import org.apache.lucene.queries.TermsQuery;
-import org.apache.lucene.search.*;
+import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.ConstantScoreQuery;
+import org.apache.lucene.search.DisjunctionMaxQuery;
+import org.apache.lucene.search.FuzzyQuery;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.MultiTermQuery;
+import org.apache.lucene.search.NumericRangeQuery;
+import org.apache.lucene.search.PrefixQuery;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.QueryWrapperFilter;
+import org.apache.lucene.search.RegexpQuery;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TermRangeQuery;
+import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.search.join.ToParentBlockJoinQuery;
-import org.apache.lucene.search.spans.*;
+import org.apache.lucene.search.spans.FieldMaskingSpanQuery;
+import org.apache.lucene.search.spans.SpanContainingQuery;
+import org.apache.lucene.search.spans.SpanFirstQuery;
+import org.apache.lucene.search.spans.SpanMultiTermQueryWrapper;
+import org.apache.lucene.search.spans.SpanNearQuery;
+import org.apache.lucene.search.spans.SpanNotQuery;
+import org.apache.lucene.search.spans.SpanOrQuery;
+import org.apache.lucene.search.spans.SpanTermQuery;
+import org.apache.lucene.search.spans.SpanWithinQuery;
 import org.apache.lucene.spatial.prefix.IntersectsPrefixTreeFilter;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.BytesRefBuilder;
@@ -37,14 +63,11 @@ import org.apache.lucene.util.CharsRefBuilder;
 import org.apache.lucene.util.NumericUtils;
 import org.apache.lucene.util.automaton.TooComplexToDeterminizeException;
 import org.elasticsearch.action.termvectors.MultiTermVectorsItemResponse;
+import org.elasticsearch.action.termvectors.MultiTermVectorsRequest;
 import org.elasticsearch.action.termvectors.MultiTermVectorsResponse;
 import org.elasticsearch.action.termvectors.TermVectorsRequest;
 import org.elasticsearch.action.termvectors.TermVectorsResponse;
-<<<<<<< HEAD
-import org.elasticsearch.cluster.metadata.MetaData;
-=======
 import org.elasticsearch.common.Strings;
->>>>>>> tempbranch
 import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.compress.CompressedXContent;
 import org.elasticsearch.common.lucene.search.MoreLikeThisQuery;
@@ -63,7 +86,6 @@ import org.elasticsearch.index.engine.Engine;
 import org.elasticsearch.index.mapper.MapperService;
 import org.elasticsearch.index.mapper.ParsedDocument;
 import org.elasticsearch.index.mapper.core.NumberFieldMapper;
-import org.elasticsearch.index.query.MoreLikeThisQueryBuilder.Item;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 import org.elasticsearch.index.search.geo.GeoDistanceRangeQuery;
 import org.elasticsearch.index.search.geo.GeoPolygonQuery;
@@ -76,13 +98,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-<<<<<<< HEAD
-import java.util.*;
-=======
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
->>>>>>> tempbranch
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -1748,15 +1766,15 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
         }
 
         @Override
-        public MultiTermVectorsResponse fetchResponse(List<Item> items, List<Item> unlikeItems, SearchContext searchContext) throws IOException {
+        public MultiTermVectorsResponse fetchResponse(MultiTermVectorsRequest items) throws IOException {
             MultiTermVectorsItemResponse[] responses = new MultiTermVectorsItemResponse[items.size()];
             int i = 0;
-            for (Item item : items) {
+            for (TermVectorsRequest item : items) {
                 TermVectorsResponse response = new TermVectorsResponse(item.index(), item.type(), item.id());
                 response.setExists(true);
-                Fields generatedFields = generateFields(item.fields(), item.id());
+                Fields generatedFields = generateFields(item.selectedFields().toArray(Strings.EMPTY_ARRAY), item.id());
                 EnumSet<TermVectorsRequest.Flag> flags = EnumSet.of(TermVectorsRequest.Flag.Positions, TermVectorsRequest.Flag.Offsets);
-                response.setFields(generatedFields, new HashSet<String>(Arrays.asList(item.fields())), flags, generatedFields);
+                response.setFields(generatedFields, item.selectedFields(), flags, generatedFields);
                 responses[i++] = new MultiTermVectorsItemResponse(response, null);
             }
             return new MultiTermVectorsResponse(responses);

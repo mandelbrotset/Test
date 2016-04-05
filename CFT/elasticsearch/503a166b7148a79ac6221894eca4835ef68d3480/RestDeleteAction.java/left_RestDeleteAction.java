@@ -24,20 +24,12 @@ import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
-<<<<<<< HEAD
-import org.elasticsearch.common.xcontent.XContentBuilder;
-=======
->>>>>>> tempbranch
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.rest.BaseRestHandler;
 import org.elasticsearch.rest.RestChannel;
 import org.elasticsearch.rest.RestController;
 import org.elasticsearch.rest.RestRequest;
 import org.elasticsearch.rest.action.support.RestActions;
-<<<<<<< HEAD
-import org.elasticsearch.rest.action.support.RestBuilderListener;
-=======
->>>>>>> tempbranch
 import org.elasticsearch.rest.action.support.RestStatusToXContentListener;
 
 import static org.elasticsearch.rest.RestRequest.Method.DELETE;
@@ -70,8 +62,5 @@ public class RestDeleteAction extends BaseRestHandler {
 
         client.delete(deleteRequest, new RestStatusToXContentListener<>(channel));
     }
-<<<<<<< HEAD
-=======
 
->>>>>>> tempbranch
 }

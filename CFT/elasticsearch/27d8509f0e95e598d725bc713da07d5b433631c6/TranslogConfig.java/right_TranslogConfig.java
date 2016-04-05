@@ -47,7 +47,7 @@ public final class TranslogConfig {
     private final BigArrays bigArrays;
     private final ThreadPool threadPool;
     private final boolean syncOnEachOperation;
-    private final int bufferSizeBytes;
+    private volatile int bufferSize;
     private volatile TranslogGeneration translogGeneration;
     private volatile Translog.Durabilty durabilty = Translog.Durabilty.REQUEST;
     private volatile TranslogWriter.Type type;
@@ -71,13 +71,8 @@ public final class TranslogConfig {
         this.durabilty = durabilty;
         this.threadPool = threadPool;
         this.bigArrays = bigArrays;
-<<<<<<< HEAD
         this.type = TranslogWriter.Type.fromString(indexSettings.getSettings().get(INDEX_TRANSLOG_FS_TYPE, TranslogWriter.Type.BUFFERED.name()));
         this.bufferSize = (int) indexSettings.getSettings().getAsBytesSize(INDEX_TRANSLOG_BUFFER_SIZE, IndexingMemoryController.INACTIVE_SHARD_TRANSLOG_BUFFER).bytes(); // Not really interesting, updated by IndexingMemoryController...
-=======
-        this.type = TranslogWriter.Type.fromString(indexSettings.get(INDEX_TRANSLOG_FS_TYPE, TranslogWriter.Type.BUFFERED.name()));
-        this.bufferSizeBytes = (int) indexSettings.getAsBytesSize(INDEX_TRANSLOG_BUFFER_SIZE, IndexingMemoryController.SHARD_TRANSLOG_BUFFER).bytes();
->>>>>>> tempbranch
 
         syncInterval = indexSettings.getSettings().getAsTime(INDEX_TRANSLOG_SYNC_INTERVAL, TimeValue.timeValueSeconds(5));
         if (syncInterval.millis() > 0 && threadPool != null) {
@@ -134,8 +129,15 @@ public final class TranslogConfig {
     /**
      * Retruns the current translog buffer size.
      */
-    public int getBufferSizeBytes() {
-        return bufferSizeBytes;
+    public int getBufferSize() {
+        return bufferSize;
+    }
+
+    /**
+     * Sets the current buffer size - for setting a live setting use {@link Translog#updateBuffer(ByteSizeValue)}
+     */
+    public void setBufferSize(int bufferSize) {
+        this.bufferSize = bufferSize;
     }
 
     /**

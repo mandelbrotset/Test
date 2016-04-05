@@ -26,6 +26,7 @@ import org.apache.lucene.search.QueryCache;
 import org.apache.lucene.search.QueryCachingPolicy;
 import org.apache.lucene.search.similarities.Similarity;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.unit.ByteSizeUnit;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.IndexSettings;
@@ -49,15 +50,8 @@ import java.util.concurrent.TimeUnit;
 public final class EngineConfig {
     private final ShardId shardId;
     private final TranslogRecoveryPerformer translogRecoveryPerformer;
-<<<<<<< HEAD
     private final IndexSettings indexSettings;
-    private volatile ByteSizeValue indexingBufferSize;
-    private volatile ByteSizeValue versionMapSize;
-    private volatile String versionMapSizeSetting;
-=======
-    private final Settings indexSettings;
     private final ByteSizeValue indexingBufferSize;
->>>>>>> tempbranch
     private volatile boolean compoundOnFlush = true;
     private long gcDeletesInMillis = DEFAULT_GC_DELETES.millis();
     private volatile boolean enableGcDeletes = true;
@@ -131,24 +125,13 @@ public final class EngineConfig {
         this.analyzer = analyzer;
         this.similarity = similarity;
         this.codecService = codecService;
-<<<<<<< HEAD
         this.eventListener = eventListener;
         this.compoundOnFlush = settings.getAsBoolean(EngineConfig.INDEX_COMPOUND_ON_FLUSH, compoundOnFlush);
         codecName = settings.get(EngineConfig.INDEX_CODEC_SETTING, EngineConfig.DEFAULT_CODEC_NAME);
-        // We start up inactive and rely on IndexingMemoryController to give us our fair share once we start indexing:
-        indexingBufferSize = IndexingMemoryController.INACTIVE_SHARD_INDEXING_BUFFER;
-        gcDeletesInMillis = settings.getAsTime(INDEX_GC_DELETES_SETTING, EngineConfig.DEFAULT_GC_DELETES).millis();
-        versionMapSizeSetting = settings.get(INDEX_VERSION_MAP_SIZE, DEFAULT_VERSION_MAP_SIZE);
-        updateVersionMapSize();
-=======
-        this.failedEngineListener = failedEngineListener;
-        this.compoundOnFlush = indexSettings.getAsBoolean(INDEX_COMPOUND_ON_FLUSH, compoundOnFlush);
-        codecName = indexSettings.get(INDEX_CODEC_SETTING, DEFAULT_CODEC_NAME);
         // We give IndexWriter a huge buffer, so it won't flush on its own.  Instead, IndexingMemoryController periodically checks
-        // and refreshes the most heap-consuming shards when total indexing heap usage is too high:
+        // and refreshes the most heap-consuming shards when total indexing heap usage across all shards is too high:
         indexingBufferSize = new ByteSizeValue(256, ByteSizeUnit.MB);
-        gcDeletesInMillis = indexSettings.getAsTime(INDEX_GC_DELETES_SETTING, DEFAULT_GC_DELETES).millis();
->>>>>>> tempbranch
+        gcDeletesInMillis = settings.getAsTime(INDEX_GC_DELETES_SETTING, EngineConfig.DEFAULT_GC_DELETES).millis();
         this.translogRecoveryPerformer = translogRecoveryPerformer;
         this.forceNewTranslog = settings.getAsBoolean(INDEX_FORCE_NEW_TRANSLOG, false);
         this.queryCache = queryCache;

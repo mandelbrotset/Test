@@ -38,9 +38,12 @@ import static com.google.common.collect.Lists.newArrayList;
  * them either using DisMax or a plain boolean query (see {@link #useDisMax(boolean)}).
  * <p/>
  */
-public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQueryBuilder> {
+public class QueryStringQueryBuilder extends QueryBuilder implements BoostableQueryBuilder<QueryStringQueryBuilder> {
 
-    public static final String NAME = "query_string";
+    public enum Operator {
+        OR,
+        AND
+    }
 
     private final String queryString;
 
@@ -65,11 +68,9 @@ public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQue
 
     private Locale locale;
 
-<<<<<<< HEAD
+
     private float boost = -1;
 
-=======
->>>>>>> tempbranch
     private Fuzziness fuzziness;
     private int fuzzyPrefixLength = -1;
     private int fuzzyMaxExpansions = -1;
@@ -91,16 +92,12 @@ public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQue
 
     private Boolean lenient;
 
+    private String queryName;
+
     private String timeZone;
 
     /** To limit effort spent determinizing regexp queries. */
     private Integer maxDeterminizedStates;
-
-<<<<<<< HEAD
-    private Boolean escape;
-=======
-    static final QueryStringQueryBuilder PROTOTYPE = new QueryStringQueryBuilder(null);
->>>>>>> tempbranch
 
     public QueryStringQueryBuilder(String queryString) {
         this.queryString = queryString;
@@ -162,11 +159,11 @@ public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQue
     /**
      * Sets the boolean operator of the query parser used to parse the query string.
      * <p/>
-     * <p>In default mode ({@link Operator#OR}) terms without any modifiers
+     * <p>In default mode ({@link FieldQueryBuilder.Operator#OR}) terms without any modifiers
      * are considered optional: for example <code>capital of Hungary</code> is equal to
      * <code>capital OR of OR Hungary</code>.
      * <p/>
-     * <p>In {@link Operator#AND} mode terms are considered to be in conjunction: the
+     * <p>In {@link FieldQueryBuilder.Operator#AND} mode terms are considered to be in conjunction: the
      * above mentioned query is parsed as <code>capital AND of AND Hungary</code>
      */
     public QueryStringQueryBuilder defaultOperator(Operator defaultOperator) {
@@ -298,6 +295,16 @@ public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQue
     }
 
     /**
+     * Sets the boost for this query.  Documents matching this query will (in addition to the normal
+     * weightings) have their score multiplied by the boost provided.
+     */
+    @Override
+    public QueryStringQueryBuilder boost(float boost) {
+        this.boost = boost;
+        return this;
+    }
+
+    /**
      * An optional field name suffix to automatically try and add to the field searched when using quoted text.
      */
     public QueryStringQueryBuilder quoteFieldSuffix(String quoteFieldSuffix) {
@@ -314,6 +321,14 @@ public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQue
         return this;
     }
 
+    /**
+     * Sets the query name for the filter that can be used when searching for matched_filters per hit.
+     */
+    public QueryStringQueryBuilder queryName(String queryName) {
+        this.queryName = queryName;
+        return this;
+    }
+
     public QueryStringQueryBuilder locale(Locale locale) {
         this.locale = locale;
         return this;
@@ -327,17 +342,9 @@ public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQue
         return this;
     }
 
-    /**
-     * Set to <tt>true</tt> to enable escaping of the query string
-     */
-    public QueryStringQueryBuilder escape(boolean escape) {
-        this.escape = escape;
-        return this;
-    }
-
     @Override
     protected void doXContent(XContentBuilder builder, Params params) throws IOException {
-        builder.startObject(NAME);
+        builder.startObject(QueryStringQueryParser.NAME);
         builder.field("query", queryString);
         if (defaultField != null) {
             builder.field("default_field", defaultField);
@@ -385,6 +392,9 @@ public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQue
         if (fuzziness != null) {
             fuzziness.toXContent(builder, params);
         }
+        if (boost != -1) {
+            builder.field("boost", boost);
+        }
         if (fuzzyPrefixLength != -1) {
             builder.field("fuzzy_prefix_length", fuzzyPrefixLength);
         }
@@ -412,24 +422,15 @@ public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQue
         if (lenient != null) {
             builder.field("lenient", lenient);
         }
+        if (queryName != null) {
+            builder.field("_name", queryName);
+        }
         if (locale != null) {
             builder.field("locale", locale.toString());
         }
         if (timeZone != null) {
             builder.field("time_zone", timeZone);
         }
-<<<<<<< HEAD
-        if (escape != null) {
-            builder.field("escape", escape);
-        }
-=======
-        printBoostAndQueryName(builder);
->>>>>>> tempbranch
         builder.endObject();
-    }
-
-    @Override
-    public String getWriteableName() {
-        return NAME;
     }
 }

@@ -49,21 +49,12 @@ import org.elasticsearch.env.Environment;
 import org.elasticsearch.env.EnvironmentModule;
 import org.elasticsearch.index.Index;
 import org.elasticsearch.index.query.AbstractQueryTestCase;
-import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.EmptyQueryBuilder;
-import org.elasticsearch.index.query.MatchAllQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryParseContext;
-<<<<<<< HEAD
-import org.elasticsearch.index.query.QueryRewriteContext;
-import org.elasticsearch.index.query.TermQueryBuilder;
-import org.elasticsearch.index.query.WrapperQueryBuilder;
-import org.elasticsearch.index.query.functionscore.ScoreFunctionParser;
-=======
 import org.elasticsearch.indices.IndicesModule;
 import org.elasticsearch.indices.breaker.CircuitBreakerService;
 import org.elasticsearch.indices.breaker.NoneCircuitBreakerService;
->>>>>>> tempbranch
 import org.elasticsearch.indices.query.IndicesQueriesRegistry;
 import org.elasticsearch.script.MockScriptEngine;
 import org.elasticsearch.script.Script;
@@ -468,13 +459,8 @@ public class SearchSourceBuilderTests extends ESTestCase {
         if (randomBoolean()) {
             parser.nextToken(); // sometimes we move it on the START_OBJECT to test the embedded case
         }
-<<<<<<< HEAD
-        SearchSourceBuilder newBuilder = SearchSourceBuilder.parseSearchSource(parser, parseContext);
-        assertNull(parser.nextToken());
-=======
         SearchSourceBuilder newBuilder = SearchSourceBuilder.parseSearchSource(parser, parseContext, aggParsers);
         assertNotSame(testBuilder, newBuilder);
->>>>>>> tempbranch
         assertEquals(testBuilder, newBuilder);
         assertEquals(testBuilder.hashCode(), newBuilder.hashCode());
     }

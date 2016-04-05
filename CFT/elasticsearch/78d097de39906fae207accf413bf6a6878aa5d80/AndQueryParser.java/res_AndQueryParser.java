@@ -45,11 +45,7 @@ public class AndQueryParser extends BaseQueryParser<AndQueryBuilder> {
     public AndQueryBuilder fromXContent(QueryParseContext parseContext) throws IOException, QueryParsingException {
         XContentParser parser = parseContext.parser();
 
-<<<<<<< HEAD
-        ArrayList<Query> queries = new ArrayList<>();
-=======
-        final ArrayList<QueryBuilder> queries = newArrayList();
->>>>>>> tempbranch
+        final ArrayList<QueryBuilder> queries = new ArrayList<>();
         boolean queriesFound = false;
 
         String queryName = null;

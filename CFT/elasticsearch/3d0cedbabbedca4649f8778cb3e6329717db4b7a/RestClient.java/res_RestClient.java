@@ -81,12 +81,7 @@ public class RestClient implements Closeable {
     private final String protocol;
     private final RestSpec restSpec;
     private final CloseableHttpClient httpClient;
-<<<<<<< HEAD
-    private final Headers headers;
     private final URL[] urls;
-=======
-    private final InetSocketAddress[] addresses;
->>>>>>> tempbranch
     private final Version esVersion;
     private final ThreadContext threadContext;
 
@@ -95,12 +90,8 @@ public class RestClient implements Closeable {
         this.restSpec = restSpec;
         this.protocol = settings.get(PROTOCOL, "http");
         this.httpClient = createHttpClient(settings);
-<<<<<<< HEAD
-        this.urls = urls;
-=======
-        this.addresses = addresses;
         this.threadContext = new ThreadContext(settings);
->>>>>>> tempbranch
+        this.urls = urls;
         this.esVersion = readAndCheckVersion();
         logger.info("REST client initialized {}, elasticsearch version: [{}]", urls, esVersion);
     }

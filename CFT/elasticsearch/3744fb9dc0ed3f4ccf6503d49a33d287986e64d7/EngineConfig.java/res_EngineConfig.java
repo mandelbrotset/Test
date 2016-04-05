@@ -51,14 +51,7 @@ public final class EngineConfig {
     private final ShardId shardId;
     private final TranslogRecoveryPerformer translogRecoveryPerformer;
     private final IndexSettings indexSettings;
-<<<<<<< HEAD
-    private volatile ByteSizeValue indexingBufferSize;
-    private volatile ByteSizeValue versionMapSize;
-    private volatile String versionMapSizeSetting;
-=======
     private final ByteSizeValue indexingBufferSize;
-    private volatile boolean compoundOnFlush = true;
->>>>>>> tempbranch
     private long gcDeletesInMillis = DEFAULT_GC_DELETES.millis();
     private volatile boolean enableGcDeletes = true;
     private final TimeValue flushMergesAfter;

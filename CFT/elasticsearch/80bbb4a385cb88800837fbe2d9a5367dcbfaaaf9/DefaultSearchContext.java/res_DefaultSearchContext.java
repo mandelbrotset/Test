@@ -150,11 +150,8 @@ public class DefaultSearchContext extends SearchContext {
 
     private final Map<String, FetchSubPhaseContext> subPhaseContexts = new HashMap<>();
     private final Map<Class<?>, Collector> queryCollectors = new HashMap<>();
-<<<<<<< HEAD
     private final QueryShardContext queryShardContext;
-=======
     private FetchPhase fetchPhase;
->>>>>>> tempbranch
 
     public DefaultSearchContext(long id, ShardSearchRequest request, SearchShardTarget shardTarget, Engine.Searcher engineSearcher,
             IndexService indexService, IndexShard indexShard, ScriptService scriptService, PageCacheRecycler pageCacheRecycler,

@@ -20,10 +20,6 @@
 package org.elasticsearch.cluster;
 
 import com.carrotsearch.hppc.cursors.ObjectCursor;
-<<<<<<< HEAD
-=======
-import com.google.common.collect.ImmutableMap;
->>>>>>> tempbranch
 
 import org.elasticsearch.Version;
 import org.elasticsearch.cluster.block.ClusterBlock;
@@ -54,7 +50,6 @@ import org.elasticsearch.discovery.DiscoverySettings;
 import org.elasticsearch.gateway.GatewayService;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.shard.ShardId;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.warmer.IndexWarmersMetaData;
 import org.elasticsearch.test.ESIntegTestCase;
 import org.junit.Test;
@@ -548,7 +543,7 @@ public class ClusterStateDiffIT extends ESIntegTestCase {
                             randomName("warm"),
                             new String[]{randomName("type")},
                             randomBoolean(),
-                            new IndexWarmersMetaData.SearchSource(new BytesArray(randomAsciiOfLength(1000))))
+                            new BytesArray(randomAsciiOfLength(1000)))
             );
         } else {
             return new IndexWarmersMetaData();

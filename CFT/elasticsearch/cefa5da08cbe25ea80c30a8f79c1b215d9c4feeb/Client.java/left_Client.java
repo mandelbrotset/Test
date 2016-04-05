@@ -19,12 +19,8 @@
 
 package org.elasticsearch.client;
 
-import org.elasticsearch.action.Action;
 import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.ActionRequest;
-import org.elasticsearch.action.ActionRequestBuilder;
-import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -84,16 +80,13 @@ import org.elasticsearch.action.termvectors.TermVectorsResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.client.support.Headers;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.lease.Releasable;
 import org.elasticsearch.common.settings.Setting;
 import org.elasticsearch.common.settings.Settings;
 
-<<<<<<< HEAD
-import java.util.Map;
-=======
 import java.util.function.Function;
->>>>>>> tempbranch
 
 /**
  * A client provides a one stop interface for performing actions/operations against the cluster.
@@ -615,9 +608,5 @@ public interface Client extends ElasticsearchClient, Releasable {
      */
     Settings settings();
 
-    /**
-     * Returns a new lightweight Client that applies all given headers to each of the requests
-     * issued from it.
-     */
-    Client filterWithHeader(Map<String, String> headers);
+    Headers headers();
 }

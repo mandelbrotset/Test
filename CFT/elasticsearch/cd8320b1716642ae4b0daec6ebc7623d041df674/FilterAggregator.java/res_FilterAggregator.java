@@ -23,7 +23,11 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Weight;
 import org.apache.lucene.util.Bits;
+import org.elasticsearch.common.io.stream.StreamInput;
+import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.lucene.Lucene;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.search.aggregations.Aggregator;
 import org.elasticsearch.search.aggregations.AggregatorFactories;
 import org.elasticsearch.search.aggregations.AggregatorFactory;
@@ -37,6 +41,7 @@ import org.elasticsearch.search.aggregations.support.AggregationContext;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Aggregate all docs that match a filter.
@@ -81,12 +86,20 @@ public class FilterAggregator extends SingleBucketAggregator {
         return new InternalFilter(name, 0, buildEmptySubAggregations(), pipelineAggregators(), metaData());
     }
 
-    public static class Factory extends AggregatorFactory {
+    public static class Factory extends AggregatorFactory<Factory> {
 
-        private final Query filter;
+        private QueryBuilder<?> filter;
 
-        public Factory(String name, Query filter) {
-            super(name, InternalFilter.TYPE.name());
+        /**
+         * @param name
+         *            the name of this aggregation
+         * @param filter
+         *            Set the filter to use, only documents that match this
+         *            filter will fall into the bucket defined by this
+         *            {@link Filter} aggregation.
+         */
+        public Factory(String name, QueryBuilder<?> filter) {
+            super(name, InternalFilter.TYPE);
             this.filter = filter;
         }
 
@@ -103,9 +116,40 @@ public class FilterAggregator extends SingleBucketAggregator {
             IndexSearcher contextSearcher = context.searchContext().searcher();
             if (searcher != contextSearcher) {
                 searcher = contextSearcher;
+                Query filter = this.filter.toQuery(context.searchContext().indexShard().getQueryShardContext());
                 weight = contextSearcher.createNormalizedWeight(filter, false);
             }
             return new FilterAggregator(name, weight, factories, context, parent, pipelineAggregators, metaData);
+        }
+
+        @Override
+        protected XContentBuilder internalXContent(XContentBuilder builder, Params params) throws IOException {
+            if (filter != null) {
+                filter.toXContent(builder, params);
+            }
+            return builder;
+        }
+
+        @Override
+        protected Factory doReadFrom(String name, StreamInput in) throws IOException {
+            Factory factory = new Factory(name, in.readQuery());
+            return factory;
+        }
+
+        @Override
+        protected void doWriteTo(StreamOutput out) throws IOException {
+            out.writeQuery(filter);
+        }
+
+        @Override
+        protected int doHashCode() {
+            return Objects.hash(filter);
+        }
+
+        @Override
+        protected boolean doEquals(Object obj) {
+            Factory other = (Factory) obj;
+            return Objects.equals(filter, other.filter);
         }
 
     }

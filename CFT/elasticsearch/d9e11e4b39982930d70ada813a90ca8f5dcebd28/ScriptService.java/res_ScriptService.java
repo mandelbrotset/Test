@@ -19,15 +19,6 @@
 
 package org.elasticsearch.script;
 
-<<<<<<< HEAD
-import com.google.common.collect.ImmutableMap;
-=======
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-
->>>>>>> tempbranch
 import org.apache.lucene.util.IOUtils;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.delete.DeleteRequest;

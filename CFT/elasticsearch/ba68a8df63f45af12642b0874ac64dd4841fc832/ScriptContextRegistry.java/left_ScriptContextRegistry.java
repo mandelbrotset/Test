@@ -19,17 +19,11 @@
 
 package org.elasticsearch.script;
 
-<<<<<<< HEAD
-import com.google.common.collect.ImmutableMap;
-
-import java.util.*;
-=======
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
->>>>>>> tempbranch
 
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;

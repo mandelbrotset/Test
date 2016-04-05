@@ -19,21 +19,8 @@
 
 package org.elasticsearch.index.engine;
 
-import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.IndexCommit;
-import org.apache.lucene.index.IndexFormatTooOldException;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.*;
 import org.apache.lucene.index.IndexWriter.IndexReaderWarmer;
-import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.LeafReader;
-import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.index.LiveIndexWriterConfig;
-import org.apache.lucene.index.MergePolicy;
-import org.apache.lucene.index.MultiReader;
-import org.apache.lucene.index.SegmentCommitInfo;
-import org.apache.lucene.index.SegmentInfos;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.SearcherFactory;
 import org.apache.lucene.search.SearcherManager;
@@ -55,7 +42,6 @@ import org.elasticsearch.common.lucene.index.ElasticsearchDirectoryReader;
 import org.elasticsearch.common.lucene.index.ElasticsearchLeafReader;
 import org.elasticsearch.common.lucene.uid.Versions;
 import org.elasticsearch.common.math.MathUtils;
-import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.util.concurrent.AbstractRunnable;
 import org.elasticsearch.common.util.concurrent.EsRejectedExecutionException;
 import org.elasticsearch.common.util.concurrent.ReleasableLock;
@@ -75,12 +61,7 @@ import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.threadpool.ThreadPool;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
@@ -120,11 +101,6 @@ public class InternalEngine extends Engine {
     private volatile SegmentInfos lastCommittedSegmentInfos;
 
     private final IndexThrottle throttle;
-
-    // How many callers are currently requesting index throttling.  Currently there are only two situations where we do this: when merges
-    // are falling behind and when writing indexing buffer to disk is too slow.  When this is 0, there is no throttling, else we throttling
-    // incoming indexing ops to a single thread:
-    private final AtomicInteger throttleRequestCount = new AtomicInteger();
 
     public InternalEngine(EngineConfig engineConfig, boolean skipInitialTranslogRecovery) throws EngineException {
         super(engineConfig);
@@ -318,11 +294,8 @@ public class InternalEngine extends Engine {
     private void updateIndexWriterSettings() {
         try {
             final LiveIndexWriterConfig iwc = indexWriter.getConfig();
-<<<<<<< HEAD
             iwc.setRAMBufferSizeMB(engineConfig.getIndexingBufferSize().mbFrac());
-=======
             iwc.setUseCompoundFile(engineConfig.isCompoundOnFlush());
->>>>>>> tempbranch
         } catch (AlreadyClosedException ex) {
             // ignore
         }
@@ -372,12 +345,13 @@ public class InternalEngine extends Engine {
             maybeFailEngine("index", t);
             throw new IndexFailedEngineException(shardId, index.type(), index.id(), t);
         }
+        checkVersionMapRefresh();
         return created;
     }
 
     private boolean innerIndex(Index index) throws IOException {
         synchronized (dirtyLock(index.uid())) {
-            lastWriteNanos = index.startTime();
+            lastWriteNanos  = index.startTime();
             final long currentVersion;
             final boolean deleted;
             VersionValue versionValue = versionMap.getUnderLock(index.uid().bytes());
@@ -437,6 +411,33 @@ public class InternalEngine extends Engine {
         }
     }
 
+    /**
+     * Forces a refresh if the versionMap is using too much RAM
+     */
+    private void checkVersionMapRefresh() {
+        if (versionMap.ramBytesUsedForRefresh() > config().getVersionMapSize().bytes() && versionMapRefreshPending.getAndSet(true) == false) {
+            try {
+                if (isClosed.get()) {
+                    // no point...
+                    return;
+                }
+                // Now refresh to clear versionMap:
+                engineConfig.getThreadPool().executor(ThreadPool.Names.REFRESH).execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            refresh("version_table_full");
+                        } catch (EngineClosedException ex) {
+                            // ignore
+                        }
+                    }
+                });
+            } catch (EsRejectedExecutionException ex) {
+                // that is fine too.. we might be shutting down
+            }
+        }
+    }
+
     @Override
     public void delete(Delete delete) throws EngineException {
         try (ReleasableLock lock = readLock.acquire()) {
@@ -449,6 +450,7 @@ public class InternalEngine extends Engine {
         }
 
         maybePruneDeletedTombstones();
+        checkVersionMapRefresh();
     }
 
     private void maybePruneDeletedTombstones() {
@@ -532,43 +534,6 @@ public class InternalEngine extends Engine {
         maybePruneDeletedTombstones();
         versionMapRefreshPending.set(false);
         mergeScheduler.refreshConfig();
-    }
-
-    @Override
-    public void writeIndexingBuffer() throws EngineException {
-
-        // we obtain a read lock here, since we don't want a flush to happen while we are writing
-        // since it flushes the index as well (though, in terms of concurrency, we are allowed to do it)
-        try (ReleasableLock lock = readLock.acquire()) {
-            ensureOpen();
-
-            // TODO: it's not great that we secretly tie searcher visibility to "freeing up heap" here... really we should keep two
-            // searcher managers, one for searching which is only refreshed by the schedule the user requested (refresh_interval, or invoking
-            // refresh API), and another for version map interactions.  See #15768.
-            final long versionMapBytes = versionMap.ramBytesUsedForRefresh();
-            final long indexingBufferBytes = indexWriter.ramBytesUsed();
-
-            final boolean useRefresh = versionMapRefreshPending.get() || (indexingBufferBytes/4 < versionMapBytes);
-            if (useRefresh) {
-                // The version map is using > 25% of the indexing buffer, so we do a refresh so the version map also clears
-                logger.debug("use refresh to write indexing buffer (heap size=[{}]), to also clear version map (heap size=[{}])",
-                             new ByteSizeValue(indexingBufferBytes), new ByteSizeValue(versionMapBytes));
-                refresh("write indexing buffer");
-            } else {
-                // Most of our heap is used by the indexing buffer, so we do a cheaper (just writes segments, doesn't open a new searcher) IW.flush:
-                logger.debug("use flush to write indexing buffer (heap size=[{}]) since version map is small (heap size=[{}])",
-                             new ByteSizeValue(indexingBufferBytes), new ByteSizeValue(versionMapBytes));
-                indexWriter.flush();
-            }
-        } catch (AlreadyClosedException e) {
-            ensureOpen();
-            maybeFailEngine("writeIndexingBuffer", e);
-        } catch (EngineClosedException e) {
-            throw e;
-        } catch (Throwable t) {
-            failEngine("writeIndexingBuffer failed", t);
-            throw new RefreshFailedEngineException(shardId, t);
-        }
     }
 
     @Override
@@ -845,8 +810,8 @@ public class InternalEngine extends Engine {
     }
 
     @Override
-    public long getIndexBufferRAMBytesUsed() {
-        return indexWriter.ramBytesUsed() + versionMap.ramBytesUsedForRefresh();
+    public long indexWriterRAMBytesUsed() {
+        return indexWriter.ramBytesUsed();
     }
 
     @Override
@@ -956,7 +921,7 @@ public class InternalEngine extends Engine {
              * here but with 1s poll this is only executed twice at most
              * in combination with the default writelock timeout*/
             iwc.setWriteLockTimeout(5000);
-            iwc.setUseCompoundFile(true); // always use compound on flush - reduces # of file-handles on refresh
+            iwc.setUseCompoundFile(this.engineConfig.isCompoundOnFlush());
             // Warm-up hook for newly-merged segments. Warming up segments here is better since it will be performed at the end
             // of the merge operation and won't slow down _refresh
             iwc.setMergedSegmentWarmer(new IndexReaderWarmer() {
@@ -1069,22 +1034,12 @@ public class InternalEngine extends Engine {
         }
     }
 
-    @Override
     public void activateThrottling() {
-        int count = throttleRequestCount.incrementAndGet();
-        assert count >= 1: "invalid post-increment throttleRequestCount=" + count;
-        if (count == 1) {
-            throttle.activate();
-        }
+        throttle.activate();
     }
 
-    @Override
     public void deactivateThrottling() {
-        int count = throttleRequestCount.decrementAndGet();
-        assert count >= 0: "invalid post-decrement throttleRequestCount=" + count;
-        if (count == 0) {
-            throttle.deactivate();
-        }
+        throttle.deactivate();
     }
 
     long getGcDeletesInMillis() {
@@ -1156,18 +1111,20 @@ public class InternalEngine extends Engine {
         @Override
         protected void handleMergeException(final Directory dir, final Throwable exc) {
             logger.error("failed to merge", exc);
-            engineConfig.getThreadPool().generic().execute(new AbstractRunnable() {
-                @Override
-                public void onFailure(Throwable t) {
-                    logger.debug("merge failure action rejected", t);
-                }
+            if (config().getMergeSchedulerConfig().isNotifyOnMergeFailure()) {
+                engineConfig.getThreadPool().generic().execute(new AbstractRunnable() {
+                    @Override
+                    public void onFailure(Throwable t) {
+                        logger.debug("merge failure action rejected", t);
+                    }
 
-                @Override
-                protected void doRun() throws Exception {
-                    MergePolicy.MergeException e = new MergePolicy.MergeException(exc, dir);
-                    failEngine("merge failed", e);
-                }
-            });
+                    @Override
+                    protected void doRun() throws Exception {
+                        MergePolicy.MergeException e = new MergePolicy.MergeException(exc, dir);
+                        failEngine("merge failed", e);
+                    }
+                });
+            }
         }
     }
 
@@ -1196,6 +1153,8 @@ public class InternalEngine extends Engine {
     public void onSettingsChanged() {
         mergeScheduler.refreshConfig();
         updateIndexWriterSettings();
+        // config().getVersionMapSize() may have changed:
+        checkVersionMapRefresh();
         // config().isEnableGcDeletes() or config.getGcDeletesInMillis() may have changed:
         maybePruneDeletedTombstones();
     }

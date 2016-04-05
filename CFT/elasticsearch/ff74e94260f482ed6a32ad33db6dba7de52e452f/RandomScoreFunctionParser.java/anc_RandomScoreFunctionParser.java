@@ -20,14 +20,15 @@
 
 package org.elasticsearch.index.query.functionscore.random;
 
+import com.google.common.primitives.Longs;
 
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.lucene.search.function.RandomScoreFunction;
 import org.elasticsearch.common.lucene.search.function.ScoreFunction;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.index.fielddata.IndexFieldData;
+import org.elasticsearch.index.mapper.FieldMapper;
 import org.elasticsearch.index.mapper.MappedFieldType;
-import org.elasticsearch.index.query.QueryShardContext;
 import org.elasticsearch.index.query.QueryParseContext;
 import org.elasticsearch.index.query.QueryParsingException;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionParser;
@@ -50,8 +51,8 @@ public class RandomScoreFunctionParser implements ScoreFunctionParser {
     }
 
     @Override
-    public ScoreFunction parse(QueryShardContext context, XContentParser parser) throws IOException, QueryParsingException {
-        QueryParseContext parseContext = context.parseContext();
+    public ScoreFunction parse(QueryParseContext parseContext, XContentParser parser) throws IOException, QueryParsingException {
+
         int seed = -1;
 
         String currentFieldName = null;
@@ -65,7 +66,7 @@ public class RandomScoreFunctionParser implements ScoreFunctionParser {
                         if (parser.numberType() == XContentParser.NumberType.INT) {
                             seed = parser.intValue();
                         } else if (parser.numberType() == XContentParser.NumberType.LONG) {
-                            seed = hash(parser.longValue());
+                            seed = Longs.hashCode(parser.longValue());
                         } else {
                             throw new QueryParsingException(parseContext, "random_score seed must be an int, long or string, not '"
                                     + token.toString() + "'");
@@ -89,20 +90,12 @@ public class RandomScoreFunctionParser implements ScoreFunctionParser {
         }
 
         if (seed == -1) {
-<<<<<<< HEAD
-            seed = hash(parseContext.nowInMillis());
-=======
-            seed = Longs.hashCode(context.nowInMillis());
->>>>>>> tempbranch
+            seed = Longs.hashCode(parseContext.nowInMillis());
         }
         final ShardId shardId = SearchContext.current().indexShard().shardId();
         final int salt = (shardId.index().name().hashCode() << 10) | shardId.id();
         final IndexFieldData<?> uidFieldData = SearchContext.current().fieldData().getForField(fieldType);
 
         return new RandomScoreFunction(seed, salt, uidFieldData);
-    }
-
-    private static final int hash(long value) {
-        return (int) (value ^ (value >>> 32));
     }
 }

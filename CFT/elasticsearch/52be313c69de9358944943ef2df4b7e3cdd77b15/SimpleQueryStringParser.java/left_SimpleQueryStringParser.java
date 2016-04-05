@@ -165,18 +165,8 @@ public class SimpleQueryStringParser extends BaseQueryParser<SimpleQueryStringBu
         qb.flags(flags).defaultOperator(defaultOperator).locale(locale).lowercaseExpandedTerms(lowercaseExpandedTerms);
         qb.lenient(lenient).analyzeWildcard(analyzeWildcard).boost(boost);
 
-<<<<<<< HEAD
-        if (minimumShouldMatch != null && query instanceof BooleanQuery) {
-            query = Queries.applyMinimumShouldMatch((BooleanQuery) query, minimumShouldMatch);
-        }
-
-        if (query != null) {
-            query.setBoost(boost);
-        }
-=======
         return qb;
     }
->>>>>>> tempbranch
 
     @Override
     public SimpleQueryStringBuilder getBuilderPrototype() {

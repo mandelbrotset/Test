@@ -43,11 +43,7 @@ public class SpanOrQueryParser extends BaseQueryParser<SpanOrQueryBuilder> {
         float boost = AbstractQueryBuilder.DEFAULT_BOOST;
         String queryName = null;
 
-<<<<<<< HEAD
-        List<SpanQuery> clauses = new ArrayList<>();
-=======
-        List<SpanQueryBuilder> clauses = newArrayList();
->>>>>>> tempbranch
+        List<SpanQueryBuilder> clauses = new ArrayList<>();
 
         String currentFieldName = null;
         XContentParser.Token token;

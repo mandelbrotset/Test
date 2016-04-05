@@ -38,26 +38,17 @@ import org.elasticsearch.index.shard.IndexShard;
 import org.elasticsearch.index.shard.ShadowIndexShard;
 import org.elasticsearch.indices.IndicesService;
 import org.elasticsearch.indices.recovery.RecoveryTarget;
-import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.snapshots.SnapshotState;
 import org.elasticsearch.test.ESIntegTestCase;
 import org.elasticsearch.test.InternalTestCluster;
 import org.elasticsearch.test.transport.MockTransportService;
-import org.elasticsearch.transport.TransportException;
-import org.elasticsearch.transport.TransportRequest;
-import org.elasticsearch.transport.TransportRequestOptions;
-import org.elasticsearch.transport.TransportService;
+import org.elasticsearch.transport.*;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
-<<<<<<< HEAD
-import java.util.ArrayList;
-=======
-import java.util.Collection;
->>>>>>> tempbranch
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -66,6 +57,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.*;
 import static org.hamcrest.Matchers.*;
@@ -86,11 +78,6 @@ public class IndexWithShadowReplicasIT extends ESIntegTestCase {
                 .put("path.shared_data", dataPath)
                 .put("index.store.fs.fs_lock", randomFrom("native", "simple"))
                 .build();
-    }
-
-    @Override
-    protected Collection<Class<? extends Plugin>> nodePlugins() {
-        return pluginList(MockTransportService.TestPlugin.class);
     }
 
     public void testCannotCreateWithBadPath() throws Exception {
@@ -429,6 +416,7 @@ public class IndexWithShadowReplicasIT extends ESIntegTestCase {
         Path dataPath = createTempDir();
         Settings nodeSettings = Settings.builder()
                 .put("node.add_id_to_custom_path", false)
+                .put("plugin.types", MockTransportService.TestPlugin.class.getName())
                 .put("path.shared_data", dataPath)
                 .build();
 
@@ -582,7 +570,7 @@ public class IndexWithShadowReplicasIT extends ESIntegTestCase {
         ensureGreen(IDX);
 
         int docCount = randomIntBetween(10, 100);
-        List<IndexRequestBuilder> builders = new ArrayList<>();
+        List<IndexRequestBuilder> builders = newArrayList();
         for (int i = 0; i < docCount; i++) {
             builders.add(client().prepareIndex(IDX, "doc", i + "").setSource("foo", "bar"));
         }

@@ -22,21 +22,12 @@ package org.elasticsearch.action.index;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
-<<<<<<< HEAD
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentBuilderString;
 import org.elasticsearch.index.shard.ShardId;
-=======
-import org.elasticsearch.common.xcontent.StatusToXContent;
-import org.elasticsearch.common.xcontent.ToXContent;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentBuilderString;
->>>>>>> tempbranch
 import org.elasticsearch.rest.RestStatus;
 
 import java.io.IOException;
-
-import static org.elasticsearch.rest.RestStatus.CREATED;
 
 /**
  * A response of an index operation,
@@ -44,11 +35,7 @@ import static org.elasticsearch.rest.RestStatus.CREATED;
  * @see org.elasticsearch.action.index.IndexRequest
  * @see org.elasticsearch.client.Client#index(IndexRequest)
  */
-<<<<<<< HEAD
 public class IndexResponse extends DocWriteResponse {
-=======
-public class IndexResponse extends ActionWriteResponse implements StatusToXContent {
->>>>>>> tempbranch
 
     private boolean created;
 
@@ -89,27 +76,6 @@ public class IndexResponse extends ActionWriteResponse implements StatusToXConte
     }
 
     @Override
-    public RestStatus status() {
-        RestStatus status = getShardInfo().status();
-        if (created) {
-            status = CREATED;
-        }
-        return status;
-    }
-
-    @Override
-    public XContentBuilder toXContent(XContentBuilder builder, Params params) throws IOException {
-        ActionWriteResponse.ShardInfo shardInfo = getShardInfo();
-        builder.field(Fields._INDEX, index)
-            .field(Fields._TYPE, type)
-            .field(Fields._ID, id)
-            .field(Fields._VERSION, version);
-        shardInfo.toXContent(builder, params);
-        builder.field(Fields.CREATED, created);
-        return builder;
-    }
-
-    @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("IndexResponse[");
@@ -123,7 +89,6 @@ public class IndexResponse extends ActionWriteResponse implements StatusToXConte
     }
 
     static final class Fields {
-<<<<<<< HEAD
         static final XContentBuilderString CREATED = new XContentBuilderString("created");
     }
 
@@ -133,12 +98,4 @@ public class IndexResponse extends ActionWriteResponse implements StatusToXConte
         builder.field(Fields.CREATED, isCreated());
         return builder;
     }
-=======
-        static final XContentBuilderString _INDEX = new XContentBuilderString("_index");
-        static final XContentBuilderString _TYPE = new XContentBuilderString("_type");
-        static final XContentBuilderString _ID = new XContentBuilderString("_id");
-        static final XContentBuilderString _VERSION = new XContentBuilderString("_version");
-        static final XContentBuilderString CREATED = new XContentBuilderString("created");
-    }
->>>>>>> tempbranch
 }

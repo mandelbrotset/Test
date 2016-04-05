@@ -386,16 +386,9 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertIndicesSubset(Arrays.asList(indices), indexShardActions);
     }
 
-<<<<<<< HEAD
-    @Test
     public void testForceMerge() {
         String mergeShardAction = ForceMergeAction.NAME + "[n]";
         interceptTransportActions(mergeShardAction);
-=======
-    public void testOptimize() {
-        String optimizeShardAction = OptimizeAction.NAME + "[n]";
-        interceptTransportActions(optimizeShardAction);
->>>>>>> tempbranch
 
         ForceMergeRequest mergeRequest = new ForceMergeRequest(randomIndicesOrAliases());
         internalCluster().clientNodeClient().admin().indices().forceMerge(mergeRequest).actionGet();

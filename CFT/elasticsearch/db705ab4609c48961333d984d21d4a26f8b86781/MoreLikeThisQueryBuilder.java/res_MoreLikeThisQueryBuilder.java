@@ -349,16 +349,13 @@ public class MoreLikeThisQueryBuilder extends AbstractQueryBuilder<MoreLikeThisQ
         }
     }
 
-<<<<<<< HEAD
+    public static final String NAME = "mlt";
+
     // document inputs
     private List<String> likeTexts = new ArrayList<>();
     private List<String> unlikeTexts = new ArrayList<>();
     private List<Item> likeItems = new ArrayList<>();
     private List<Item> unlikeItems = new ArrayList<>();
-=======
-    public static final String NAME = "mlt";
-
->>>>>>> tempbranch
     private final String[] fields;
 
     // term selection parameters
@@ -368,11 +365,7 @@ public class MoreLikeThisQueryBuilder extends AbstractQueryBuilder<MoreLikeThisQ
     private int maxDocFreq = -1;
     private int minWordLength = -1;
     private int maxWordLength = -1;
-<<<<<<< HEAD
     private String[] stopWords = null;
-=======
-    private float boostTerms = -1;
->>>>>>> tempbranch
     private String analyzer;
 
     // query formation parameters
@@ -382,13 +375,9 @@ public class MoreLikeThisQueryBuilder extends AbstractQueryBuilder<MoreLikeThisQ
 
     // other parameters
     private Boolean failOnUnsupportedField;
-<<<<<<< HEAD
-    private float boost = -1;
-    private String queryName;
-=======
 
     static final MoreLikeThisQueryBuilder PROTOTYPE = new MoreLikeThisQueryBuilder();
->>>>>>> tempbranch
+
 
     /**
      * Constructs a new more like this query which uses the "_all" field.
@@ -529,18 +518,6 @@ public class MoreLikeThisQueryBuilder extends AbstractQueryBuilder<MoreLikeThisQ
     }
 
     /**
-     * Set the set of stopwords.
-     * <p/>
-     * <p>Any word in this set is considered "uninteresting" and ignored. Even if your Analyzer allows stopwords, you
-     * might want to tell the MoreLikeThis code to ignore them, as for the purposes of document similarity it seems
-     * reasonable to assume that "a stop word is never interesting".
-     */
-    public MoreLikeThisQueryBuilder stopWords(String... stopWords) {
-        this.stopWords = stopWords;
-        return this;
-    }
-
-    /**
      * The analyzer that will be used to analyze the text. Defaults to the analyzer associated with the fied.
      */
     public MoreLikeThisQueryBuilder analyzer(String analyzer) {
@@ -548,7 +525,6 @@ public class MoreLikeThisQueryBuilder extends AbstractQueryBuilder<MoreLikeThisQ
         return this;
     }
 
-<<<<<<< HEAD
     /**
      * Number of terms that must match the generated query expressed in the
      * common syntax for minimum should match. Defaults to <tt>30%</tt>.
@@ -576,28 +552,11 @@ public class MoreLikeThisQueryBuilder extends AbstractQueryBuilder<MoreLikeThisQ
         return this;
     }
 
-=======
->>>>>>> tempbranch
     /**
      * Whether to fail or return no result when this query is run against a field which is not supported such as binary/numeric fields.
      */
     public MoreLikeThisQueryBuilder failOnUnsupportedField(boolean fail) {
         failOnUnsupportedField = fail;
-        return this;
-    }
-
-<<<<<<< HEAD
-    @Override
-    public MoreLikeThisQueryBuilder boost(float boost) {
-        this.boost = boost;
-        return this;
-    }
-
-    /**
-     * Sets the query name for the filter that can be used when searching for matched_filters per hit.
-     */
-    public MoreLikeThisQueryBuilder queryName(String queryName) {
-        this.queryName = queryName;
         return this;
     }
 
@@ -653,13 +612,7 @@ public class MoreLikeThisQueryBuilder extends AbstractQueryBuilder<MoreLikeThisQ
 
     @Override
     protected void doXContent(XContentBuilder builder, Params params) throws IOException {
-        builder.startObject(MoreLikeThisQueryParser.NAME);
-=======
-    @Override
-    protected void doXContent(XContentBuilder builder, Params params) throws IOException {
-        String likeFieldName = MoreLikeThisQueryParser.Fields.LIKE.getPreferredName();
         builder.startObject(NAME);
->>>>>>> tempbranch
         if (fields != null) {
             builder.field(MoreLikeThisQueryParser.Field.FIELDS.getPreferredName(), fields);
         }
@@ -689,13 +642,8 @@ public class MoreLikeThisQueryBuilder extends AbstractQueryBuilder<MoreLikeThisQ
         if (maxWordLength != -1) {
             builder.field(MoreLikeThisQueryParser.Field.MAX_WORD_LENGTH.getPreferredName(), maxWordLength);
         }
-<<<<<<< HEAD
         if (stopWords != null && stopWords.length > 0) {
             builder.field(MoreLikeThisQueryParser.Field.STOP_WORDS.getPreferredName(), stopWords);
-=======
-        if (boostTerms != -1) {
-            builder.field(MoreLikeThisQueryParser.Fields.BOOST_TERMS.getPreferredName(), boostTerms);
->>>>>>> tempbranch
         }
         if (analyzer != null) {
             builder.field(MoreLikeThisQueryParser.Field.ANALYZER.getPreferredName(), analyzer);
@@ -712,13 +660,7 @@ public class MoreLikeThisQueryBuilder extends AbstractQueryBuilder<MoreLikeThisQ
         if (failOnUnsupportedField != null) {
             builder.field(MoreLikeThisQueryParser.Field.FAIL_ON_UNSUPPORTED_FIELD.getPreferredName(), failOnUnsupportedField);
         }
-        if (boost != -1) {
-            builder.field("boost", boost);
-        }
-<<<<<<< HEAD
-        if (queryName != null) {
-            builder.field("_name", queryName);
-        }
+        printBoostAndQueryName(builder);
         builder.endObject();
     }
 
@@ -731,17 +673,10 @@ public class MoreLikeThisQueryBuilder extends AbstractQueryBuilder<MoreLikeThisQ
             builder.value(item);
         }
         builder.endArray();
-=======
-        if (include != null) {
-            builder.field("include", include);
-        }
-        printBoostAndQueryName(builder);
-        builder.endObject();
     }
 
     @Override
     public String getWriteableName() {
         return NAME;
->>>>>>> tempbranch
     }
 }

@@ -329,8 +329,6 @@ public class ClusterSettingsIT extends ESIntegTestCase {
         }
     }
 
-<<<<<<< HEAD
-=======
     public void testMissingUnitsLenient() {
         try {
             createNode(Settings.builder().put(Settings.SETTINGS_REQUIRE_UNITS, "false").build());
@@ -345,7 +343,6 @@ public class ClusterSettingsIT extends ESIntegTestCase {
         }
     }
 
->>>>>>> tempbranch
     private void createNode(Settings settings) {
         internalCluster().startNode(Settings.builder()
                         .put(ClusterName.SETTING, "ClusterSettingsIT")

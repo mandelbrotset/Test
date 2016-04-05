@@ -224,11 +224,7 @@ public class MoreLikeThisQueryParser extends BaseQueryParserTemp {
         // set like text fields
         boolean useDefaultField = (moreLikeFields == null);
         if (useDefaultField) {
-<<<<<<< HEAD
-            moreLikeFields = Collections.singletonList(parseContext.defaultField());
-=======
-            moreLikeFields = Lists.newArrayList(context.defaultField());
->>>>>>> tempbranch
+            moreLikeFields = Collections.singletonList(context.defaultField());
         }
         // possibly remove unsupported fields
         removeUnsupportedFields(moreLikeFields, analyzer, failOnUnsupportedField);

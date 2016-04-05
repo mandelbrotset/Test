@@ -27,12 +27,8 @@ import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentParser;
-<<<<<<< HEAD
 import org.elasticsearch.index.query.QueryParsingException;
 import org.elasticsearch.search.internal.SearchContext;
-=======
-import org.elasticsearch.index.query.QueryShardException;
->>>>>>> tempbranch
 
 import java.io.IOException;
 
@@ -113,12 +109,8 @@ public class JLHScore extends SignificanceHeuristic {
     public static class JLHScoreParser implements SignificanceHeuristicParser {
 
         @Override
-<<<<<<< HEAD
         public SignificanceHeuristic parse(XContentParser parser, ParseFieldMatcher parseFieldMatcher, SearchContext context)
                 throws IOException, QueryParsingException {
-=======
-        public SignificanceHeuristic parse(XContentParser parser, ParseFieldMatcher parseFieldMatcher) throws IOException, QueryShardException {
->>>>>>> tempbranch
             // move to the closing bracket
             if (!parser.nextToken().equals(XContentParser.Token.END_OBJECT)) {
                 throw new ElasticsearchParseException("failed to parse [jhl] significance heuristic. expected an empty object, but found [{}] instead", parser.currentToken());

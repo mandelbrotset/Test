@@ -38,20 +38,8 @@ import java.nio.file.Path;
  */
 public final class TranslogConfig {
 
-<<<<<<< HEAD
     public static final ByteSizeValue DEFAULT_BUFFER_SIZE = new ByteSizeValue(8, ByteSizeUnit.KB);
     private final BigArrays bigArrays;
-=======
-    public static final String INDEX_TRANSLOG_DURABILITY = "index.translog.durability";
-    public static final String INDEX_TRANSLOG_FS_TYPE = "index.translog.fs.type";
-    public static final String INDEX_TRANSLOG_SYNC_INTERVAL = "index.translog.sync_interval";
-
-    private final TimeValue syncInterval;
-    private final BigArrays bigArrays;
-    private final ThreadPool threadPool;
-    private final boolean syncOnEachOperation;
-    private final int bufferSizeBytes;
->>>>>>> tempbranch
     private volatile TranslogGeneration translogGeneration;
     private final IndexSettings indexSettings;
     private final ShardId shardId;
@@ -75,80 +63,13 @@ public final class TranslogConfig {
         this.shardId = shardId;
         this.translogPath = translogPath;
         this.bigArrays = bigArrays;
-<<<<<<< HEAD
-=======
-        this.type = TranslogWriter.Type.fromString(indexSettings.getSettings().get(INDEX_TRANSLOG_FS_TYPE, TranslogWriter.Type.BUFFERED.name()));
-        this.bufferSizeBytes = (int) IndexingMemoryController.SHARD_TRANSLOG_BUFFER.bytes();
-
-        syncInterval = indexSettings.getSettings().getAsTime(INDEX_TRANSLOG_SYNC_INTERVAL, TimeValue.timeValueSeconds(5));
-        if (syncInterval.millis() > 0 && threadPool != null) {
-            syncOnEachOperation = false;
-        } else if (syncInterval.millis() == 0) {
-            syncOnEachOperation = true;
-        } else {
-            syncOnEachOperation = false;
-        }
-    }
-
-    /**
-     * Returns a {@link ThreadPool} to schedule async durability operations
-     */
-    public ThreadPool getThreadPool() {
-        return threadPool;
-    }
-
-    /**
-     * Returns the current durability mode of this translog.
-     */
-    public Translog.Durabilty getDurabilty() {
-        return durabilty;
-    }
-
-    /**
-     * Sets the current durability mode for the translog.
-     */
-    public void setDurabilty(Translog.Durabilty durabilty) {
-        this.durabilty = durabilty;
-    }
-
-    /**
-     * Returns the translog type
-     */
-    public TranslogWriter.Type getType() {
-        return type;
-    }
-
-    /**
-     * Sets the TranslogType for this Translog. The change will affect all subsequent translog files.
-     */
-    public void setType(TranslogWriter.Type type) {
-        this.type = type;
->>>>>>> tempbranch
     }
 
     /**
      * Returns <code>true</code> iff each low level operation shoudl be fsynced
      */
     public boolean isSyncOnEachOperation() {
-<<<<<<< HEAD
         return indexSettings.getTranslogSyncInterval().millis() == 0;
-=======
-        return syncOnEachOperation;
-    }
-
-    /**
-     * Returns the current translog buffer size.
-     */
-    public int getBufferSizeBytes() {
-        return bufferSizeBytes;
-    }
-
-    /**
-     * Returns the current async fsync interval
-     */
-    public TimeValue getSyncInterval() {
-        return syncInterval;
->>>>>>> tempbranch
     }
 
     /**

@@ -27,8 +27,6 @@ import com.carrotsearch.randomizedtesting.generators.RandomPicks;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import org.apache.http.impl.client.HttpClients;
-<<<<<<< HEAD
-=======
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.admin.cluster.state.ClusterStateResponse;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
@@ -36,7 +34,6 @@ import org.elasticsearch.cluster.routing.UnassignedInfo;
 import org.elasticsearch.cluster.routing.allocation.decider.EnableAllocationDecider;
 import org.elasticsearch.common.network.NetworkAddress;
 import org.elasticsearch.index.shard.MergeSchedulerConfig;
->>>>>>> tempbranch
 import org.apache.lucene.util.IOUtils;
 import org.apache.lucene.util.LuceneTestCase;
 import org.apache.lucene.util.TestUtil;

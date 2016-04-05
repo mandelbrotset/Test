@@ -23,8 +23,9 @@ import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.xcontent.XContentParser;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+
+import static com.google.common.collect.Lists.newArrayList;
 
 /**
  * Parser for span_or query
@@ -43,11 +44,7 @@ public class SpanOrQueryParser extends BaseQueryParser<SpanOrQueryBuilder> {
         float boost = AbstractQueryBuilder.DEFAULT_BOOST;
         String queryName = null;
 
-<<<<<<< HEAD
-        List<SpanQuery> clauses = new ArrayList<>();
-=======
         List<SpanQueryBuilder> clauses = newArrayList();
->>>>>>> tempbranch
 
         String currentFieldName = null;
         XContentParser.Token token;

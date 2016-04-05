@@ -334,14 +334,8 @@ public class SearchModule extends AbstractModule {
         bind(FetchPhase.class).asEagerSingleton();
         bind(SearchServiceTransportAction.class).asEagerSingleton();
         bind(MoreLikeThisFetchService.class).asEagerSingleton();
-<<<<<<< HEAD
-        // search service -- testing only!
-        String impl = settings.get(SEARCH_SERVICE_IMPL);
-        if (impl == null) {
-=======
 
         if (searchServiceImpl == SearchService.class) {
->>>>>>> tempbranch
             bind(SearchService.class).asEagerSingleton();
         } else {
             bind(SearchService.class).to(searchServiceImpl).asEagerSingleton();

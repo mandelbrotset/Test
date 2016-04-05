@@ -19,8 +19,10 @@
 
 package org.elasticsearch.common.logging.log4j;
 
+import com.google.common.collect.ImmutableMap;
 import org.apache.log4j.PropertyConfigurator;
 import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.SettingsException;
 import org.elasticsearch.env.Environment;
@@ -34,12 +36,10 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import static java.util.Collections.unmodifiableMap;
 import static org.elasticsearch.common.Strings.cleanPath;
 import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 
@@ -50,41 +50,8 @@ public class LogConfigurator {
 
     static final List<String> ALLOWED_SUFFIXES = Arrays.asList(".yml", ".yaml", ".json", ".properties");
 
-    private static final Map<String, String> REPLACEMENTS;
-    static {
-        Map<String, String> replacements = new HashMap<>();
-        replacements.put("console", "org.elasticsearch.common.logging.log4j.ConsoleAppender");
-        replacements.put("async", "org.apache.log4j.AsyncAppender");
-        replacements.put("dailyRollingFile", "org.apache.log4j.DailyRollingFileAppender");
-        replacements.put("externallyRolledFile", "org.apache.log4j.ExternallyRolledFileAppender");
-        replacements.put("file", "org.apache.log4j.FileAppender");
-        replacements.put("jdbc", "org.apache.log4j.jdbc.JDBCAppender");
-        replacements.put("jms", "org.apache.log4j.net.JMSAppender");
-        replacements.put("lf5", "org.apache.log4j.lf5.LF5Appender");
-        replacements.put("ntevent", "org.apache.log4j.nt.NTEventLogAppender");
-        replacements.put("null", "org.apache.log4j.NullAppender");
-        replacements.put("rollingFile", "org.apache.log4j.RollingFileAppender");
-        replacements.put("extrasRollingFile", "org.apache.log4j.rolling.RollingFileAppender");
-        replacements.put("smtp", "org.apache.log4j.net.SMTPAppender");
-        replacements.put("socket", "org.apache.log4j.net.SocketAppender");
-        replacements.put("socketHub", "org.apache.log4j.net.SocketHubAppender");
-        replacements.put("syslog", "org.apache.log4j.net.SyslogAppender");
-        replacements.put("telnet", "org.apache.log4j.net.TelnetAppender");
-                // policies
-        replacements.put("timeBased", "org.apache.log4j.rolling.TimeBasedRollingPolicy");
-        replacements.put("sizeBased", "org.apache.log4j.rolling.SizeBasedTriggeringPolicy");
-                // layouts
-        replacements.put("simple", "org.apache.log4j.SimpleLayout");
-        replacements.put("html", "org.apache.log4j.HTMLLayout");
-        replacements.put("pattern", "org.apache.log4j.PatternLayout");
-        replacements.put("consolePattern", "org.apache.log4j.PatternLayout");
-        replacements.put("enhancedPattern", "org.apache.log4j.EnhancedPatternLayout");
-        replacements.put("ttcc", "org.apache.log4j.TTCCLayout");
-        replacements.put("xml", "org.apache.log4j.XMLLayout");
-        REPLACEMENTS = unmodifiableMap(replacements);
-    }
+    private static boolean loaded;
 
-<<<<<<< HEAD
     private static ImmutableMap<String, String> replacements = new MapBuilder<String, String>()
             .put("console", "org.elasticsearch.common.logging.log4j.ConsoleAppender")
             .put("async", "org.apache.log4j.AsyncAppender")
@@ -103,7 +70,6 @@ public class LogConfigurator {
             .put("socketHub", "org.apache.log4j.net.SocketHubAppender")
             .put("syslog", "org.apache.log4j.net.SyslogAppender")
             .put("telnet", "org.apache.log4j.net.TelnetAppender")
-            .put("terminal", "org.elasticsearch.common.logging.log4j.TerminalAppender")
                     // policies
             .put("timeBased", "org.apache.log4j.rolling.TimeBasedRollingPolicy")
             .put("sizeBased", "org.apache.log4j.rolling.SizeBasedTriggeringPolicy")
@@ -116,28 +82,16 @@ public class LogConfigurator {
             .put("ttcc", "org.apache.log4j.TTCCLayout")
             .put("xml", "org.apache.log4j.XMLLayout")
             .immutableMap();
-=======
-    private static boolean loaded;
->>>>>>> tempbranch
 
-    /**
-     * Consolidates settings and converts them into actual log4j settings, then initializes loggers and appenders.
-     *
-     * @param settings      custom settings that should be applied
-     * @param resolveConfig controls whether the logging conf file should be read too or not.
-     */
-    public static void configure(Settings settings, boolean resolveConfig) {
+    public static void configure(Settings settings) {
         if (loaded) {
             return;
         }
         loaded = true;
         // TODO: this is partly a copy of InternalSettingsPreparer...we should pass in Environment and not do all this...
         Environment environment = new Environment(settings);
-
         Settings.Builder settingsBuilder = settingsBuilder();
-        if (resolveConfig) {
-            resolveConfig(environment, settingsBuilder);
-        }
+        resolveConfig(environment, settingsBuilder);
         settingsBuilder
                 .putProperties("elasticsearch.", System.getProperties())
                 .putProperties("es.", System.getProperties());
@@ -148,7 +102,9 @@ public class LogConfigurator {
         for (Map.Entry<String, String> entry : settingsBuilder.build().getAsMap().entrySet()) {
             String key = "log4j." + entry.getKey();
             String value = entry.getValue();
-            value = REPLACEMENTS.getOrDefault(value, value);
+            if (replacements.containsKey(value)) {
+                value = replacements.get(value);
+            }
             if (key.endsWith(".value")) {
                 props.setProperty(key.substring(0, key.length() - ".value".length()), value);
             } else if (key.endsWith(".type")) {

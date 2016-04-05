@@ -39,14 +39,9 @@ public class FilterParser implements Aggregator.Parser {
     }
 
     @Override
-<<<<<<< HEAD
-    public AggregatorFactory parse(String aggregationName, XContentParser parser, SearchContext context) throws IOException {
-        ParsedQuery filter = context.getQueryShardContext().parseInnerFilter(parser);
-=======
     public FilterAggregator.FilterAggregatorBuilder parse(String aggregationName, XContentParser parser, QueryParseContext context)
             throws IOException {
         QueryBuilder<?> filter = context.parseInnerQueryBuilder();
->>>>>>> tempbranch
 
         if (filter == null) {
             throw new ParsingException(null, "filter cannot be null in filter aggregation [{}]", aggregationName);

@@ -37,11 +37,8 @@ import org.elasticsearch.common.lucene.search.Queries;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.support.XContentMapValues;
 import org.elasticsearch.index.mapper.MappedFieldType;
-<<<<<<< HEAD
-import org.elasticsearch.indices.TermsLookup;
-=======
 import org.elasticsearch.indices.cache.query.terms.TermsLookup;
->>>>>>> tempbranch
+import org.elasticsearch.search.internal.SearchContext;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -230,13 +227,22 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
 
     @Override
     protected Query doToQuery(QueryShardContext context) throws IOException {
-        if (termsLookup != null) {
-            throw new UnsupportedOperationException("query must be rewritten first");
+        List<Object> terms;
+        TermsLookup termsLookup = null;
+        if (this.termsLookup != null) {
+            termsLookup = new TermsLookup(this.termsLookup);
+            if (termsLookup.index() == null) {
+                termsLookup.index(context.index().getName());
+            }
+            Client client = context.getClient();
+            terms = fetch(termsLookup, client);
+        } else {
+            terms = values;
         }
-        if (values == null || values.isEmpty()) {
+        if (terms == null || terms.isEmpty()) {
             return Queries.newMatchNoDocsQuery();
         }
-        return handleTermsQuery(values, fieldName, context);
+        return handleTermsQuery(terms, fieldName, context);
     }
 
     private List<Object> fetch(TermsLookup termsLookup, Client client) {
@@ -318,22 +324,4 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
                 Objects.equals(values, other.values) &&
                 Objects.equals(termsLookup, other.termsLookup);
     }
-
-    @Override
-    public QueryBuilder<TermsQueryBuilder> rewrite(QueryRewriteContext queryRewriteContext) throws IOException {
-        if (this.termsLookup != null) {
-            TermsLookup termsLookup = new TermsLookup(this.termsLookup);
-            if (termsLookup.index() == null) { // TODO this should go away?
-                if (queryRewriteContext.hasIndex()) {
-                    termsLookup.index(queryRewriteContext.getIndexSettings().getIndex().getName());
-                } else {
-                    return this; // can't rewrite until we have index scope on the shard
-                }
-            }
-            List<Object> values = fetch(termsLookup, queryRewriteContext.getClient());
-            return new TermsQueryBuilder(this.fieldName, values).boost(boost()).queryName(queryName());
-        }
-        return this;
-    }
-
 }

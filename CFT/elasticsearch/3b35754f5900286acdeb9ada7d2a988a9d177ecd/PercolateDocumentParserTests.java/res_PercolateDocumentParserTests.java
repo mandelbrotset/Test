@@ -88,20 +88,11 @@ public class PercolateDocumentParserTests extends ESTestCase {
         queryShardContext = new QueryShardContext(indexSettings, null, null, null, mapperService, null, null, indicesQueriesRegistry);
 
         HighlightPhase highlightPhase = new HighlightPhase(Settings.EMPTY, new Highlighters());
-<<<<<<< HEAD
-        AggregatorParsers aggregatorParsers = new AggregatorParsers(Collections.emptySet(), Collections.emptySet());
-        AggregationPhase aggregationPhase = new AggregationPhase(new AggregationParseElement(aggregatorParsers), new AggregationBinaryParseElement(aggregatorParsers));
-        parser = new PercolateDocumentParser(highlightPhase, new SortParseElement(), aggregationPhase);
-=======
         AggregatorParsers aggregatorParsers = new AggregatorParsers(Collections.emptySet(), Collections.emptySet(),
                 new NamedWriteableRegistry());
         AggregationPhase aggregationPhase = new AggregationPhase(new AggregationParseElement(aggregatorParsers, indicesQueriesRegistry),
                 new AggregationBinaryParseElement(aggregatorParsers, indicesQueriesRegistry));
-        MappingUpdatedAction mappingUpdatedAction = Mockito.mock(MappingUpdatedAction.class);
-        parser = new PercolateDocumentParser(
-                highlightPhase, new SortParseElement(), aggregationPhase, mappingUpdatedAction
-        );
->>>>>>> tempbranch
+        parser = new PercolateDocumentParser(highlightPhase, new SortParseElement(), aggregationPhase);
 
         request = Mockito.mock(PercolateShardRequest.class);
         Mockito.when(request.shardId()).thenReturn(new ShardId(new Index("_index"), 0));

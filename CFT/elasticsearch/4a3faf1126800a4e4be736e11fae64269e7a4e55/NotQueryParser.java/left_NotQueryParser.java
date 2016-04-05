@@ -19,20 +19,17 @@
 
 package org.elasticsearch.index.query;
 
-import org.apache.lucene.search.Query;
 import org.elasticsearch.common.ParseField;
 import org.elasticsearch.common.inject.Inject;
-import org.elasticsearch.common.lucene.search.Queries;
 import org.elasticsearch.common.xcontent.XContentParser;
 
 import java.io.IOException;
 
 /**
- *
+ * Parser for not query
  */
-public class NotQueryParser implements QueryParser {
+public class NotQueryParser extends BaseQueryParser<NotQueryBuilder> {
 
-    public static final String NAME = "not";
     private static final ParseField QUERY_FIELD = new ParseField("filter", "query");
 
     @Inject
@@ -41,18 +38,19 @@ public class NotQueryParser implements QueryParser {
 
     @Override
     public String[] names() {
-        return new String[]{NAME};
+        return new String[]{NotQueryBuilder.NAME};
     }
 
     @Override
-    public Query parse(QueryParseContext parseContext) throws IOException, QueryParsingException {
+    public NotQueryBuilder fromXContent(QueryParseContext parseContext) throws IOException, QueryParsingException {
         XContentParser parser = parseContext.parser();
 
-        Query query = null;
+        QueryBuilder query = null;
         boolean queryFound = false;
 
         String queryName = null;
         String currentFieldName = null;
+        float boost = AbstractQueryBuilder.DEFAULT_BOOST;
         XContentParser.Token token;
         while ((token = parser.nextToken()) != XContentParser.Token.END_OBJECT) {
             if (token == XContentParser.Token.FIELD_NAME) {
@@ -61,16 +59,22 @@ public class NotQueryParser implements QueryParser {
                 // skip
             } else if (token == XContentParser.Token.START_OBJECT) {
                 if (parseContext.parseFieldMatcher().match(currentFieldName, QUERY_FIELD)) {
-                    query = parseContext.parseInnerFilter();
+                    query = parseContext.parseInnerFilterToQueryBuilder();
                     queryFound = true;
                 } else {
                     queryFound = true;
                     // its the filter, and the name is the field
-                    query = parseContext.parseInnerFilter(currentFieldName);
+                    query = parseContext.parseInnerFilterToQueryBuilder(currentFieldName);
                 }
+            } else if (token == XContentParser.Token.START_ARRAY) {
+                queryFound = true;
+                // its the filter, and the name is the field
+                query = parseContext.parseInnerFilterToQueryBuilder(currentFieldName);
             } else if (token.isValue()) {
                 if ("_name".equals(currentFieldName)) {
                     queryName = parser.text();
+                } else if ("boost".equals(currentFieldName)) {
+                    boost = parser.floatValue();
                 } else {
                     throw new QueryParsingException(parseContext, "[not] query does not support [" + currentFieldName + "]");
                 }
@@ -81,14 +85,14 @@ public class NotQueryParser implements QueryParser {
             throw new QueryParsingException(parseContext, "filter is required when using `not` query");
         }
 
-        if (query == null) {
-            return null;
-        }
+        NotQueryBuilder notQueryBuilder = new NotQueryBuilder(query);
+        notQueryBuilder.queryName(queryName);
+        notQueryBuilder.boost(boost);
+        return notQueryBuilder;
+    }
 
-        Query notQuery = Queries.not(query);
-        if (queryName != null) {
-            parseContext.addNamedQuery(queryName, notQuery);
-        }
-        return notQuery;
+    @Override
+    public NotQueryBuilder getBuilderPrototype() {
+        return NotQueryBuilder.PROTOTYPE;
     }
 }

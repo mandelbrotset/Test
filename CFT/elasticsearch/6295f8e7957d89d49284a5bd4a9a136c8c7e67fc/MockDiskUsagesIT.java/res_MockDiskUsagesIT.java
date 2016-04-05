@@ -37,11 +37,8 @@ import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.test.ESIntegTestCase;
 import org.junit.Test;
 
-<<<<<<< HEAD
-import java.util.ArrayList;
-=======
 import java.util.Collection;
->>>>>>> tempbranch
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;

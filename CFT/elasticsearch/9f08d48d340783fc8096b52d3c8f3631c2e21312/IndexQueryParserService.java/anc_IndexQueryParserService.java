@@ -149,26 +149,16 @@ public class IndexQueryParserService extends AbstractIndexComponent {
         return this.queryStringLenient;
     }
 
-    public IndicesQueriesRegistry indicesQueriesRegistry() {
+    IndicesQueriesRegistry indicesQueriesRegistry() {
         return indicesQueriesRegistry;
     }
 
-    //norelease this needs to go away
-    public ParsedQuery parse(QueryBuilder<?> queryBuilder) {
-        QueryShardContext context = cache.get();
-        context.reset();
-        context.parseFieldMatcher(parseFieldMatcher);
-        try {
-            return innerParse(context, queryBuilder);
-        } catch (ParsingException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new QueryShardException(context, "failed to create query: {}", e, queryBuilder);
-        }
+    public ParsedQuery parse(BytesReference source) {
+        return parse(cache.get(), source);
     }
 
-    public ParsedQuery parse(BytesReference source) {
-        QueryShardContext context = cache.get();
+    //norelease
+    public ParsedQuery parse(QueryShardContext context, BytesReference source) {
         XContentParser parser = null;
         try {
             parser = XContentFactory.xContent(source).createParser(source);
@@ -196,11 +186,11 @@ public class IndexQueryParserService extends AbstractIndexComponent {
      * Parses an inner filter, returning null if the filter should be ignored.
      */
     @Nullable
+    //norelease
     public ParsedQuery parseInnerFilter(XContentParser parser) throws IOException {
         QueryShardContext context = cache.get();
         context.reset(parser);
         try {
-            context.parseFieldMatcher(parseFieldMatcher);
             Query filter = context.parseContext().parseInnerQueryBuilder().toFilter(context);
             if (filter == null) {
                 return null;
@@ -212,16 +202,13 @@ public class IndexQueryParserService extends AbstractIndexComponent {
     }
 
     @Nullable
-<<<<<<< HEAD
-=======
-    public QueryBuilder<?> parseInnerQueryBuilder(QueryParseContext parseContext) throws IOException {
+    public QueryBuilder parseInnerQueryBuilder(QueryParseContext parseContext) throws IOException {
         parseContext.parseFieldMatcher(parseFieldMatcher);
         return parseContext.parseInnerQueryBuilder();
     }
 
     @Nullable
     //norelease
->>>>>>> tempbranch
     public Query parseInnerQuery(QueryShardContext context) throws IOException {
         Query query = context.parseContext().parseInnerQueryBuilder().toQuery(context);
         if (query == null) {
@@ -278,23 +265,18 @@ public class IndexQueryParserService extends AbstractIndexComponent {
         }
     }
 
+    //norelease
     private ParsedQuery innerParse(QueryShardContext context, XContentParser parser) throws IOException, QueryShardException {
         context.reset(parser);
         try {
             context.parseFieldMatcher(parseFieldMatcher);
-            Query query = context.parseContext().parseInnerQueryBuilder().toQuery(context);
-            if (query == null) {
-                query = Queries.newMatchNoDocsQuery();
-            }
-            return new ParsedQuery(query, context.copyNamedQueries());
+            return innerParse(context, context.parseContext().parseInnerQueryBuilder());
         } finally {
             context.reset(null);
         }
     }
 
-<<<<<<< HEAD
-=======
-    private static ParsedQuery innerParse(QueryShardContext context, QueryBuilder<?> queryBuilder) throws IOException, QueryShardException {
+    private static ParsedQuery innerParse(QueryShardContext context, QueryBuilder queryBuilder) throws IOException, QueryShardException {
         Query query = queryBuilder.toQuery(context);
         if (query == null) {
             query = Queries.newMatchNoDocsQuery();
@@ -302,7 +284,6 @@ public class IndexQueryParserService extends AbstractIndexComponent {
         return new ParsedQuery(query, context.copyNamedQueries());
     }
 
->>>>>>> tempbranch
     public ParseFieldMatcher parseFieldMatcher() {
         return parseFieldMatcher;
     }

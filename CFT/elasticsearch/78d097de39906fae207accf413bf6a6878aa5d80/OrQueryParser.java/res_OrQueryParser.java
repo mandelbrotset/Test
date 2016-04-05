@@ -45,11 +45,7 @@ public class OrQueryParser extends BaseQueryParser<OrQueryBuilder> {
     public OrQueryBuilder fromXContent(QueryParseContext parseContext) throws IOException, QueryParsingException {
         XContentParser parser = parseContext.parser();
 
-<<<<<<< HEAD
-        ArrayList<Query> queries = new ArrayList<>();
-=======
-        final ArrayList<QueryBuilder> queries = newArrayList();
->>>>>>> tempbranch
+        final ArrayList<QueryBuilder> queries = new ArrayList<>();
         boolean queriesFound = false;
 
         float boost = AbstractQueryBuilder.DEFAULT_BOOST;

@@ -86,14 +86,9 @@ import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.lease.Releasable;
-import org.elasticsearch.common.settings.Setting;
 import org.elasticsearch.common.settings.Settings;
 
-<<<<<<< HEAD
 import java.util.Map;
-=======
-import java.util.function.Function;
->>>>>>> tempbranch
 
 /**
  * A client provides a one stop interface for performing actions/operations against the cluster.
@@ -110,15 +105,7 @@ import java.util.function.Function;
  */
 public interface Client extends ElasticsearchClient, Releasable {
 
-    Setting<String> CLIENT_TYPE_SETTING_S = new Setting<>("client.type", "node", (s) -> {
-        switch (s) {
-            case "node":
-            case "transport":
-                return s;
-            default:
-                throw new IllegalArgumentException("Can't parse [client.type] must be one of [node, transport]");
-        }
-    }, false, Setting.Scope.CLUSTER);
+    String CLIENT_TYPE_SETTING = "client.type";
 
     /**
      * The admin client that can be used to perform administrative operations.

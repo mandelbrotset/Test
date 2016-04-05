@@ -29,13 +29,8 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.index.query.QueryBuilders;
-<<<<<<< HEAD
-import org.elasticsearch.index.query.QueryParsingException;
-import org.elasticsearch.plugins.Plugin;
-=======
 import org.elasticsearch.index.query.QueryShardException;
-import org.elasticsearch.plugins.AbstractPlugin;
->>>>>>> tempbranch
+import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptModule;
 import org.elasticsearch.script.ScriptService;
@@ -292,7 +287,7 @@ public class SignificantTermsSignificanceScoreIT extends ESIntegTestCase {
         assertThat(responseBuilder.string(), equalTo(result));
 
     }
-    
+
     @Test
     public void testDeletesIssue7951() throws Exception {
         String settings = "{\"index.number_of_shards\": 1, \"index.number_of_replicas\": 0}";
@@ -312,10 +307,10 @@ public class SignificantTermsSignificanceScoreIT extends ESIntegTestCase {
         indexRequestBuilderList.add(client().prepareIndex(INDEX_NAME, DOC_TYPE, "4")
                 .setSource(TEXT_FIELD, cat2v2, CLASS_FIELD, "2"));
         indexRandom(true, false, indexRequestBuilderList);
-        
+
         // Now create some holes in the index with selective deletes caused by updates.
         // This is the scenario that caused this issue https://github.com/elasticsearch/elasticsearch/issues/7951
-        // Scoring algorithms throw exceptions if term docFreqs exceed the reported size of the index 
+        // Scoring algorithms throw exceptions if term docFreqs exceed the reported size of the index
         // from which they are taken so need to make sure this doesn't happen.
         String[] text = cat1v1;
         indexRequestBuilderList.clear();
@@ -324,7 +319,7 @@ public class SignificantTermsSignificanceScoreIT extends ESIntegTestCase {
             indexRequestBuilderList.add(client().prepareIndex(INDEX_NAME, DOC_TYPE, "1").setSource(TEXT_FIELD, text, CLASS_FIELD, "1"));
         }
         indexRandom(true, false, indexRequestBuilderList);
-        
+
         SearchResponse response1 = client().prepareSearch(INDEX_NAME).setTypes(DOC_TYPE)
                 .addAggregation(new TermsBuilder("class")
                         .field(CLASS_FIELD)
@@ -334,7 +329,7 @@ public class SignificantTermsSignificanceScoreIT extends ESIntegTestCase {
                                         .minDocCount(1)))
                 .execute()
                 .actionGet();
-    }    
+    }
 
     @Test
     public void testBackgroundVsSeparateSet() throws Exception {

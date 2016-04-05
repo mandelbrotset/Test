@@ -30,6 +30,7 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.SizeValue;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.index.query.ScoreType;
 import org.elasticsearch.node.Node;
 
 import java.io.IOException;
@@ -40,10 +41,7 @@ import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_NUMBER_OF
 import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_NUMBER_OF_SHARDS;
 import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.hasChildQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
+import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
 /**
@@ -158,7 +156,7 @@ public class ChildSearchShortCircuitBenchmark {
         for (int i = 1; i < PARENT_COUNT; i *= 2) {
             for (int j = 0; j < QUERY_COUNT; j++) {
                 SearchResponse searchResponse = client.prepareSearch(indexName)
-                        .setQuery(boolQuery().must(matchAllQuery()).filter(hasChildQuery("child", matchQuery("field2", i))))
+                        .setQuery(filteredQuery(matchAllQuery(), hasChildQuery("child", matchQuery("field2", i))))
                         .execute().actionGet();
                 if (searchResponse.getHits().totalHits() != i) {
                     System.err.println("--> mismatch on hits");
@@ -178,7 +176,7 @@ public class ChildSearchShortCircuitBenchmark {
         for (int i = 1; i < PARENT_COUNT; i *= 2) {
             for (int j = 0; j < QUERY_COUNT; j++) {
                 SearchResponse searchResponse = client.prepareSearch(indexName)
-                        .setQuery(hasChildQuery("child", matchQuery("field2", i)).scoreType("max"))
+                        .setQuery(hasChildQuery("child", matchQuery("field2", i)).scoreType(ScoreType.MAX))
                         .execute().actionGet();
                 if (searchResponse.getHits().totalHits() != i) {
                     System.err.println("--> mismatch on hits");

@@ -65,10 +65,6 @@ import java.util.Set;
 
 import static org.elasticsearch.common.settings.Settings.settingsBuilder;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
-<<<<<<< HEAD:core/src/test/java/org/elasticsearch/search/child/ChildQuerySearchIT.java
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders.fieldValueFactorFunction;
-=======
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
 import static org.elasticsearch.index.query.QueryBuilders.hasParentQuery;
@@ -81,8 +77,7 @@ import static org.elasticsearch.index.query.QueryBuilders.prefixQuery;
 import static org.elasticsearch.index.query.QueryBuilders.queryStringQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termsQuery;
-import static org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders.scriptFunction;
->>>>>>> tempbranch:plugins/lang-groovy/src/test/java/org/elasticsearch/messy/tests/ChildQuerySearchTests.java
+import static org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders.fieldValueFactorFunction;
 import static org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders.weightFactorFunction;
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertAcked;
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertHitCount;
@@ -102,16 +97,8 @@ import static org.hamcrest.Matchers.notNullValue;
  */
 @ClusterScope(scope = Scope.SUITE)
 public class ChildQuerySearchIT extends ESIntegTestCase {
-
+    
     @Override
-<<<<<<< HEAD:core/src/test/java/org/elasticsearch/search/child/ChildQuerySearchIT.java
-=======
-    protected Collection<Class<? extends Plugin>> nodePlugins() {
-        return Collections.singleton(GroovyPlugin.class);
-    }
-
-    @Override
->>>>>>> tempbranch:plugins/lang-groovy/src/test/java/org/elasticsearch/messy/tests/ChildQuerySearchTests.java
     protected Settings nodeSettings(int nodeOrdinal) {
         return Settings.settingsBuilder().put(super.nodeSettings(nodeOrdinal))
                 // aggressive filter caching so that we can assert on the filter cache size

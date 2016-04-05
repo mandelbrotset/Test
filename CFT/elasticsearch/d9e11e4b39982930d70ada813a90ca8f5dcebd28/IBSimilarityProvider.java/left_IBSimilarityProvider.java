@@ -19,11 +19,6 @@
 
 package org.elasticsearch.index.similarity;
 
-<<<<<<< HEAD
-import com.google.common.collect.ImmutableMap;
-import org.apache.lucene.search.similarities.*;
-import org.elasticsearch.common.collect.MapBuilder;
-=======
 import org.apache.lucene.search.similarities.Distribution;
 import org.apache.lucene.search.similarities.DistributionLL;
 import org.apache.lucene.search.similarities.DistributionSPL;
@@ -35,7 +30,6 @@ import org.apache.lucene.search.similarities.Normalization;
 import org.apache.lucene.search.similarities.Similarity;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.inject.assistedinject.Assisted;
->>>>>>> tempbranch
 import org.elasticsearch.common.settings.Settings;
 
 import java.util.HashMap;
@@ -73,7 +67,8 @@ public class IBSimilarityProvider extends AbstractSimilarityProvider {
 
     private final IBSimilarity similarity;
 
-    public IBSimilarityProvider(String name, Settings settings) {
+    @Inject
+    public IBSimilarityProvider(@Assisted String name, @Assisted Settings settings) {
         super(name);
         Distribution distribution = parseDistribution(settings);
         Lambda lambda = parseLambda(settings);

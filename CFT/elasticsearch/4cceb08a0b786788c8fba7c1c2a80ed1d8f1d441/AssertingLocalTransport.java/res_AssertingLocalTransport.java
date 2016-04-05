@@ -46,15 +46,9 @@ public class AssertingLocalTransport extends LocalTransport {
     private final Version maxVersion;
 
     @Inject
-<<<<<<< HEAD
-    public AssertingLocalTransport(Settings settings, ThreadPool threadPool, Version version) {
-        super(settings, threadPool, version);
-        final long seed = settings.getAsLong(ESIntegTestCase.SETTING_INDEX_SEED, 0l);
-=======
     public AssertingLocalTransport(Settings settings, ThreadPool threadPool, Version version, NamedWriteableRegistry namedWriteableRegistry) {
         super(settings, threadPool, version, namedWriteableRegistry);
-        final long seed = settings.getAsLong(ElasticsearchIntegrationTest.SETTING_INDEX_SEED, 0l);
->>>>>>> tempbranch
+        final long seed = settings.getAsLong(ESIntegTestCase.SETTING_INDEX_SEED, 0l);
         random = new Random(seed);
         minVersion = settings.getAsVersion(ASSERTING_TRANSPORT_MIN_VERSION_KEY, Version.V_0_18_0);
         maxVersion = settings.getAsVersion(ASSERTING_TRANSPORT_MAX_VERSION_KEY, Version.CURRENT);
@@ -65,7 +59,7 @@ public class AssertingLocalTransport extends LocalTransport {
         ElasticsearchAssertions.assertVersionSerializable(VersionUtils.randomVersionBetween(random, minVersion, maxVersion), response);
         super.handleParsedResponse(response, handler);
     }
-    
+
     @Override
     public void sendRequest(final DiscoveryNode node, final long requestId, final String action, final TransportRequest request, TransportRequestOptions options) throws IOException, TransportException {
         ElasticsearchAssertions.assertVersionSerializable(VersionUtils.randomVersionBetween(random, minVersion, maxVersion), request);

@@ -20,11 +20,6 @@ package org.elasticsearch;
 
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParseException;
-<<<<<<< HEAD
-import com.google.common.collect.ImmutableSet;
-=======
-
->>>>>>> tempbranch
 import org.apache.lucene.util.Constants;
 import org.codehaus.groovy.runtime.typehandling.GroovyCastException;
 import org.elasticsearch.action.FailedNodeException;
@@ -36,9 +31,6 @@ import org.elasticsearch.client.AbstractClientHeadersTestCase;
 import org.elasticsearch.cluster.block.ClusterBlockException;
 import org.elasticsearch.cluster.metadata.SnapshotId;
 import org.elasticsearch.cluster.node.DiscoveryNode;
-<<<<<<< HEAD
-import org.elasticsearch.cluster.routing.*;
-=======
 import org.elasticsearch.cluster.routing.IllegalShardRoutingStateException;
 import org.elasticsearch.cluster.routing.RoutingTableValidation;
 import org.elasticsearch.cluster.routing.RoutingValidationException;
@@ -46,7 +38,6 @@ import org.elasticsearch.cluster.routing.ShardRouting;
 import org.elasticsearch.cluster.routing.ShardRoutingState;
 import org.elasticsearch.cluster.routing.TestShardRouting;
 import org.elasticsearch.common.ParsingException;
->>>>>>> tempbranch
 import org.elasticsearch.common.breaker.CircuitBreakingException;
 import org.elasticsearch.common.io.PathUtils;
 import org.elasticsearch.common.io.stream.BytesStreamOutput;
@@ -69,11 +60,11 @@ import org.elasticsearch.index.engine.IndexFailedEngineException;
 import org.elasticsearch.index.engine.RecoveryEngineException;
 import org.elasticsearch.index.mapper.MergeMappingException;
 <<<<<<< HEAD
+import org.elasticsearch.index.query.TestParsingException;
+=======
 import org.elasticsearch.common.ParsingException;
 import org.elasticsearch.index.query.QueryShardException;
-=======
-import org.elasticsearch.index.query.TestParsingException;
->>>>>>> tempbranch
+>>>>>>> master
 import org.elasticsearch.index.shard.IllegalIndexShardStateException;
 import org.elasticsearch.index.shard.IndexShardState;
 import org.elasticsearch.index.shard.ShardId;

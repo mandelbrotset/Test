@@ -40,11 +40,6 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
 
     private Boolean disableCoord;
 
-<<<<<<< HEAD
-    private String queryName;
-
-    private float boost = -1;
-=======
     private String execution;
 
     private String lookupIndex;
@@ -52,7 +47,6 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
     private String lookupId;
     private String lookupRouting;
     private String lookupPath;
->>>>>>> tempbranch
 
     /**
      * A filter for a field based on several terms matching on any of them.
@@ -131,8 +125,6 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
     }
 
     /**
-<<<<<<< HEAD
-=======
      * Sets the execution mode for the terms filter. Cane be either "plain", "bool"
      * "and". Defaults to "plain".
      * @deprecated elasticsearch now makes better decisions on its own
@@ -147,7 +139,6 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
 <<<<<<< HEAD
      * Sets the index name to lookup the terms from.
 =======
->>>>>>> tempbranch
      * Sets the minimum number of matches across the provided terms. Defaults to <tt>1</tt>.
      * @deprecated use [bool] query instead
      */
@@ -207,10 +198,6 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
 
     @Override
     public void doXContent(XContentBuilder builder, Params params) throws IOException {
-<<<<<<< HEAD
-        builder.startObject(TermsQueryParser.NAME);
-        builder.field(name, values);
-=======
         builder.startObject(NAME);
         if (values == null) {
             builder.startObject(name);
@@ -230,7 +217,6 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
         if (execution != null) {
             builder.field("execution", execution);
         }
->>>>>>> tempbranch
 
         if (minimumShouldMatch != null) {
             builder.field("minimum_should_match", minimumShouldMatch);

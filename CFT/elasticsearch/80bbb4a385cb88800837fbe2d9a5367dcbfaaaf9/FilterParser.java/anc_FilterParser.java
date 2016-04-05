@@ -18,13 +18,12 @@
  */
 package org.elasticsearch.search.aggregations.bucket.filter;
 
-import org.elasticsearch.common.ParsingException;
+import org.apache.lucene.search.MatchAllDocsQuery;
 import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.index.query.MatchAllQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryParseContext;
+import org.elasticsearch.index.query.ParsedQuery;
 import org.elasticsearch.search.aggregations.Aggregator;
-import org.elasticsearch.search.aggregations.AggregatorBuilder;
+import org.elasticsearch.search.aggregations.AggregatorFactory;
+import org.elasticsearch.search.internal.SearchContext;
 
 import java.io.IOException;
 
@@ -39,27 +38,10 @@ public class FilterParser implements Aggregator.Parser {
     }
 
     @Override
-<<<<<<< HEAD
     public AggregatorFactory parse(String aggregationName, XContentParser parser, SearchContext context) throws IOException {
-        ParsedQuery filter = context.getQueryShardContext().parseInnerFilter(parser);
-=======
-    public FilterAggregator.FilterAggregatorBuilder parse(String aggregationName, XContentParser parser, QueryParseContext context)
-            throws IOException {
-        QueryBuilder<?> filter = context.parseInnerQueryBuilder();
->>>>>>> tempbranch
+        ParsedQuery filter = context.indexShard().getQueryShardContext().parseInnerFilter(parser);
 
-        if (filter == null) {
-            throw new ParsingException(null, "filter cannot be null in filter aggregation [{}]", aggregationName);
-        }
-
-        FilterAggregator.FilterAggregatorBuilder factory = new FilterAggregator.FilterAggregatorBuilder(aggregationName,
-                filter == null ? new MatchAllQueryBuilder() : filter);
-        return factory;
-    }
-
-    @Override
-    public AggregatorBuilder<?> getFactoryPrototypes() {
-        return new FilterAggregator.FilterAggregatorBuilder(null, null);
+        return new FilterAggregator.Factory(aggregationName, filter == null ? new MatchAllDocsQuery() : filter.query());
     }
 
 }

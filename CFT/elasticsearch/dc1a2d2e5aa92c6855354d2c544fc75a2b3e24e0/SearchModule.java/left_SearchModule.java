@@ -19,6 +19,8 @@
 
 package org.elasticsearch.search;
 
+import com.google.common.collect.Lists;
+
 import org.elasticsearch.common.Classes;
 import org.elasticsearch.common.inject.AbstractModule;
 import org.elasticsearch.common.inject.multibindings.Multibinder;
@@ -148,7 +150,7 @@ import org.elasticsearch.search.suggest.SuggestPhase;
 import org.elasticsearch.search.suggest.Suggester;
 import org.elasticsearch.search.suggest.Suggesters;
 
-import java.util.*;
+import java.util.List;
 
 /**
  *
@@ -156,14 +158,14 @@ import java.util.*;
 public class SearchModule extends AbstractModule {
 
     private final Settings settings;
-    private final Set<Class<? extends Aggregator.Parser>> aggParsers = new HashSet<>();
-    private final Set<Class<? extends PipelineAggregator.Parser>> pipelineAggParsers = new HashSet<>();
-    private final Highlighters highlighters = new Highlighters();
-    private final Suggesters suggesters = new Suggesters();
-    private final Set<Class<? extends ScoreFunctionParser>> functionScoreParsers = new HashSet<>();
-    private final Set<Class<? extends FetchSubPhase>> fetchSubPhases = new HashSet<>();
-    private final Set<Class<? extends SignificanceHeuristicParser>> heuristicParsers = new HashSet<>();
-    private final Set<Class<? extends MovAvgModel.AbstractModelParser>> modelParsers = new HashSet<>();
+    private final List<Class<? extends Aggregator.Parser>> aggParsers = Lists.newArrayList();
+    private final List<Class<? extends PipelineAggregator.Parser>> pipelineAggParsers = Lists.newArrayList();
+    private final List<Class<? extends Highlighter>> highlighters = Lists.newArrayList();
+    private final List<Class<? extends Suggester>> suggesters = Lists.newArrayList();
+    private final List<Class<? extends ScoreFunctionParser>> functionScoreParsers = Lists.newArrayList();
+    private final List<Class<? extends FetchSubPhase>> fetchSubPhases = Lists.newArrayList();
+    private final List<Class<? extends SignificanceHeuristicParser>> heuristicParsers = Lists.newArrayList();
+    private final List<Class<? extends MovAvgModel.AbstractModelParser>> modelParsers = Lists.newArrayList();
 
     // pkg private so tests can mock
     Class<? extends SearchService> searchServiceImpl = SearchService.class;
@@ -181,12 +183,12 @@ public class SearchModule extends AbstractModule {
         MovAvgModelStreams.registerStream(stream);
     }
 
-    public void registerHighlighter(String key, Class<? extends Highlighter> clazz) {
-        highlighters.registerExtension(key, clazz);
+    public void registerHighlighter(Class<? extends Highlighter> clazz) {
+        highlighters.add(clazz);
     }
 
-    public void registerSuggester(String key, Class<? extends Suggester> suggester) {
-        suggesters.registerExtension(key, suggester);
+    public void registerSuggester(Class<? extends Suggester> suggester) {
+        suggesters.add(suggester);
     }
 
     public void registerFunctionScoreParser(Class<? extends ScoreFunctionParser> parser) {
@@ -244,7 +246,14 @@ public class SearchModule extends AbstractModule {
     }
 
     protected void configureSuggesters() {
-        suggesters.bind(binder());
+        Multibinder<Suggester> suggesterMultibinder = Multibinder.newSetBinder(binder(), Suggester.class);
+        for (Class<? extends Suggester> clazz : suggesters) {
+            suggesterMultibinder.addBinding().to(clazz);
+        }
+
+        bind(SuggestParseElement.class).asEagerSingleton();
+        bind(SuggestPhase.class).asEagerSingleton();
+        bind(Suggesters.class).asEagerSingleton();
     }
 
     protected void configureFunctionScore() {
@@ -256,7 +265,11 @@ public class SearchModule extends AbstractModule {
     }
 
     protected void configureHighlighters() {
-       highlighters.bind(binder());
+        Multibinder<Highlighter> multibinder = Multibinder.newSetBinder(binder(), Highlighter.class);
+        for (Class<? extends Highlighter> highlighter : highlighters) {
+            multibinder.addBinding().to(highlighter);
+        }
+        bind(Highlighters.class).asEagerSingleton();
     }
 
     protected void configureAggs() {
@@ -334,14 +347,8 @@ public class SearchModule extends AbstractModule {
         bind(FetchPhase.class).asEagerSingleton();
         bind(SearchServiceTransportAction.class).asEagerSingleton();
         bind(MoreLikeThisFetchService.class).asEagerSingleton();
-<<<<<<< HEAD
-        // search service -- testing only!
-        String impl = settings.get(SEARCH_SERVICE_IMPL);
-        if (impl == null) {
-=======
 
         if (searchServiceImpl == SearchService.class) {
->>>>>>> tempbranch
             bind(SearchService.class).asEagerSingleton();
         } else {
             bind(SearchService.class).to(searchServiceImpl).asEagerSingleton();
@@ -405,5 +412,4 @@ public class SearchModule extends AbstractModule {
         BucketSelectorPipelineAggregator.registerStreams();
         SerialDiffPipelineAggregator.registerStreams();
     }
-
 }

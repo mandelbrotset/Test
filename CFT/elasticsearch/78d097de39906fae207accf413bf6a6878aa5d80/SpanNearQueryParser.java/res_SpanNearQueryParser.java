@@ -51,11 +51,7 @@ public class SpanNearQueryParser extends BaseQueryParser<SpanNearQueryBuilder> {
         boolean collectPayloads = SpanNearQueryBuilder.DEFAULT_COLLECT_PAYLOADS;
         String queryName = null;
 
-<<<<<<< HEAD
-        List<SpanQuery> clauses = new ArrayList<>();
-=======
-        List<SpanQueryBuilder> clauses = newArrayList();
->>>>>>> tempbranch
+        List<SpanQueryBuilder> clauses = new ArrayList<>();
 
         String currentFieldName = null;
         XContentParser.Token token;

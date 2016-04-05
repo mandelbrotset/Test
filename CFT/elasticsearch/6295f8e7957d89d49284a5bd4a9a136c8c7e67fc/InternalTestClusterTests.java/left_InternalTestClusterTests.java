@@ -30,7 +30,9 @@ import org.elasticsearch.test.NodeConfigurationSource;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Random;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
@@ -53,48 +55,28 @@ public class InternalTestClusterTests extends ESTestCase {
         String nodePrefix = randomRealisticUnicodeOfCodepointLengthBetween(1, 10);
 
         Path baseDir = createTempDir();
-<<<<<<< HEAD
-        InternalTestCluster cluster0 = new InternalTestCluster("local", clusterSeed, baseDir, minNumDataNodes, maxNumDataNodes, clusterName, settingsSource, numClientNodes, enableHttpPipelining, nodePrefix);
-        InternalTestCluster cluster1 = new InternalTestCluster("local", clusterSeed, baseDir, minNumDataNodes, maxNumDataNodes, clusterName, settingsSource, numClientNodes, enableHttpPipelining, nodePrefix);
-        // TODO: this is not ideal - we should have a way to make sure ports are initialized in the same way
-        assertClusters(cluster0, cluster1, false);
-
-    }
-
-    /**
-     * a set of settings that are expected to have different values betweem clusters, even they have been initialized with the same
-     * base settins.
-     */
-    final static Set<String> clusterUniqueSettings = new HashSet<>();
-=======
         InternalTestCluster cluster0 = new InternalTestCluster("local", clusterSeed, baseDir, minNumDataNodes, maxNumDataNodes, clusterName, nodeConfigurationSource, numClientNodes, enableHttpPipelining, nodePrefix);
         InternalTestCluster cluster1 = new InternalTestCluster("local", clusterSeed, baseDir, minNumDataNodes, maxNumDataNodes, clusterName, nodeConfigurationSource, numClientNodes, enableHttpPipelining, nodePrefix);
         assertClusters(cluster0, cluster1, true);
->>>>>>> tempbranch
 
-    static {
-        clusterUniqueSettings.add(ClusterName.SETTING);
-        clusterUniqueSettings.add("transport.tcp.port");
-        clusterUniqueSettings.add("http.port");
-        clusterUniqueSettings.add("http.port");
     }
 
-    public static void assertClusters(InternalTestCluster cluster0, InternalTestCluster cluster1, boolean checkClusterUniqueSettings) {
+    public static void assertClusters(InternalTestCluster cluster0, InternalTestCluster cluster1, boolean assertClusterName) {
         Settings defaultSettings0 = cluster0.getDefaultSettings();
         Settings defaultSettings1 = cluster1.getDefaultSettings();
-        assertSettings(defaultSettings0, defaultSettings1, checkClusterUniqueSettings);
+        assertSettings(defaultSettings0, defaultSettings1, assertClusterName);
         assertThat(cluster0.numDataNodes(), equalTo(cluster1.numDataNodes()));
-        if (checkClusterUniqueSettings) {
+        if (assertClusterName) {
             assertThat(cluster0.getClusterName(), equalTo(cluster1.getClusterName()));
         }
     }
 
-    public static void assertSettings(Settings left, Settings right, boolean checkClusterUniqueSettings) {
+    public static void assertSettings(Settings left, Settings right, boolean compareClusterName) {
         ImmutableSet<Map.Entry<String, String>> entries0 = left.getAsMap().entrySet();
         Map<String, String> entries1 = right.getAsMap();
         assertThat(entries0.size(), equalTo(entries1.size()));
         for (Map.Entry<String, String> entry : entries0) {
-            if (clusterUniqueSettings.contains(entry.getKey()) && checkClusterUniqueSettings == false) {
+            if(entry.getKey().equals(ClusterName.SETTING) && compareClusterName == false) {
                 continue;
             }
             assertThat(entries1, hasEntry(entry.getKey(), entry.getValue()));

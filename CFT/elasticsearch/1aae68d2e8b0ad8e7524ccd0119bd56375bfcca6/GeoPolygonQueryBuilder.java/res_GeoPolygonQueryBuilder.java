@@ -53,19 +53,7 @@ public class GeoPolygonQueryBuilder extends AbstractQueryBuilder<GeoPolygonQuery
 
     private boolean coerce = false;
 
-<<<<<<< HEAD
-    /**
-     * Adds a point with lat and lon
-     *
-     * @param lat The latitude
-     * @param lon The longitude
-     */
-    public GeoPolygonQueryBuilder addPoint(double lat, double lon) {
-        return addPoint(new GeoPoint(lat, lon));
-    }
-=======
     private boolean ignoreMalformed = false;
->>>>>>> tempbranch
 
     public GeoPolygonQueryBuilder(String fieldName, List<GeoPoint> points) {
         if (Strings.isEmpty(fieldName)) {

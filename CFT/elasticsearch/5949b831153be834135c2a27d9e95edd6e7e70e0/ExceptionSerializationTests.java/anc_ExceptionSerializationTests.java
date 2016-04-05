@@ -20,11 +20,8 @@ package org.elasticsearch;
 
 import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParseException;
-<<<<<<< HEAD
 import com.google.common.collect.ImmutableSet;
-=======
 
->>>>>>> tempbranch
 import org.apache.lucene.util.Constants;
 import org.codehaus.groovy.runtime.typehandling.GroovyCastException;
 import org.elasticsearch.action.FailedNodeException;
@@ -36,17 +33,12 @@ import org.elasticsearch.client.AbstractClientHeadersTestCase;
 import org.elasticsearch.cluster.block.ClusterBlockException;
 import org.elasticsearch.cluster.metadata.SnapshotId;
 import org.elasticsearch.cluster.node.DiscoveryNode;
-<<<<<<< HEAD
-import org.elasticsearch.cluster.routing.*;
-=======
 import org.elasticsearch.cluster.routing.IllegalShardRoutingStateException;
 import org.elasticsearch.cluster.routing.RoutingTableValidation;
 import org.elasticsearch.cluster.routing.RoutingValidationException;
 import org.elasticsearch.cluster.routing.ShardRouting;
 import org.elasticsearch.cluster.routing.ShardRoutingState;
 import org.elasticsearch.cluster.routing.TestShardRouting;
-import org.elasticsearch.common.ParsingException;
->>>>>>> tempbranch
 import org.elasticsearch.common.breaker.CircuitBreakingException;
 import org.elasticsearch.common.io.PathUtils;
 import org.elasticsearch.common.io.stream.BytesStreamOutput;
@@ -68,12 +60,8 @@ import org.elasticsearch.index.engine.CreateFailedEngineException;
 import org.elasticsearch.index.engine.IndexFailedEngineException;
 import org.elasticsearch.index.engine.RecoveryEngineException;
 import org.elasticsearch.index.mapper.MergeMappingException;
-<<<<<<< HEAD
 import org.elasticsearch.common.ParsingException;
-import org.elasticsearch.index.query.QueryShardException;
-=======
 import org.elasticsearch.index.query.TestParsingException;
->>>>>>> tempbranch
 import org.elasticsearch.index.shard.IllegalIndexShardStateException;
 import org.elasticsearch.index.shard.IndexShardState;
 import org.elasticsearch.index.shard.ShardId;
@@ -112,8 +100,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashSet;
 import java.util.Set;
 
-import static java.util.Collections.singleton;
-
 public class ExceptionSerializationTests extends ESTestCase {
 
     public void testExceptionRegistration()
@@ -125,6 +111,7 @@ public class ExceptionSerializationTests extends ESTestCase {
         final Path startPath = PathUtils.get(ElasticsearchException.class.getProtectionDomain().getCodeSource().getLocation().toURI()).resolve("org").resolve("elasticsearch");
         final Set<? extends Class> ignore = Sets.newHashSet(
                 org.elasticsearch.test.rest.parser.RestTestParseException.class,
+                TestParsingException.class,
                 org.elasticsearch.test.rest.client.RestException.class,
                 CancellableThreadsTests.CustomException.class,
                 org.elasticsearch.rest.BytesRestResponseTests.WithHeadersException.class,
@@ -240,27 +227,17 @@ public class ExceptionSerializationTests extends ESTestCase {
     }
 
     public void testParsingException() throws IOException {
-        ParsingException ex = serialize(new ParsingException(1, 2, "fobar", null));
-        assertNull(ex.getIndex());
-        assertEquals(ex.getMessage(), "fobar");
-        assertEquals(ex.getLineNumber(),1);
-        assertEquals(ex.getColumnNumber(), 2);
-
-        ex = serialize(new ParsingException(1, 2, null, null));
-        assertNull(ex.getIndex());
-        assertNull(ex.getMessage());
-        assertEquals(ex.getLineNumber(),1);
-        assertEquals(ex.getColumnNumber(), 2);
-    }
-
-    public void testQueryShardException() throws IOException {
-        QueryShardException ex = serialize(new QueryShardException(new Index("foo"), "fobar", null));
+        ParsingException ex = serialize(new ParsingException(new Index("foo"), 1, 2, "fobar", null));
         assertEquals(ex.getIndex(), "foo");
         assertEquals(ex.getMessage(), "fobar");
+        assertEquals(ex.getLineNumber(),1);
+        assertEquals(ex.getColumnNumber(), 2);
 
-        ex = serialize(new QueryShardException((Index)null, null, null));
+        ex = serialize(new ParsingException(null, 1, 2, null, null));
         assertNull(ex.getIndex());
         assertNull(ex.getMessage());
+        assertEquals(ex.getLineNumber(),1);
+        assertEquals(ex.getColumnNumber(), 2);
     }
 
     public void testSearchException() throws IOException {
@@ -557,7 +534,7 @@ public class ExceptionSerializationTests extends ESTestCase {
     }
 
     public void testClusterBlockException() throws IOException {
-        ClusterBlockException ex = serialize(new ClusterBlockException(singleton(DiscoverySettings.NO_MASTER_BLOCK_WRITES)));
+        ClusterBlockException ex = serialize(new ClusterBlockException(ImmutableSet.of(DiscoverySettings.NO_MASTER_BLOCK_WRITES)));
         assertEquals("blocked by: [SERVICE_UNAVAILABLE/2/no master];", ex.getMessage());
         assertTrue(ex.blocks().contains(DiscoverySettings.NO_MASTER_BLOCK_WRITES));
         assertEquals(1, ex.blocks().size());
@@ -656,5 +633,15 @@ public class ExceptionSerializationTests extends ESTestCase {
         InterruptedException orig = randomBoolean() ? new InterruptedException("boom") : new InterruptedException();
         InterruptedException ex = serialize(orig);
         assertEquals(orig.getMessage(), ex.getMessage());
+    }
+
+    public static class UnknownException extends Exception {
+        public UnknownException(String message) {
+            super(message);
+        }
+
+        public UnknownException(String message, Throwable cause) {
+            super(message, cause);
+        }
     }
 }

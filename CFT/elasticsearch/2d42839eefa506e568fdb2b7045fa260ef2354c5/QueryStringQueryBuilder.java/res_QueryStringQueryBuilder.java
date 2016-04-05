@@ -65,11 +65,6 @@ public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQue
 
     private Locale locale;
 
-<<<<<<< HEAD
-    private float boost = -1;
-
-=======
->>>>>>> tempbranch
     private Fuzziness fuzziness;
     private int fuzzyPrefixLength = -1;
     private int fuzzyMaxExpansions = -1;
@@ -93,14 +88,12 @@ public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQue
 
     private String timeZone;
 
+    private Boolean escape;
+
     /** To limit effort spent determinizing regexp queries. */
     private Integer maxDeterminizedStates;
 
-<<<<<<< HEAD
-    private Boolean escape;
-=======
     static final QueryStringQueryBuilder PROTOTYPE = new QueryStringQueryBuilder(null);
->>>>>>> tempbranch
 
     public QueryStringQueryBuilder(String queryString) {
         this.queryString = queryString;
@@ -418,13 +411,10 @@ public class QueryStringQueryBuilder extends AbstractQueryBuilder<QueryStringQue
         if (timeZone != null) {
             builder.field("time_zone", timeZone);
         }
-<<<<<<< HEAD
         if (escape != null) {
             builder.field("escape", escape);
         }
-=======
         printBoostAndQueryName(builder);
->>>>>>> tempbranch
         builder.endObject();
     }
 

@@ -18,11 +18,7 @@
  */
 package org.elasticsearch.percolator;
 
-<<<<<<< HEAD
-=======
-import com.carrotsearch.hppc.ObjectObjectAssociativeContainer;
 
->>>>>>> tempbranch
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.LeafReaderContext;
@@ -119,11 +115,8 @@ public class PercolateContext extends SearchContext {
     private final Map<String, FetchSubPhaseContext> subPhaseContexts = new HashMap<>();
     private final QueryShardContext queryShardContext;
     private final Map<Class<?>, Collector> queryCollectors = new HashMap<>();
-<<<<<<< HEAD
     private SearchLookup searchLookup;
-=======
     private final FetchPhase fetchPhase;
->>>>>>> tempbranch
 
     public PercolateContext(PercolateShardRequest request, SearchShardTarget searchShardTarget, IndexShard indexShard,
             IndexService indexService, PageCacheRecycler pageCacheRecycler, BigArrays bigArrays, ScriptService scriptService,
@@ -164,11 +157,8 @@ public class PercolateContext extends SearchContext {
         this.startTime = 0;
         this.numberOfShards = 0;
         this.onlyCount = true;
-<<<<<<< HEAD
         this.queryShardContext = queryShardContext;
-=======
         this.fetchPhase = null;
->>>>>>> tempbranch
     }
 
     public IndexSearcher docSearcher() {

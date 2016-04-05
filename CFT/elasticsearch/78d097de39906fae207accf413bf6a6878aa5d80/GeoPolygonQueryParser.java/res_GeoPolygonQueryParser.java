@@ -19,10 +19,6 @@
 
 package org.elasticsearch.index.query;
 
-<<<<<<< HEAD
-=======
-import com.google.common.collect.Lists;
->>>>>>> tempbranch
 import org.apache.lucene.search.Query;
 import org.elasticsearch.Version;
 import org.elasticsearch.common.geo.GeoPoint;

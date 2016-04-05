@@ -189,13 +189,8 @@ public class Node implements Releasable {
             modules.add(new DiscoveryModule(this.settings));
             modules.add(new ClusterModule(this.settings));
             modules.add(new IndicesModule());
-<<<<<<< HEAD
             modules.add(new SearchModule(settings, namedWriteableRegistry));
-            modules.add(new ActionModule(false));
-=======
-            modules.add(new SearchModule());
-            modules.add(new ActionModule(this.settings, false));
->>>>>>> tempbranch
+            modules.add(new ActionModule(settings, false));
             modules.add(new GatewayModule(settings));
             modules.add(new NodeClientModule());
             modules.add(new PercolatorModule());

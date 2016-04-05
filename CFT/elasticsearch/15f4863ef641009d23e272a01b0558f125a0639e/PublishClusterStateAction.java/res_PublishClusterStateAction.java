@@ -78,14 +78,10 @@ public class PublishClusterStateAction extends AbstractComponent {
         this.nodesProvider = nodesProvider;
         this.newPendingClusterStatelistener = listener;
         this.discoverySettings = discoverySettings;
-<<<<<<< HEAD
         this.clusterName = clusterName;
         this.pendingStatesQueue = new PendingClusterStatesQueue(logger, settings.getAsInt(SETTINGS_MAX_PENDING_CLUSTER_STATES, 25));
-        transportService.registerRequestHandler(SEND_ACTION_NAME, BytesTransportRequest.class, ThreadPool.Names.SAME, new SendClusterStateRequestHandler());
-        transportService.registerRequestHandler(COMMIT_ACTION_NAME, CommitClusterStateRequest.class, ThreadPool.Names.SAME, new CommitClusterStateRequestHandler());
-=======
-        transportService.registerRequestHandler(ACTION_NAME, BytesTransportRequest::new, ThreadPool.Names.SAME, new PublishClusterStateRequestHandler());
->>>>>>> tempbranch
+        transportService.registerRequestHandler(SEND_ACTION_NAME, BytesTransportRequest::new, ThreadPool.Names.SAME, new SendClusterStateRequestHandler());
+        transportService.registerRequestHandler(COMMIT_ACTION_NAME, CommitClusterStateRequest::new, ThreadPool.Names.SAME, new CommitClusterStateRequestHandler());
     }
 
     public void close() {

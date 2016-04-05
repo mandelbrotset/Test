@@ -87,56 +87,12 @@ public class QueryParseContext {
      * @deprecated replaced by calls to parseInnerFilterToQueryBuilder(String queryName) for the resulting queries
      */
     @Nullable
-<<<<<<< HEAD
-    public SimilarityService similarityService() {
-        return indexQueryParser.similarityService;
-    }
-
-    public Similarity searchSimilarity() {
-        return indexQueryParser.similarityService != null ? indexQueryParser.similarityService.similarity() : null;
-    }
-
-    public String defaultField() {
-        return indexQueryParser.defaultField();
-    }
-
-    public boolean queryStringLenient() {
-        return indexQueryParser.queryStringLenient();
-    }
-
-    public MapperQueryParser queryParser(QueryParserSettings settings) {
-        queryParser.reset(settings);
-        return queryParser;
-    }
-
-    public BitDocIdSetFilter bitsetFilter(Filter filter) {
-        return indexQueryParser.bitsetFilterCache.getBitDocIdSetFilter(filter);
-    }
-
-    public <IFD extends IndexFieldData<?>> IFD getForField(MappedFieldType mapper) {
-        return indexQueryParser.fieldDataService.getForField(mapper);
-    }
-
-    public void addNamedQuery(String name, Query query) {
-        if (query != null) {
-            namedQueries.put(name, query);
-        }
-    }
-
-    public ImmutableMap<String, Query> copyNamedQueries() {
-        return ImmutableMap.copyOf(namedQueries);
-    }
-
-    public void combineNamedQueries(QueryParseContext context) {
-        namedQueries.putAll(context.namedQueries);
-=======
     @Deprecated
     //norelease should be possible to remove after refactoring all queries
     public Query parseInnerFilter(String queryName) throws IOException, QueryShardException {
         assert this.shardContext != null;
         QueryBuilder builder = parseInnerFilterToQueryBuilder(queryName);
         return (builder != null) ? builder.toQuery(this.shardContext) : null;
->>>>>>> tempbranch
     }
 
     /**

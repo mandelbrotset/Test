@@ -99,7 +99,7 @@ public class ShardIndexingService extends AbstractIndexShardComponent {
             try {
                 listener.postCreateUnderLock(create);
             } catch (Exception e) {
-                logger.warn("postCreateUnderLock listener [{}] failed", e, listener);
+                logger.warn("post listener [{}] failed", e, listener);
             }
         }
     }
@@ -124,19 +124,12 @@ public class ShardIndexingService extends AbstractIndexShardComponent {
             try {
                 listener.postCreate(create);
             } catch (Exception e) {
-                logger.warn("postCreate listener [{}] failed", e, listener);
+                logger.warn("post listener [{}] failed", e, listener);
             }
         }
     }
 
     public void postCreate(Engine.Create create, Throwable ex) {
-        for (IndexingOperationListener listener : listeners) {
-            try {
-                listener.postCreate(create, ex);
-            } catch (Throwable t) {
-                logger.warn("postCreate listener [{}] failed", t, listener);
-            }
-        }
     }
 
     public Engine.Index preIndex(Engine.Index index) {
@@ -153,7 +146,7 @@ public class ShardIndexingService extends AbstractIndexShardComponent {
             try {
                 listener.postIndexUnderLock(index);
             } catch (Exception e) {
-                logger.warn("postIndexUnderLock listener [{}] failed", e, listener);
+                logger.warn("post listener [{}] failed", e, listener);
             }
         }
     }
@@ -170,7 +163,7 @@ public class ShardIndexingService extends AbstractIndexShardComponent {
             try {
                 listener.postIndex(index);
             } catch (Exception e) {
-                logger.warn("postIndex listener [{}] failed", e, listener);
+                logger.warn("post listener [{}] failed", e, listener);
             }
         }
     }
@@ -178,18 +171,6 @@ public class ShardIndexingService extends AbstractIndexShardComponent {
     public void postIndex(Engine.Index index, Throwable ex) {
         totalStats.indexCurrent.dec();
         typeStats(index.type()).indexCurrent.dec();
-<<<<<<< HEAD
-        totalStats.indexFailed.inc();
-        typeStats(index.type()).indexFailed.inc();
-=======
-        for (IndexingOperationListener listener : listeners) {
-            try {
-                listener.postIndex(index, ex);
-            } catch (Throwable t) {
-                logger.warn("postIndex listener [{}] failed", t, listener);
-            }
-        }
->>>>>>> tempbranch
     }
 
     public Engine.Delete preDelete(Engine.Delete delete) {
@@ -206,7 +187,7 @@ public class ShardIndexingService extends AbstractIndexShardComponent {
             try {
                 listener.postDeleteUnderLock(delete);
             } catch (Exception e) {
-                logger.warn("postDeleteUnderLock listener [{}] failed", e, listener);
+                logger.warn("post listener [{}] failed", e, listener);
             }
         }
     }
@@ -222,7 +203,7 @@ public class ShardIndexingService extends AbstractIndexShardComponent {
             try {
                 listener.postDelete(delete);
             } catch (Exception e) {
-                logger.warn("postDelete listener [{}] failed", e, listener);
+                logger.warn("post listener [{}] failed", e, listener);
             }
         }
     }
@@ -230,13 +211,6 @@ public class ShardIndexingService extends AbstractIndexShardComponent {
     public void postDelete(Engine.Delete delete, Throwable ex) {
         totalStats.deleteCurrent.dec();
         typeStats(delete.type()).deleteCurrent.dec();
-        for (IndexingOperationListener listener : listeners) {
-            try {
-                listener. postDelete(delete, ex);
-            } catch (Throwable t) {
-                logger.warn("postDelete listener [{}] failed", t, listener);
-            }
-        }
     }
 
     public void noopUpdate(String type) {
@@ -282,7 +256,6 @@ public class ShardIndexingService extends AbstractIndexShardComponent {
         public final MeanMetric indexMetric = new MeanMetric();
         public final MeanMetric deleteMetric = new MeanMetric();
         public final CounterMetric indexCurrent = new CounterMetric();
-        public final CounterMetric indexFailed = new CounterMetric();
         public final CounterMetric deleteCurrent = new CounterMetric();
         public final CounterMetric noopUpdates = new CounterMetric();
         public final CounterMetric throttleTimeMillisMetric = new CounterMetric();
@@ -299,7 +272,7 @@ public class ShardIndexingService extends AbstractIndexShardComponent {
                 }
             }
             return new IndexingStats.Stats(
-                    indexMetric.count(), TimeUnit.NANOSECONDS.toMillis(indexMetric.sum()), indexCurrent.count(), indexFailed.count(),
+                    indexMetric.count(), TimeUnit.NANOSECONDS.toMillis(indexMetric.sum()), indexCurrent.count(),
                     deleteMetric.count(), TimeUnit.NANOSECONDS.toMillis(deleteMetric.sum()), deleteCurrent.count(),
                     noopUpdates.count(), isThrottled, TimeUnit.MILLISECONDS.toMillis(throttleTimeMillisMetric.count() + TimeValue.nsecToMSec(currentThrottleNS)));
         }

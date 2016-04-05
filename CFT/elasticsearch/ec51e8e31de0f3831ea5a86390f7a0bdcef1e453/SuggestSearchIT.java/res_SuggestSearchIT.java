@@ -19,11 +19,7 @@
 
 package org.elasticsearch.search.suggest;
 
-<<<<<<< HEAD
-=======
-import com.google.common.io.Resources;
 
->>>>>>> tempbranch
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.index.IndexRequestBuilder;
@@ -46,20 +42,10 @@ import org.elasticsearch.test.hamcrest.ElasticsearchAssertions;
 import org.junit.Test;
 
 import java.io.IOException;
-<<<<<<< HEAD
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
-=======
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
->>>>>>> tempbranch
 import java.util.concurrent.ExecutionException;
 
 import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_NUMBER_OF_REPLICAS;
@@ -189,7 +175,7 @@ public class SuggestSearchIT extends ESIntegTestCase {
                 .put("index.analysis.filter.shingler.type", "shingle")
                 .put("index.analysis.filter.shingler.min_shingle_size", 2)
                 .put("index.analysis.filter.shingler.max_shingle_size", 3));
-
+        
         XContentBuilder mapping = XContentFactory.jsonBuilder().startObject().startObject("type1")
                 .startObject("properties")
                 .startObject("name")
@@ -209,7 +195,7 @@ public class SuggestSearchIT extends ESIntegTestCase {
                 .endObject().endObject();
         assertAcked(builder.addMapping("type1", mapping));
         ensureGreen();
-
+        
 
         index("test", "type1", "1", "name", "I like iced tea");
         index("test", "type1", "2", "name", "I like tea.");
@@ -227,7 +213,7 @@ public class SuggestSearchIT extends ESIntegTestCase {
         searchSuggest = searchSuggest( "ice tea", phraseSuggestion);
         assertSuggestionSize(searchSuggest, 0, 0, "did_you_mean");
     }
-
+    
     @Test // see #2729
     public void testSizeOneShard() throws Exception {
         prepareCreate("test").setSettings(
@@ -242,7 +228,7 @@ public class SuggestSearchIT extends ESIntegTestCase {
 
         SearchResponse search = client().prepareSearch().setQuery(matchQuery("text", "spellchecker")).get();
         assertThat("didn't ask for suggestions but got some", search.getSuggest(), nullValue());
-
+        
         TermSuggestionBuilder termSuggestion = termSuggestion("test")
                 .suggestMode("always") // Always, otherwise the results can vary between requests.
                 .text("abcd")
@@ -255,7 +241,7 @@ public class SuggestSearchIT extends ESIntegTestCase {
         suggest = searchSuggest( termSuggestion);
         assertSuggestion(suggest, 0, "test", 5, "abc0");
     }
-
+    
     @Test
     public void testUnmappedField() throws IOException, InterruptedException, ExecutionException {
         CreateIndexRequestBuilder builder = prepareCreate("test").setSettings(settingsBuilder()
@@ -319,10 +305,10 @@ public class SuggestSearchIT extends ESIntegTestCase {
         index("test", "type1", "3", "text", "abbd");
         index("test", "type1", "4", "text", "abcc");
         refresh();
-
+        
         SearchResponse search = client().prepareSearch().setQuery(matchQuery("text", "spellcecker")).get();
         assertThat("didn't ask for suggestions but got some", search.getSuggest(), nullValue());
-
+        
         TermSuggestionBuilder termSuggest = termSuggestion("test")
                 .suggestMode("always") // Always, otherwise the results can vary between requests.
                 .text("abcd")
@@ -434,7 +420,7 @@ public class SuggestSearchIT extends ESIntegTestCase {
         // assertThat(suggest.get(3).getSuggestedWords().get("prefix_abcd").get(4).getTerm(), equalTo("prefix_abcc"));
         // assertThat(suggest.get(3).getSuggestedWords().get("prefix_abcd").get(4).getTerm(), equalTo("prefix_accd"));
     }
-
+    
     @Test // see #2817
     public void testStopwordsOnlyPhraseSuggest() throws IOException {
         assertAcked(prepareCreate("test").addMapping("typ1", "body", "type=string,analyzer=stopwd").setSettings(
@@ -452,7 +438,7 @@ public class SuggestSearchIT extends ESIntegTestCase {
                         .size(1));
         assertSuggestionSize(searchSuggest, 0, 0, "simple_phrase");
     }
-
+    
     @Test
     public void testPrefixLength() throws IOException {  // Stopped here
         CreateIndexRequestBuilder builder = prepareCreate("test").setSettings(settingsBuilder()
@@ -488,14 +474,14 @@ public class SuggestSearchIT extends ESIntegTestCase {
                         .addCandidateGenerator(PhraseSuggestionBuilder.candidateGenerator("body").prefixLength(4).minWordLength(1).suggestMode("always"))
                         .size(1).confidence(1.0f));
         assertSuggestion(searchSuggest, 0, "simple_phrase", "hello words");
-
+        
         searchSuggest = searchSuggest( "hello word",
                 phraseSuggestion("simple_phrase").field("body")
                         .addCandidateGenerator(PhraseSuggestionBuilder.candidateGenerator("body").prefixLength(2).minWordLength(1).suggestMode("always"))
                         .size(1).confidence(1.0f));
         assertSuggestion(searchSuggest, 0, "simple_phrase", "hello world");
     }
-
+    
     @Test
     @Nightly
     public void testMarvelHerosPhraseSuggest() throws IOException, URISyntaxException {
@@ -600,7 +586,7 @@ public class SuggestSearchIT extends ESIntegTestCase {
 
         searchSuggest = searchSuggest( "american ame", phraseSuggest);
         assertSuggestion(searchSuggest, 0, "simple_phrase", "american ace");
-
+        
         // try all smoothing methods
         phraseSuggest.smoothingModel(new PhraseSuggestionBuilder.LinearInterpolation(0.4,0.4,0.2));
         searchSuggest = searchSuggest( "Xor the Got-Jewel", phraseSuggest);
@@ -625,14 +611,11 @@ public class SuggestSearchIT extends ESIntegTestCase {
         // Check the name this time because we're repeating it which is funky
         assertThat(searchSuggest.getSuggestion("simple_phrase").getEntries().get(0).getText().string(), equalTo("Xor the Got-Jewel Xor the Got-Jewel Xor the Got-Jewel"));
     }
-
-<<<<<<< HEAD
+    
     private List<String> readMarvelHeroNames() throws IOException, URISyntaxException {
         return Files.readAllLines(PathUtils.get(SuggestSearchIT.class.getResource("/config/names.txt").toURI()), StandardCharsets.UTF_8);
     }
 
-=======
->>>>>>> tempbranch
     @Test
     public void testSizePararm() throws IOException {
         CreateIndexRequestBuilder builder = prepareCreate("test").setSettings(settingsBuilder()
@@ -647,7 +630,7 @@ public class SuggestSearchIT extends ESIntegTestCase {
                 .put("index.analysis.filter.my_shingle.output_unigrams", false)
                 .put("index.analysis.filter.my_shingle.min_shingle_size", 2)
                 .put("index.analysis.filter.my_shingle.max_shingle_size", 2));
-
+        
         XContentBuilder mapping = XContentFactory.jsonBuilder()
                 .startObject()
                     .startObject("type1")
@@ -720,7 +703,7 @@ public class SuggestSearchIT extends ESIntegTestCase {
                 .put("index.analysis.filter.my_shingle2.output_unigrams", true)
                 .put("index.analysis.filter.my_shingle2.min_shingle_size", 2)
                 .put("index.analysis.filter.my_shingle2.max_shingle_size", 2));
-
+        
         XContentBuilder mapping = XContentFactory.jsonBuilder()
                     .startObject().startObject("type1")
                     .startObject("_all").field("store", "yes").field("termVector", "with_positions_offsets").endObject()

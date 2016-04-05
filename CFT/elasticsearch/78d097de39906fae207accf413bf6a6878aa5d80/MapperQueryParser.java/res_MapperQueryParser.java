@@ -87,11 +87,7 @@ public class MapperQueryParser extends QueryParser {
 
     public MapperQueryParser(QueryShardContext context) {
         super(null, null);
-<<<<<<< HEAD
-        this.parseContext = parseContext;
-=======
         this.context = context;
->>>>>>> tempbranch
     }
 
     public void reset(QueryParserSettings settings) {

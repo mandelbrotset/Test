@@ -178,10 +178,8 @@ public class ShardIndexingService extends AbstractIndexShardComponent {
     public void postIndex(Engine.Index index, Throwable ex) {
         totalStats.indexCurrent.dec();
         typeStats(index.type()).indexCurrent.dec();
-<<<<<<< HEAD
         totalStats.indexFailed.inc();
         typeStats(index.type()).indexFailed.inc();
-=======
         for (IndexingOperationListener listener : listeners) {
             try {
                 listener.postIndex(index, ex);
@@ -189,7 +187,6 @@ public class ShardIndexingService extends AbstractIndexShardComponent {
                 logger.warn("postIndex listener [{}] failed", t, listener);
             }
         }
->>>>>>> tempbranch
     }
 
     public Engine.Delete preDelete(Engine.Delete delete) {

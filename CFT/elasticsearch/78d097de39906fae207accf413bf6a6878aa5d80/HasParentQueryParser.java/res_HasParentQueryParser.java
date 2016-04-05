@@ -141,30 +141,18 @@ public class HasParentQueryParser extends BaseQueryParserTemp {
         return query;
     }
 
-<<<<<<< HEAD
-    static Query createParentQuery(Query innerQuery, String parentType, boolean score, QueryParseContext parseContext, InnerHitsSubSearchContext innerHits) throws IOException {
-        DocumentMapper parentDocMapper = parseContext.mapperService().documentMapper(parentType);
-=======
-    static Query createParentQuery(Query innerQuery, String parentType, boolean score, QueryShardContext context, Tuple<String, SubSearchContext> innerHits) throws IOException {
+    static Query createParentQuery(Query innerQuery, String parentType, boolean score, QueryShardContext context, InnerHitsSubSearchContext innerHits) throws IOException {
         DocumentMapper parentDocMapper = context.mapperService().documentMapper(parentType);
->>>>>>> tempbranch
         if (parentDocMapper == null) {
             throw new QueryParsingException(context.parseContext(), "[has_parent] query configured 'parent_type' [" + parentType
                     + "] is not a valid type");
         }
 
         if (innerHits != null) {
-<<<<<<< HEAD
-            ParsedQuery parsedQuery = new ParsedQuery(innerQuery, parseContext.copyNamedQueries());
-            InnerHitsContext.ParentChildInnerHits parentChildInnerHits = new InnerHitsContext.ParentChildInnerHits(innerHits.getSubSearchContext(), parsedQuery, null, parseContext.mapperService(), parentDocMapper);
-            String name = innerHits.getName() != null ? innerHits.getName() : parentType;
-            parseContext.addInnerHits(name, parentChildInnerHits);
-=======
             ParsedQuery parsedQuery = new ParsedQuery(innerQuery, context.copyNamedQueries());
-            InnerHitsContext.ParentChildInnerHits parentChildInnerHits = new InnerHitsContext.ParentChildInnerHits(innerHits.v2(), parsedQuery, null, context.mapperService(), parentDocMapper);
-            String name = innerHits.v1() != null ? innerHits.v1() : parentType;
+            InnerHitsContext.ParentChildInnerHits parentChildInnerHits = new InnerHitsContext.ParentChildInnerHits(innerHits.getSubSearchContext(), parsedQuery, null, context.mapperService(), parentDocMapper);
+            String name = innerHits.getName() != null ? innerHits.getName() : parentType;
             context.addInnerHits(name, parentChildInnerHits);
->>>>>>> tempbranch
         }
 
         Set<String> parentTypes = new HashSet<>(5);

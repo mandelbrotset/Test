@@ -75,7 +75,6 @@ import org.elasticsearch.indices.ttl.IndicesTTLService;
 import org.elasticsearch.monitor.MonitorService;
 import org.elasticsearch.monitor.jvm.JvmInfo;
 import org.elasticsearch.node.internal.InternalSettingsPreparer;
-import org.elasticsearch.node.service.NodeService;
 import org.elasticsearch.percolator.PercolatorModule;
 import org.elasticsearch.percolator.PercolatorService;
 import org.elasticsearch.plugins.Plugin;
@@ -189,13 +188,8 @@ public class Node implements Releasable {
             modules.add(new DiscoveryModule(this.settings));
             modules.add(new ClusterModule(this.settings));
             modules.add(new IndicesModule());
-<<<<<<< HEAD
             modules.add(new SearchModule(settings, namedWriteableRegistry));
             modules.add(new ActionModule(false));
-=======
-            modules.add(new SearchModule());
-            modules.add(new ActionModule(this.settings, false));
->>>>>>> tempbranch
             modules.add(new GatewayModule(settings));
             modules.add(new NodeClientModule());
             modules.add(new PercolatorModule());
@@ -235,13 +229,6 @@ public class Node implements Releasable {
      */
     public Client client() {
         return client;
-    }
-
-    /**
-     * Returns the environment of the node
-     */
-    public Environment getEnvironment() {
-        return environment;
     }
 
     /**
@@ -359,12 +346,6 @@ public class Node implements Releasable {
         StopWatch stopWatch = new StopWatch("node_close");
         stopWatch.start("tribe");
         injector.getInstance(TribeService.class).close();
-        stopWatch.stop().start("ingest_service");
-        try {
-            injector.getInstance(NodeService.class).getIngestService().close();
-        } catch (IOException e) {
-            logger.warn("IngestService close failed", e);
-        }
         stopWatch.stop().start("http");
         if (settings.getAsBoolean("http.enabled", true)) {
             injector.getInstance(HttpServer.class).close();

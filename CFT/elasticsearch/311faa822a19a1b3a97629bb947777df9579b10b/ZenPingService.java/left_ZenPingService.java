@@ -19,17 +19,21 @@
 
 package org.elasticsearch.discovery.zen.ping;
 
-<<<<<<< HEAD
-=======
 import org.elasticsearch.Version;
 import org.elasticsearch.cluster.ClusterName;
 import org.elasticsearch.common.Nullable;
->>>>>>> tempbranch
 import org.elasticsearch.common.component.AbstractLifecycleComponent;
 import org.elasticsearch.common.inject.Inject;
+import org.elasticsearch.common.network.NetworkService;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.util.concurrent.EsRejectedExecutionException;
+import org.elasticsearch.discovery.zen.elect.ElectMasterService;
+import org.elasticsearch.discovery.zen.ping.multicast.MulticastZenPing;
+import org.elasticsearch.discovery.zen.ping.unicast.UnicastHostsProvider;
+import org.elasticsearch.discovery.zen.ping.unicast.UnicastZenPing;
+import org.elasticsearch.threadpool.ThreadPool;
+import org.elasticsearch.transport.TransportService;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,23 +43,17 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ *
+ */
 public class ZenPingService extends AbstractLifecycleComponent<ZenPing> implements ZenPing {
 
-<<<<<<< HEAD
-    private List<ZenPing> zenPings = Collections.emptyList();
-=======
     private volatile List<? extends ZenPing> zenPings = Collections.emptyList();
->>>>>>> tempbranch
 
     @Inject
-    public ZenPingService(Settings settings, Set<ZenPing> zenPings) {
+    public ZenPingService(Settings settings, ThreadPool threadPool, TransportService transportService, ClusterName clusterName, NetworkService networkService,
+                          Version version, ElectMasterService electMasterService, @Nullable Set<UnicastHostsProvider> unicastHostsProviders) {
         super(settings);
-<<<<<<< HEAD
-        this.zenPings = Collections.unmodifiableList(new ArrayList<>(zenPings));
-    }
-
-    public List<ZenPing> zenPings() {
-=======
         List<ZenPing> zenPingsBuilder = new ArrayList<>();
         if (this.settings.getAsBoolean("discovery.zen.ping.multicast.enabled", true)) {
             zenPingsBuilder.add(new MulticastZenPing(settings, threadPool, transportService, clusterName, networkService, version));
@@ -67,7 +65,6 @@ public class ZenPingService extends AbstractLifecycleComponent<ZenPing> implemen
     }
 
     public List<? extends ZenPing> zenPings() {
->>>>>>> tempbranch
         return this.zenPings;
     }
 

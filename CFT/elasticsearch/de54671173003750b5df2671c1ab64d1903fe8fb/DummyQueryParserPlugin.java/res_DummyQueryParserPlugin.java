@@ -25,16 +25,8 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Weight;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentParser;
-<<<<<<< HEAD
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryParseContext;
-import org.elasticsearch.index.query.QueryParser;
-import org.elasticsearch.index.query.QueryParsingException;
-import org.elasticsearch.indices.IndicesModule;
-=======
 import org.elasticsearch.index.query.*;
-import org.elasticsearch.indices.query.IndicesQueriesModule;
->>>>>>> tempbranch
+import org.elasticsearch.indices.IndicesModule;
 import org.elasticsearch.plugins.AbstractPlugin;
 
 import java.io.IOException;

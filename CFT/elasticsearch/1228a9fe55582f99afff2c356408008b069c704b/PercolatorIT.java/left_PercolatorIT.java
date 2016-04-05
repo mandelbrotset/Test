@@ -18,6 +18,7 @@
  */
 package org.elasticsearch.percolator;
 
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.ShardOperationFailedException;
 import org.elasticsearch.action.admin.cluster.node.stats.NodeStats;
 import org.elasticsearch.action.admin.cluster.node.stats.NodesStatsResponse;
@@ -41,11 +42,12 @@ import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.index.engine.VersionConflictEngineException;
 import org.elasticsearch.index.percolator.PercolatorException;
-import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.common.ParsingException;
+import org.elasticsearch.index.query.QueryShardException;
+import org.elasticsearch.index.query.support.QueryInnerHits;
+import org.elasticsearch.index.query.QueryParsingException;
 import org.elasticsearch.index.query.functionscore.weight.WeightBuilder;
-import org.elasticsearch.index.query.support.QueryInnerHitBuilder;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.search.highlight.HighlightBuilder;
@@ -1737,7 +1739,7 @@ public class PercolatorIT extends ESIntegTestCase {
                     .get();
             fail();
         } catch (PercolatorException e) {
-            assertThat(e.getRootCause(), instanceOf(ParsingException.class));
+            assertThat(e.getRootCause(), instanceOf(QueryShardException.class));
         }
 
         try {
@@ -1746,7 +1748,7 @@ public class PercolatorIT extends ESIntegTestCase {
                     .get();
             fail();
         } catch (PercolatorException e) {
-            assertThat(e.getRootCause(), instanceOf(ParsingException.class));
+            assertThat(e.getRootCause(), instanceOf(QueryShardException.class));
         }
     }
 
@@ -1785,7 +1787,7 @@ public class PercolatorIT extends ESIntegTestCase {
         ensureGreen("nestedindex");
 
         client().prepareIndex("nestedindex", PercolatorService.TYPE_NAME, "Q").setSource(jsonBuilder().startObject()
-                .field("query", QueryBuilders.nestedQuery("employee", QueryBuilders.matchQuery("employee.name", "virginia potts").operator(MatchQueryBuilder.Operator.AND)).scoreMode("avg")).endObject()).get();
+                .field("query", QueryBuilders.nestedQuery("employee", QueryBuilders.matchQuery("employee.name", "virginia potts").operator(Operator.AND)).scoreMode(ScoreMode.Avg)).endObject()).get();
 
         refresh();
 
@@ -1985,11 +1987,11 @@ public class PercolatorIT extends ESIntegTestCase {
         assertAcked(prepareCreate("index").addMapping("mapping", mapping));
         try {
             client().prepareIndex("index", PercolatorService.TYPE_NAME, "1")
-                    .setSource(jsonBuilder().startObject().field("query", nestedQuery("nested", matchQuery("nested.name", "value")).innerHit(new QueryInnerHitBuilder())).endObject())
+                    .setSource(jsonBuilder().startObject().field("query", nestedQuery("nested", matchQuery("nested.name", "value")).innerHit(new QueryInnerHits())).endObject())
                     .execute().actionGet();
             fail("Expected a parse error, because inner_hits isn't supported in the percolate api");
         } catch (Exception e) {
-            assertThat(e.getCause(), instanceOf(ParsingException.class));
+            assertThat(e.getCause(), instanceOf(QueryShardException.class));
             assertThat(e.getCause().getMessage(), containsString("inner_hits unsupported"));
         }
     }

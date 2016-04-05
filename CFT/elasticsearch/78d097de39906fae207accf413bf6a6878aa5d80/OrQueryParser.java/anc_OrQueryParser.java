@@ -19,18 +19,24 @@
 
 package org.elasticsearch.index.query;
 
+import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Query;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.xcontent.XContentParser;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
+import static com.google.common.collect.Lists.newArrayList;
+
 /**
- * Parser for or query
- * @deprecated use bool query instead
+ *
  */
 @Deprecated
-public class OrQueryParser extends BaseQueryParser<OrQueryBuilder> {
+public class OrQueryParser implements QueryParser {
+
+    public static final String NAME = "or";
 
     @Inject
     public OrQueryParser() {
@@ -38,28 +44,23 @@ public class OrQueryParser extends BaseQueryParser<OrQueryBuilder> {
 
     @Override
     public String[] names() {
-        return new String[]{OrQueryBuilder.NAME};
+        return new String[]{NAME};
     }
 
     @Override
-    public OrQueryBuilder fromXContent(QueryParseContext parseContext) throws IOException, QueryParsingException {
+    public Query parse(QueryParseContext parseContext) throws IOException, QueryParsingException {
         XContentParser parser = parseContext.parser();
 
-<<<<<<< HEAD
-        ArrayList<Query> queries = new ArrayList<>();
-=======
-        final ArrayList<QueryBuilder> queries = newArrayList();
->>>>>>> tempbranch
+        ArrayList<Query> queries = newArrayList();
         boolean queriesFound = false;
 
-        float boost = AbstractQueryBuilder.DEFAULT_BOOST;
         String queryName = null;
         String currentFieldName = null;
         XContentParser.Token token = parser.currentToken();
         if (token == XContentParser.Token.START_ARRAY) {
             while ((token = parser.nextToken()) != XContentParser.Token.END_ARRAY) {
                 queriesFound = true;
-                QueryBuilder filter = parseContext.parseInnerFilterToQueryBuilder();
+                Query filter = parseContext.parseInnerFilter();
                 if (filter != null) {
                     queries.add(filter);
                 }
@@ -72,7 +73,15 @@ public class OrQueryParser extends BaseQueryParser<OrQueryBuilder> {
                     if ("filters".equals(currentFieldName)) {
                         queriesFound = true;
                         while ((token = parser.nextToken()) != XContentParser.Token.END_ARRAY) {
-                            QueryBuilder filter = parseContext.parseInnerFilterToQueryBuilder();
+                            Query filter = parseContext.parseInnerFilter();
+                            if (filter != null) {
+                                queries.add(filter);
+                            }
+                        }
+                    } else {
+                        while ((token = parser.nextToken()) != XContentParser.Token.END_ARRAY) {
+                            queriesFound = true;
+                            Query filter = parseContext.parseInnerFilter();
                             if (filter != null) {
                                 queries.add(filter);
                             }
@@ -81,8 +90,6 @@ public class OrQueryParser extends BaseQueryParser<OrQueryBuilder> {
                 } else if (token.isValue()) {
                     if ("_name".equals(currentFieldName)) {
                         queryName = parser.text();
-                    } else if ("boost".equals(currentFieldName)) {
-                        boost = parser.floatValue();
                     } else {
                         throw new QueryParsingException(parseContext, "[or] query does not support [" + currentFieldName + "]");
                     }
@@ -94,17 +101,17 @@ public class OrQueryParser extends BaseQueryParser<OrQueryBuilder> {
             throw new QueryParsingException(parseContext, "[or] query requires 'filters' to be set on it'");
         }
 
-        OrQueryBuilder orQuery = new OrQueryBuilder();
-        for (QueryBuilder query : queries) {
-            orQuery.add(query);
+        if (queries.isEmpty()) {
+            return null;
         }
-        orQuery.queryName(queryName);
-        orQuery.boost(boost);
-        return orQuery;
-    }
 
-    @Override
-    public OrQueryBuilder getBuilderPrototype() {
-        return OrQueryBuilder.PROTOTYPE;
+        BooleanQuery query = new BooleanQuery();
+        for (Query f : queries) {
+            query.add(f, Occur.SHOULD);
+        }
+        if (queryName != null) {
+            parseContext.addNamedQuery(queryName, query);
+        }
+        return query;
     }
 }

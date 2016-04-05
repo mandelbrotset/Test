@@ -20,13 +20,13 @@
 package org.elasticsearch.index.translog;
 
 import org.elasticsearch.common.Nullable;
-import org.elasticsearch.common.unit.ByteSizeUnit;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.util.BigArrays;
 import org.elasticsearch.index.IndexSettings;
 import org.elasticsearch.index.shard.ShardId;
 import org.elasticsearch.index.translog.Translog.TranslogGeneration;
+import org.elasticsearch.indices.memory.IndexingMemoryController;
 import org.elasticsearch.threadpool.ThreadPool;
 
 import java.nio.file.Path;
@@ -38,10 +38,6 @@ import java.nio.file.Path;
  */
 public final class TranslogConfig {
 
-<<<<<<< HEAD
-    public static final ByteSizeValue DEFAULT_BUFFER_SIZE = new ByteSizeValue(8, ByteSizeUnit.KB);
-    private final BigArrays bigArrays;
-=======
     public static final String INDEX_TRANSLOG_DURABILITY = "index.translog.durability";
     public static final String INDEX_TRANSLOG_FS_TYPE = "index.translog.fs.type";
     public static final String INDEX_TRANSLOG_SYNC_INTERVAL = "index.translog.sync_interval";
@@ -51,32 +47,29 @@ public final class TranslogConfig {
     private final ThreadPool threadPool;
     private final boolean syncOnEachOperation;
     private final int bufferSizeBytes;
->>>>>>> tempbranch
     private volatile TranslogGeneration translogGeneration;
+    private volatile Translog.Durabilty durabilty = Translog.Durabilty.REQUEST;
+    private volatile TranslogWriter.Type type;
     private final IndexSettings indexSettings;
     private final ShardId shardId;
     private final Path translogPath;
-    private final ByteSizeValue bufferSize;
 
     /**
      * Creates a new TranslogConfig instance
      * @param shardId the shard ID this translog belongs to
      * @param translogPath the path to use for the transaction log files
      * @param indexSettings the index settings used to set internal variables
+     * @param durabilty the default durability setting for the translog
      * @param bigArrays a bigArrays instance used for temporarily allocating write operations
+     * @param threadPool a {@link ThreadPool} to schedule async sync durability
      */
-    public TranslogConfig(ShardId shardId, Path translogPath, IndexSettings indexSettings, BigArrays bigArrays) {
-        this(shardId, translogPath, indexSettings, bigArrays, DEFAULT_BUFFER_SIZE);
-    }
-
-    TranslogConfig(ShardId shardId, Path translogPath, IndexSettings indexSettings, BigArrays bigArrays, ByteSizeValue bufferSize) {
-        this.bufferSize = bufferSize;
+    public TranslogConfig(ShardId shardId, Path translogPath, IndexSettings indexSettings, Translog.Durabilty durabilty, BigArrays bigArrays, @Nullable ThreadPool threadPool) {
         this.indexSettings = indexSettings;
         this.shardId = shardId;
         this.translogPath = translogPath;
+        this.durabilty = durabilty;
+        this.threadPool = threadPool;
         this.bigArrays = bigArrays;
-<<<<<<< HEAD
-=======
         this.type = TranslogWriter.Type.fromString(indexSettings.getSettings().get(INDEX_TRANSLOG_FS_TYPE, TranslogWriter.Type.BUFFERED.name()));
         this.bufferSizeBytes = (int) IndexingMemoryController.SHARD_TRANSLOG_BUFFER.bytes();
 
@@ -123,16 +116,12 @@ public final class TranslogConfig {
      */
     public void setType(TranslogWriter.Type type) {
         this.type = type;
->>>>>>> tempbranch
     }
 
     /**
      * Returns <code>true</code> iff each low level operation shoudl be fsynced
      */
     public boolean isSyncOnEachOperation() {
-<<<<<<< HEAD
-        return indexSettings.getTranslogSyncInterval().millis() == 0;
-=======
         return syncOnEachOperation;
     }
 
@@ -148,7 +137,6 @@ public final class TranslogConfig {
      */
     public TimeValue getSyncInterval() {
         return syncInterval;
->>>>>>> tempbranch
     }
 
     /**
@@ -195,12 +183,5 @@ public final class TranslogConfig {
      */
     public void setTranslogGeneration(TranslogGeneration translogGeneration) {
         this.translogGeneration = translogGeneration;
-    }
-
-    /**
-     * The translog buffer size. Default is <tt>8kb</tt>
-     */
-    public ByteSizeValue getBufferSize() {
-        return bufferSize;
     }
 }

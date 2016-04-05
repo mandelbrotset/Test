@@ -304,29 +304,16 @@ public class ScriptServiceTests extends ESTestCase {
                 for (String lang : scriptEngineService.getTypes()) {
                     switch (scriptMode) {
                         case ON:
-<<<<<<< HEAD
-                            assertCompileAccepted(lang, script, scriptType, scriptContext, contextAndHeaders);
+                            assertCompileAccepted(lang, script, scriptType, scriptContext);
                             break;
                         case OFF:
-                            assertCompileRejected(lang, script, scriptType, scriptContext, contextAndHeaders);
+                            assertCompileRejected(lang, script, scriptType, scriptContext);
                             break;
                         case SANDBOX:
                             if (scriptEngineService.isSandboxed()) {
-                                assertCompileAccepted(lang, script, scriptType, scriptContext, contextAndHeaders);
+                                assertCompileAccepted(lang, script, scriptType, scriptContext);
                             } else {
-                                assertCompileRejected(lang, script, scriptType, scriptContext, contextAndHeaders);
-=======
-                        assertCompileAccepted(lang, script, scriptType, scriptContext);
-                            break;
-                        case OFF:
-                        assertCompileRejected(lang, script, scriptType, scriptContext);
-                            break;
-                        case SANDBOX:
-                            if (scriptEngineService.sandboxed()) {
-                            assertCompileAccepted(lang, script, scriptType, scriptContext);
-                            } else {
-                            assertCompileRejected(lang, script, scriptType, scriptContext);
->>>>>>> tempbranch
+                                assertCompileRejected(lang, script, scriptType, scriptContext);
                             }
                             break;
                     }
@@ -416,12 +403,11 @@ public class ScriptServiceTests extends ESTestCase {
     }
 
     public void testDefaultLanguage() throws IOException {
-        ContextAndHeaderHolder contextAndHeaderHolder = new ContextAndHeaderHolder();
         Settings.Builder builder = Settings.builder();
         builder.put("script.default_lang", "test");
         buildScriptService(builder.build());
         CompiledScript script =
-            scriptService.compile(new Script("1 + 1", ScriptType.INLINE, null, null), randomFrom(scriptContexts), contextAndHeaderHolder, Collections.emptyMap());
+            scriptService.compile(new Script("1 + 1", ScriptType.INLINE, null, null), randomFrom(scriptContexts), Collections.emptyMap());
         assertEquals(script.lang(), "test");
     }
 
@@ -442,13 +428,8 @@ public class ScriptServiceTests extends ESTestCase {
         }
     }
 
-<<<<<<< HEAD
-    private void assertCompileAccepted(String lang, String script, ScriptType scriptType, ScriptContext scriptContext, HasContextAndHeaders contextAndHeaders) {
-        assertThat(scriptService.compile(new Script(script, scriptType, lang, null), scriptContext, contextAndHeaders, Collections.emptyMap()), notNullValue());
-=======
     private void assertCompileAccepted(String lang, String script, ScriptType scriptType, ScriptContext scriptContext) {
         assertThat(scriptService.compile(new Script(script, scriptType, lang, null), scriptContext, Collections.emptyMap()), notNullValue());
->>>>>>> tempbranch
     }
 
     public static class TestEngineService implements ScriptEngineService {

@@ -70,7 +70,7 @@ public class GeoShapeQueryBuilder extends AbstractQueryBuilder<GeoShapeQueryBuil
     // and Equals so ShapeBuilder can be used here
     private BytesReference shapeBytes;
 
-    private SpatialStrategy strategy;
+    private SpatialStrategy strategy = null;
 
     private final String indexedShapeId;
     private final String indexedShapeType;
@@ -429,9 +429,7 @@ public class GeoShapeQueryBuilder extends AbstractQueryBuilder<GeoShapeQueryBuil
             }
         }
         builder.relation = ShapeRelation.DISJOINT.readFrom(in);
-        if (in.readBoolean()) {
-            builder.strategy = SpatialStrategy.RECURSIVE.readFrom(in);
-        }
+        builder.strategy = SpatialStrategy.RECURSIVE.readFrom(in);
         return builder;
     }
 
@@ -449,18 +447,7 @@ public class GeoShapeQueryBuilder extends AbstractQueryBuilder<GeoShapeQueryBuil
             out.writeOptionalString(indexedShapePath);
         }
         relation.writeTo(out);
-<<<<<<< HEAD
-        if (strategy == null) {
-            out.writeBoolean(false);
-        } else {
-            out.writeBoolean(true);
-=======
-        boolean hasStrategy = strategy != null;
-        out.writeBoolean(hasStrategy);
-        if (hasStrategy) {
->>>>>>> tempbranch
-            strategy.writeTo(out);
-        }
+        strategy.writeTo(out);
     }
 
     @Override

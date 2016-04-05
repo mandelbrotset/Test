@@ -19,7 +19,6 @@
 
 package org.elasticsearch.index.query;
 
-<<<<<<< HEAD
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -37,14 +36,6 @@ import org.elasticsearch.script.ScriptParameterParser.ScriptParameterValue;
 import org.elasticsearch.script.ScriptService;
 import org.elasticsearch.script.SearchScript;
 import org.elasticsearch.search.lookup.SearchLookup;
-=======
-import org.elasticsearch.common.inject.Inject;
-import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.script.Script;
-import org.elasticsearch.script.Script.ScriptField;
-import org.elasticsearch.script.ScriptParameterParser;
-import org.elasticsearch.script.ScriptParameterParser.ScriptParameterValue;
->>>>>>> tempbranch
 
 import java.io.IOException;
 import java.util.Map;
@@ -53,9 +44,11 @@ import java.util.Objects;
 import static com.google.common.collect.Maps.newHashMap;
 
 /**
- * Parser for script query
+ *
  */
-public class ScriptQueryParser extends BaseQueryParser<ScriptQueryBuilder> {
+public class ScriptQueryParser implements QueryParser {
+
+    public static final String NAME = "script";
 
     @Inject
     public ScriptQueryParser() {
@@ -63,23 +56,23 @@ public class ScriptQueryParser extends BaseQueryParser<ScriptQueryBuilder> {
 
     @Override
     public String[] names() {
-        return new String[]{ScriptQueryBuilder.NAME};
+        return new String[] { NAME };
     }
 
     @Override
-    public ScriptQueryBuilder fromXContent(QueryParseContext parseContext) throws IOException, QueryParsingException {
+    public Query parse(QueryParseContext parseContext) throws IOException, QueryParsingException {
         XContentParser parser = parseContext.parser();
         ScriptParameterParser scriptParameterParser = new ScriptParameterParser();
-        
+
+        XContentParser.Token token;
+
         // also, when caching, since its isCacheable is false, will result in loading all bit set...
         Script script = null;
         Map<String, Object> params = null;
 
-        float boost = AbstractQueryBuilder.DEFAULT_BOOST;
         String queryName = null;
-
-        XContentParser.Token token;
         String currentFieldName = null;
+
         while ((token = parser.nextToken()) != XContentParser.Token.END_OBJECT) {
             if (token == XContentParser.Token.FIELD_NAME) {
                 currentFieldName = parser.currentName();
@@ -96,8 +89,6 @@ public class ScriptQueryParser extends BaseQueryParser<ScriptQueryBuilder> {
             } else if (token.isValue()) {
                 if ("_name".equals(currentFieldName)) {
                     queryName = parser.text();
-                } else if ("boost".equals(currentFieldName)) {
-                    boost = parser.floatValue();
                 } else if (!scriptParameterParser.token(currentFieldName, token, parser, parseContext.parseFieldMatcher())) {
                     throw new QueryParsingException(parseContext, "[script] query does not support [" + currentFieldName + "]");
                 }
@@ -120,12 +111,13 @@ public class ScriptQueryParser extends BaseQueryParser<ScriptQueryBuilder> {
             throw new QueryParsingException(parseContext, "script must be provided with a [script] filter");
         }
 
-        return new ScriptQueryBuilder(script)
-                .boost(boost)
-                .queryName(queryName);
+        Query query = new ScriptQuery(script, parseContext.scriptService(), parseContext.lookup());
+        if (queryName != null) {
+            parseContext.addNamedQuery(queryName, query);
+        }
+        return query;
     }
 
-<<<<<<< HEAD
     static class ScriptQuery extends Query {
 
         private final Script script;
@@ -197,10 +189,5 @@ public class ScriptQueryParser extends BaseQueryParser<ScriptQueryBuilder> {
                 }
             };
         }
-=======
-    @Override
-    public ScriptQueryBuilder getBuilderPrototype() {
-        return ScriptQueryBuilder.PROTOTYPE;
->>>>>>> tempbranch
     }
 }

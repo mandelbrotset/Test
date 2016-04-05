@@ -89,11 +89,7 @@ public class RandomScoreFunctionParser implements ScoreFunctionParser {
         }
 
         if (seed == -1) {
-<<<<<<< HEAD
-            seed = hash(parseContext.nowInMillis());
-=======
-            seed = Longs.hashCode(context.nowInMillis());
->>>>>>> tempbranch
+            seed = hash(context.nowInMillis());
         }
         final ShardId shardId = SearchContext.current().indexShard().shardId();
         final int salt = (shardId.index().name().hashCode() << 10) | shardId.id();

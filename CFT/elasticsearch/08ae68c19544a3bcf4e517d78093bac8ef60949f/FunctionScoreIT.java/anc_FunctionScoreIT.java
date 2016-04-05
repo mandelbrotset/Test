@@ -25,11 +25,8 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.geo.GeoPoint;
-import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.common.lucene.search.function.FieldValueFactorFunction;
-import org.elasticsearch.common.lucene.search.function.FiltersFunctionScoreQuery;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.index.query.MatchAllQueryBuilder;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilder;
 import org.elasticsearch.index.query.functionscore.weight.WeightBuilder;
@@ -93,25 +90,21 @@ public class FunctionScoreIT extends ESIntegTestCase {
         SearchResponse response = client().search(
                 searchRequest().searchType(SearchType.QUERY_THEN_FETCH).source(
                         searchSource().explain(true).query(
-                                functionScoreQuery(termQuery("test", "value"), new FunctionScoreQueryBuilder.FilterFunctionBuilder[]{
-                                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(gaussDecayFunction("num", 5, 5)),
-                                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(exponentialDecayFunction("num", 5, 5)),
-                                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(linearDecayFunction("num", 5, 5))
-                                })))).get();
+                                functionScoreQuery(termQuery("test", "value")).add(gaussDecayFunction("num", 5, 5)).add(exponentialDecayFunction("num", 5, 5)).add(linearDecayFunction("num", 5, 5))))).get();
         String explanation = response.getHits().getAt(0).explanation().toString();
 
         checkQueryExplanationAppearsOnlyOnce(explanation);
         response = client().search(
                 searchRequest().searchType(SearchType.QUERY_THEN_FETCH).source(
                         searchSource().explain(true).query(
-                                functionScoreQuery(termQuery("test", "value"), fieldValueFactorFunction("num"))))).get();
+                                functionScoreQuery(termQuery("test", "value")).add(fieldValueFactorFunction("num"))))).get();
         explanation = response.getHits().getAt(0).explanation().toString();
         checkQueryExplanationAppearsOnlyOnce(explanation);
 
         response = client().search(
                 searchRequest().searchType(SearchType.QUERY_THEN_FETCH).source(
                         searchSource().explain(true).query(
-                                functionScoreQuery(termQuery("test", "value"), randomFunction(10))))).get();
+                                functionScoreQuery(termQuery("test", "value")).add(randomFunction(10))))).get();
         explanation = response.getHits().getAt(0).explanation().toString();
 
         checkQueryExplanationAppearsOnlyOnce(explanation);
@@ -178,11 +171,11 @@ public class FunctionScoreIT extends ESIntegTestCase {
         SearchResponse responseWithWeights = client().search(
                 searchRequest().source(
                         searchSource().query(
-                                functionScoreQuery(constantScoreQuery(termQuery(TEXT_FIELD, "value")), new FunctionScoreQueryBuilder.FilterFunctionBuilder[]{
-                                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(gaussDecayFunction(GEO_POINT_FIELD, new GeoPoint(10, 20), "1000km")),
-                                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(fieldValueFactorFunction(DOUBLE_FIELD).modifier(FieldValueFactorFunction.Modifier.LN).setWeight(2)),
-                                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(scriptFunction(new Script("_index['" + TEXT_FIELD + "']['value'].tf()")).setWeight(3))
-                                })).explain(true))).actionGet();
+                                functionScoreQuery(constantScoreQuery(termQuery(TEXT_FIELD, "value")))
+                                        .add(gaussDecayFunction(GEO_POINT_FIELD, new GeoPoint(10, 20), "1000km"))
+                                        .add(fieldValueFactorFunction(DOUBLE_FIELD).modifier(FieldValueFactorFunction.Modifier.LN).setWeight(2))
+                                        .add(scriptFunction(new Script("_index['" + TEXT_FIELD + "']['value'].tf()")).setWeight(3)))
+                                .explain(true))).actionGet();
 
         assertThat(
                 responseWithWeights.getHits().getAt(0).getExplanation().toString(),
@@ -190,7 +183,7 @@ public class FunctionScoreIT extends ESIntegTestCase {
         responseWithWeights = client().search(
                 searchRequest().source(
                         searchSource().query(
-                                functionScoreQuery(constantScoreQuery(termQuery(TEXT_FIELD, "value")), weightFactorFunction(4.0f)))
+                                functionScoreQuery(constantScoreQuery(termQuery(TEXT_FIELD, "value"))).add(weightFactorFunction(4.0f)))
                                 .explain(true))).actionGet();
         assertThat(
                 responseWithWeights.getHits().getAt(0).getExplanation().toString(),
@@ -210,19 +203,19 @@ public class FunctionScoreIT extends ESIntegTestCase {
         SearchResponse response = client().search(
                 searchRequest().source(
                         searchSource().query(
-                                functionScoreQuery(constantScoreQuery(termQuery(TEXT_FIELD, "value")), new FunctionScoreQueryBuilder.FilterFunctionBuilder[]{
-                                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(gaussDecayFunction(GEO_POINT_FIELD, new GeoPoint(10, 20), "1000km")),
-                                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(fieldValueFactorFunction(DOUBLE_FIELD).modifier(FieldValueFactorFunction.Modifier.LN)),
-                                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(scriptFunction(new Script("_index['" + TEXT_FIELD + "']['value'].tf()")))
-                                })))).actionGet();
+                                functionScoreQuery(constantScoreQuery(termQuery(TEXT_FIELD, "value")))
+                                        .add(gaussDecayFunction(GEO_POINT_FIELD, new GeoPoint(10, 20), "1000km"))
+                                        .add(fieldValueFactorFunction(DOUBLE_FIELD).modifier(FieldValueFactorFunction.Modifier.LN))
+                                        .add(scriptFunction(new Script("_index['" + TEXT_FIELD + "']['value'].tf()")))))).actionGet();
         SearchResponse responseWithWeights = client().search(
                 searchRequest().source(
                         searchSource().query(
-                                functionScoreQuery(constantScoreQuery(termQuery(TEXT_FIELD, "value")), new FunctionScoreQueryBuilder.FilterFunctionBuilder[]{
-                                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(gaussDecayFunction(GEO_POINT_FIELD, new GeoPoint(10, 20), "1000km").setWeight(2)),
-                                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(fieldValueFactorFunction(DOUBLE_FIELD).modifier(FieldValueFactorFunction.Modifier.LN).setWeight(2)),
-                                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(scriptFunction(new Script("_index['" + TEXT_FIELD + "']['value'].tf()")).setWeight(2))
-                                })))).actionGet();
+                                functionScoreQuery(constantScoreQuery(termQuery(TEXT_FIELD, "value")))
+                                        .add(gaussDecayFunction(GEO_POINT_FIELD, new GeoPoint(10, 20), "1000km").setWeight(2))
+                                        .add(fieldValueFactorFunction(DOUBLE_FIELD).modifier(FieldValueFactorFunction.Modifier.LN)
+                                                .setWeight(2))
+                                        .add(scriptFunction(new Script("_index['" + TEXT_FIELD + "']['value'].tf()")).setWeight(2)))))
+                .actionGet();
 
         assertSearchResponse(response);
         assertThat(response.getHits().getAt(0).getScore(), is(1.0f));
@@ -242,16 +235,14 @@ public class FunctionScoreIT extends ESIntegTestCase {
         ScoreFunctionBuilder[] scoreFunctionBuilders = getScoreFunctionBuilders();
         float[] weights = createRandomWeights(scoreFunctionBuilders.length);
         float[] scores = getScores(scoreFunctionBuilders);
+
+        String scoreMode = getRandomScoreMode();
+        FunctionScoreQueryBuilder withWeights = functionScoreQuery(constantScoreQuery(termQuery(TEXT_FIELD, "value"))).scoreMode(scoreMode);
         int weightscounter = 0;
-        FunctionScoreQueryBuilder.FilterFunctionBuilder[] filterFunctionBuilders = new FunctionScoreQueryBuilder.FilterFunctionBuilder[scoreFunctionBuilders.length];
         for (ScoreFunctionBuilder builder : scoreFunctionBuilders) {
-            filterFunctionBuilders[weightscounter] = new FunctionScoreQueryBuilder.FilterFunctionBuilder(builder.setWeight(weights[weightscounter]));
+            withWeights.add(builder.setWeight(weights[weightscounter]));
             weightscounter++;
         }
-        FiltersFunctionScoreQuery.ScoreMode scoreMode = randomFrom(FiltersFunctionScoreQuery.ScoreMode.AVG, FiltersFunctionScoreQuery.ScoreMode.SUM,
-                FiltersFunctionScoreQuery.ScoreMode.MIN, FiltersFunctionScoreQuery.ScoreMode.MAX, FiltersFunctionScoreQuery.ScoreMode.MULTIPLY);
-        FunctionScoreQueryBuilder withWeights = functionScoreQuery(constantScoreQuery(termQuery(TEXT_FIELD, "value")), filterFunctionBuilders).scoreMode(scoreMode);
-
         SearchResponse responseWithWeights = client().search(
                 searchRequest().source(searchSource().query(withWeights))
         ).actionGet();
@@ -260,48 +251,38 @@ public class FunctionScoreIT extends ESIntegTestCase {
         assertThat((float) expectedScore / responseWithWeights.getHits().getAt(0).getScore(), is(1.0f));
     }
 
-    protected double computeExpectedScore(float[] weights, float[] scores, FiltersFunctionScoreQuery.ScoreMode scoreMode) {
-        double expectedScore;
-        switch(scoreMode) {
-            case MULTIPLY:
-                expectedScore = 1.0;
-                break;
-            case MAX:
-                expectedScore = Float.MAX_VALUE * -1.0;
-                break;
-            case MIN:
-                expectedScore = Float.MAX_VALUE;
-                break;
-            default:
-                expectedScore = 0.0;
-                break;
+    protected double computeExpectedScore(float[] weights, float[] scores, String scoreMode) {
+        double expectedScore = 0.0;
+        if ("multiply".equals(scoreMode)) {
+            expectedScore = 1.0;
+        }
+        if ("max".equals(scoreMode)) {
+            expectedScore = Float.MAX_VALUE * -1.0;
+        }
+        if ("min".equals(scoreMode)) {
+            expectedScore = Float.MAX_VALUE;
         }
 
         float weightSum = 0;
+
         for (int i = 0; i < weights.length; i++) {
             double functionScore = (double) weights[i] * scores[i];
             weightSum += weights[i];
-            switch(scoreMode) {
-                case AVG:
-                    expectedScore += functionScore;
-                    break;
-                case MAX:
-                    expectedScore = Math.max(functionScore, expectedScore);
-                    break;
-                case MIN:
-                    expectedScore = Math.min(functionScore, expectedScore);
-                    break;
-                case SUM:
-                    expectedScore += functionScore;
-                    break;
-                case MULTIPLY:
-                    expectedScore *= functionScore;
-                    break;
-                default:
-                    throw new UnsupportedOperationException();
+
+            if ("avg".equals(scoreMode)) {
+                expectedScore += functionScore;
+            } else if ("max".equals(scoreMode)) {
+                expectedScore = Math.max(functionScore, expectedScore);
+            } else if ("min".equals(scoreMode)) {
+                expectedScore = Math.min(functionScore, expectedScore);
+            } else if ("sum".equals(scoreMode)) {
+                expectedScore += functionScore;
+            } else if ("multiply".equals(scoreMode)) {
+                expectedScore *= functionScore;
             }
+
         }
-        if (scoreMode == FiltersFunctionScoreQuery.ScoreMode.AVG) {
+        if ("avg".equals(scoreMode)) {
             expectedScore /= weightSum;
         }
         return expectedScore;
@@ -328,7 +309,8 @@ public class FunctionScoreIT extends ESIntegTestCase {
         ScoreFunctionBuilder scoreFunctionBuilder = scoreFunctionBuilders[randomInt(3)];
         float[] weights = createRandomWeights(1);
         float[] scores = getScores(scoreFunctionBuilder);
-        FunctionScoreQueryBuilder withWeights = functionScoreQuery(constantScoreQuery(termQuery(TEXT_FIELD, "value")), scoreFunctionBuilder.setWeight(weights[0]));
+        FunctionScoreQueryBuilder withWeights = functionScoreQuery(constantScoreQuery(termQuery(TEXT_FIELD, "value")));
+        withWeights.add(scoreFunctionBuilder.setWeight(weights[0]));
 
         SearchResponse responseWithWeights = client().search(
                 searchRequest().source(searchSource().query(withWeights))
@@ -338,6 +320,11 @@ public class FunctionScoreIT extends ESIntegTestCase {
 
     }
 
+    private String getRandomScoreMode() {
+        String[] scoreModes = {"avg", "sum", "min", "max", "multiply"};
+        return scoreModes[randomInt(scoreModes.length - 1)];
+    }
+
     private float[] getScores(ScoreFunctionBuilder... scoreFunctionBuilders) {
         float[] scores = new float[scoreFunctionBuilders.length];
         int scorecounter = 0;
@@ -345,7 +332,8 @@ public class FunctionScoreIT extends ESIntegTestCase {
             SearchResponse response = client().search(
                     searchRequest().source(
                             searchSource().query(
-                                    functionScoreQuery(constantScoreQuery(termQuery(TEXT_FIELD, "value")), builder)
+                                    functionScoreQuery(constantScoreQuery(termQuery(TEXT_FIELD, "value")))
+                                            .add(builder)
                             ))).actionGet();
             scores[scorecounter] = response.getHits().getAt(0).getScore();
             scorecounter++;
@@ -370,7 +358,6 @@ public class FunctionScoreIT extends ESIntegTestCase {
         return builders;
     }
 
-<<<<<<< HEAD
     @Test
     public void checkWeightOnlyCreatesBoostFunction() throws IOException {
         assertAcked(prepareCreate(INDEX).addMapping(
@@ -410,67 +397,16 @@ public class FunctionScoreIT extends ESIntegTestCase {
         assertSearchResponse(response);
         assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
         response = client().search(
-                searchRequest().source(searchSource().query(functionScoreQuery(new WeightBuilder().setWeight(2.0f))))
+                searchRequest().source(searchSource().query(functionScoreQuery().add(new WeightBuilder().setWeight(2.0f))))
         ).actionGet();
         assertSearchResponse(response);
         assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
         response = client().search(
-                searchRequest().source(searchSource().query(functionScoreQuery(weightFactorFunction(2.0f))))
+                searchRequest().source(searchSource().query(functionScoreQuery().add(weightFactorFunction(2.0f))))
         ).actionGet();
         assertSearchResponse(response);
         assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
     }
-=======
-//    @Test
-//    public void checkWeightOnlyCreatesBoostFunction() throws IOException {
-//        assertAcked(prepareCreate(INDEX).addMapping(
-//                TYPE,
-//                MAPPING_WITH_DOUBLE_AND_GEO_POINT_AND_TEXT_FIELD));
-//        ensureYellow();
-//
-//        index(INDEX, TYPE, "1", SIMPLE_DOC);
-//        refresh();
-//        String query =jsonBuilder().startObject()
-//                .startObject("query")
-//                .startObject("function_score")
-//                .startArray("functions")
-//                .startObject()
-//                .field("weight",2)
-//                .endObject()
-//                .endArray()
-//                .endObject()
-//                .endObject()
-//                .endObject().string();
-//        SearchResponse response = client().search(
-//                searchRequest().source(new BytesArray(query))
-//                ).actionGet();
-//        assertSearchResponse(response);
-//        assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
-//
-//        query =jsonBuilder().startObject()
-//                .startObject("query")
-//                .startObject("function_score")
-//                .field("weight",2)
-//                .endObject()
-//                .endObject()
-//                .endObject().string();
-//        response = client().search(
-//                searchRequest().source(new BytesArray(query))
-//        ).actionGet();
-//        assertSearchResponse(response);
-//        assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
-//        response = client().search(
-//                searchRequest().source(searchSource().query(functionScoreQuery().add(new WeightBuilder().setWeight(2.0f))))
-//        ).actionGet();
-//        assertSearchResponse(response);
-//        assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
-//        response = client().search(
-//                searchRequest().source(searchSource().query(functionScoreQuery().add(weightFactorFunction(2.0f))))
-//        ).actionGet();
-//        assertSearchResponse(response);
-//        assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
-//    } NOCOMMIT fix this
->>>>>>> tempbranch
 
     @Test
     public void testScriptScoresNested() throws IOException {
@@ -483,10 +419,10 @@ public class FunctionScoreIT extends ESIntegTestCase {
                         searchSource().query(
                                 functionScoreQuery(
                                         functionScoreQuery(
-                                                functionScoreQuery(scriptFunction(new Script("1"))),
-                                                scriptFunction(new Script("_score.doubleValue()"))),
+functionScoreQuery().add(scriptFunction(new Script("1")))).add(
+                                                scriptFunction(new Script("_score.doubleValue()")))).add(
                                         scriptFunction(new Script("_score.doubleValue()"))
-                                )
+                                        )
                         )
                 )
         ).actionGet();
@@ -502,7 +438,7 @@ public class FunctionScoreIT extends ESIntegTestCase {
         refresh();
         SearchResponse response = client().search(
                 searchRequest().source(
-                        searchSource().query(functionScoreQuery(scriptFunction(new Script("_score.doubleValue()")))).aggregation(
+                        searchSource().query(functionScoreQuery().add(scriptFunction(new Script("_score.doubleValue()")))).aggregation(
                                 terms("score_agg").script(new Script("_score.doubleValue()")))
                 )
         ).actionGet();
@@ -521,7 +457,7 @@ public class FunctionScoreIT extends ESIntegTestCase {
         SearchResponse searchResponse = client().search(
                 searchRequest().source(
                         searchSource().query(
-                                functionScoreQuery(scriptFunction(new Script(Float.toString(score)))).setMinScore(minScore)))
+                                functionScoreQuery().add(scriptFunction(new Script(Float.toString(score)))).setMinScore(minScore)))
         ).actionGet();
         if (score < minScore) {
             assertThat(searchResponse.getHits().getTotalHits(), is(0l));
@@ -530,11 +466,11 @@ public class FunctionScoreIT extends ESIntegTestCase {
         }
 
         searchResponse = client().search(
-                searchRequest().source(searchSource().query(functionScoreQuery(new MatchAllQueryBuilder(), new FunctionScoreQueryBuilder.FilterFunctionBuilder[] {
-                                new FunctionScoreQueryBuilder.FilterFunctionBuilder(scriptFunction(new Script(Float.toString(score)))),
-                                new FunctionScoreQueryBuilder.FilterFunctionBuilder(scriptFunction(new Script(Float.toString(score))))
-                        }).scoreMode(FiltersFunctionScoreQuery.ScoreMode.AVG).setMinScore(minScore)))
-                ).actionGet();
+                searchRequest().source(searchSource().query(functionScoreQuery()
+.add(scriptFunction(new Script(Float.toString(score))))
+                                        .add(scriptFunction(new Script(Float.toString(score))))
+                        .scoreMode("avg").setMinScore(minScore)))
+        ).actionGet();
         if (score < minScore) {
             assertThat(searchResponse.getHits().getTotalHits(), is(0l));
         } else {
@@ -563,15 +499,16 @@ public class FunctionScoreIT extends ESIntegTestCase {
         }
 
         SearchResponse searchResponse = client().search(
-                searchRequest().source(searchSource().query(functionScoreQuery(scriptFunction(script))
+                searchRequest().source(searchSource().query(functionScoreQuery()
+                        .add(scriptFunction(script))
                         .setMinScore(minScore)).size(numDocs))).actionGet();
         assertMinScoreSearchResponses(numDocs, searchResponse, numMatchingDocs);
 
         searchResponse = client().search(
-                searchRequest().source(searchSource().query(functionScoreQuery(new MatchAllQueryBuilder(), new FunctionScoreQueryBuilder.FilterFunctionBuilder[] {
-                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(scriptFunction(script)),
-                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(scriptFunction(script))
-                }).scoreMode(FiltersFunctionScoreQuery.ScoreMode.AVG).setMinScore(minScore)).size(numDocs))).actionGet();
+                searchRequest().source(searchSource().query(functionScoreQuery()
+                        .add(scriptFunction(script))
+                        .add(scriptFunction(script))
+                        .scoreMode("avg").setMinScore(minScore)).size(numDocs))).actionGet();
         assertMinScoreSearchResponses(numDocs, searchResponse, numMatchingDocs);
     }
 
@@ -594,12 +531,15 @@ public class FunctionScoreIT extends ESIntegTestCase {
 
         // make sure that min_score works if functions is empty, see https://github.com/elastic/elasticsearch/issues/10253
         float termQueryScore = 0.19178301f;
-        for (CombineFunction combineFunction : CombineFunction.values()) {
-            testMinScoreApplied(combineFunction, termQueryScore);
-        }
+        testMinScoreApplied("sum", termQueryScore);
+        testMinScoreApplied("avg", termQueryScore);
+        testMinScoreApplied("max", termQueryScore);
+        testMinScoreApplied("min", termQueryScore);
+        testMinScoreApplied("multiply", termQueryScore);
+        testMinScoreApplied("replace", termQueryScore);
     }
 
-    protected void testMinScoreApplied(CombineFunction boostMode, float expectedScore) throws InterruptedException, ExecutionException {
+    protected void testMinScoreApplied(String boostMode, float expectedScore) throws InterruptedException, ExecutionException {
         SearchResponse response = client().search(
                 searchRequest().source(
                         searchSource().explain(true).query(

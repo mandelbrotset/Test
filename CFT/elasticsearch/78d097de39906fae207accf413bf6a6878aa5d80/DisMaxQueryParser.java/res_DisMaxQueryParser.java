@@ -48,11 +48,7 @@ public class DisMaxQueryParser extends BaseQueryParser<DisMaxQueryBuilder> {
         float boost = AbstractQueryBuilder.DEFAULT_BOOST;
         float tieBreaker = DisMaxQueryBuilder.DEFAULT_TIE_BREAKER;
 
-<<<<<<< HEAD
-        List<Query> queries = new ArrayList<>();
-=======
-        final List<QueryBuilder> queries = newArrayList();
->>>>>>> tempbranch
+        final List<QueryBuilder> queries = new ArrayList<>();
         boolean queriesFound = false;
         String queryName = null;
 

@@ -37,14 +37,9 @@ public class QueryParseContext {
     private static final ParseField CACHE_KEY = new ParseField("_cache_key").withAllDeprecated("Filters are always used as cache keys");
 
     private XContentParser parser;
-<<<<<<< HEAD
-
-    private ParseFieldMatcher parseFieldMatcher = ParseFieldMatcher.EMPTY;
-=======
     private final Index index;
     //norelease this flag is also used in the QueryShardContext, we need to make sure we set it there correctly in doToQuery()
     private ParseFieldMatcher parseFieldMatcher;
->>>>>>> tempbranch
 
     //norelease this can eventually be deleted when context() method goes away
     private final QueryShardContext shardContext;
@@ -52,20 +47,8 @@ public class QueryParseContext {
 
     public QueryParseContext(Index index, IndicesQueriesRegistry registry) {
         this.index = index;
-<<<<<<< HEAD
-        this.indexVersionCreated = Version.indexCreated(indexQueryParser.indexSettings());
-        this.indexQueryParser = indexQueryParser;
-    }
-
-    public void parseFieldMatcher(ParseFieldMatcher parseFieldMatcher) {
-        if (parseFieldMatcher == null) {
-            throw new IllegalArgumentException("parseFieldMatcher must not be null");
-        }
-        this.parseFieldMatcher = parseFieldMatcher;
-=======
         this.indicesQueriesRegistry = registry;
         this.shardContext = null;
->>>>>>> tempbranch
     }
 
     QueryParseContext(QueryShardContext context) {
@@ -77,19 +60,6 @@ public class QueryParseContext {
     public void reset(XContentParser jp) {
         this.parseFieldMatcher = ParseFieldMatcher.EMPTY;
         this.parser = jp;
-<<<<<<< HEAD
-        if (parser != null) {
-            this.parser.setParseFieldMatcher(parseFieldMatcher);
-        }
-        this.namedQueries.clear();
-        this.nestedScope = new NestedScope();
-        this.isFilter = false;
-    }
-
-    public Index index() {
-        return this.index;
-=======
->>>>>>> tempbranch
     }
 
     //norelease this is still used in BaseQueryParserTemp and FunctionScoreQueryParser, remove if not needed there anymore

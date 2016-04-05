@@ -18,16 +18,6 @@
  */
 package org.elasticsearch.test;
 
-<<<<<<< HEAD
-=======
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import com.carrotsearch.hppc.ObjectObjectAssociativeContainer;
->>>>>>> tempbranch
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.FieldDoc;
 import org.apache.lucene.search.Query;
@@ -53,7 +43,6 @@ import org.elasticsearch.script.ScriptService;
 import org.elasticsearch.search.SearchShardTarget;
 import org.elasticsearch.search.aggregations.SearchContextAggregations;
 import org.elasticsearch.search.dfs.DfsSearchResult;
-import org.elasticsearch.search.fetch.FetchPhase;
 import org.elasticsearch.search.fetch.FetchSearchResult;
 import org.elasticsearch.search.fetch.FetchSubPhase;
 import org.elasticsearch.search.fetch.FetchSubPhaseContext;
@@ -71,13 +60,9 @@ import org.elasticsearch.search.rescore.RescoreSearchContext;
 import org.elasticsearch.search.suggest.SuggestionSearchContext;
 import org.elasticsearch.threadpool.ThreadPool;
 
-<<<<<<< HEAD
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-=======
-import com.carrotsearch.hppc.ObjectObjectAssociativeContainer;
->>>>>>> tempbranch
 
 public class TestSearchContext extends SearchContext {
 
@@ -555,10 +540,6 @@ public class TestSearchContext extends SearchContext {
         return null;
     }
 
-    @Override
-    public FetchPhase fetchPhase() {
-        return null;
-    }
 
     @Override
     public MappedFieldType smartNameFieldType(String name) {

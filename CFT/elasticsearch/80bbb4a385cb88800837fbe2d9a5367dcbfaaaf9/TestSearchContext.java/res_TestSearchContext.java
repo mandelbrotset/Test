@@ -18,16 +18,12 @@
  */
 package org.elasticsearch.test;
 
-<<<<<<< HEAD
-=======
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.carrotsearch.hppc.ObjectObjectAssociativeContainer;
->>>>>>> tempbranch
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.FieldDoc;
 import org.apache.lucene.search.Query;
@@ -71,13 +67,9 @@ import org.elasticsearch.search.rescore.RescoreSearchContext;
 import org.elasticsearch.search.suggest.SuggestionSearchContext;
 import org.elasticsearch.threadpool.ThreadPool;
 
-<<<<<<< HEAD
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-=======
-import com.carrotsearch.hppc.ObjectObjectAssociativeContainer;
->>>>>>> tempbranch
 
 public class TestSearchContext extends SearchContext {
 

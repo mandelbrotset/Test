@@ -19,11 +19,20 @@
 
 package org.elasticsearch.index.query;
 
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Query;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.inject.Inject;
+import org.elasticsearch.common.lucene.search.Queries;
+import org.elasticsearch.common.regex.Regex;
+import org.elasticsearch.common.util.LocaleUtils;
 import org.elasticsearch.common.xcontent.XContentParser;
+import org.elasticsearch.index.mapper.MappedFieldType;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -59,7 +68,9 @@ import java.util.Map;
  * {@code fields} - fields to search, defaults to _all if not set, allows
  * boosting a field with ^n
  */
-public class SimpleQueryStringParser extends BaseQueryParser<SimpleQueryStringBuilder> {
+public class SimpleQueryStringParser implements QueryParser {
+
+    public static final String NAME = "simple_query_string";
 
     @Inject
     public SimpleQueryStringParser() {
@@ -68,26 +79,23 @@ public class SimpleQueryStringParser extends BaseQueryParser<SimpleQueryStringBu
 
     @Override
     public String[] names() {
-        return new String[]{SimpleQueryStringBuilder.NAME, Strings.toCamelCase(SimpleQueryStringBuilder.NAME)};
+        return new String[]{NAME, Strings.toCamelCase(NAME)};
     }
 
     @Override
-    public SimpleQueryStringBuilder fromXContent(QueryParseContext parseContext) throws IOException, QueryParsingException {
+    public Query parse(QueryParseContext parseContext) throws IOException, QueryParsingException {
         XContentParser parser = parseContext.parser();
 
         String currentFieldName = null;
         String queryBody = null;
-        float boost = AbstractQueryBuilder.DEFAULT_BOOST;
+        float boost = 1.0f; 
         String queryName = null;
         String minimumShouldMatch = null;
-        Map<String, Float> fieldsAndWeights = new HashMap<>();
-        Operator defaultOperator = null;
-        String analyzerName = null;
-        int flags = SimpleQueryStringFlag.ALL.value();
-        boolean lenient = SimpleQueryStringBuilder.DEFAULT_LENIENT;
-        boolean lowercaseExpandedTerms = SimpleQueryStringBuilder.DEFAULT_LOWERCASE_EXPANDED_TERMS;
-        boolean analyzeWildcard = SimpleQueryStringBuilder.DEFAULT_ANALYZE_WILDCARD;
-        Locale locale = null;
+        Map<String, Float> fieldsAndWeights = null;
+        BooleanClause.Occur defaultOperator = null;
+        Analyzer analyzer = null;
+        int flags = -1;
+        SimpleQueryParser.Settings sqsSettings = new SimpleQueryParser.Settings();
 
         XContentParser.Token token;
         while ((token = parser.nextToken()) != XContentParser.Token.END_OBJECT) {
@@ -111,10 +119,26 @@ public class SimpleQueryStringParser extends BaseQueryParser<SimpleQueryStringBu
                         if (fField == null) {
                             fField = parser.text();
                         }
-                        fieldsAndWeights.put(fField, fBoost);
+
+                        if (fieldsAndWeights == null) {
+                            fieldsAndWeights = new HashMap<>();
+                        }
+
+                        if (Regex.isSimpleMatchPattern(fField)) {
+                            for (String fieldName : parseContext.mapperService().simpleMatchToIndexNames(fField)) {
+                                fieldsAndWeights.put(fieldName, fBoost);
+                            }
+                        } else {
+                            MappedFieldType fieldType = parseContext.fieldMapper(fField);
+                            if (fieldType != null) {
+                                fieldsAndWeights.put(fieldType.names().indexName(), fBoost);
+                            } else {
+                                fieldsAndWeights.put(fField, fBoost);
+                            }
+                        }
                     }
                 } else {
-                    throw new QueryParsingException(parseContext, "[" + SimpleQueryStringBuilder.NAME + "] query does not support [" + currentFieldName + "]");
+                    throw new QueryParsingException(parseContext, "[" + NAME + "] query does not support [" + currentFieldName + "]");
                 }
             } else if (token.isValue()) {
                 if ("query".equals(currentFieldName)) {
@@ -122,9 +146,19 @@ public class SimpleQueryStringParser extends BaseQueryParser<SimpleQueryStringBu
                 } else if ("boost".equals(currentFieldName)) {
                     boost = parser.floatValue();
                 } else if ("analyzer".equals(currentFieldName)) {
-                    analyzerName = parser.text();
+                    analyzer = parseContext.analysisService().analyzer(parser.text());
+                    if (analyzer == null) {
+                        throw new QueryParsingException(parseContext, "[" + NAME + "] analyzer [" + parser.text() + "] not found");
+                    }
                 } else if ("default_operator".equals(currentFieldName) || "defaultOperator".equals(currentFieldName)) {
-                    defaultOperator = Operator.fromString(parser.text());
+                    String op = parser.text();
+                    if ("or".equalsIgnoreCase(op)) {
+                        defaultOperator = BooleanClause.Occur.SHOULD;
+                    } else if ("and".equalsIgnoreCase(op)) {
+                        defaultOperator = BooleanClause.Occur.MUST;
+                    } else {
+                        throw new QueryParsingException(parseContext, "[" + NAME + "] default operator [" + op + "] is not allowed");
+                    }
                 } else if ("flags".equals(currentFieldName)) {
                     if (parser.currentToken() != XContentParser.Token.VALUE_NUMBER) {
                         // Possible options are:
@@ -138,48 +172,56 @@ public class SimpleQueryStringParser extends BaseQueryParser<SimpleQueryStringBu
                     }
                 } else if ("locale".equals(currentFieldName)) {
                     String localeStr = parser.text();
-                    locale = Locale.forLanguageTag(localeStr);
+                    Locale locale = LocaleUtils.parse(localeStr);
+                    sqsSettings.locale(locale);
                 } else if ("lowercase_expanded_terms".equals(currentFieldName)) {
-                    lowercaseExpandedTerms = parser.booleanValue();
+                    sqsSettings.lowercaseExpandedTerms(parser.booleanValue());
                 } else if ("lenient".equals(currentFieldName)) {
-                    lenient = parser.booleanValue();
+                    sqsSettings.lenient(parser.booleanValue());
                 } else if ("analyze_wildcard".equals(currentFieldName)) {
-                    analyzeWildcard = parser.booleanValue();
+                    sqsSettings.analyzeWildcard(parser.booleanValue());
                 } else if ("_name".equals(currentFieldName)) {
                     queryName = parser.text();
                 } else if ("minimum_should_match".equals(currentFieldName)) {
                     minimumShouldMatch = parser.textOrNull();
                 } else {
-                    throw new QueryParsingException(parseContext, "[" + SimpleQueryStringBuilder.NAME + "] unsupported field [" + parser.currentName() + "]");
+                    throw new QueryParsingException(parseContext, "[" + NAME + "] unsupported field [" + parser.currentName() + "]");
                 }
             }
         }
 
         // Query text is required
         if (queryBody == null) {
-            throw new QueryParsingException(parseContext, "[" + SimpleQueryStringBuilder.NAME + "] query text missing");
+            throw new QueryParsingException(parseContext, "[" + NAME + "] query text missing");
         }
 
-        SimpleQueryStringBuilder qb = new SimpleQueryStringBuilder(queryBody);
-        qb.boost(boost).fields(fieldsAndWeights).analyzer(analyzerName).queryName(queryName).minimumShouldMatch(minimumShouldMatch);
-        qb.flags(flags).defaultOperator(defaultOperator).locale(locale).lowercaseExpandedTerms(lowercaseExpandedTerms);
-        qb.lenient(lenient).analyzeWildcard(analyzeWildcard).boost(boost);
+        // Use standard analyzer by default
+        if (analyzer == null) {
+            analyzer = parseContext.mapperService().searchAnalyzer();
+        }
 
-<<<<<<< HEAD
+        if (fieldsAndWeights == null) {
+            fieldsAndWeights = Collections.singletonMap(parseContext.defaultField(), 1.0F);
+        }
+        SimpleQueryParser sqp = new SimpleQueryParser(analyzer, fieldsAndWeights, flags, sqsSettings);
+
+        if (defaultOperator != null) {
+            sqp.setDefaultOperator(defaultOperator);
+        }
+
+        Query query = sqp.parse(queryBody);
+        if (queryName != null) {
+            parseContext.addNamedQuery(queryName, query);
+        }
+
         if (minimumShouldMatch != null && query instanceof BooleanQuery) {
-            query = Queries.applyMinimumShouldMatch((BooleanQuery) query, minimumShouldMatch);
+            Queries.applyMinimumShouldMatch((BooleanQuery) query, minimumShouldMatch);
         }
 
         if (query != null) {
             query.setBoost(boost);
         }
-=======
-        return qb;
-    }
->>>>>>> tempbranch
 
-    @Override
-    public SimpleQueryStringBuilder getBuilderPrototype() {
-        return SimpleQueryStringBuilder.PROTOTYPE;
+        return query;
     }
 }

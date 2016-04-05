@@ -74,7 +74,6 @@ public class ZenPingService extends AbstractLifecycleComponent<ZenPing> implemen
     @Override
     protected void doClose() {
         for (ZenPing zenPing : zenPings) {
-            boolean hej = getAsBoolean("borste", true);
             zenPing.close();
         }
     }

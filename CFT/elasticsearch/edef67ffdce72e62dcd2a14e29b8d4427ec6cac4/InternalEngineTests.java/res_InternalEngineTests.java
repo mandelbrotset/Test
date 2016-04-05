@@ -1973,13 +1973,8 @@ public class InternalEngineTests extends ESTestCase {
 
         EngineConfig brokenConfig = new EngineConfig(shardId, threadPool, config.getIndexingService(), config.getIndexSettings()
                 , null, store, createSnapshotDeletionPolicy(), newMergePolicy(), config.getMergeSchedulerConfig(),
-<<<<<<< HEAD
                 config.getAnalyzer(), config.getSimilarity(), new CodecService(INDEX_SETTINGS, null), config.getEventListener()
-        , config.getTranslogRecoveryPerformer(), IndexSearcher.getDefaultQueryCache(), IndexSearcher.getDefaultQueryCachingPolicy(), translogConfig);
-=======
-                config.getAnalyzer(), config.getSimilarity(), new CodecService(shardId.index()), config.getEventListener()
         , config.getTranslogRecoveryPerformer(), IndexSearcher.getDefaultQueryCache(), IndexSearcher.getDefaultQueryCachingPolicy(), translogConfig, TimeValue.timeValueMinutes(5));
->>>>>>> tempbranch
 
         try {
             new InternalEngine(brokenConfig, false);

@@ -18,29 +18,12 @@
  */
 package org.elasticsearch.index.query;
 
-import org.apache.lucene.search.*;
-<<<<<<< HEAD
-=======
-import org.apache.lucene.search.join.ScoreMode;
-import org.elasticsearch.Version;
->>>>>>> tempbranch
 import org.elasticsearch.common.ParseField;
 import org.elasticsearch.common.Strings;
-import org.elasticsearch.common.inject.Inject;
-import org.elasticsearch.common.lucene.search.Queries;
 import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.index.fielddata.plain.ParentChildIndexFieldData;
-import org.elasticsearch.index.mapper.DocumentMapper;
-import org.elasticsearch.index.mapper.internal.ParentFieldMapper;
-import org.elasticsearch.index.query.support.InnerHitsQueryParserHelper;
 import org.elasticsearch.index.query.support.QueryInnerHits;
-import org.elasticsearch.index.query.support.XContentStructure;
-import org.elasticsearch.search.fetch.innerhits.InnerHitsContext;
-import org.elasticsearch.search.fetch.innerhits.InnerHitsSubSearchContext;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 
 public class HasParentQueryParser extends BaseQueryParser  {
@@ -108,69 +91,8 @@ public class HasParentQueryParser extends BaseQueryParser  {
         return new HasParentQueryBuilder(parentType, iqb, score, innerHits).queryName(queryName).boost(boost);
     }
 
-<<<<<<< HEAD
-    static Query createParentQuery(Query innerQuery, String parentType, boolean score, QueryParseContext parseContext, InnerHitsSubSearchContext innerHits) throws IOException {
-        DocumentMapper parentDocMapper = parseContext.mapperService().documentMapper(parentType);
-        if (parentDocMapper == null) {
-            throw new QueryParsingException(parseContext, "[has_parent] query configured 'parent_type' [" + parentType
-                    + "] is not a valid type");
-        }
-
-        if (innerHits != null) {
-            ParsedQuery parsedQuery = new ParsedQuery(innerQuery, parseContext.copyNamedQueries());
-            InnerHitsContext.ParentChildInnerHits parentChildInnerHits = new InnerHitsContext.ParentChildInnerHits(innerHits.getSubSearchContext(), parsedQuery, null, parseContext.mapperService(), parentDocMapper);
-            String name = innerHits.getName() != null ? innerHits.getName() : parentType;
-            parseContext.addInnerHits(name, parentChildInnerHits);
-        }
-
-        Set<String> parentTypes = new HashSet<>(5);
-        parentTypes.add(parentDocMapper.type());
-        ParentChildIndexFieldData parentChildIndexFieldData = null;
-        for (DocumentMapper documentMapper : parseContext.mapperService().docMappers(false)) {
-            ParentFieldMapper parentFieldMapper = documentMapper.parentFieldMapper();
-            if (parentFieldMapper.active()) {
-                DocumentMapper parentTypeDocumentMapper = parseContext.mapperService().documentMapper(parentFieldMapper.type());
-                parentChildIndexFieldData = parseContext.getForField(parentFieldMapper.fieldType());
-                if (parentTypeDocumentMapper == null) {
-                    // Only add this, if this parentFieldMapper (also a parent)  isn't a child of another parent.
-                    parentTypes.add(parentFieldMapper.type());
-                }
-            }
-        }
-        if (parentChildIndexFieldData == null) {
-            throw new QueryParsingException(parseContext, "[has_parent] no _parent field configured");
-        }
-
-        Query parentTypeQuery = null;
-        if (parentTypes.size() == 1) {
-            DocumentMapper documentMapper = parseContext.mapperService().documentMapper(parentTypes.iterator().next());
-            if (documentMapper != null) {
-                parentTypeQuery = documentMapper.typeFilter();
-            }
-        } else {
-            BooleanQuery.Builder parentsFilter = new BooleanQuery.Builder();
-            for (String parentTypeStr : parentTypes) {
-                DocumentMapper documentMapper = parseContext.mapperService().documentMapper(parentTypeStr);
-                if (documentMapper != null) {
-                    parentsFilter.add(documentMapper.typeFilter(), BooleanClause.Occur.SHOULD);
-                }
-            }
-            parentTypeQuery = parentsFilter.build();
-        }
-
-        if (parentTypeQuery == null) {
-            return null;
-        }
-
-        // wrap the query with type query
-        innerQuery = Queries.filtered(innerQuery, parentDocMapper.typeFilter());
-        Query childrenFilter = Queries.not(parentTypeQuery);
-        ScoreType scoreMode = score ? ScoreType.MAX : ScoreType.NONE;
-        return joinUtilHelper(parentType, parentChildIndexFieldData, childrenFilter, scoreMode, innerQuery, 0, Integer.MAX_VALUE);
-=======
     @Override
     public HasParentQueryBuilder getBuilderPrototype() {
         return PROTOTYPE;
->>>>>>> tempbranch
     }
 }

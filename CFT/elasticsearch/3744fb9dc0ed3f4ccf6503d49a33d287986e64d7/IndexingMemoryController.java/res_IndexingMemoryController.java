@@ -19,12 +19,6 @@
 
 package org.elasticsearch.indices.memory;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantLock;
-
 import org.elasticsearch.common.component.AbstractLifecycleComponent;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
@@ -41,16 +35,19 @@ import org.elasticsearch.indices.IndicesService;
 import org.elasticsearch.monitor.jvm.JvmInfo;
 import org.elasticsearch.threadpool.ThreadPool;
 
-<<<<<<< HEAD
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 
-public class IndexingMemoryController extends AbstractLifecycleComponent<IndexingMemoryController> implements IndexEventListener {
-=======
 public class IndexingMemoryController extends AbstractLifecycleComponent<IndexingMemoryController> {
->>>>>>> tempbranch
 
     /** How much heap (% or bytes) we will share across all actively indexing shards on this node (default: 10%). */
     public static final String INDEX_BUFFER_SIZE_SETTING = "indices.memory.index_buffer_size";
@@ -61,28 +58,6 @@ public class IndexingMemoryController extends AbstractLifecycleComponent<Indexin
     /** Only applies when <code>indices.memory.index_buffer_size</code> is a %, to set a ceiling on the actual size in bytes (default: not set). */
     public static final String MAX_INDEX_BUFFER_SIZE_SETTING = "indices.memory.max_index_buffer_size";
 
-<<<<<<< HEAD
-    /** Sets a floor on the per-shard index buffer size (default: 4 MB). */
-    public static final String MIN_SHARD_INDEX_BUFFER_SIZE_SETTING = "indices.memory.min_shard_index_buffer_size";
-
-    /** Sets a ceiling on the per-shard index buffer size (default: 512 MB). */
-    public static final String MAX_SHARD_INDEX_BUFFER_SIZE_SETTING = "indices.memory.max_shard_index_buffer_size";
-
-    /** Sets a floor on the per-shard translog buffer size (default: 2 KB). */
-    public static final String MIN_SHARD_TRANSLOG_BUFFER_SIZE_SETTING = "indices.memory.min_shard_translog_buffer_size";
-
-    /** Sets a ceiling on the per-shard translog buffer size (default: 64 KB). */
-    public static final String MAX_SHARD_TRANSLOG_BUFFER_SIZE_SETTING = "indices.memory.max_shard_translog_buffer_size";
-
-    /** How frequently we check shards to find inactive ones (default: 30 seconds). */
-    public static final String SHARD_INACTIVE_INTERVAL_TIME_SETTING = "indices.memory.interval";
-
-    /** Once a shard becomes inactive, we reduce the {@code IndexWriter} buffer to this value (500 KB) to let active shards use the heap instead. */
-    public static final ByteSizeValue INACTIVE_SHARD_INDEXING_BUFFER = ByteSizeValue.parseBytesSizeValue("500kb", "INACTIVE_SHARD_INDEXING_BUFFER");
-
-    /** Once a shard becomes inactive, we reduce the {@code Translog} buffer to this value (1 KB) to let active shards use the heap instead. */
-    public static final ByteSizeValue INACTIVE_SHARD_TRANSLOG_BUFFER = ByteSizeValue.parseBytesSizeValue("1kb", "INACTIVE_SHARD_TRANSLOG_BUFFER");
-=======
     /** If we see no indexing operations after this much time for a given shard, we consider that shard inactive (default: 5 minutes). */
     public static final String SHARD_INACTIVE_TIME_SETTING = "indices.memory.shard_inactive_time";
 
@@ -94,19 +69,13 @@ public class IndexingMemoryController extends AbstractLifecycleComponent<Indexin
 
     /** Hardwired translog buffer size */
     public static final ByteSizeValue SHARD_TRANSLOG_BUFFER = ByteSizeValue.parseBytesSizeValue("8kb", "SHARD_TRANSLOG_BUFFER");
->>>>>>> tempbranch
 
     private final ThreadPool threadPool;
     private final IndicesService indicesService;
 
     private final ByteSizeValue indexingBuffer;
-<<<<<<< HEAD
-    private final ByteSizeValue minShardIndexBufferSize;
-    private final ByteSizeValue maxShardIndexBufferSize;
-=======
 
     private final TimeValue inactiveTime;
->>>>>>> tempbranch
     private final TimeValue interval;
 
     /** Contains shards currently being throttled because we can't write segments quickly enough */
@@ -148,19 +117,10 @@ public class IndexingMemoryController extends AbstractLifecycleComponent<Indexin
             indexingBuffer = ByteSizeValue.parseBytesSizeValue(indexingBufferSetting, INDEX_BUFFER_SIZE_SETTING);
         }
         this.indexingBuffer = indexingBuffer;
-<<<<<<< HEAD
-        this.minShardIndexBufferSize = this.settings.getAsBytesSize(MIN_SHARD_INDEX_BUFFER_SIZE_SETTING, new ByteSizeValue(4, ByteSizeUnit.MB));
-        // LUCENE MONITOR: Based on this thread, currently (based on Mike), having a large buffer does not make a lot of sense: https://issues.apache.org/jira/browse/LUCENE-2324?focusedCommentId=13005155&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-13005155
-        this.maxShardIndexBufferSize = this.settings.getAsBytesSize(MAX_SHARD_INDEX_BUFFER_SIZE_SETTING, new ByteSizeValue(512, ByteSizeUnit.MB));
-
-        // we need to have this relatively small to move a shard from inactive to active fast (enough)
-        this.interval = this.settings.getAsTime(SHARD_INACTIVE_INTERVAL_TIME_SETTING, TimeValue.timeValueSeconds(30));
-=======
 
         this.inactiveTime = this.settings.getAsTime(SHARD_INACTIVE_TIME_SETTING, SHARD_DEFAULT_INACTIVE_TIME);
         // we need to have this relatively small to free up heap quickly enough
         this.interval = this.settings.getAsTime(SHARD_MEMORY_INTERVAL_TIME_SETTING, TimeValue.timeValueSeconds(5));
->>>>>>> tempbranch
 
         this.statusChecker = new ShardsIndicesStatusChecker();
 
@@ -213,17 +173,6 @@ public class IndexingMemoryController extends AbstractLifecycleComponent<Indexin
         return shard.getIndexBufferRAMBytesUsed();
     }
 
-<<<<<<< HEAD
-    /** set new indexing and translog buffers on this shard.  this may cause the shard to refresh to free up heap. */
-    protected void updateShardBuffers(IndexShard shard, ByteSizeValue shardIndexingBufferSize) {
-        try {
-            shard.updateBufferSize(shardIndexingBufferSize);
-        } catch (EngineClosedException | FlushNotAllowedEngineException e) {
-            // ignore
-        } catch (Exception e) {
-            logger.warn("failed to set shard {} index buffer to [{}]", e, shard.shardId(), shardIndexingBufferSize);
-        }
-=======
     /** returns how many bytes this shard is currently writing to disk */
     protected long getShardWritingBytes(IndexShard shard) {
         return shard.getWritingBytes();
@@ -237,7 +186,6 @@ public class IndexingMemoryController extends AbstractLifecycleComponent<Indexin
                 shard.writeIndexingBuffer();
             }
         });
->>>>>>> tempbranch
     }
 
     /** force checker to run now */
@@ -324,12 +272,6 @@ public class IndexingMemoryController extends AbstractLifecycleComponent<Indexin
                 // Give shard a chance to transition to inactive so sync'd flush can happen:
                 checkIdle(shard, inactiveTime.nanos());
 
-<<<<<<< HEAD
-            logger.debug("recalculating shard indexing buffer, total is [{}] with [{}] active shards, each shard set to indexing=[{}]", indexingBuffer, activeShardCount, shardIndexingBufferSize);
-
-            for (IndexShard shard : activeShards) {
-                updateShardBuffers(shard, shardIndexingBufferSize);
-=======
                 // How many bytes this shard is currently (async'd) moving from heap to disk:
                 long shardWritingBytes = getShardWritingBytes(shard);
 
@@ -410,7 +352,6 @@ public class IndexingMemoryController extends AbstractLifecycleComponent<Indexin
                     deactivateThrottling(shard);
                 }
                 throttled.clear();
->>>>>>> tempbranch
             }
         }
     }

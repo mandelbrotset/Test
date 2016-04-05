@@ -20,11 +20,8 @@
 package org.elasticsearch.indices.warmer;
 
 import com.carrotsearch.hppc.cursors.ObjectObjectCursor;
-<<<<<<< HEAD
 import com.google.common.collect.ImmutableList;
-=======
 
->>>>>>> tempbranch
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.segments.IndexSegments;
 import org.elasticsearch.action.admin.indices.segments.IndexShardSegments;
@@ -49,14 +46,10 @@ import org.elasticsearch.test.ESIntegTestCase;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.util.List;
 import java.util.Locale;
 
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertAcked;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 
 public class SimpleIndicesWarmerIT extends ESIntegTestCase {
 
@@ -180,18 +173,6 @@ public class SimpleIndicesWarmerIT extends ESIntegTestCase {
         }
     }
 
-    @Test // issue 8991
-    public void deleteAllIndexWarmerDoesNotThrowWhenNoWarmers() {
-        createIndex("test");
-        DeleteWarmerResponse deleteWarmerResponse = client().admin().indices().prepareDeleteWarmer()
-                .setIndices("test").setNames("_all").execute().actionGet();
-        assertThat(deleteWarmerResponse.isAcknowledged(), equalTo(true));
-
-        deleteWarmerResponse = client().admin().indices().prepareDeleteWarmer()
-                .setIndices("test").setNames("foo", "_all", "bar").execute().actionGet();
-        assertThat(deleteWarmerResponse.isAcknowledged(), equalTo(true));
-    }
-
     @Test
     public void deleteIndexWarmerTest() {
         createIndex("test");
@@ -204,7 +185,7 @@ public class SimpleIndicesWarmerIT extends ESIntegTestCase {
 
         GetWarmersResponse getWarmersResponse = client().admin().indices().prepareGetWarmers("test").get();
         assertThat(getWarmersResponse.warmers().size(), equalTo(1));
-        ObjectObjectCursor<String, List<IndexWarmersMetaData.Entry>> entry = getWarmersResponse.warmers().iterator().next();
+        ObjectObjectCursor<String, ImmutableList<IndexWarmersMetaData.Entry>> entry = getWarmersResponse.warmers().iterator().next();
         assertThat(entry.key, equalTo("test"));
         assertThat(entry.value.size(), equalTo(1));
         assertThat(entry.value.iterator().next().name(), equalTo("custom_warmer"));
@@ -279,7 +260,7 @@ public class SimpleIndicesWarmerIT extends ESIntegTestCase {
         for (IndexShardSegments indexShardSegments : indicesSegments) {
             for (ShardSegments shardSegments : indexShardSegments) {
                 for (Segment segment : shardSegments) {
-                    logger.debug("+=" + segment.memoryInBytes + " " + indexShardSegments.getShardId() + " " + shardSegments.getShardRouting().getIndex());
+                    logger.debug("+=" + segment.memoryInBytes + " " + indexShardSegments.getShardId() + " " + shardSegments.getIndex());
                     total += segment.memoryInBytes;
                 }
             }

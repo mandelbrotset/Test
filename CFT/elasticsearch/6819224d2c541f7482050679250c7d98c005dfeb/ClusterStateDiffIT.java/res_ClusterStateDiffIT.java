@@ -20,10 +20,6 @@
 package org.elasticsearch.cluster;
 
 import com.carrotsearch.hppc.cursors.ObjectCursor;
-<<<<<<< HEAD
-=======
-import com.google.common.collect.ImmutableMap;
->>>>>>> tempbranch
 
 import org.elasticsearch.Version;
 import org.elasticsearch.cluster.block.ClusterBlock;

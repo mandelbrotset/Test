@@ -21,27 +21,20 @@ package org.elasticsearch.action.admin.indices.forcemerge;
 
 import org.elasticsearch.test.ESIntegTestCase;
 import org.elasticsearch.test.ESIntegTestCase.ClusterScope;
+import org.junit.Test;
 
 import java.util.Arrays;
 
-import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_BLOCKS_METADATA;
-import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_BLOCKS_READ;
-import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_BLOCKS_WRITE;
-import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_READ_ONLY;
+import static org.elasticsearch.cluster.metadata.IndexMetaData.*;
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertBlocked;
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertNoFailures;
 import static org.hamcrest.Matchers.equalTo;
 
 @ClusterScope(scope = ESIntegTestCase.Scope.TEST)
-<<<<<<< HEAD:core/src/test/java/org/elasticsearch/action/admin/indices/forcemerge/ForceMergeBlocksIT.java
 public class ForceMergeBlocksIT extends ESIntegTestCase {
 
     @Test
     public void testForceMergeWithBlocks() {
-=======
-public class OptimizeBlocksIT extends ESIntegTestCase {
-    public void testOptimizeWithBlocks() {
->>>>>>> tempbranch:core/src/test/java/org/elasticsearch/action/admin/indices/optimize/OptimizeBlocksIT.java
         createIndex("test");
         ensureGreen("test");
 

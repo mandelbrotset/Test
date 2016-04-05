@@ -20,7 +20,6 @@
 package org.elasticsearch.search.aggregations.bucket.filters;
 
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Weight;
 import org.apache.lucene.util.Bits;
@@ -116,28 +115,25 @@ public class FiltersAggregator extends BucketsAggregator {
     }
 
     private final String[] keys;
-    private Weight[] filters;
+    private final Weight[] filters;
     private final boolean keyed;
     private final boolean showOtherBucket;
     private final String otherBucketKey;
     private final int totalNumKeys;
 
-    public FiltersAggregator(String name, AggregatorFactories factories, String[] keys, Weight[] filters, boolean keyed, String otherBucketKey,
+    public FiltersAggregator(String name, AggregatorFactories factories, List<KeyedFilter> filters, boolean keyed, String otherBucketKey,
             AggregationContext aggregationContext,
             Aggregator parent, List<PipelineAggregator> pipelineAggregators, Map<String, Object> metaData)
             throws IOException {
         super(name, factories, aggregationContext, parent, pipelineAggregators, metaData);
         this.keyed = keyed;
-        this.keys = keys;
-        this.filters = filters;
+        this.keys = new String[filters.size()];
+        this.filters = new Weight[filters.size()];
         this.showOtherBucket = otherBucketKey != null;
         this.otherBucketKey = otherBucketKey;
         if (showOtherBucket) {
-            this.totalNumKeys = keys.length + 1;
+            this.totalNumKeys = filters.size() + 1;
         } else {
-<<<<<<< HEAD
-            this.totalNumKeys = keys.length;
-=======
             this.totalNumKeys = filters.size();
         }
         for (int i = 0; i < filters.size(); ++i) {
@@ -145,7 +141,6 @@ public class FiltersAggregator extends BucketsAggregator {
             this.keys[i] = keyedFilter.key;
             Query filter = keyedFilter.filter.toFilter(context.searchContext().indexShard().getQueryShardContext());
             this.filters[i] = aggregationContext.searchContext().searcher().createNormalizedWeight(filter, false);
->>>>>>> tempbranch
         }
     }
 
@@ -210,15 +205,9 @@ public class FiltersAggregator extends BucketsAggregator {
     public static class Factory extends AggregatorFactory<Factory> {
 
         private final List<KeyedFilter> filters;
-<<<<<<< HEAD
-        private final String[] keys;
-        private boolean keyed;
-        private String otherBucketKey;
-=======
         private final boolean keyed;
         private boolean otherBucket = false;
         private String otherBucketKey = "_other_";
->>>>>>> tempbranch
 
         /**
          * @param name
@@ -269,13 +258,6 @@ public class FiltersAggregator extends BucketsAggregator {
          */
         public Factory otherBucketKey(String otherBucketKey) {
             this.otherBucketKey = otherBucketKey;
-<<<<<<< HEAD
-            this.keys = new String[filters.size()];
-            for (int i = 0; i < filters.size(); ++i) {
-                KeyedFilter keyedFilter = filters.get(i);
-                this.keys[i] = keyedFilter.key;
-            }
-=======
             return this;
         }
 
@@ -285,31 +267,11 @@ public class FiltersAggregator extends BucketsAggregator {
          */
         public String otherBucketKey() {
             return otherBucketKey;
->>>>>>> tempbranch
         }
-
-        // TODO: refactor in order to initialize the factory once with its parent,
-        // the context, etc. and then have a no-arg lightweight create method
-        // (since create may be called thousands of times)
-
-        private IndexSearcher searcher;
-        private Weight[] weights;
 
         @Override
         public Aggregator createInternal(AggregationContext context, Aggregator parent, boolean collectsFromSingleBucket,
                 List<PipelineAggregator> pipelineAggregators, Map<String, Object> metaData) throws IOException {
-<<<<<<< HEAD
-            IndexSearcher contextSearcher = context.searchContext().searcher();
-            if (searcher != contextSearcher) {
-                searcher = contextSearcher;
-                weights = new Weight[filters.size()];
-                for (int i = 0; i < filters.size(); ++i) {
-                    KeyedFilter keyedFilter = filters.get(i);
-                    this.weights[i] = contextSearcher.createNormalizedWeight(keyedFilter.filter, false);
-                }
-            }
-            return new FiltersAggregator(name, factories, keys, weights, keyed, otherBucketKey, context, parent, pipelineAggregators, metaData);
-=======
             return new FiltersAggregator(name, factories, filters, keyed, otherBucket ? otherBucketKey : null, context, parent,
                     pipelineAggregators, metaData);
         }
@@ -389,7 +351,6 @@ public class FiltersAggregator extends BucketsAggregator {
                     && Objects.equals(keyed, other.keyed)
                     && Objects.equals(otherBucket, other.otherBucket)
                     && Objects.equals(otherBucketKey, other.otherBucketKey);
->>>>>>> tempbranch
         }
     }
 

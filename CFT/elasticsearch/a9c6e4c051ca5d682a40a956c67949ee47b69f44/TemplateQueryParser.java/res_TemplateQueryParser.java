@@ -22,14 +22,10 @@ import org.elasticsearch.ElasticsearchParseException;
 import org.elasticsearch.common.HasContextAndHeaders;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.ParseFieldMatcher;
-<<<<<<< HEAD
-=======
-import org.elasticsearch.common.ParsingException;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.lease.Releasables;
 import org.elasticsearch.common.xcontent.XContent;
 import org.elasticsearch.common.xcontent.XContentFactory;
->>>>>>> tempbranch
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.script.*;
 import org.elasticsearch.script.mustache.MustacheScriptEngineService;

@@ -19,17 +19,11 @@
 
 package org.elasticsearch.index.query.functionscore.fieldvaluefactor;
 
-import org.apache.lucene.document.FieldType;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.common.lucene.search.function.FieldValueFactorFunction;
 import org.elasticsearch.common.lucene.search.function.ScoreFunction;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.index.fielddata.IndexNumericFieldData;
-<<<<<<< HEAD
-import org.elasticsearch.index.fielddata.plain.DoubleArrayIndexFieldData;
-import org.elasticsearch.index.mapper.FieldMapper;
-=======
->>>>>>> tempbranch
 import org.elasticsearch.index.mapper.MappedFieldType;
 import org.elasticsearch.index.query.QueryShardContext;
 import org.elasticsearch.index.query.QueryParseContext;

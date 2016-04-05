@@ -84,60 +84,17 @@ public class LogConfigurator {
         REPLACEMENTS = unmodifiableMap(replacements);
     }
 
-<<<<<<< HEAD
-    private static ImmutableMap<String, String> replacements = new MapBuilder<String, String>()
-            .put("console", "org.elasticsearch.common.logging.log4j.ConsoleAppender")
-            .put("async", "org.apache.log4j.AsyncAppender")
-            .put("dailyRollingFile", "org.apache.log4j.DailyRollingFileAppender")
-            .put("externallyRolledFile", "org.apache.log4j.ExternallyRolledFileAppender")
-            .put("file", "org.apache.log4j.FileAppender")
-            .put("jdbc", "org.apache.log4j.jdbc.JDBCAppender")
-            .put("jms", "org.apache.log4j.net.JMSAppender")
-            .put("lf5", "org.apache.log4j.lf5.LF5Appender")
-            .put("ntevent", "org.apache.log4j.nt.NTEventLogAppender")
-            .put("null", "org.apache.log4j.NullAppender")
-            .put("rollingFile", "org.apache.log4j.RollingFileAppender")
-            .put("extrasRollingFile", "org.apache.log4j.rolling.RollingFileAppender")
-            .put("smtp", "org.apache.log4j.net.SMTPAppender")
-            .put("socket", "org.apache.log4j.net.SocketAppender")
-            .put("socketHub", "org.apache.log4j.net.SocketHubAppender")
-            .put("syslog", "org.apache.log4j.net.SyslogAppender")
-            .put("telnet", "org.apache.log4j.net.TelnetAppender")
-            .put("terminal", "org.elasticsearch.common.logging.log4j.TerminalAppender")
-                    // policies
-            .put("timeBased", "org.apache.log4j.rolling.TimeBasedRollingPolicy")
-            .put("sizeBased", "org.apache.log4j.rolling.SizeBasedTriggeringPolicy")
-                    // layouts
-            .put("simple", "org.apache.log4j.SimpleLayout")
-            .put("html", "org.apache.log4j.HTMLLayout")
-            .put("pattern", "org.apache.log4j.PatternLayout")
-            .put("consolePattern", "org.apache.log4j.PatternLayout")
-            .put("enhancedPattern", "org.apache.log4j.EnhancedPatternLayout")
-            .put("ttcc", "org.apache.log4j.TTCCLayout")
-            .put("xml", "org.apache.log4j.XMLLayout")
-            .immutableMap();
-=======
     private static boolean loaded;
->>>>>>> tempbranch
 
-    /**
-     * Consolidates settings and converts them into actual log4j settings, then initializes loggers and appenders.
-     *
-     * @param settings      custom settings that should be applied
-     * @param resolveConfig controls whether the logging conf file should be read too or not.
-     */
-    public static void configure(Settings settings, boolean resolveConfig) {
+    public static void configure(Settings settings) {
         if (loaded) {
             return;
         }
         loaded = true;
         // TODO: this is partly a copy of InternalSettingsPreparer...we should pass in Environment and not do all this...
         Environment environment = new Environment(settings);
-
         Settings.Builder settingsBuilder = settingsBuilder();
-        if (resolveConfig) {
-            resolveConfig(environment, settingsBuilder);
-        }
+        resolveConfig(environment, settingsBuilder);
         settingsBuilder
                 .putProperties("elasticsearch.", System.getProperties())
                 .putProperties("es.", System.getProperties());

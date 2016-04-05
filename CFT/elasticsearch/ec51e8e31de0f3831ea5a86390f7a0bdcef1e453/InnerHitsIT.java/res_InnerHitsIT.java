@@ -180,26 +180,16 @@ public class InnerHitsIT extends ESIntegTestCase {
         innerHit.setSize(1);
         innerHitsBuilder = new InnerHitsBuilder();
         innerHitsBuilder.addNestedInnerHits("comments", "comments", new InnerHitsBuilder.InnerHit()
-                            .setQuery(matchQuery("comments.message", "fox"))
+                                .setQuery(matchQuery("comments.message", "fox"))
                             .highlighter(new HighlightBuilder().field("comments.message"))
-                            .setExplain(true)
-                            .addFieldDataField("comments.message")
-                            .addScriptField("script", new Script("doc['comments.message'].value"))
+                                .setExplain(true)
+                                .addFieldDataField("comments.message")
+                                .addScriptField("script", new Script("5", ScriptService.ScriptType.INLINE, MockScriptEngine.NAME, Collections.emptyMap()))
                             .setSize(1));
         searchRequests = new SearchRequest[] {
                 client().prepareSearch("articles")
                         .setQuery(nestedQuery("comments", matchQuery("comments.message", "fox")))
-<<<<<<< HEAD:core/src/test/java/org/elasticsearch/search/innerhits/InnerHitsIT.java
-                        .addNestedInnerHits("comments", "comments", new InnerHitsBuilder.InnerHit()
-                                .setQuery(matchQuery("comments.message", "fox"))
-                                .addHighlightedField("comments.message")
-                                .setExplain(true)
-                                .addFieldDataField("comments.message")
-                                .addScriptField("script", new Script("5", ScriptService.ScriptType.INLINE, MockScriptEngine.NAME, Collections.emptyMap()))
-                                .setSize(1)).request(),
-=======
                         .innerHits(innerHitsBuilder).request(),
->>>>>>> tempbranch:plugins/lang-groovy/src/test/java/org/elasticsearch/messy/tests/InnerHitsTests.java
                 client().prepareSearch("articles")
                         .setQuery(nestedQuery("comments", matchQuery("comments.message", "fox")).innerHit(new QueryInnerHits(null, innerHit))).request()
         };
@@ -376,28 +366,17 @@ public class InnerHitsIT extends ESIntegTestCase {
         innerHit.setSize(1);
         innerHitsBuilder = new InnerHitsBuilder();
         innerHitsBuilder.addParentChildInnerHits("comment", "comment", new InnerHitsBuilder.InnerHit()
-                            .setQuery(matchQuery("message", "fox"))
+                                        .setQuery(matchQuery("message", "fox"))
                             .highlighter(new HighlightBuilder().field("message"))
-                            .setExplain(true)
-                            .addFieldDataField("message")
-                            .addScriptField("script", new Script("doc['message'].value"))
+                                        .setExplain(true)
+                                        .addFieldDataField("message")
+                                        .addScriptField("script", new Script("5", ScriptService.ScriptType.INLINE, MockScriptEngine.NAME, Collections.emptyMap()))
                             .setSize(1));
         searchRequests = new SearchRequest[] {
                 client().prepareSearch("articles")
                         .setQuery(hasChildQuery("comment", matchQuery("message", "fox")))
-<<<<<<< HEAD:core/src/test/java/org/elasticsearch/search/innerhits/InnerHitsIT.java
-                        .addParentChildInnerHits("comment", "comment", new InnerHitsBuilder.InnerHit()
-                                        .setQuery(matchQuery("message", "fox"))
-                                        .addHighlightedField("message")
-                                        .setExplain(true)
-                                        .addFieldDataField("message")
-                                        .addScriptField("script", new Script("5", ScriptService.ScriptType.INLINE, MockScriptEngine.NAME, Collections.emptyMap()))
-                                        .setSize(1)
-                        ).request(),
-=======
                         .innerHits(innerHitsBuilder)
                         .request(),
->>>>>>> tempbranch:plugins/lang-groovy/src/test/java/org/elasticsearch/messy/tests/InnerHitsTests.java
 
                 client().prepareSearch("articles")
                         .setQuery(
@@ -1047,14 +1026,14 @@ public class InnerHitsIT extends ESIntegTestCase {
         innerInnerHitsBuilder.addParentChildInnerHits("barons", "baron", new InnerHitsBuilder.InnerHit());
         InnerHitsBuilder innerHitsBuilder = new InnerHitsBuilder();
         innerHitsBuilder.addParentChildInnerHits("earls", "earl", new InnerHitsBuilder.InnerHit()
-                .addSort(SortBuilders.fieldSort("_uid").order(SortOrder.ASC))
-                .setSize(4)
+                                .addSort(SortBuilders.fieldSort("_uid").order(SortOrder.ASC))
+                                .setSize(4)
                 .innerHits(innerInnerHitsBuilder)
         );
         innerInnerHitsBuilder = new InnerHitsBuilder();
         innerInnerHitsBuilder.addParentChildInnerHits("kings", "king", new InnerHitsBuilder.InnerHit());
         innerHitsBuilder.addParentChildInnerHits("princes", "prince",
-        new InnerHitsBuilder.InnerHit()
+                        new InnerHitsBuilder.InnerHit()
             .innerHits(innerInnerHitsBuilder)
         );
         SearchResponse response = client().prepareSearch("royals")

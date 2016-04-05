@@ -21,6 +21,7 @@ package org.elasticsearch.search.functionscore;
 
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.lucene.search.function.FieldValueFactorFunction;
 import org.elasticsearch.test.ESIntegTestCase;
 import org.junit.Test;
@@ -125,8 +126,6 @@ public class FunctionScoreFieldValueIT extends ESIntegTestCase {
             // This is fine, the query will throw an exception if executed
             // locally, instead of just having failures
         }
-<<<<<<< HEAD
-=======
 
 //        // don't permit an array of factors
 //        try {
@@ -156,6 +155,5 @@ public class FunctionScoreFieldValueIT extends ESIntegTestCase {
 //          // locally, instead of just having failures
 //        } NOCOMMIT fix this
 
->>>>>>> tempbranch
     }
 }

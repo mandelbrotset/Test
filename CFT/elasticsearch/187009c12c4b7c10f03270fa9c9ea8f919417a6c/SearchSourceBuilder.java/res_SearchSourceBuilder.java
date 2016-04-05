@@ -41,13 +41,9 @@ import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryParseContext;
 import org.elasticsearch.script.Script;
-<<<<<<< HEAD
 import org.elasticsearch.search.searchafter.SearchAfterBuilder;
-import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
-=======
 import org.elasticsearch.search.aggregations.AggregatorFactory;
 import org.elasticsearch.search.aggregations.pipeline.PipelineAggregatorFactory;
->>>>>>> tempbranch
 import org.elasticsearch.search.fetch.innerhits.InnerHitsBuilder;
 import org.elasticsearch.search.fetch.source.FetchSourceContext;
 import org.elasticsearch.search.highlight.HighlightBuilder;

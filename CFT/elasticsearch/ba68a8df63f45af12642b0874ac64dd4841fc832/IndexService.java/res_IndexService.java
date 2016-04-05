@@ -41,7 +41,11 @@ import org.elasticsearch.index.mapper.MapperService;
 import org.elasticsearch.index.query.IndexQueryParserService;
 import org.elasticsearch.index.settings.IndexSettings;
 import org.elasticsearch.index.settings.IndexSettingsService;
-import org.elasticsearch.index.shard.*;
+import org.elasticsearch.index.shard.IndexShard;
+import org.elasticsearch.index.shard.ShadowIndexShard;
+import org.elasticsearch.index.shard.ShardId;
+import org.elasticsearch.index.shard.ShardNotFoundException;
+import org.elasticsearch.index.shard.ShardPath;
 import org.elasticsearch.index.similarity.SimilarityService;
 import org.elasticsearch.index.store.IndexStore;
 import org.elasticsearch.index.store.Store;
@@ -75,33 +79,9 @@ public class IndexService extends AbstractIndexComponent implements IndexCompone
     private final IndexSettingsService settingsService;
     private final NodeEnvironment nodeEnv;
     private final IndicesService indicesServices;
-<<<<<<< HEAD
     private final IndexServicesProvider indexServicesProvider;
     private final IndexStore indexStore;
-    private volatile ImmutableMap<Integer, IndexShard> shards = ImmutableMap.of();
-=======
-
-    private volatile Map<Integer, IndexShardInjectorPair> shards = emptyMap();
-
-    private static class IndexShardInjectorPair {
-        private final IndexShard indexShard;
-        private final Injector injector;
-
-        public IndexShardInjectorPair(IndexShard indexShard, Injector injector) {
-            this.indexShard = indexShard;
-            this.injector = injector;
-        }
-
-        public IndexShard getIndexShard() {
-            return indexShard;
-        }
-
-        public Injector getInjector() {
-            return injector;
-        }
-    }
-
->>>>>>> tempbranch
+    private volatile Map<Integer, IndexShard> shards = emptyMap();
     private final AtomicBoolean closed = new AtomicBoolean(false);
     private final AtomicBoolean deleted = new AtomicBoolean(false);
 
@@ -338,19 +318,10 @@ public class IndexService extends AbstractIndexComponent implements IndexCompone
             return;
         }
         logger.debug("[{}] closing... (reason: [{}])", shardId, reason);
-<<<<<<< HEAD
-        HashMap<Integer, IndexShard> tmpShardsMap = new HashMap<>(shards);
-        indexShard = tmpShardsMap.remove(shardId);
-        shards = ImmutableMap.copyOf(tmpShardsMap);
-        closeShard(reason, sId, indexShard, indexShard.store());
-=======
-        HashMap<Integer, IndexShardInjectorPair> newShards = new HashMap<>(shards);
-        IndexShardInjectorPair indexShardInjectorPair = newShards.remove(shardId);
-        indexShard = indexShardInjectorPair.getIndexShard();
-        shardInjector = indexShardInjectorPair.getInjector();
+        HashMap<Integer, IndexShard> newShards = new HashMap<>(shards);
+        indexShard = newShards.remove(shardId);
         shards = unmodifiableMap(newShards);
-        closeShardInjector(reason, sId, shardInjector, indexShard);
->>>>>>> tempbranch
+        closeShard(reason, sId, indexShard, indexShard.store());
         logger.debug("[{}] closed (reason: [{}])", shardId, reason);
     }
 

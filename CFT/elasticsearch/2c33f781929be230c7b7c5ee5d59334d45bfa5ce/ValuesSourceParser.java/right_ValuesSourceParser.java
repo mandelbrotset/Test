@@ -19,14 +19,26 @@
 
 package org.elasticsearch.search.aggregations.support;
 
+import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.ParseField;
 import org.elasticsearch.common.xcontent.XContentParser;
+import org.elasticsearch.index.fielddata.IndexFieldData;
+import org.elasticsearch.index.fielddata.IndexGeoPointFieldData;
+import org.elasticsearch.index.fielddata.IndexNumericFieldData;
+import org.elasticsearch.index.mapper.MappedFieldType;
+import org.elasticsearch.index.mapper.core.BooleanFieldMapper;
+import org.elasticsearch.index.mapper.core.DateFieldMapper;
+import org.elasticsearch.index.mapper.core.NumberFieldMapper;
+import org.elasticsearch.index.mapper.ip.IpFieldMapper;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.Script.ScriptField;
+import org.elasticsearch.script.ScriptContext;
 import org.elasticsearch.script.ScriptParameterParser;
 import org.elasticsearch.script.ScriptParameterParser.ScriptParameterValue;
+import org.elasticsearch.script.SearchScript;
 import org.elasticsearch.search.SearchParseException;
 import org.elasticsearch.search.aggregations.InternalAggregation;
+import org.elasticsearch.search.aggregations.support.format.ValueFormat;
 import org.elasticsearch.search.internal.SearchContext;
 import org.joda.time.DateTimeZone;
 
@@ -35,55 +47,38 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-// NORELEASE remove this class when aggs refactoring complete
 /**
- * @deprecated use {@link AbstractValuesSourceParser} instead. This class will
- *             be removed when aggs refactoring is complete.
+ *
  */
-@Deprecated
 public class ValuesSourceParser<VS extends ValuesSource> {
 
     static final ParseField TIME_ZONE = new ParseField("time_zone");
 
     public static Builder any(String aggName, InternalAggregation.Type aggType, SearchContext context) {
-        return new Builder<>(aggName, aggType, context, ValuesSource.class, ValuesSourceType.ANY);
+        return new Builder<>(aggName, aggType, context, ValuesSource.class);
     }
 
     public static Builder<ValuesSource.Numeric> numeric(String aggName, InternalAggregation.Type aggType, SearchContext context) {
-        return new Builder<>(aggName, aggType, context, ValuesSource.Numeric.class, ValuesSourceType.NUMERIC)
-                .targetValueType(ValueType.NUMERIC);
+        return new Builder<>(aggName, aggType, context, ValuesSource.Numeric.class).targetValueType(ValueType.NUMERIC);
     }
 
     public static Builder<ValuesSource.Bytes> bytes(String aggName, InternalAggregation.Type aggType, SearchContext context) {
-        return new Builder<>(aggName, aggType, context, ValuesSource.Bytes.class, ValuesSourceType.BYTES).targetValueType(ValueType.STRING);
+        return new Builder<>(aggName, aggType, context, ValuesSource.Bytes.class).targetValueType(ValueType.STRING);
     }
 
     public static Builder<ValuesSource.GeoPoint> geoPoint(String aggName, InternalAggregation.Type aggType, SearchContext context) {
-        return new Builder<>(aggName, aggType, context, ValuesSource.GeoPoint.class, ValuesSourceType.GEOPOINT).targetValueType(
-                ValueType.GEOPOINT).scriptable(false);
+        return new Builder<>(aggName, aggType, context, ValuesSource.GeoPoint.class).targetValueType(ValueType.GEOPOINT).scriptable(false);
     }
 
-    // NORELEASE remove this class when aggs refactoring complete
-    /**
-     * @deprecated use {@link AbstractValuesSourceParser} instead. This class
-     *             will be removed when aggs refactoring is complete.
-     */
-    @Deprecated
-    public static class Input<VS> {
-        String field = null;
-        Script script = null;
+    public static class Input {
+        private String field = null;
+        private Script script = null;
         @Deprecated
-        Map<String, Object> params = null; // TODO Remove in 3.0
-        ValueType valueType = null;
-        String format = null;
-        Object missing = null;
-        ValuesSourceType valuesSourceType = null;
-        ValueType targetValueType = null;
-        DateTimeZone timezone = DateTimeZone.UTC;
-
-        public boolean valid() {
-            return field != null || script != null;
-        }
+        private Map<String, Object> params = null; // TODO Remove in 3.0
+        private ValueType valueType = null;
+        private String format = null;
+        private Object missing = null;
+        private DateTimeZone timezone = DateTimeZone.UTC;
 
         public DateTimeZone timezone() {
             return this.timezone;
@@ -93,19 +88,21 @@ public class ValuesSourceParser<VS extends ValuesSource> {
     private final String aggName;
     private final InternalAggregation.Type aggType;
     private final SearchContext context;
+    private final Class<VS> valuesSourceType;
 
     private boolean scriptable = true;
     private boolean formattable = false;
     private boolean timezoneAware = false;
+    private ValueType targetValueType = null;
     private ScriptParameterParser scriptParameterParser = new ScriptParameterParser();
 
-    private Input<VS> input = new Input<VS>();
+    private Input input = new Input();
 
-    private ValuesSourceParser(String aggName, InternalAggregation.Type aggType, SearchContext context, ValuesSourceType valuesSourceType) {
+    private ValuesSourceParser(String aggName, InternalAggregation.Type aggType, SearchContext context, Class<VS> valuesSourceType) {
         this.aggName = aggName;
         this.aggType = aggType;
         this.context = context;
-        input.valuesSourceType = valuesSourceType;
+        this.valuesSourceType = valuesSourceType;
     }
 
     public boolean token(String currentFieldName, XContentParser.Token token, XContentParser parser) throws IOException {
@@ -123,10 +120,11 @@ public class ValuesSourceParser<VS extends ValuesSource> {
             } else if (scriptable) {
                 if ("value_type".equals(currentFieldName) || "valueType".equals(currentFieldName)) {
                     input.valueType = ValueType.resolveForScript(parser.text());
-                    if (input.targetValueType != null && input.valueType.isNotA(input.targetValueType)) {
-                        throw new SearchParseException(context, aggType.name() + " aggregation [" + aggName
-                                + "] was configured with an incompatible value type [" + input.valueType + "]. [" + aggType
-                                + "] aggregation can only work on value of type [" + input.targetValueType + "]", parser.getTokenLocation());
+                    if (targetValueType != null && input.valueType.isNotA(targetValueType)) {
+                        throw new SearchParseException(context, aggType.name() + " aggregation [" + aggName +
+                                "] was configured with an incompatible value type [" + input.valueType + "]. [" + aggType +
+                                "] aggregation can only work on value of type [" + targetValueType + "]",
+                                parser.getTokenLocation());
                     }
                 } else if (!scriptParameterParser.token(currentFieldName, token, parser, context.parseFieldMatcher())) {
                     return false;
@@ -159,9 +157,9 @@ public class ValuesSourceParser<VS extends ValuesSource> {
         return false;
     }
 
-    public Input<VS> input() {
-        if (input.script == null) { // Didn't find anything using the new API so
-                                    // try using the old one instead
+    public ValuesSourceConfig<VS> config() {
+
+        if (input.script == null) { // Didn't find anything using the new API so try using the old one instead
             ScriptParameterValue scriptValue = scriptParameterParser.getDefaultScriptParameterValue();
             if (scriptValue != null) {
                 if (input.params == null) {
@@ -171,7 +169,6 @@ public class ValuesSourceParser<VS extends ValuesSource> {
             }
         }
 
-<<<<<<< HEAD
         ValueType valueType = input.valueType != null ? input.valueType : targetValueType;
 
         if (input.field == null) {
@@ -263,23 +260,13 @@ public class ValuesSourceParser<VS extends ValuesSource> {
 
     public Input input() {
         return this.input;
-=======
-        return input;
->>>>>>> tempbranch
     }
 
-    // NORELEASE remove this class when aggs refactoring complete
-    /**
-     * @deprecated use {@link AbstractValuesSourceParser} instead. This class
-     *             will be removed when aggs refactoring is complete.
-     */
-    @Deprecated
     public static class Builder<VS extends ValuesSource> {
 
         private final ValuesSourceParser<VS> parser;
 
-        private Builder(String aggName, InternalAggregation.Type aggType, SearchContext context, Class<VS> valuesSourcecClass,
-                ValuesSourceType valuesSourceType) {
+        private Builder(String aggName, InternalAggregation.Type aggType, SearchContext context, Class<VS> valuesSourceType) {
             parser = new ValuesSourceParser<>(aggName, aggType, context, valuesSourceType);
         }
 
@@ -299,7 +286,7 @@ public class ValuesSourceParser<VS extends ValuesSource> {
         }
 
         public Builder<VS> targetValueType(ValueType valueType) {
-            parser.input.targetValueType = valueType;
+            parser.targetValueType = valueType;
             return this;
         }
 

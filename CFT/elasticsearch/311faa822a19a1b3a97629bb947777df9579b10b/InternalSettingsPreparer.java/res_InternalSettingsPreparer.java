@@ -20,11 +20,7 @@
 package org.elasticsearch.node.internal;
 
 import com.google.common.base.Charsets;
-<<<<<<< HEAD
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
-=======
->>>>>>> tempbranch
 import com.google.common.collect.UnmodifiableIterator;
 import org.elasticsearch.cluster.ClusterName;
 import org.elasticsearch.common.Booleans;

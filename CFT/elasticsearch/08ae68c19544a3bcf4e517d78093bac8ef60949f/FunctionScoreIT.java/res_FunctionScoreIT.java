@@ -264,13 +264,13 @@ public class FunctionScoreIT extends ESIntegTestCase {
         double expectedScore;
         switch(scoreMode) {
             case MULTIPLY:
-                expectedScore = 1.0;
+            expectedScore = 1.0;
                 break;
             case MAX:
-                expectedScore = Float.MAX_VALUE * -1.0;
+            expectedScore = Float.MAX_VALUE * -1.0;
                 break;
             case MIN:
-                expectedScore = Float.MAX_VALUE;
+            expectedScore = Float.MAX_VALUE;
                 break;
             default:
                 expectedScore = 0.0;
@@ -283,19 +283,19 @@ public class FunctionScoreIT extends ESIntegTestCase {
             weightSum += weights[i];
             switch(scoreMode) {
                 case AVG:
-                    expectedScore += functionScore;
+                expectedScore += functionScore;
                     break;
                 case MAX:
-                    expectedScore = Math.max(functionScore, expectedScore);
+                expectedScore = Math.max(functionScore, expectedScore);
                     break;
                 case MIN:
-                    expectedScore = Math.min(functionScore, expectedScore);
+                expectedScore = Math.min(functionScore, expectedScore);
                     break;
                 case SUM:
-                    expectedScore += functionScore;
+                expectedScore += functionScore;
                     break;
                 case MULTIPLY:
-                    expectedScore *= functionScore;
+                expectedScore *= functionScore;
                     break;
                 default:
                     throw new UnsupportedOperationException();
@@ -370,57 +370,6 @@ public class FunctionScoreIT extends ESIntegTestCase {
         return builders;
     }
 
-<<<<<<< HEAD
-    @Test
-    public void checkWeightOnlyCreatesBoostFunction() throws IOException {
-        assertAcked(prepareCreate(INDEX).addMapping(
-                TYPE,
-                MAPPING_WITH_DOUBLE_AND_GEO_POINT_AND_TEXT_FIELD));
-        ensureYellow();
-
-        index(INDEX, TYPE, "1", SIMPLE_DOC);
-        refresh();
-        String query =jsonBuilder().startObject()
-                .startObject("query")
-                .startObject("function_score")
-                .startArray("functions")
-                .startObject()
-                .field("weight",2)
-                .endObject()
-                .endArray()
-                .endObject()
-                .endObject()
-                .endObject().string();
-        SearchResponse response = client().search(
-                searchRequest().source(new BytesArray(query))
-                ).actionGet();
-        assertSearchResponse(response);
-        assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
-
-        query =jsonBuilder().startObject()
-                .startObject("query")
-                .startObject("function_score")
-                .field("weight",2)
-                .endObject()
-                .endObject()
-                .endObject().string();
-        response = client().search(
-                searchRequest().source(new BytesArray(query))
-        ).actionGet();
-        assertSearchResponse(response);
-        assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
-        response = client().search(
-                searchRequest().source(searchSource().query(functionScoreQuery(new WeightBuilder().setWeight(2.0f))))
-        ).actionGet();
-        assertSearchResponse(response);
-        assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
-        response = client().search(
-                searchRequest().source(searchSource().query(functionScoreQuery(weightFactorFunction(2.0f))))
-        ).actionGet();
-        assertSearchResponse(response);
-        assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
-    }
-=======
 //    @Test
 //    public void checkWeightOnlyCreatesBoostFunction() throws IOException {
 //        assertAcked(prepareCreate(INDEX).addMapping(
@@ -460,17 +409,16 @@ public class FunctionScoreIT extends ESIntegTestCase {
 //        assertSearchResponse(response);
 //        assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
 //        response = client().search(
-//                searchRequest().source(searchSource().query(functionScoreQuery().add(new WeightBuilder().setWeight(2.0f))))
+//                searchRequest().source(searchSource().query(functionScoreQuery(new WeightBuilder().setWeight(2.0f))))
 //        ).actionGet();
 //        assertSearchResponse(response);
 //        assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
 //        response = client().search(
-//                searchRequest().source(searchSource().query(functionScoreQuery().add(weightFactorFunction(2.0f))))
+//                searchRequest().source(searchSource().query(functionScoreQuery(weightFactorFunction(2.0f))))
 //        ).actionGet();
 //        assertSearchResponse(response);
 //        assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
 //    } NOCOMMIT fix this
->>>>>>> tempbranch
 
     @Test
     public void testScriptScoresNested() throws IOException {
@@ -486,7 +434,7 @@ public class FunctionScoreIT extends ESIntegTestCase {
                                                 functionScoreQuery(scriptFunction(new Script("1"))),
                                                 scriptFunction(new Script("_score.doubleValue()"))),
                                         scriptFunction(new Script("_score.doubleValue()"))
-                                )
+                                        )
                         )
                 )
         ).actionGet();
@@ -534,7 +482,7 @@ public class FunctionScoreIT extends ESIntegTestCase {
                                 new FunctionScoreQueryBuilder.FilterFunctionBuilder(scriptFunction(new Script(Float.toString(score)))),
                                 new FunctionScoreQueryBuilder.FilterFunctionBuilder(scriptFunction(new Script(Float.toString(score))))
                         }).scoreMode(FiltersFunctionScoreQuery.ScoreMode.AVG).setMinScore(minScore)))
-                ).actionGet();
+        ).actionGet();
         if (score < minScore) {
             assertThat(searchResponse.getHits().getTotalHits(), is(0l));
         } else {
@@ -596,7 +544,7 @@ public class FunctionScoreIT extends ESIntegTestCase {
         float termQueryScore = 0.19178301f;
         for (CombineFunction combineFunction : CombineFunction.values()) {
             testMinScoreApplied(combineFunction, termQueryScore);
-        }
+    }
     }
 
     protected void testMinScoreApplied(CombineFunction boostMode, float expectedScore) throws InterruptedException, ExecutionException {

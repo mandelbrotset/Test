@@ -35,11 +35,7 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.util.BigArrays;
 import org.elasticsearch.common.util.concurrent.AbstractRunnable;
-<<<<<<< HEAD
-import org.elasticsearch.node.Node;
-=======
 import org.elasticsearch.common.util.concurrent.ThreadContext;
->>>>>>> tempbranch
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.test.ESIntegTestCase;
 import org.elasticsearch.test.ESIntegTestCase.ClusterScope;
@@ -72,7 +68,7 @@ public class NettyTransportIT extends ESIntegTestCase {
     @Override
     protected Settings nodeSettings(int nodeOrdinal) {
         return settingsBuilder().put(super.nodeSettings(nodeOrdinal))
-                .put(Node.NODE_MODE_SETTING.getKey(), "network")
+                .put("node.mode", "network")
                 .put(NetworkModule.TRANSPORT_TYPE_KEY, "exception-throwing").build();
     }
 

@@ -25,6 +25,8 @@ import org.elasticsearch.common.xcontent.XContentParser;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import static com.google.common.collect.Lists.newArrayList;
+
 /**
  * Parser for and query
  * @deprecated use bool query instead
@@ -45,11 +47,7 @@ public class AndQueryParser extends BaseQueryParser<AndQueryBuilder> {
     public AndQueryBuilder fromXContent(QueryParseContext parseContext) throws IOException, QueryParsingException {
         XContentParser parser = parseContext.parser();
 
-<<<<<<< HEAD
-        ArrayList<Query> queries = new ArrayList<>();
-=======
         final ArrayList<QueryBuilder> queries = newArrayList();
->>>>>>> tempbranch
         boolean queriesFound = false;
 
         String queryName = null;

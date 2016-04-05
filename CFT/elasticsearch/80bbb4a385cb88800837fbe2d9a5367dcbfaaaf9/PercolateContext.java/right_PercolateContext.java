@@ -18,11 +18,6 @@
  */
 package org.elasticsearch.percolator;
 
-<<<<<<< HEAD
-=======
-import com.carrotsearch.hppc.ObjectObjectAssociativeContainer;
-
->>>>>>> tempbranch
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.LeafReaderContext;
@@ -57,7 +52,6 @@ import org.elasticsearch.search.SearchHitField;
 import org.elasticsearch.search.SearchShardTarget;
 import org.elasticsearch.search.aggregations.SearchContextAggregations;
 import org.elasticsearch.search.dfs.DfsSearchResult;
-import org.elasticsearch.search.fetch.FetchPhase;
 import org.elasticsearch.search.fetch.FetchSearchResult;
 import org.elasticsearch.search.fetch.FetchSubPhase;
 import org.elasticsearch.search.fetch.FetchSubPhaseContext;
@@ -119,19 +113,14 @@ public class PercolateContext extends SearchContext {
     private final Map<String, FetchSubPhaseContext> subPhaseContexts = new HashMap<>();
     private final QueryShardContext queryShardContext;
     private final Map<Class<?>, Collector> queryCollectors = new HashMap<>();
-<<<<<<< HEAD
     private SearchLookup searchLookup;
-=======
-    private final FetchPhase fetchPhase;
->>>>>>> tempbranch
 
     public PercolateContext(PercolateShardRequest request, SearchShardTarget searchShardTarget, IndexShard indexShard,
-            IndexService indexService, PageCacheRecycler pageCacheRecycler, BigArrays bigArrays, ScriptService scriptService,
-            Query aliasFilter, ParseFieldMatcher parseFieldMatcher, FetchPhase fetchPhase) {
+                            IndexService indexService, PageCacheRecycler pageCacheRecycler,
+                            BigArrays bigArrays, ScriptService scriptService, Query aliasFilter, ParseFieldMatcher parseFieldMatcher) {
         super(parseFieldMatcher);
         this.indexShard = indexShard;
         this.indexService = indexService;
-        this.fetchPhase = fetchPhase;
         this.fieldDataService = indexService.fieldData();
         this.mapperService = indexService.mapperService();
         this.searchShardTarget = searchShardTarget;
@@ -164,11 +153,7 @@ public class PercolateContext extends SearchContext {
         this.startTime = 0;
         this.numberOfShards = 0;
         this.onlyCount = true;
-<<<<<<< HEAD
         this.queryShardContext = queryShardContext;
-=======
-        this.fetchPhase = null;
->>>>>>> tempbranch
     }
 
     public IndexSearcher docSearcher() {
@@ -657,11 +642,6 @@ public class PercolateContext extends SearchContext {
     @Override
     public FetchSearchResult fetchResult() {
         throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public FetchPhase fetchPhase() {
-        return fetchPhase;
     }
 
     @Override

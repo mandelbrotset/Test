@@ -26,9 +26,9 @@ import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.inject.Inject;
-import org.elasticsearch.common.settings.IndexScopedSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentBuilderString;
 import org.elasticsearch.rest.BaseRestHandler;
 import org.elasticsearch.rest.BytesRestResponse;
 import org.elasticsearch.rest.RestChannel;
@@ -42,12 +42,9 @@ import static org.elasticsearch.rest.RestStatus.OK;
 
 public class RestGetSettingsAction extends BaseRestHandler {
 
-    private final IndexScopedSettings indexScopedSettings;
-
     @Inject
-    public RestGetSettingsAction(Settings settings, RestController controller, Client client, IndexScopedSettings indexScopedSettings) {
-        super(settings, controller, client);
-        this.indexScopedSettings = indexScopedSettings;
+    public RestGetSettingsAction(Settings settings, RestController controller, Client client) {
+        super(settings, client);
         controller.registerHandler(GET, "/{index}/_settings/{name}", this);
         controller.registerHandler(GET, "/_settings/{name}", this);
         controller.registerHandler(GET, "/{index}/_setting/{name}", this);
@@ -56,7 +53,6 @@ public class RestGetSettingsAction extends BaseRestHandler {
     @Override
     public void handleRequest(final RestRequest request, final RestChannel channel, final Client client) {
         final String[] names = request.paramAsStringArrayOrEmptyIfAll("name");
-        final boolean renderDefaults = request.paramAsBoolean("include_defaults", false);
         GetSettingsRequest getSettingsRequest = new GetSettingsRequest()
                 .indices(Strings.splitStringByCommaToArray(request.param("index")))
                 .indicesOptions(IndicesOptions.fromRequest(request, IndicesOptions.strictExpandOpen()))
@@ -75,19 +71,18 @@ public class RestGetSettingsAction extends BaseRestHandler {
                         continue;
                     }
                     builder.startObject(cursor.key, XContentBuilder.FieldCaseConversion.NONE);
-                    builder.startObject("settings");
+                    builder.startObject(Fields.SETTINGS);
                     cursor.value.toXContent(builder, request);
                     builder.endObject();
-                    if (renderDefaults) {
-                        builder.startObject("defaults");
-                        indexScopedSettings.diff(cursor.value, settings).toXContent(builder, request);
-                        builder.endObject();
-                    }
                     builder.endObject();
                 }
                 builder.endObject();
                 return new BytesRestResponse(OK, builder);
             }
         });
+    }
+
+    static class Fields {
+        static final XContentBuilderString SETTINGS = new XContentBuilderString("settings");
     }
 }

@@ -19,22 +19,21 @@
 
 package org.elasticsearch.index.query;
 
-<<<<<<< HEAD
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
-=======
->>>>>>> tempbranch
 import org.elasticsearch.common.inject.Inject;
+import org.elasticsearch.common.lucene.search.Queries;
 import org.elasticsearch.common.xcontent.XContentParser;
 
 import java.io.IOException;
 
 /**
- * Parser for filtered query.
- * @deprecated Use {@link BoolQueryParser} instead.
+ *
  */
 @Deprecated
-public class FilteredQueryParser extends BaseQueryParser<FilteredQueryBuilder> {
+public class FilteredQueryParser implements QueryParser {
+
+    public static final String NAME = "filtered";
 
     @Inject
     public FilteredQueryParser() {
@@ -42,16 +41,17 @@ public class FilteredQueryParser extends BaseQueryParser<FilteredQueryBuilder> {
 
     @Override
     public String[] names() {
-        return new String[]{FilteredQueryBuilder.NAME};
+        return new String[]{NAME};
     }
 
     @Override
-    public FilteredQueryBuilder fromXContent(QueryParseContext parseContext) throws IOException, QueryParsingException {
+    public Query parse(QueryParseContext parseContext) throws IOException, QueryParsingException {
         XContentParser parser = parseContext.parser();
 
-        QueryBuilder query = null;
-        QueryBuilder filter = null;
-        float boost = AbstractQueryBuilder.DEFAULT_BOOST;
+        Query query = Queries.newMatchAllQuery();
+        Query filter = null;
+        boolean filterFound = false;
+        float boost = 1.0f;
         String queryName = null;
 
         String currentFieldName = null;
@@ -64,9 +64,10 @@ public class FilteredQueryParser extends BaseQueryParser<FilteredQueryBuilder> {
                 // skip
             } else if (token == XContentParser.Token.START_OBJECT) {
                 if ("query".equals(currentFieldName)) {
-                    query = parseContext.parseInnerQueryBuilder();
+                    query = parseContext.parseInnerQuery();
                 } else if ("filter".equals(currentFieldName)) {
-                    filter = parseContext.parseInnerFilterToQueryBuilder();
+                    filterFound = true;
+                    filter = parseContext.parseInnerFilter();
                 } else {
                     throw new QueryParsingException(parseContext, "[filtered] query does not support [" + currentFieldName + "]");
                 }
@@ -83,7 +84,6 @@ public class FilteredQueryParser extends BaseQueryParser<FilteredQueryBuilder> {
             }
         }
 
-<<<<<<< HEAD
         // parsed internally, but returned null during parsing...
         if (query == null) {
             return null;
@@ -95,17 +95,5 @@ public class FilteredQueryParser extends BaseQueryParser<FilteredQueryBuilder> {
             parseContext.addNamedQuery(queryName, filteredQuery);
         }
         return filteredQuery;
-=======
-        FilteredQueryBuilder qb = new FilteredQueryBuilder(query, filter);
-        qb.boost(boost);
-        qb.queryName(queryName);
-        return qb;
     }
-
-    @Override
-    public FilteredQueryBuilder getBuilderPrototype() {
-        return FilteredQueryBuilder.PROTOTYPE;
->>>>>>> tempbranch
-    }
-
 }

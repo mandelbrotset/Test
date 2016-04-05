@@ -19,6 +19,7 @@
 
 package org.elasticsearch.rest.action.index;
 
+import org.elasticsearch.action.ActionWriteResponse;
 import org.elasticsearch.action.WriteConsistencyLevel;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
@@ -26,6 +27,7 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentBuilderString;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.rest.*;
 import org.elasticsearch.rest.action.support.RestActions;
@@ -100,8 +102,5 @@ public class RestIndexAction extends BaseRestHandler {
         }
         client.index(indexRequest, new RestStatusToXContentListener<>(channel));
     }
-<<<<<<< HEAD
-=======
 
->>>>>>> tempbranch
 }

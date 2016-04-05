@@ -551,8 +551,6 @@ public class TestSearchContext extends SearchContext {
         return null;
     }
 
-<<<<<<< HEAD
-=======
     @Override
     public FetchPhase fetchPhase() {
         return null;
@@ -565,12 +563,11 @@ public class TestSearchContext extends SearchContext {
         }
         return null;
     }
->>>>>>> tempbranch
 
     @Override
-    public MappedFieldType smartNameFieldType(String name) {
+    public MappedFieldType smartNameFieldTypeFromAnyType(String name) {
         if (mapperService() != null) {
-            return mapperService().fullName(name);
+            return mapperService().smartNameFieldType(name);
         }
         return null;
     }
@@ -578,7 +575,7 @@ public class TestSearchContext extends SearchContext {
     @Override
     public ObjectMapper getObjectMapper(String name) {
         if (mapperService() != null) {
-            return mapperService().getObjectMapper(name);
+            return mapperService().getObjectMapper(name, types);
         }
         return null;
     }

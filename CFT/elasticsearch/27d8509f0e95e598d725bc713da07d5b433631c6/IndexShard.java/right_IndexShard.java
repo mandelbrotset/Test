@@ -178,13 +178,9 @@ public class IndexShard extends AbstractIndexShardComponent {
     public static final String INDEX_TRANSLOG_FLUSH_THRESHOLD_OPS = "index.translog.flush_threshold_ops";
     public static final String INDEX_TRANSLOG_FLUSH_THRESHOLD_SIZE = "index.translog.flush_threshold_size";
     public static final String INDEX_TRANSLOG_DISABLE_FLUSH = "index.translog.disable_flush";
-<<<<<<< HEAD
     /** If we see no indexing operations after this much time for a given shard, we consider that shard inactive (default: 5 minutes). */
     public static final String INDEX_SHARD_INACTIVE_TIME_SETTING = "index.shard.inactive_time";
     private static final String INDICES_INACTIVE_TIME_SETTING = "indices.memory.shard_inactive_time";
-=======
-    public static final String INDEX_REFRESH_INTERVAL = "index.refresh_interval";
->>>>>>> tempbranch
 
     private final ShardPath path;
 
@@ -262,13 +258,10 @@ public class IndexShard extends AbstractIndexShardComponent {
         if (mapperService.hasMapping(PercolatorService.TYPE_NAME)) {
             percolatorQueriesRegistry.enableRealTimePercolator();
         }
-<<<<<<< HEAD
 
 
         // We start up inactive
         active.set(false);
-=======
->>>>>>> tempbranch
     }
 
     public Store store() {
@@ -501,7 +494,6 @@ public class IndexShard extends AbstractIndexShardComponent {
             throw ex;
         }
         indexingService.postIndex(index);
-        indexingMemoryController.bytesWritten(index.getTranslogLocation().size);
         return created;
     }
 
@@ -539,7 +531,6 @@ public class IndexShard extends AbstractIndexShardComponent {
             throw ex;
         }
         indexingService.postDelete(delete);
-        indexingMemoryController.bytesWritten(delete.getTranslogLocation().size);
     }
 
     public Engine.GetResult get(Engine.Get get) {
@@ -549,19 +540,12 @@ public class IndexShard extends AbstractIndexShardComponent {
 
     public void refresh(String source) {
         verifyNotClosed();
-        // nocommit OK to throw EngineClosedExc?
-        long ramBytesUsed = getEngine().indexBufferRAMBytesUsed();
-        indexingMemoryController.addRefreshingBytes(shardId, ramBytesUsed);
-        try {
-            if (logger.isTraceEnabled()) {
-                logger.trace("refresh with source: {} indexBufferRAMBytesUsed={}", source, ramBytesUsed);
-            }
-            long time = System.nanoTime();
-            getEngine().refresh(source);
-            refreshMetric.inc(System.nanoTime() - time);
-        } finally {
-            indexingMemoryController.removeRefreshingBytes(shardId, ramBytesUsed);
+        if (logger.isTraceEnabled()) {
+            logger.trace("refresh with source: {}", source);
         }
+        long time = System.nanoTime();
+        getEngine().refresh(source);
+        refreshMetric.inc(System.nanoTime() - time);
     }
 
     public RefreshStats refreshStats() {
@@ -945,16 +929,10 @@ public class IndexShard extends AbstractIndexShardComponent {
     }
 
     /** Records timestamp of the last write operation, possibly switching {@code active} to true if we were inactive. */
-<<<<<<< HEAD
     private void markLastWrite() {
         if (active.getAndSet(true) == false) {
             indexEventListener.onShardActive(this);
         }
-=======
-    private void markLastWrite(Engine.Operation op) {
-        lastWriteNS = op.startTime();
-        active.set(true);
->>>>>>> tempbranch
     }
 
     private void ensureWriteAllowed(Engine.Operation op) throws IllegalIndexShardStateException {
@@ -1014,7 +992,6 @@ public class IndexShard extends AbstractIndexShardComponent {
         }
     }
 
-<<<<<<< HEAD
     public static final String INDEX_REFRESH_INTERVAL = "index.refresh_interval";
 
     public void addShardFailureCallback(Callback<ShardFailure> onShardFailure) {
@@ -1032,18 +1009,11 @@ public class IndexShard extends AbstractIndexShardComponent {
 
         config.setIndexingBufferSize(shardIndexingBufferSize);
 
-=======
-    public void addFailedEngineListener(Engine.FailedEngineListener failedEngineListener) {
-        this.failedEngineListener.delegates.add(failedEngineListener);
-    }
-
-    public long getIndexBufferRAMBytesUsed() {
->>>>>>> tempbranch
         Engine engine = getEngineOrNull();
         if (engine == null) {
-            return 0;
+            logger.debug("updateBufferSize: engine is closed; skipping");
+            return;
         }
-<<<<<<< HEAD
 
         // update engine if it is already started.
         if (preValue.bytes() != shardIndexingBufferSize.bytes()) {
@@ -1069,16 +1039,11 @@ public class IndexShard extends AbstractIndexShardComponent {
             } else {
                 logger.debug(message);
             }
-=======
-        try {
-            return engine.indexBufferRAMBytesUsed();
-        } catch (AlreadyClosedException ex) {
-            return 0;
->>>>>>> tempbranch
         }
+
+        engine.getTranslog().updateBuffer(shardTranslogBufferSize);
     }
 
-<<<<<<< HEAD
     /**
      * Called by {@link IndexingMemoryController} to check whether more than {@code inactiveTimeNS} has passed since the last
      * indexing operation, and become inactive (reducing indexing and translog buffers to tiny values) if so.  This returns true
@@ -1096,18 +1061,10 @@ public class IndexShard extends AbstractIndexShardComponent {
                 updateBufferSize(IndexingMemoryController.INACTIVE_SHARD_INDEXING_BUFFER, IndexingMemoryController.INACTIVE_SHARD_TRANSLOG_BUFFER);
                 logger.debug("marking shard as inactive (inactive_time=[{}]) indexing wise", inactiveTime);
                 indexEventListener.onShardInactive(this);
-=======
-    /** Called by {@link IndexingMemoryController} to check whether more than {@code inactiveTimeNS} has passed since the last
-     *  indexing operation, and become inactive (reducing indexing and translog buffers to tiny values) if so. */
-    public void checkIdle(long inactiveTimeNS) {
-        if (System.nanoTime() - lastWriteNS >= inactiveTimeNS) {
-            boolean wasActive = active.getAndSet(false);
-            if (wasActive) {
-                logger.debug("shard is now inactive");
-                indicesLifecycle.onShardInactive(this);
->>>>>>> tempbranch
             }
         }
+
+        return active.get() == false;
     }
 
     /**
@@ -1242,6 +1199,10 @@ public class IndexShard extends AbstractIndexShardComponent {
                 config.setCompoundOnFlush(compoundOnFlush);
                 change = true;
             }
+            final String versionMapSize = settings.get(EngineConfig.INDEX_VERSION_MAP_SIZE, config.getVersionMapSizeSetting());
+            if (config.getVersionMapSizeSetting().equals(versionMapSize) == false) {
+                config.setVersionMapSizeSetting(versionMapSize);
+            }
 
             final int maxThreadCount = settings.getAsInt(MergeSchedulerConfig.MAX_THREAD_COUNT, mergeSchedulerConfig.getMaxThreadCount());
             if (maxThreadCount != mergeSchedulerConfig.getMaxThreadCount()) {
@@ -1294,7 +1255,6 @@ public class IndexShard extends AbstractIndexShardComponent {
         return percolatorQueriesRegistry.stats();
     }
 
-<<<<<<< HEAD
     public IndexEventListener getIndexEventListener() {
         return indexEventListener;
     }
@@ -1304,26 +1264,6 @@ public class IndexShard extends AbstractIndexShardComponent {
     }
 
     class EngineRefresher implements Runnable {
-=======
-    /**
-     * Asynchronously refreshes the engine for new search operations to reflect the latest
-     * changes.
-     */
-    public void refreshAsync(final String reason) {
-        engineConfig.getThreadPool().executor(ThreadPool.Names.REFRESH).execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        refresh(reason);
-                    } catch (EngineClosedException ex) {
-                        // ignore
-                    }
-                }
-            });
-    }
-
-    final class EngineRefresher implements Runnable {
->>>>>>> tempbranch
         @Override
         public void run() {
             // we check before if a refresh is needed, if not, we reschedule, otherwise, we fork, refresh, and then reschedule
@@ -1335,8 +1275,6 @@ public class IndexShard extends AbstractIndexShardComponent {
                 @Override
                 public void run() {
                     try {
-                        // TODO: now that we use refresh to clear the indexing buffer, we should check here if we did that "recently" and
-                        // reschedule if so...
                         if (getEngine().refreshNeeded()) {
                             refresh("schedule");
                         }

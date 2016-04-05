@@ -19,12 +19,8 @@
 
 package org.elasticsearch.index.query;
 
-<<<<<<< HEAD
-import java.nio.charset.StandardCharsets;
-=======
 import com.google.common.base.Charsets;
 import org.apache.lucene.search.Query;
->>>>>>> tempbranch
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
@@ -59,13 +55,7 @@ public class WrapperQueryBuilder extends AbstractQueryBuilder<WrapperQueryBuilde
      * Creates a query builder given a query provided as a string
      */
     public WrapperQueryBuilder(String source) {
-<<<<<<< HEAD
-        this.source = source.getBytes(StandardCharsets.UTF_8);
-        this.offset = 0;
-        this.length = this.source.length;
-=======
         this.source = source.getBytes(Charsets.UTF_8);
->>>>>>> tempbranch
     }
 
     /**

@@ -88,7 +88,7 @@ public class FiltersAggregator extends BucketsAggregator {
             String key = in.readString();
             QueryBuilder<?> filter = in.readQuery();
             return new KeyedFilter(key, filter);
-        }
+    }
 
         @Override
         public void writeTo(StreamOutput out) throws IOException {
@@ -135,17 +135,7 @@ public class FiltersAggregator extends BucketsAggregator {
         if (showOtherBucket) {
             this.totalNumKeys = keys.length + 1;
         } else {
-<<<<<<< HEAD
             this.totalNumKeys = keys.length;
-=======
-            this.totalNumKeys = filters.size();
-        }
-        for (int i = 0; i < filters.size(); ++i) {
-            KeyedFilter keyedFilter = filters.get(i);
-            this.keys[i] = keyedFilter.key;
-            Query filter = keyedFilter.filter.toFilter(context.searchContext().indexShard().getQueryShardContext());
-            this.filters[i] = aggregationContext.searchContext().searcher().createNormalizedWeight(filter, false);
->>>>>>> tempbranch
         }
     }
 
@@ -210,15 +200,9 @@ public class FiltersAggregator extends BucketsAggregator {
     public static class Factory extends AggregatorFactory<Factory> {
 
         private final List<KeyedFilter> filters;
-<<<<<<< HEAD
-        private final String[] keys;
-        private boolean keyed;
-        private String otherBucketKey;
-=======
         private final boolean keyed;
         private boolean otherBucket = false;
         private String otherBucketKey = "_other_";
->>>>>>> tempbranch
 
         /**
          * @param name
@@ -269,13 +253,6 @@ public class FiltersAggregator extends BucketsAggregator {
          */
         public Factory otherBucketKey(String otherBucketKey) {
             this.otherBucketKey = otherBucketKey;
-<<<<<<< HEAD
-            this.keys = new String[filters.size()];
-            for (int i = 0; i < filters.size(); ++i) {
-                KeyedFilter keyedFilter = filters.get(i);
-                this.keys[i] = keyedFilter.key;
-            }
-=======
             return this;
         }
 
@@ -285,7 +262,6 @@ public class FiltersAggregator extends BucketsAggregator {
          */
         public String otherBucketKey() {
             return otherBucketKey;
->>>>>>> tempbranch
         }
 
         // TODO: refactor in order to initialize the factory once with its parent,
@@ -293,24 +269,25 @@ public class FiltersAggregator extends BucketsAggregator {
         // (since create may be called thousands of times)
 
         private IndexSearcher searcher;
+        private String[] keys;
         private Weight[] weights;
 
         @Override
         public Aggregator createInternal(AggregationContext context, Aggregator parent, boolean collectsFromSingleBucket,
                 List<PipelineAggregator> pipelineAggregators, Map<String, Object> metaData) throws IOException {
-<<<<<<< HEAD
             IndexSearcher contextSearcher = context.searchContext().searcher();
             if (searcher != contextSearcher) {
                 searcher = contextSearcher;
                 weights = new Weight[filters.size()];
+                keys = new String[filters.size()];
                 for (int i = 0; i < filters.size(); ++i) {
                     KeyedFilter keyedFilter = filters.get(i);
-                    this.weights[i] = contextSearcher.createNormalizedWeight(keyedFilter.filter, false);
+                    this.keys[i] = keyedFilter.key;
+                    Query filter = keyedFilter.filter.toFilter(context.searchContext().indexShard().getQueryShardContext());
+                    this.weights[i] = contextSearcher.createNormalizedWeight(filter, false);
                 }
             }
-            return new FiltersAggregator(name, factories, keys, weights, keyed, otherBucketKey, context, parent, pipelineAggregators, metaData);
-=======
-            return new FiltersAggregator(name, factories, filters, keyed, otherBucket ? otherBucketKey : null, context, parent,
+            return new FiltersAggregator(name, factories, keys, weights, keyed, otherBucket ? otherBucketKey : null, context, parent,
                     pipelineAggregators, metaData);
         }
 
@@ -389,7 +366,6 @@ public class FiltersAggregator extends BucketsAggregator {
                     && Objects.equals(keyed, other.keyed)
                     && Objects.equals(otherBucket, other.otherBucket)
                     && Objects.equals(otherBucketKey, other.otherBucketKey);
->>>>>>> tempbranch
         }
     }
 

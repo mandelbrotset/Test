@@ -52,7 +52,6 @@ public abstract class AbstractSimpleTransportTests extends ESTestCase {
 
     protected ThreadPool threadPool;
 
-    protected static final NamedWriteableRegistry namedWriteableRegistry = new NamedWriteableRegistry();
     protected static final Version version0 = Version.fromId(/*0*/99);
     protected DiscoveryNode nodeA;
     protected MockTransportService serviceA;
@@ -70,22 +69,12 @@ public abstract class AbstractSimpleTransportTests extends ESTestCase {
         threadPool = new ThreadPool(getClass().getName());
         serviceA = build(
                 Settings.builder().put("name", "TS_A", TransportService.SETTING_TRACE_LOG_INCLUDE, "", TransportService.SETTING_TRACE_LOG_EXCLUDE, "NOTHING").build(),
-<<<<<<< HEAD
                 version0, new NamedWriteableRegistry()
-=======
-                version0,
-                namedWriteableRegistry
->>>>>>> tempbranch
         );
         nodeA = new DiscoveryNode("TS_A", "TS_A", serviceA.boundAddress().publishAddress(), ImmutableMap.<String, String>of(), version0);
         serviceB = build(
                 Settings.builder().put("name", "TS_B", TransportService.SETTING_TRACE_LOG_INCLUDE, "", TransportService.SETTING_TRACE_LOG_EXCLUDE, "NOTHING").build(),
-<<<<<<< HEAD
                 version1, new NamedWriteableRegistry()
-=======
-                version1,
-                namedWriteableRegistry
->>>>>>> tempbranch
         );
         nodeB = new DiscoveryNode("TS_B", "TS_B", serviceB.boundAddress().publishAddress(), ImmutableMap.<String, String>of(), version1);
 

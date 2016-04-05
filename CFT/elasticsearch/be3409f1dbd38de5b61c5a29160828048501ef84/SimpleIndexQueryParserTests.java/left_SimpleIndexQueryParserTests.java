@@ -67,7 +67,6 @@ import org.elasticsearch.action.termvectors.MultiTermVectorsRequest;
 import org.elasticsearch.action.termvectors.MultiTermVectorsResponse;
 import org.elasticsearch.action.termvectors.TermVectorsRequest;
 import org.elasticsearch.action.termvectors.TermVectorsResponse;
-import org.elasticsearch.cluster.metadata.MetaData;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.compress.CompressedXContent;
@@ -102,7 +101,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Locale;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import static org.elasticsearch.index.query.QueryBuilders.*;
@@ -834,7 +832,7 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
         IndexQueryParserService queryParser = queryParser();
         Query parsedQuery = queryParser.parse(filteredQuery(termQuery("name.first", "shay"), boolQuery().must(termQuery("name.first", "shay1")).must(termQuery("name.first", "shay4")).mustNot(termQuery("name.first", "shay2")).should(termQuery("name.first", "shay3")))).query();
 
-        BooleanQuery.Builder filter = new BooleanQuery.Builder();
+        BooleanQuery filter = new BooleanQuery();
         filter.add(new TermQuery(new Term("name.first", "shay1")), Occur.MUST);
         filter.add(new TermQuery(new Term("name.first", "shay4")), Occur.MUST);
         filter.add(new TermQuery(new Term("name.first", "shay2")), Occur.MUST_NOT);
@@ -842,7 +840,7 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
         filter.setMinimumNumberShouldMatch(1);
         Query expected = Queries.filtered(
                 new TermQuery(new Term("name.first", "shay")),
-                filter.build());
+                filter);
         assertEquals(expected, parsedQuery);
     }
 
@@ -851,7 +849,7 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
         IndexQueryParserService queryParser = queryParser();
         String query = copyToStringFromClasspath("/org/elasticsearch/index/query/bool-filter.json");
         Query parsedQuery = queryParser.parse(query).query();
-        BooleanQuery.Builder filter = new BooleanQuery.Builder();
+        BooleanQuery filter = new BooleanQuery();
         filter.add(new TermQuery(new Term("name.first", "shay1")), Occur.MUST);
         filter.add(new TermQuery(new Term("name.first", "shay4")), Occur.MUST);
         filter.add(new TermQuery(new Term("name.first", "shay2")), Occur.MUST_NOT);
@@ -859,7 +857,7 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
         filter.setMinimumNumberShouldMatch(1);
         Query expected = Queries.filtered(
                 new TermQuery(new Term("name.first", "shay")),
-                filter.build());
+                filter);
         assertEquals(expected, parsedQuery);
     }
 
@@ -867,12 +865,12 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
     public void testAndFilteredQueryBuilder() throws IOException {
         IndexQueryParserService queryParser = queryParser();
         Query parsedQuery = queryParser.parse(filteredQuery(matchAllQuery(), andQuery(termQuery("name.first", "shay1"), termQuery("name.first", "shay4")))).query();
-        BooleanQuery.Builder and = new BooleanQuery.Builder();
+        BooleanQuery and = new BooleanQuery();
         and.add(new TermQuery(new Term("name.first", "shay1")), Occur.MUST);
         and.add(new TermQuery(new Term("name.first", "shay4")), Occur.MUST);
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
-        builder.add(new MatchAllDocsQuery(), Occur.MUST);
-        builder.add(and.build(), Occur.FILTER);
+        builder.add(new BooleanClause(new MatchAllDocsQuery(), Occur.MUST));
+        builder.add(new BooleanClause(and, Occur.FILTER));
         assertEquals(builder.build(), parsedQuery);
     }
 
@@ -881,12 +879,12 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
         IndexQueryParserService queryParser = queryParser();
         String query = copyToStringFromClasspath("/org/elasticsearch/index/query/and-filter.json");
         Query parsedQuery = queryParser.parse(query).query();
-        BooleanQuery.Builder and = new BooleanQuery.Builder();
+        BooleanQuery and = new BooleanQuery();
         and.add(new TermQuery(new Term("name.first", "shay1")), Occur.MUST);
         and.add(new TermQuery(new Term("name.first", "shay4")), Occur.MUST);
         Query expected = Queries.filtered(
                 new TermQuery(new Term("name.first", "shay")),
-                and.build());
+                and);
         assertEquals(expected, parsedQuery);
     }
 
@@ -895,12 +893,12 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
         IndexQueryParserService queryParser = queryParser();
         String query = copyToStringFromClasspath("/org/elasticsearch/index/query/and-filter-named.json");
         Query parsedQuery = queryParser.parse(query).query();
-        BooleanQuery.Builder and = new BooleanQuery.Builder();
+        BooleanQuery and = new BooleanQuery();
         and.add(new TermQuery(new Term("name.first", "shay1")), Occur.MUST);
         and.add(new TermQuery(new Term("name.first", "shay4")), Occur.MUST);
         Query expected = Queries.filtered(
                 new TermQuery(new Term("name.first", "shay")),
-                and.build());
+                and);
         assertEquals(expected, parsedQuery);
     }
 
@@ -909,12 +907,12 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
         IndexQueryParserService queryParser = queryParser();
         String query = copyToStringFromClasspath("/org/elasticsearch/index/query/and-filter2.json");
         Query parsedQuery = queryParser.parse(query).query();
-        BooleanQuery.Builder and = new BooleanQuery.Builder();
+        BooleanQuery and = new BooleanQuery();
         and.add(new TermQuery(new Term("name.first", "shay1")), Occur.MUST);
         and.add(new TermQuery(new Term("name.first", "shay4")), Occur.MUST);
         Query expected = Queries.filtered(
                 new TermQuery(new Term("name.first", "shay")),
-                and.build());
+                and);
         assertEquals(expected, parsedQuery);
     }
 
@@ -922,12 +920,12 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
     public void testOrFilteredQueryBuilder() throws IOException {
         IndexQueryParserService queryParser = queryParser();
         Query parsedQuery = queryParser.parse(filteredQuery(matchAllQuery(), orQuery(termQuery("name.first", "shay1"), termQuery("name.first", "shay4")))).query();
-        BooleanQuery.Builder or = new BooleanQuery.Builder();
+        BooleanQuery or = new BooleanQuery();
         or.add(new TermQuery(new Term("name.first", "shay1")), Occur.SHOULD);
         or.add(new TermQuery(new Term("name.first", "shay4")), Occur.SHOULD);
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         builder.add(new MatchAllDocsQuery(), Occur.MUST);
-        builder.add(or.build(), Occur.FILTER);
+        builder.add(or, Occur.FILTER);
         assertEquals(builder.build(), parsedQuery);
     }
 
@@ -936,12 +934,12 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
         IndexQueryParserService queryParser = queryParser();
         String query = copyToStringFromClasspath("/org/elasticsearch/index/query/or-filter.json");
         Query parsedQuery = queryParser.parse(query).query();
-        BooleanQuery.Builder or = new BooleanQuery.Builder();
+        BooleanQuery or = new BooleanQuery();
         or.add(new TermQuery(new Term("name.first", "shay1")), Occur.SHOULD);
         or.add(new TermQuery(new Term("name.first", "shay4")), Occur.SHOULD);
         Query expected = Queries.filtered(
                 new TermQuery(new Term("name.first", "shay")),
-                or.build());
+                or);
         assertEquals(expected, parsedQuery);
     }
 
@@ -950,12 +948,12 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
         IndexQueryParserService queryParser = queryParser();
         String query = copyToStringFromClasspath("/org/elasticsearch/index/query/or-filter2.json");
         Query parsedQuery = queryParser.parse(query).query();
-        BooleanQuery.Builder or = new BooleanQuery.Builder();
+        BooleanQuery or = new BooleanQuery();
         or.add(new TermQuery(new Term("name.first", "shay1")), Occur.SHOULD);
         or.add(new TermQuery(new Term("name.first", "shay4")), Occur.SHOULD);
         Query expected = Queries.filtered(
                 new TermQuery(new Term("name.first", "shay")),
-                or.build());
+                or);
         assertEquals(expected, parsedQuery);
     }
 
@@ -1005,7 +1003,7 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
     @Test
     public void testBoostingQueryBuilder() throws IOException {
         IndexQueryParserService queryParser = queryParser();
-        Query parsedQuery = queryParser.parse(boostingQuery().positive(termQuery("field1", "value1")).negative(termQuery("field1", "value2")).negativeBoost(0.2f)).query();
+        Query parsedQuery = queryParser.parse(boostingQuery(termQuery("field1", "value1"), termQuery("field1", "value2")).negativeBoost(0.2f)).query();
         assertThat(parsedQuery, instanceOf(BoostingQuery.class));
     }
 
@@ -1387,7 +1385,7 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
     @Test
     public void testSpanNotQueryBuilder() throws IOException {
         IndexQueryParserService queryParser = queryParser();
-        Query parsedQuery = queryParser.parse(spanNotQuery().include(spanTermQuery("age", 34)).exclude(spanTermQuery("age", 35))).query();
+        Query parsedQuery = queryParser.parse(spanNotQuery(spanTermQuery("age", 34), spanTermQuery("age", 35))).query();
         assertThat(parsedQuery, instanceOf(SpanNotQuery.class));
         SpanNotQuery spanNotQuery = (SpanNotQuery) parsedQuery;
         // since age is automatically registered in data, we encode it as numeric
@@ -1410,22 +1408,10 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
     @Test
     public void testSpanWithinQueryBuilder() throws IOException {
         IndexQueryParserService queryParser = queryParser();
-        SpanTermQuery big = new SpanTermQuery(new Term("age", longToPrefixCoded(34, 0)));
-        big.setBoost(2);
-        SpanTermQuery little = new SpanTermQuery(new Term("age", longToPrefixCoded(35, 0)));
-        little.setBoost(3);
-        Query expectedQuery = new SpanWithinQuery(big, little);
-
-        SpanWithinQueryBuilder spanWithinQueryBuilder = spanWithinQuery()
-                .big(spanTermQuery("age", 34).boost(2))
-                .little(spanTermQuery("age", 35).boost(3));
-        Query actualQuery = queryParser.parse(spanWithinQueryBuilder).query();
-        assertEquals(expectedQuery, actualQuery);
-
-        float boost = randomFloat();
-        expectedQuery.setBoost(boost);
-        spanWithinQueryBuilder.boost(boost);
-        actualQuery = queryParser.parse(spanWithinQueryBuilder).query();
+        Query expectedQuery = new SpanWithinQuery(new SpanTermQuery(new Term("age", longToPrefixCoded(34, 0))),
+                                                  new SpanTermQuery(new Term("age", longToPrefixCoded(35, 0))));
+        Query actualQuery = queryParser.parse(spanWithinQuery(spanTermQuery("age", 34), spanTermQuery("age", 35)))
+                                              .query();
         assertEquals(expectedQuery, actualQuery);
     }
 
@@ -1442,22 +1428,9 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
     @Test
     public void testSpanContainingQueryBuilder() throws IOException {
         IndexQueryParserService queryParser = queryParser();
-        SpanTermQuery big = new SpanTermQuery(new Term("age", longToPrefixCoded(34, 0)));
-        big.setBoost(2);
-        SpanTermQuery little = new SpanTermQuery(new Term("age", longToPrefixCoded(35, 0)));
-        little.setBoost(3);
-        Query expectedQuery = new SpanContainingQuery(big, little);
-
-        SpanContainingQueryBuilder spanContainingQueryBuilder = spanContainingQuery()
-                .big(spanTermQuery("age", 34).boost(2))
-                .little(spanTermQuery("age", 35).boost(3));
-        Query actualQuery = queryParser.parse(spanContainingQueryBuilder).query();
-        assertEquals(expectedQuery, actualQuery);
-
-        float boost = randomFloat();
-        expectedQuery.setBoost(boost);
-        spanContainingQueryBuilder.boost(boost);
-        actualQuery = queryParser.parse(spanContainingQueryBuilder).query();
+        Query expectedQuery = new SpanContainingQuery(new SpanTermQuery(new Term("age", longToPrefixCoded(34, 0))),
+                                                      new SpanTermQuery(new Term("age", longToPrefixCoded(35, 0))));
+        Query actualQuery = queryParser.parse(spanContainingQuery(spanTermQuery("age", 34), spanTermQuery("age", 35))).query();
         assertEquals(expectedQuery, actualQuery);
     }
 
@@ -1497,7 +1470,7 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
     @Test
     public void testSpanNearQueryBuilder() throws IOException {
         IndexQueryParserService queryParser = queryParser();
-        Query parsedQuery = queryParser.parse(spanNearQuery().clause(spanTermQuery("age", 34)).clause(spanTermQuery("age", 35)).clause(spanTermQuery("age", 36)).slop(12).inOrder(false).collectPayloads(false)).query();
+        Query parsedQuery = queryParser.parse(spanNearQuery(12).clause(spanTermQuery("age", 34)).clause(spanTermQuery("age", 35)).clause(spanTermQuery("age", 36)).inOrder(false).collectPayloads(false)).query();
         assertThat(parsedQuery, instanceOf(SpanNearQuery.class));
         SpanNearQuery spanNearQuery = (SpanNearQuery) parsedQuery;
         assertThat(spanNearQuery.getClauses().length, equalTo(3));
@@ -1705,7 +1678,7 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
 
     @Test
     public void testMoreLikeThisIds() throws Exception {
-        MoreLikeThisQueryParser parser = (MoreLikeThisQueryParser) queryParser.queryParser("more_like_this");
+        MoreLikeThisQueryParser parser = (MoreLikeThisQueryParser) queryParser.indicesQueriesRegistry().queryParsers().get("more_like_this");
         parser.setFetchService(new MockMoreLikeThisFetchService());
 
         IndexQueryParserService queryParser = queryParser();
@@ -1731,7 +1704,7 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
     @Test
     public void testMLTMinimumShouldMatch() throws Exception {
         // setup for mocking fetching items
-        MoreLikeThisQueryParser parser = (MoreLikeThisQueryParser) queryParser.queryParser("more_like_this");
+        MoreLikeThisQueryParser parser = (MoreLikeThisQueryParser) queryParser.indicesQueriesRegistry().queryParsers().get("more_like_this");
         parser.setFetchService(new MockMoreLikeThisFetchService());
 
         // parsing the ES query
@@ -2540,40 +2513,15 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
         try (Engine.Searcher searcher = indexService.shardSafe(0).acquireSearcher("test")) {
             Query rewrittenQuery = searcher.searcher().rewrite(parsedQuery);
 
-            BooleanQuery.Builder expected = new BooleanQuery.Builder();
+            BooleanQuery expected = new BooleanQuery();
             expected.add(new TermQuery(new Term("foobar", "banon")), Occur.SHOULD);
             TermQuery tq1 = new TermQuery(new Term("name.first", "banon"));
             tq1.setBoost(2);
             TermQuery tq2 = new TermQuery(new Term("name.last", "banon"));
             tq2.setBoost(3);
             expected.add(new DisjunctionMaxQuery(Arrays.<Query>asList(tq1, tq2), 0f), Occur.SHOULD);
-            assertEquals(expected.build(), rewrittenQuery);
+            assertEquals(expected, rewrittenQuery);
         }
-    }
-
-    @Test
-    public void testSimpleQueryString() throws Exception {
-        IndexQueryParserService queryParser = queryParser();
-        String query = copyToStringFromClasspath("/org/elasticsearch/index/query/simple-query-string.json");
-        Query parsedQuery = queryParser.parse(query).query();
-        assertThat(parsedQuery, instanceOf(BooleanQuery.class));
-    }
-
-    @Test
-    public void testSimpleQueryStringBoost() throws Exception {
-        IndexQueryParserService queryParser = queryParser();
-        SimpleQueryStringBuilder simpleQueryStringBuilder = new SimpleQueryStringBuilder("test");
-        simpleQueryStringBuilder.field("body", 5);
-        Query parsedQuery = queryParser.parse(simpleQueryStringBuilder.toString()).query();
-        assertThat(parsedQuery, instanceOf(TermQuery.class));
-        assertThat(parsedQuery.getBoost(), equalTo(5f));
-
-        simpleQueryStringBuilder = new SimpleQueryStringBuilder("test");
-        simpleQueryStringBuilder.field("body", 5);
-        simpleQueryStringBuilder.boost(2);
-        parsedQuery = queryParser.parse(simpleQueryStringBuilder.toString()).query();
-        assertThat(parsedQuery, instanceOf(TermQuery.class));
-        assertThat(parsedQuery.getBoost(), equalTo(10f));
     }
 
     @Test
@@ -2714,8 +2662,8 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
         assertThat(toParentBlockJoinQuery.toString(), equalTo("ToParentBlockJoinQuery (+*:* #QueryWrapperFilter(_type:__nested))"));
         SearchContext.removeCurrent();
     }
-    
-    /** 
+
+    /**
      * helper to extract term from TermQuery. */
     private Term getTerm(Query query) {
         while (query instanceof QueryWrapperFilter) {
@@ -2766,20 +2714,5 @@ public class SimpleIndexQueryParserTests extends ESSingleNodeTestCase {
             assertThat(prefixQuery.getPrefix(), equalTo(new Term("field", "val")));
             assertThat(prefixQuery.getRewriteMethod(), instanceOf(MultiTermQuery.TopTermsBlendedFreqScoringRewrite.class));
         }
-    }
-
-    @Test
-    public void testSimpleQueryStringNoFields() throws Exception {
-        IndexQueryParserService queryParser = queryParser();
-        String queryText = randomAsciiOfLengthBetween(1, 10).toLowerCase(Locale.ROOT);
-        String query = "{\n" +
-                "    \"simple_query_string\" : {\n" +
-                "        \"query\" : \"" + queryText + "\"\n" +
-                "    }\n" +
-                "}";
-        Query parsedQuery = queryParser.parse(query).query();
-        assertThat(parsedQuery, instanceOf(TermQuery.class));
-        TermQuery termQuery = (TermQuery) parsedQuery;
-        assertThat(termQuery.getTerm(), equalTo(new Term(MetaData.ALL, queryText)));
     }
 }

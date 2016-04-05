@@ -200,9 +200,6 @@ public class MatchQueryBuilder extends AbstractQueryBuilder<MatchQueryBuilder> {
     }
 
     /**
-<<<<<<< HEAD
-     * Set a cutoff value in [0..1] (or absolute number &gt;=1) representing the
-=======
      * Get the (optional) number of term expansions when using fuzzy or prefix type query.
      */
     public int maxExpansions() {
@@ -210,8 +207,7 @@ public class MatchQueryBuilder extends AbstractQueryBuilder<MatchQueryBuilder> {
     }
 
     /**
-     * Sets an optional cutoff value in [0..1] (or absolute number >=1) representing the
->>>>>>> tempbranch
+     * Set a cutoff value in [0..1] (or absolute number &gt;=1) representing the
      * maximum threshold of a terms document frequency to be considered a low
      * frequency term.
      */

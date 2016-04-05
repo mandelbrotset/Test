@@ -20,14 +20,15 @@
 package org.elasticsearch.index.query;
 
 import com.google.common.collect.Sets;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queries.TermsQuery;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.util.BytesRef;
+import org.elasticsearch.action.termvectors.MultiTermVectorsRequest;
 import org.elasticsearch.action.termvectors.MultiTermVectorsResponse;
+import org.elasticsearch.action.termvectors.TermVectorsRequest;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.ParseField;
 import org.elasticsearch.common.Strings;
@@ -96,18 +97,13 @@ public class MoreLikeThisQueryParser extends BaseQueryParserTemp {
         XContentParser parser = parseContext.parser();
 
         MoreLikeThisQuery mltQuery = new MoreLikeThisQuery();
-<<<<<<< HEAD
-        mltQuery.setSimilarity(parseContext.searchSimilarity());
+        mltQuery.setSimilarity(context.searchSimilarity());
 
         List<String> likeTexts = new ArrayList<>();
         List<String> unlikeTexts = new ArrayList<>();
         List<Item> likeItems = new ArrayList<>();
         List<Item> unlikeItems = new ArrayList<>();
 
-=======
-        mltQuery.setSimilarity(context.searchSimilarity());
-        Analyzer analyzer = null;
->>>>>>> tempbranch
         List<String> moreLikeFields = null;
         Analyzer analyzer = null;
         boolean include = false;
@@ -140,7 +136,7 @@ public class MoreLikeThisQueryParser extends BaseQueryParserTemp {
                 } else if (parseContext.parseFieldMatcher().match(currentFieldName, Field.MAX_WORD_LENGTH)) {
                     mltQuery.setMaxWordLen(parser.intValue());
                 } else if (parseContext.parseFieldMatcher().match(currentFieldName, Field.ANALYZER)) {
-                    analyzer = parseContext.analysisService().analyzer(parser.text());
+                    analyzer = context.analysisService().analyzer(parser.text());
                 } else if (parseContext.parseFieldMatcher().match(currentFieldName, Field.MINIMUM_SHOULD_MATCH)) {
                     mltQuery.setMinimumShouldMatch(parser.text());
                 } else if (parseContext.parseFieldMatcher().match(currentFieldName, Field.BOOST_TERMS)) {
@@ -149,17 +145,14 @@ public class MoreLikeThisQueryParser extends BaseQueryParserTemp {
                         mltQuery.setBoostTerms(true);
                         mltQuery.setBoostTermsFactor(boostFactor);
                     }
-<<<<<<< HEAD
+                } else if (parseContext.parseFieldMatcher().match(currentFieldName, Field.MINIMUM_SHOULD_MATCH)) {
+                    mltQuery.setMinimumShouldMatch(parser.text());
+                } else if ("analyzer".equals(currentFieldName)) {
+                    analyzer = context.analysisService().analyzer(parser.text());
                 } else if (parseContext.parseFieldMatcher().match(currentFieldName, Field.INCLUDE)) {
                     include = parser.booleanValue();
                 } else if (parseContext.parseFieldMatcher().match(currentFieldName, Field.FAIL_ON_UNSUPPORTED_FIELD)) {
                     failOnUnsupportedField = parser.booleanValue();
-=======
-                } else if (parseContext.parseFieldMatcher().match(currentFieldName, Fields.MINIMUM_SHOULD_MATCH)) {
-                    mltQuery.setMinimumShouldMatch(parser.text());
-                } else if ("analyzer".equals(currentFieldName)) {
-                    analyzer = context.analysisService().analyzer(parser.text());
->>>>>>> tempbranch
                 } else if ("boost".equals(currentFieldName)) {
                     mltQuery.setBoost(parser.floatValue());
                 } else if ("_name".equals(currentFieldName)) {
@@ -258,63 +251,9 @@ public class MoreLikeThisQueryParser extends BaseQueryParserTemp {
 
         // handle items
         if (!likeItems.isEmpty()) {
-<<<<<<< HEAD
             return handleItems(parseContext, mltQuery, likeItems, unlikeItems, include, moreLikeFields, useDefaultField);
         } else {
             return mltQuery;
-=======
-            // set default index, type and fields if not specified
-            MultiTermVectorsRequest items = likeItems;
-            for (TermVectorsRequest item : unlikeItems) {
-                items.add(item);
-            }
-
-            for (TermVectorsRequest item : items) {
-                if (item.index() == null) {
-                    item.index(context.index().name());
-                }
-                if (item.type() == null) {
-                    if (context.queryTypes().size() > 1) {
-                        throw new QueryParsingException(parseContext,
-                                    "ambiguous type for item with id: " + item.id()
-                                + " and index: " + item.index());
-                    } else {
-                        item.type(context.queryTypes().iterator().next());
-                    }
-                }
-                // default fields if not present but don't override for artificial docs
-                if (item.selectedFields() == null && item.doc() == null) {
-                    if (useDefaultField) {
-                        item.selectedFields("*");
-                    } else {
-                        item.selectedFields(moreLikeFields.toArray(new String[moreLikeFields.size()]));
-                    }
-                }
-            }
-            // fetching the items with multi-termvectors API
-            items.copyContextAndHeadersFrom(SearchContext.current());
-            MultiTermVectorsResponse responses = fetchService.fetchResponse(items);
-
-            // getting the Fields for liked items
-            mltQuery.setLikeText(MoreLikeThisFetchService.getFields(responses, likeItems));
-
-            // getting the Fields for ignored items
-            if (!unlikeItems.isEmpty()) {
-                org.apache.lucene.index.Fields[] ignoreFields = MoreLikeThisFetchService.getFields(responses, unlikeItems);
-                if (ignoreFields.length > 0) {
-                    mltQuery.setUnlikeText(ignoreFields);
-                }
-            }
-
-            BooleanQuery.Builder boolQuery = new BooleanQuery.Builder();
-            boolQuery.add(mltQuery, BooleanClause.Occur.SHOULD);
-
-            // exclude the items from the search
-            if (!include) {
-                handleExclude(boolQuery, likeItems);
-            }
-            return boolQuery.build();
->>>>>>> tempbranch
         }
     }
 
@@ -383,11 +322,11 @@ public class MoreLikeThisQueryParser extends BaseQueryParserTemp {
             item.index(parseContext.index().name());
         }
         if (item.type() == null) {
-            if (parseContext.queryTypes().size() > 1) {
+            if (parseContext.shardContext().queryTypes().size() > 1) {
                 throw new QueryParsingException(parseContext,
                             "ambiguous type for item with id: " + item.id() + " and index: " + item.index());
             } else {
-                item.type(parseContext.queryTypes().iterator().next());
+                item.type(parseContext.shardContext().queryTypes().iterator().next());
             }
         }
         // default fields if not present but don't override for artificial docs

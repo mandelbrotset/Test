@@ -315,19 +315,6 @@ public class InternalEngine extends Engine {
         }
     }
 
-    private void updateIndexWriterSettings() {
-        try {
-            final LiveIndexWriterConfig iwc = indexWriter.getConfig();
-<<<<<<< HEAD
-            iwc.setRAMBufferSizeMB(engineConfig.getIndexingBufferSize().mbFrac());
-=======
-            iwc.setUseCompoundFile(engineConfig.isCompoundOnFlush());
->>>>>>> tempbranch
-        } catch (AlreadyClosedException ex) {
-            // ignore
-        }
-    }
-
     @Override
     public GetResult get(Get get, Function<String, Searcher> searcherFactory) throws EngineException {
         try (ReleasableLock lock = readLock.acquire()) {
@@ -1195,7 +1182,6 @@ public class InternalEngine extends Engine {
 
     public void onSettingsChanged() {
         mergeScheduler.refreshConfig();
-        updateIndexWriterSettings();
         // config().isEnableGcDeletes() or config.getGcDeletesInMillis() may have changed:
         maybePruneDeletedTombstones();
     }

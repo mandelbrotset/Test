@@ -41,14 +41,8 @@ import java.util.Objects;
 /**
  * CommonTermsQuery query is a query that executes high-frequency terms in a
  * optional sub-query to prevent slow queries due to "common" terms like
-<<<<<<< HEAD
  * stopwords. This query basically builds 2 queries off the {@code #add(Term)
  * added} terms where low-frequency terms are added to a required boolean clause
-=======
- * stopwords. This query basically builds 2 queries off the
- * {@link org.apache.lucene.queries.CommonTermsQuery#add(Term) added} terms
- * where low-frequency terms are added to a required boolean clause
->>>>>>> tempbranch
  * and high-frequency terms are added to an optional boolean clause. The
  * optional clause is only executed if the required "low-frequency' clause
  * matches. Scores produced by this query will be slightly different to plain

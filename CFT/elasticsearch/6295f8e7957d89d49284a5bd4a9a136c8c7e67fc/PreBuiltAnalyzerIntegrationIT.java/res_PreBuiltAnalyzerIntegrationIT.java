@@ -30,11 +30,8 @@ import org.elasticsearch.test.ESIntegTestCase;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
-<<<<<<< HEAD
-import java.util.ArrayList;
-=======
 import java.util.Collection;
->>>>>>> tempbranch
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;

@@ -19,10 +19,7 @@
 
 package org.elasticsearch.index.query;
 
-<<<<<<< HEAD
-=======
 import com.google.common.collect.Lists;
->>>>>>> tempbranch
 import org.apache.lucene.search.Query;
 import org.elasticsearch.Version;
 import org.elasticsearch.common.geo.GeoPoint;
@@ -36,7 +33,6 @@ import org.elasticsearch.index.mapper.geo.GeoPointFieldMapper;
 import org.elasticsearch.index.search.geo.GeoPolygonQuery;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -71,7 +67,7 @@ public class GeoPolygonQueryParser extends BaseQueryParserTemp {
 
         String fieldName = null;
 
-        List<GeoPoint> shell = new ArrayList<>();
+        List<GeoPoint> shell = Lists.newArrayList();
 
         float boost = AbstractQueryBuilder.DEFAULT_BOOST;
         final boolean indexCreatedBeforeV2_0 = parseContext.shardContext().indexVersionCreated().before(Version.V_2_0_0);

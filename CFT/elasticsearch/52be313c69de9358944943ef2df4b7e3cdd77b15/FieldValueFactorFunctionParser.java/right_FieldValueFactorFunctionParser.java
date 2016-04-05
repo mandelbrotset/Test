@@ -25,13 +25,9 @@ import org.elasticsearch.common.lucene.search.function.FieldValueFactorFunction;
 import org.elasticsearch.common.lucene.search.function.ScoreFunction;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.index.fielddata.IndexNumericFieldData;
-<<<<<<< HEAD
 import org.elasticsearch.index.fielddata.plain.DoubleArrayIndexFieldData;
 import org.elasticsearch.index.mapper.FieldMapper;
-=======
->>>>>>> tempbranch
 import org.elasticsearch.index.mapper.MappedFieldType;
-import org.elasticsearch.index.query.QueryShardContext;
 import org.elasticsearch.index.query.QueryParseContext;
 import org.elasticsearch.index.query.QueryParsingException;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionParser;
@@ -58,8 +54,7 @@ public class FieldValueFactorFunctionParser implements ScoreFunctionParser {
     public static String[] NAMES = { "field_value_factor", "fieldValueFactor" };
 
     @Override
-    public ScoreFunction parse(QueryShardContext context, XContentParser parser) throws IOException, QueryParsingException {
-        QueryParseContext parseContext = context.parseContext();
+    public ScoreFunction parse(QueryParseContext parseContext, XContentParser parser) throws IOException, QueryParsingException {
 
         String currentFieldName = null;
         String field = null;

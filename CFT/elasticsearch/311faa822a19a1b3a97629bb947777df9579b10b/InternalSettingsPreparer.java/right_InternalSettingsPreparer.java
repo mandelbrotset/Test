@@ -20,11 +20,8 @@
 package org.elasticsearch.node.internal;
 
 import com.google.common.base.Charsets;
-<<<<<<< HEAD
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
-=======
->>>>>>> tempbranch
 import com.google.common.collect.UnmodifiableIterator;
 import org.elasticsearch.cluster.ClusterName;
 import org.elasticsearch.common.Booleans;
@@ -42,7 +39,6 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,7 +52,7 @@ import static org.elasticsearch.common.settings.Settings.settingsBuilder;
  */
 public class InternalSettingsPreparer {
 
-    static final List<String> ALLOWED_SUFFIXES = Arrays.asList(".yml", ".yaml", ".json", ".properties");
+    static final List<String> ALLOWED_SUFFIXES = ImmutableList.of(".yml", ".yaml", ".json", ".properties");
 
     public static final String SECRET_PROMPT_VALUE = "${prompt.secret}";
     public static final String TEXT_PROMPT_VALUE = "${prompt.text}";

@@ -19,19 +19,15 @@
 
 package org.elasticsearch.script;
 
-<<<<<<< HEAD
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 
-import java.util.*;
-=======
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
->>>>>>> tempbranch
 
-import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
 
 /**
@@ -42,7 +38,7 @@ import static java.util.Collections.unmodifiableSet;
 public final class ScriptContextRegistry {
     static final Set<String> RESERVED_SCRIPT_CONTEXTS = reservedScriptContexts();
 
-    private final Map<String, ScriptContext> scriptContexts;
+    private final ImmutableMap<String, ScriptContext> scriptContexts;
 
     public ScriptContextRegistry(Collection<ScriptContext.Plugin> customScriptContexts) {
         Map<String, ScriptContext> scriptContexts = new HashMap<>();
@@ -56,13 +52,13 @@ public final class ScriptContextRegistry {
                 throw new IllegalArgumentException("script context [" + customScriptContext.getKey() + "] cannot be registered twice");
             }
         }
-        this.scriptContexts = unmodifiableMap(scriptContexts);
+        this.scriptContexts = ImmutableMap.copyOf(scriptContexts);
     }
 
     /**
      * @return a list that contains all the supported {@link ScriptContext}s, both standard ones and registered via plugins
      */
-    Collection<ScriptContext> scriptContexts() {
+    ImmutableCollection<ScriptContext> scriptContexts() {
         return scriptContexts.values();
     }
 

@@ -580,13 +580,6 @@ public abstract class StreamOutput extends OutputStream {
     }
 
     /**
-<<<<<<< HEAD
-     * Writes the given {@link GeoPoint} to the stream
-     */
-    public void writeGeoPoint(GeoPoint geoPoint) throws IOException {
-        writeDouble(geoPoint.lat());
-        writeDouble(geoPoint.lon());
-=======
      * Writes a {@link QueryBuilder} to the current stream
      */
     public void writeQuery(QueryBuilder queryBuilder) throws IOException {
@@ -598,6 +591,13 @@ public abstract class StreamOutput extends OutputStream {
      */
     public void writeScoreFunction(ScoreFunctionBuilder<?> scoreFunctionBuilder) throws IOException {
         writeNamedWriteable(scoreFunctionBuilder);
->>>>>>> tempbranch
+    }
+
+    /**
+     * Writes the given {@link GeoPoint} to the stream
+     */
+    public void writeGeoPoint(GeoPoint geoPoint) throws IOException {
+        writeDouble(geoPoint.lat());
+        writeDouble(geoPoint.lon());
     }
 }

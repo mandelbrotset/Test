@@ -19,11 +19,6 @@
 
 package org.elasticsearch.index.similarity;
 
-<<<<<<< HEAD
-import com.google.common.collect.ImmutableMap;
-import org.apache.lucene.search.similarities.*;
-import org.elasticsearch.common.collect.MapBuilder;
-=======
 import org.apache.lucene.search.similarities.Distribution;
 import org.apache.lucene.search.similarities.DistributionLL;
 import org.apache.lucene.search.similarities.DistributionSPL;
@@ -33,9 +28,6 @@ import org.apache.lucene.search.similarities.LambdaDF;
 import org.apache.lucene.search.similarities.LambdaTTF;
 import org.apache.lucene.search.similarities.Normalization;
 import org.apache.lucene.search.similarities.Similarity;
-import org.elasticsearch.common.inject.Inject;
-import org.elasticsearch.common.inject.assistedinject.Assisted;
->>>>>>> tempbranch
 import org.elasticsearch.common.settings.Settings;
 
 import java.util.HashMap;

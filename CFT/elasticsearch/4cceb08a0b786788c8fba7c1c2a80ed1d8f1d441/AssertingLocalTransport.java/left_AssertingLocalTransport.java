@@ -24,7 +24,7 @@ import org.elasticsearch.cluster.node.DiscoveryNode;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.io.stream.NamedWriteableRegistry;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.test.ESIntegTestCase;
+import org.elasticsearch.test.ElasticsearchIntegrationTest;
 import org.elasticsearch.test.VersionUtils;
 import org.elasticsearch.test.hamcrest.ElasticsearchAssertions;
 import org.elasticsearch.threadpool.ThreadPool;
@@ -46,15 +46,9 @@ public class AssertingLocalTransport extends LocalTransport {
     private final Version maxVersion;
 
     @Inject
-<<<<<<< HEAD
-    public AssertingLocalTransport(Settings settings, ThreadPool threadPool, Version version) {
-        super(settings, threadPool, version);
-        final long seed = settings.getAsLong(ESIntegTestCase.SETTING_INDEX_SEED, 0l);
-=======
     public AssertingLocalTransport(Settings settings, ThreadPool threadPool, Version version, NamedWriteableRegistry namedWriteableRegistry) {
         super(settings, threadPool, version, namedWriteableRegistry);
         final long seed = settings.getAsLong(ElasticsearchIntegrationTest.SETTING_INDEX_SEED, 0l);
->>>>>>> tempbranch
         random = new Random(seed);
         minVersion = settings.getAsVersion(ASSERTING_TRANSPORT_MIN_VERSION_KEY, Version.V_0_18_0);
         maxVersion = settings.getAsVersion(ASSERTING_TRANSPORT_MAX_VERSION_KEY, Version.CURRENT);

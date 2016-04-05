@@ -38,7 +38,6 @@ import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.compress.CompressedXContent;
 import org.elasticsearch.common.lucene.search.Queries;
 import org.elasticsearch.common.regex.Regex;
-import org.elasticsearch.common.settings.Setting;
 import org.elasticsearch.index.AbstractIndexComponent;
 import org.elasticsearch.index.IndexSettings;
 import org.elasticsearch.index.analysis.AnalysisService;
@@ -95,13 +94,8 @@ public class MapperService extends AbstractIndexComponent implements Closeable {
     }
 
     public static final String DEFAULT_MAPPING = "_default_";
-<<<<<<< HEAD
     public static final String INDEX_MAPPER_DYNAMIC_SETTING = "index.mapper.dynamic";
-    public static final String INDEX_MAPPING_NESTED_FIELDS_LIMIT_SETTING = "index.mapping.nested_fields.limit";
-=======
->>>>>>> tempbranch
     public static final boolean INDEX_MAPPER_DYNAMIC_DEFAULT = true;
-    public static final Setting<Boolean> INDEX_MAPPER_DYNAMIC_SETTING = Setting.boolSetting("index.mapper.dynamic", INDEX_MAPPER_DYNAMIC_DEFAULT, false, Setting.Scope.INDEX);
     private static ObjectHashSet<String> META_FIELDS = ObjectHashSet.from(
             "_uid", "_id", "_type", "_all", "_parent", "_routing", "_index",
             "_size", "_timestamp", "_ttl"
@@ -149,7 +143,7 @@ public class MapperService extends AbstractIndexComponent implements Closeable {
         this.searchQuoteAnalyzer = new MapperAnalyzerWrapper(analysisService.defaultSearchQuoteAnalyzer(), p -> p.searchQuoteAnalyzer());
         this.mapperRegistry = mapperRegistry;
 
-        this.dynamic = this.indexSettings.getValue(INDEX_MAPPER_DYNAMIC_SETTING);
+        this.dynamic = this.indexSettings.getSettings().getAsBoolean(INDEX_MAPPER_DYNAMIC_SETTING, INDEX_MAPPER_DYNAMIC_DEFAULT);
         defaultPercolatorMappingSource = "{\n" +
             "\"_default_\":{\n" +
                 "\"properties\" : {\n" +
@@ -248,12 +242,12 @@ public class MapperService extends AbstractIndexComponent implements Closeable {
                         // only apply the default mapping if we don't have the type yet
                         && mappers.containsKey(type) == false;
                 DocumentMapper mergeWith = parse(type, mappingSource, applyDefault);
-                return merge(mergeWith, reason, updateAllTypes);
+                return merge(mergeWith, updateAllTypes);
             }
         }
     }
 
-    private synchronized DocumentMapper merge(DocumentMapper mapper, MergeReason reason, boolean updateAllTypes) {
+    private synchronized DocumentMapper merge(DocumentMapper mapper, boolean updateAllTypes) {
         if (mapper.type().length() == 0) {
             throw new InvalidTypeNameException("mapping type name is empty");
         }
@@ -306,11 +300,6 @@ public class MapperService extends AbstractIndexComponent implements Closeable {
             }
         }
         fullPathObjectMappers = Collections.unmodifiableMap(fullPathObjectMappers);
-
-        if (reason == MergeReason.MAPPING_UPDATE) {
-            checkNestedFieldsLimit(fullPathObjectMappers);
-        }
-
         Set<String> parentTypes = this.parentTypes;
         if (oldMapper == null && newMapper.parentFieldMapper().active()) {
             parentTypes = new HashSet<>(parentTypes.size() + 1);
@@ -420,19 +409,6 @@ public class MapperService extends AbstractIndexComponent implements Closeable {
             if (fullPathObjectMappers.containsKey(fieldMapper.name())) {
                 throw new IllegalArgumentException("Field [" + fieldMapper.name() + "] is defined as a field in mapping [" + type + "] but this name is already used for an object in other types");
             }
-        }
-    }
-
-    private void checkNestedFieldsLimit(Map<String, ObjectMapper> fullPathObjectMappers) {
-        long allowedNestedFields = indexSettings.getSettings().getAsLong(INDEX_MAPPING_NESTED_FIELDS_LIMIT_SETTING, 50L);
-        long actualNestedFields = 0;
-        for (ObjectMapper objectMapper : fullPathObjectMappers.values()) {
-            if (objectMapper.nested().isNested()) {
-                actualNestedFields++;
-            }
-        }
-        if (allowedNestedFields >= 0 && actualNestedFields > allowedNestedFields) {
-            throw new IllegalArgumentException("Limit of nested fields [" + allowedNestedFields + "] in index [" + index().name() + "] has been exceeded");
         }
     }
 

@@ -22,7 +22,6 @@ package org.elasticsearch.transport;
 import com.google.common.collect.ImmutableMap;
 import org.elasticsearch.Version;
 import org.elasticsearch.cluster.node.DiscoveryNode;
-import org.elasticsearch.common.io.stream.NamedWriteableRegistry;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.settings.Settings;
@@ -52,7 +51,6 @@ public abstract class AbstractSimpleTransportTests extends ESTestCase {
 
     protected ThreadPool threadPool;
 
-    protected static final NamedWriteableRegistry namedWriteableRegistry = new NamedWriteableRegistry();
     protected static final Version version0 = Version.fromId(/*0*/99);
     protected DiscoveryNode nodeA;
     protected MockTransportService serviceA;
@@ -61,7 +59,7 @@ public abstract class AbstractSimpleTransportTests extends ESTestCase {
     protected DiscoveryNode nodeB;
     protected MockTransportService serviceB;
 
-    protected abstract MockTransportService build(Settings settings, Version version, NamedWriteableRegistry namedWriteableRegistry);
+    protected abstract MockTransportService build(Settings settings, Version version);
 
     @Override
     @Before
@@ -70,22 +68,12 @@ public abstract class AbstractSimpleTransportTests extends ESTestCase {
         threadPool = new ThreadPool(getClass().getName());
         serviceA = build(
                 Settings.builder().put("name", "TS_A", TransportService.SETTING_TRACE_LOG_INCLUDE, "", TransportService.SETTING_TRACE_LOG_EXCLUDE, "NOTHING").build(),
-<<<<<<< HEAD
-                version0, new NamedWriteableRegistry()
-=======
-                version0,
-                namedWriteableRegistry
->>>>>>> tempbranch
+                version0
         );
         nodeA = new DiscoveryNode("TS_A", "TS_A", serviceA.boundAddress().publishAddress(), ImmutableMap.<String, String>of(), version0);
         serviceB = build(
                 Settings.builder().put("name", "TS_B", TransportService.SETTING_TRACE_LOG_INCLUDE, "", TransportService.SETTING_TRACE_LOG_EXCLUDE, "NOTHING").build(),
-<<<<<<< HEAD
-                version1, new NamedWriteableRegistry()
-=======
-                version1,
-                namedWriteableRegistry
->>>>>>> tempbranch
+                version1
         );
         nodeB = new DiscoveryNode("TS_B", "TS_B", serviceB.boundAddress().publishAddress(), ImmutableMap.<String, String>of(), version1);
 

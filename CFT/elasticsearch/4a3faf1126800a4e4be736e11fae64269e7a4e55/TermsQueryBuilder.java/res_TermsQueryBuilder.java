@@ -24,9 +24,13 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import java.io.IOException;
 
 /**
- * A filer for a field based on several terms matching on any of them.
+ * A filter for a field based on several terms matching on any of them.
  */
-public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBuilder<TermsQueryBuilder> {
+public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
+
+    public static final String NAME = "terms";
+
+    static final TermsQueryBuilder PROTOTYPE = new TermsQueryBuilder(null, (Object) null);
 
     private final String name;
 
@@ -36,12 +40,14 @@ public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBui
 
     private Boolean disableCoord;
 
-    private String queryName;
-
-    private float boost = -1;
+    private String lookupIndex;
+    private String lookupType;
+    private String lookupId;
+    private String lookupRouting;
+    private String lookupPath;
 
     /**
-     * A filer for a field based on several terms matching on any of them.
+     * A filter for a field based on several terms matching on any of them.
      *
      * @param name   The field name
      * @param values The terms
@@ -51,7 +57,7 @@ public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBui
     }
 
     /**
-     * A filer for a field based on several terms matching on any of them.
+     * A filter for a field based on several terms matching on any of them.
      *
      * @param name   The field name
      * @param values The terms
@@ -62,7 +68,7 @@ public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBui
     }
 
     /**
-     * A filer for a field based on several terms matching on any of them.
+     * A filter for a field based on several terms matching on any of them.
      *
      * @param name   The field name
      * @param values The terms
@@ -73,7 +79,7 @@ public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBui
     }
 
     /**
-     * A filer for a field based on several terms matching on any of them.
+     * A filter for a field based on several terms matching on any of them.
      *
      * @param name   The field name
      * @param values The terms
@@ -84,7 +90,7 @@ public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBui
     }
 
     /**
-     * A filer for a field based on several terms matching on any of them.
+     * A filter for a field based on several terms matching on any of them.
      *
      * @param name   The field name
      * @param values The terms
@@ -95,7 +101,7 @@ public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBui
     }
 
     /**
-     * A filer for a field based on several terms matching on any of them.
+     * A filter for a field based on several terms matching on any of them.
      *
      * @param name   The field name
      * @param values The terms
@@ -106,7 +112,7 @@ public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBui
     }
 
     /**
-     * A filer for a field based on several terms matching on any of them.
+     * A filter for a field based on several terms matching on any of them.
      *
      * @param name   The field name
      * @param values The terms
@@ -137,24 +143,61 @@ public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBui
     }
 
     /**
-     * Sets the filter name for the filter that can be used when searching for matched_filters per hit.
+     * Sets the index name to lookup the terms from.
      */
-    public TermsQueryBuilder queryName(String queryName) {
-        this.queryName = queryName;
+    public TermsQueryBuilder lookupIndex(String lookupIndex) {
+        this.lookupIndex = lookupIndex;
         return this;
     }
 
-    @Override
-    public TermsQueryBuilder boost(float boost) {
-        this.boost = boost;
+    /**
+     * Sets the index type to lookup the terms from.
+     */
+    public TermsQueryBuilder lookupType(String lookupType) {
+        this.lookupType = lookupType;
+        return this;
+    }
+
+    /**
+     * Sets the doc id to lookup the terms from.
+     */
+    public TermsQueryBuilder lookupId(String lookupId) {
+        this.lookupId = lookupId;
+        return this;
+    }
+
+    /**
+     * Sets the path within the document to lookup the terms from.
+     */
+    public TermsQueryBuilder lookupPath(String lookupPath) {
+        this.lookupPath = lookupPath;
+        return this;
+    }
+
+    public TermsQueryBuilder lookupRouting(String lookupRouting) {
+        this.lookupRouting = lookupRouting;
         return this;
     }
 
     @Override
     public void doXContent(XContentBuilder builder, Params params) throws IOException {
-        builder.startObject(TermsQueryParser.NAME);
-        builder.field(name, values);
-
+        builder.startObject(NAME);
+        if (values == null) {
+            builder.startObject(name);
+            if (lookupIndex != null) {
+                builder.field("index", lookupIndex);
+            }
+            builder.field("type", lookupType);
+            builder.field("id", lookupId);
+            if (lookupRouting != null) {
+                builder.field("routing", lookupRouting);
+            }
+            builder.field("path", lookupPath);
+            builder.endObject();
+        } else {
+            builder.field(name, values);
+        }
+        
         if (minimumShouldMatch != null) {
             builder.field("minimum_should_match", minimumShouldMatch);
         }
@@ -163,14 +206,13 @@ public class TermsQueryBuilder extends QueryBuilder implements BoostableQueryBui
             builder.field("disable_coord", disableCoord);
         }
 
-        if (boost != -1) {
-            builder.field("boost", boost);
-        }
-
-        if (queryName != null) {
-            builder.field("_name", queryName);
-        }
+        printBoostAndQueryName(builder);
 
         builder.endObject();
+    }
+
+    @Override
+    public String getWriteableName() {
+        return NAME;
     }
 }

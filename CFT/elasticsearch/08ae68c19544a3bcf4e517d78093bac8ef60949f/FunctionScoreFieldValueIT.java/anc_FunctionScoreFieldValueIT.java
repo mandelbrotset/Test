@@ -21,6 +21,7 @@ package org.elasticsearch.search.functionscore;
 
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.lucene.search.function.FieldValueFactorFunction;
 import org.elasticsearch.test.ESIntegTestCase;
 import org.junit.Test;
@@ -125,37 +126,34 @@ public class FunctionScoreFieldValueIT extends ESIntegTestCase {
             // This is fine, the query will throw an exception if executed
             // locally, instead of just having failures
         }
-<<<<<<< HEAD
-=======
 
-//        // don't permit an array of factors
-//        try {
-//          String querySource = "{" +
-//            "\"query\": {" +
-//            "  \"function_score\": {" +
-//            "    \"query\": {" +
-//            "      \"match\": {\"name\": \"foo\"}" +
-//            "      }," +
-//            "      \"functions\": [" +
-//            "        {" +
-//            "          \"field_value_factor\": {" +
-//            "            \"field\": \"test\"," +
-//            "            \"factor\": [1.2,2]" +
-//            "          }" +
-//            "        }" +
-//            "      ]" +
-//            "    }" +
-//            "  }" +
-//            "}";
-//          response = client().prepareSearch("test")
-//          .setSource(new BytesArray(querySource))
-//                  .get();
-//          assertFailures(response);
-//        } catch (SearchPhaseExecutionException e) {
-//          // This is fine, the query will throw an exception if executed
-//          // locally, instead of just having failures
-//        } NOCOMMIT fix this
+        // don't permit an array of factors
+        try {
+          String querySource = "{" +
+            "\"query\": {" +
+            "  \"function_score\": {" +
+            "    \"query\": {" +
+            "      \"match\": {\"name\": \"foo\"}" +
+            "      }," +
+            "      \"functions\": [" +
+            "        {" +
+            "          \"field_value_factor\": {" +
+            "            \"field\": \"test\"," +
+            "            \"factor\": [1.2,2]" +
+            "          }" +
+            "        }" +
+            "      ]" +
+            "    }" +
+            "  }" +
+            "}";
+          response = client().prepareSearch("test")
+          .setSource(new BytesArray(querySource))
+                  .get();
+          assertFailures(response);
+        } catch (SearchPhaseExecutionException e) {
+          // This is fine, the query will throw an exception if executed
+          // locally, instead of just having failures
+        }
 
->>>>>>> tempbranch
     }
 }

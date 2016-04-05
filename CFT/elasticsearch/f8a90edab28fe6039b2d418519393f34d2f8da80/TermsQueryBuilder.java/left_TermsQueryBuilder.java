@@ -36,15 +36,6 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
 
     private final Object values;
 
-<<<<<<< HEAD
-    private String minimumShouldMatch;
-
-    private Boolean disableCoord;
-
-    private String queryName;
-
-=======
->>>>>>> tempbranch
     private String execution;
 
     private String lookupIndex;
@@ -142,31 +133,7 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
     }
 
     /**
-<<<<<<< HEAD
-     * Sets the minimum number of matches across the provided terms. Defaults to <tt>1</tt>.
-     * @deprecated use [bool] query instead
-     */
-    @Deprecated
-    public TermsQueryBuilder minimumShouldMatch(String minimumShouldMatch) {
-        this.minimumShouldMatch = minimumShouldMatch;
-        return this;
-    }
-
-    /**
-     * Disables <tt>Similarity#coord(int,int)</tt> in scoring. Defaults to <tt>false</tt>.
-     * @deprecated use [bool] query instead
-     */
-    @Deprecated
-    public TermsQueryBuilder disableCoord(boolean disableCoord) {
-        this.disableCoord = disableCoord;
-        return this;
-    }
-
-    /**
-     * Sets the filter name for the filter that can be used when searching for matched_filters per hit.
-=======
      * Sets the index name to lookup the terms from.
->>>>>>> tempbranch
      */
     public TermsQueryBuilder lookupIndex(String lookupIndex) {
         this.lookupIndex = lookupIndex;
@@ -232,26 +199,7 @@ public class TermsQueryBuilder extends AbstractQueryBuilder<TermsQueryBuilder> {
             builder.field("execution", execution);
         }
 
-<<<<<<< HEAD
-        if (minimumShouldMatch != null) {
-            builder.field("minimum_should_match", minimumShouldMatch);
-        }
-
-        if (disableCoord != null) {
-            builder.field("disable_coord", disableCoord);
-        }
-
-        if (boost != -1) {
-            builder.field("boost", boost);
-        }
-
-        if (queryName != null) {
-            builder.field("_name", queryName);
-        }
-
-=======
         printBoostAndQueryName(builder);
->>>>>>> tempbranch
         builder.endObject();
     }
 

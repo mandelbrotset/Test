@@ -19,18 +19,24 @@
 
 package org.elasticsearch.index.query;
 
+import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Query;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.xcontent.XContentParser;
 
 import java.io.IOException;
 import java.util.ArrayList;
 
+import static com.google.common.collect.Lists.newArrayList;
+
 /**
- * Parser for and query
- * @deprecated use bool query instead
+ *
  */
 @Deprecated
-public class AndQueryParser extends BaseQueryParser<AndQueryBuilder> {
+public class AndQueryParser implements QueryParser {
+
+    public static final String NAME = "and";
 
     @Inject
     public AndQueryParser() {
@@ -38,29 +44,26 @@ public class AndQueryParser extends BaseQueryParser<AndQueryBuilder> {
 
     @Override
     public String[] names() {
-        return new String[]{AndQueryBuilder.NAME};
+        return new String[]{NAME};
     }
 
     @Override
-    public AndQueryBuilder fromXContent(QueryParseContext parseContext) throws IOException, QueryParsingException {
+    public Query parse(QueryParseContext parseContext) throws IOException, QueryParsingException {
         XContentParser parser = parseContext.parser();
 
-<<<<<<< HEAD
-        ArrayList<Query> queries = new ArrayList<>();
-=======
-        final ArrayList<QueryBuilder> queries = newArrayList();
->>>>>>> tempbranch
+        ArrayList<Query> queries = newArrayList();
         boolean queriesFound = false;
 
         String queryName = null;
         String currentFieldName = null;
-        float boost = AbstractQueryBuilder.DEFAULT_BOOST;
         XContentParser.Token token = parser.currentToken();
         if (token == XContentParser.Token.START_ARRAY) {
             while ((token = parser.nextToken()) != XContentParser.Token.END_ARRAY) {
                 queriesFound = true;
-                QueryBuilder filter = parseContext.parseInnerFilterToQueryBuilder();
-                queries.add(filter);
+                Query filter = parseContext.parseInnerFilter();
+                if (filter != null) {
+                    queries.add(filter);
+                }
             }
         } else {
             while ((token = parser.nextToken()) != XContentParser.Token.END_OBJECT) {
@@ -72,15 +75,23 @@ public class AndQueryParser extends BaseQueryParser<AndQueryBuilder> {
                     if ("filters".equals(currentFieldName)) {
                         queriesFound = true;
                         while ((token = parser.nextToken()) != XContentParser.Token.END_ARRAY) {
-                            QueryBuilder filter = parseContext.parseInnerFilterToQueryBuilder();
-                            queries.add(filter);
+                            Query filter = parseContext.parseInnerFilter();
+                            if (filter != null) {
+                                queries.add(filter);
+                            }
+                        }
+                    } else {
+                        queriesFound = true;
+                        while ((token = parser.nextToken()) != XContentParser.Token.END_ARRAY) {
+                            Query filter = parseContext.parseInnerFilter();
+                            if (filter != null) {
+                                queries.add(filter);
+                            }
                         }
                     }
                 } else if (token.isValue()) {
                     if ("_name".equals(currentFieldName)) {
                         queryName = parser.text();
-                    } else if ("boost".equals(currentFieldName)) {
-                        boost = parser.floatValue();
                     } else {
                         throw new QueryParsingException(parseContext, "[and] query does not support [" + currentFieldName + "]");
                     }
@@ -92,17 +103,18 @@ public class AndQueryParser extends BaseQueryParser<AndQueryBuilder> {
             throw new QueryParsingException(parseContext, "[and] query requires 'filters' to be set on it'");
         }
 
-        AndQueryBuilder andQuery = new AndQueryBuilder();
-        for (QueryBuilder query : queries) {
-            andQuery.add(query);
+        if (queries.isEmpty()) {
+            // no filters provided, this should be ignored upstream
+            return null;
         }
-        andQuery.queryName(queryName);
-        andQuery.boost(boost);
-        return andQuery;
-    }
 
-    @Override
-    public AndQueryBuilder getBuilderPrototype() {
-        return AndQueryBuilder.PROTOTYPE;
+        BooleanQuery query = new BooleanQuery();
+        for (Query f : queries) {
+            query.add(f, Occur.MUST);
+        }
+        if (queryName != null) {
+            parseContext.addNamedQuery(queryName, query);
+        }
+        return query;
     }
 }

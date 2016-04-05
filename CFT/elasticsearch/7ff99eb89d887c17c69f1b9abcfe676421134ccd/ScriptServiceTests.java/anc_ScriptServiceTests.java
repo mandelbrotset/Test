@@ -18,6 +18,8 @@
  */
 package org.elasticsearch.script;
 
+import org.elasticsearch.common.ContextAndHeaderHolder;
+import org.elasticsearch.common.HasContextAndHeaders;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.io.Streams;
 import org.elasticsearch.common.settings.Settings;
@@ -31,10 +33,8 @@ import org.junit.Before;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.elasticsearch.common.settings.Settings.settingsBuilder;
@@ -49,9 +49,7 @@ public class ScriptServiceTests extends ESTestCase {
     private ResourceWatcherService resourceWatcherService;
     private ScriptEngineService scriptEngineService;
     private Map<String, ScriptEngineService> scriptEnginesByLangMap;
-    private ScriptEngineRegistry scriptEngineRegistry;
     private ScriptContextRegistry scriptContextRegistry;
-    private ScriptSettings scriptSettings;
     private ScriptContext[] scriptContexts;
     private ScriptService scriptService;
     private Path scriptsFilePath;
@@ -91,9 +89,7 @@ public class ScriptServiceTests extends ESTestCase {
             String context = plugin + "_" + operation;
             contexts.put(context, new ScriptContext.Plugin(plugin, operation));
         }
-        scriptEngineRegistry = new ScriptEngineRegistry(Collections.singletonList(new ScriptEngineRegistry.ScriptEngineRegistration(TestEngineService.class, TestEngineService.TYPES)));
         scriptContextRegistry = new ScriptContextRegistry(contexts.values());
-        scriptSettings = new ScriptSettings(scriptEngineRegistry, scriptContextRegistry);
         scriptContexts = scriptContextRegistry.scriptContexts().toArray(new ScriptContext[scriptContextRegistry.scriptContexts().size()]);
         logger.info("--> setup script service");
         scriptsFilePath = genericConfigFolder.resolve("scripts");
@@ -103,9 +99,9 @@ public class ScriptServiceTests extends ESTestCase {
     private void buildScriptService(Settings additionalSettings) throws IOException {
         Settings finalSettings = Settings.builder().put(baseSettings).put(additionalSettings).build();
         Environment environment = new Environment(finalSettings);
-        scriptService = new ScriptService(finalSettings, environment, Collections.singleton(scriptEngineService), resourceWatcherService, scriptEngineRegistry, scriptContextRegistry, scriptSettings) {
+        scriptService = new ScriptService(finalSettings, environment, Collections.singleton(scriptEngineService), resourceWatcherService, scriptContextRegistry) {
             @Override
-            String getScriptFromIndex(String scriptLang, String id) {
+            String getScriptFromIndex(String scriptLang, String id, HasContextAndHeaders headersContext) {
                 //mock the script that gets retrieved from an index
                 return "100";
             }
@@ -123,6 +119,7 @@ public class ScriptServiceTests extends ESTestCase {
 
     public void testScriptsWithoutExtensions() throws IOException {
 
+        ContextAndHeaderHolder contextAndHeaders = new ContextAndHeaderHolder();
         buildScriptService(Settings.EMPTY);
         logger.info("--> setup two test files one with extension and another without");
         Path testFileNoExt = scriptsFilePath.resolve("test_no_ext");
@@ -133,7 +130,7 @@ public class ScriptServiceTests extends ESTestCase {
 
         logger.info("--> verify that file with extension was correctly processed");
         CompiledScript compiledScript = scriptService.compile(new Script("test_script", ScriptType.FILE, "test", null),
-                ScriptContext.Standard.SEARCH, Collections.emptyMap());
+                ScriptContext.Standard.SEARCH, contextAndHeaders, Collections.emptyMap());
         assertThat(compiledScript.compiled(), equalTo((Object) "compiled_test_file"));
 
         logger.info("--> delete both files");
@@ -144,7 +141,7 @@ public class ScriptServiceTests extends ESTestCase {
         logger.info("--> verify that file with extension was correctly removed");
         try {
             scriptService.compile(new Script("test_script", ScriptType.FILE, "test", null), ScriptContext.Standard.SEARCH,
-                    Collections.emptyMap());
+                    contextAndHeaders, Collections.emptyMap());
             fail("the script test_script should no longer exist");
         } catch (IllegalArgumentException ex) {
             assertThat(ex.getMessage(), containsString("Unable to find on disk file script [test_script] using lang [test]"));
@@ -152,57 +149,62 @@ public class ScriptServiceTests extends ESTestCase {
     }
 
     public void testInlineScriptCompiledOnceCache() throws IOException {
+        ContextAndHeaderHolder contextAndHeaders = new ContextAndHeaderHolder();
         buildScriptService(Settings.EMPTY);
         CompiledScript compiledScript1 = scriptService.compile(new Script("1+1", ScriptType.INLINE, "test", null),
-                randomFrom(scriptContexts), Collections.emptyMap());
+                randomFrom(scriptContexts), contextAndHeaders, Collections.emptyMap());
         CompiledScript compiledScript2 = scriptService.compile(new Script("1+1", ScriptType.INLINE, "test", null),
-                randomFrom(scriptContexts), Collections.emptyMap());
+                randomFrom(scriptContexts), contextAndHeaders, Collections.emptyMap());
         assertThat(compiledScript1.compiled(), sameInstance(compiledScript2.compiled()));
     }
 
     public void testInlineScriptCompiledOnceMultipleLangAcronyms() throws IOException {
+        ContextAndHeaderHolder contextAndHeaders = new ContextAndHeaderHolder();
         buildScriptService(Settings.EMPTY);
         CompiledScript compiledScript1 = scriptService.compile(new Script("script", ScriptType.INLINE, "test", null),
-                randomFrom(scriptContexts), Collections.emptyMap());
+                randomFrom(scriptContexts), contextAndHeaders, Collections.emptyMap());
         CompiledScript compiledScript2 = scriptService.compile(new Script("script", ScriptType.INLINE, "test2", null),
-                randomFrom(scriptContexts), Collections.emptyMap());
+                randomFrom(scriptContexts), contextAndHeaders, Collections.emptyMap());
         assertThat(compiledScript1.compiled(), sameInstance(compiledScript2.compiled()));
     }
 
     public void testFileScriptCompiledOnceMultipleLangAcronyms() throws IOException {
+        ContextAndHeaderHolder contextAndHeaders = new ContextAndHeaderHolder();
         buildScriptService(Settings.EMPTY);
         createFileScripts("test");
         CompiledScript compiledScript1 = scriptService.compile(new Script("file_script", ScriptType.FILE, "test", null),
-                randomFrom(scriptContexts), Collections.emptyMap());
+                randomFrom(scriptContexts), contextAndHeaders, Collections.emptyMap());
         CompiledScript compiledScript2 = scriptService.compile(new Script("file_script", ScriptType.FILE, "test2", null),
-                randomFrom(scriptContexts), Collections.emptyMap());
+                randomFrom(scriptContexts), contextAndHeaders, Collections.emptyMap());
         assertThat(compiledScript1.compiled(), sameInstance(compiledScript2.compiled()));
     }
 
     public void testDefaultBehaviourFineGrainedSettings() throws IOException {
+        ContextAndHeaderHolder contextAndHeaders = new ContextAndHeaderHolder();
         Settings.Builder builder = Settings.builder();
         //rarely inject the default settings, which have no effect
         if (rarely()) {
             builder.put("script.file", randomFrom(ScriptModesTests.ENABLE_VALUES));
         }
         if (rarely()) {
-            builder.put("script.indexed", "sandbox");
+            builder.put("script.indexed", ScriptMode.SANDBOX);
         }
         if (rarely()) {
-            builder.put("script.inline", "sandbox");
+            builder.put("script.inline", ScriptMode.SANDBOX);
         }
         buildScriptService(builder.build());
         createFileScripts("groovy", "mustache", "test");
 
         for (ScriptContext scriptContext : scriptContexts) {
             //custom engine is sandboxed, all scripts are enabled by default
-            assertCompileAccepted("test", "script", ScriptType.INLINE, scriptContext);
-            assertCompileAccepted("test", "script", ScriptType.INDEXED, scriptContext);
-            assertCompileAccepted("test", "file_script", ScriptType.FILE, scriptContext);
+            assertCompileAccepted("test", "script", ScriptType.INLINE, scriptContext, contextAndHeaders);
+            assertCompileAccepted("test", "script", ScriptType.INDEXED, scriptContext, contextAndHeaders);
+            assertCompileAccepted("test", "file_script", ScriptType.FILE, scriptContext, contextAndHeaders);
         }
     }
 
     public void testFineGrainedSettings() throws IOException {
+        ContextAndHeaderHolder contextAndHeaders = new ContextAndHeaderHolder();
         //collect the fine-grained settings to set for this run
         int numScriptSettings = randomIntBetween(0, ScriptType.values().length);
         Map<ScriptType, ScriptMode> scriptSourceSettings = new HashMap<>();
@@ -214,11 +216,11 @@ public class ScriptServiceTests extends ESTestCase {
             scriptSourceSettings.put(scriptType, randomFrom(ScriptMode.values()));
         }
         int numScriptContextSettings = randomIntBetween(0, this.scriptContextRegistry.scriptContexts().size());
-        Map<ScriptContext, ScriptMode> scriptContextSettings = new HashMap<>();
+        Map<String, ScriptMode> scriptContextSettings = new HashMap<>();
         for (int i = 0; i < numScriptContextSettings; i++) {
-            ScriptContext scriptContext;
+            String scriptContext;
             do {
-                scriptContext = randomFrom(this.scriptContexts);
+                scriptContext = randomFrom(this.scriptContexts).getKey();
             } while (scriptContextSettings.containsKey(scriptContext));
             scriptContextSettings.put(scriptContext, randomFrom(ScriptMode.values()));
         }
@@ -229,7 +231,7 @@ public class ScriptServiceTests extends ESTestCase {
             do {
                 ScriptType scriptType = randomFrom(ScriptType.values());
                 ScriptContext scriptContext = randomFrom(this.scriptContexts);
-                settingKey = scriptEngineService.getTypes().get(0) + "." + scriptType + "." + scriptContext.getKey();
+                settingKey = scriptEngineService.types()[0] + "." + scriptType + "." + scriptContext.getKey();
             } while (engineSettings.containsKey(settingKey));
             engineSettings.put(settingKey, randomFrom(ScriptMode.values()));
         }
@@ -238,27 +240,26 @@ public class ScriptServiceTests extends ESTestCase {
         for (Map.Entry<ScriptType, ScriptMode> entry : scriptSourceSettings.entrySet()) {
             switch (entry.getValue()) {
                 case ON:
-                    builder.put("script" + "." + entry.getKey().getScriptType(), "true");
+                    builder.put(ScriptModes.SCRIPT_SETTINGS_PREFIX + entry.getKey(), randomFrom(ScriptModesTests.ENABLE_VALUES));
                     break;
                 case OFF:
-                    builder.put("script" + "." + entry.getKey().getScriptType(), "false");
+                    builder.put(ScriptModes.SCRIPT_SETTINGS_PREFIX + entry.getKey(), randomFrom(ScriptModesTests.DISABLE_VALUES));
                     break;
                 case SANDBOX:
-                    builder.put("script" + "." + entry.getKey().getScriptType(), "sandbox");
+                    builder.put(ScriptModes.SCRIPT_SETTINGS_PREFIX + entry.getKey(), ScriptMode.SANDBOX);
                     break;
             }
         }
-        for (Map.Entry<ScriptContext, ScriptMode> entry : scriptContextSettings.entrySet()) {
+        for (Map.Entry<String, ScriptMode> entry : scriptContextSettings.entrySet()) {
             switch (entry.getValue()) {
                 case ON:
-                    builder.put("script" + "." + entry.getKey().getKey(), "true");
+                    builder.put(ScriptModes.SCRIPT_SETTINGS_PREFIX + entry.getKey(), randomFrom(ScriptModesTests.ENABLE_VALUES));
                     break;
-
                 case OFF:
-                    builder.put("script" + "." + entry.getKey().getKey(), "false");
+                    builder.put(ScriptModes.SCRIPT_SETTINGS_PREFIX + entry.getKey(), randomFrom(ScriptModesTests.DISABLE_VALUES));
                     break;
                 case SANDBOX:
-                    builder.put("script" + "." + entry.getKey().getKey(), "sandbox");
+                    builder.put(ScriptModes.SCRIPT_SETTINGS_PREFIX + entry.getKey(), ScriptMode.SANDBOX);
                     break;
             }
         }
@@ -267,16 +268,16 @@ public class ScriptServiceTests extends ESTestCase {
             String part1 = entry.getKey().substring(0, delimiter);
             String part2 = entry.getKey().substring(delimiter + 1);
 
-            String lang = randomFrom(scriptEnginesByLangMap.get(part1).getTypes());
+            String lang = randomFrom(scriptEnginesByLangMap.get(part1).types());
             switch (entry.getValue()) {
                 case ON:
-                    builder.put("script.engine" + "." + lang + "." + part2, "true");
+                    builder.put(ScriptModes.ENGINE_SETTINGS_PREFIX + "." + lang + "." + part2, randomFrom(ScriptModesTests.ENABLE_VALUES));
                     break;
                 case OFF:
-                    builder.put("script.engine" + "." + lang + "." + part2, "false");
+                    builder.put(ScriptModes.ENGINE_SETTINGS_PREFIX + "." + lang + "." + part2, randomFrom(ScriptModesTests.DISABLE_VALUES));
                     break;
                 case SANDBOX:
-                    builder.put("script.engine" + "." + lang + "." + part2, "sandbox");
+                    builder.put(ScriptModes.ENGINE_SETTINGS_PREFIX + "." + lang + "." + part2, ScriptMode.SANDBOX);
                     break;
             }
         }
@@ -290,9 +291,9 @@ public class ScriptServiceTests extends ESTestCase {
             String script = scriptType == ScriptType.FILE ? "file_script" : "script";
             for (ScriptContext scriptContext : this.scriptContexts) {
                 //fallback mechanism: 1) engine specific settings 2) op based settings 3) source based settings
-                ScriptMode scriptMode = engineSettings.get(scriptEngineService.getTypes().get(0) + "." + scriptType + "." + scriptContext.getKey());
+                ScriptMode scriptMode = engineSettings.get(scriptEngineService.types()[0] + "." + scriptType + "." + scriptContext.getKey());
                 if (scriptMode == null) {
-                    scriptMode = scriptContextSettings.get(scriptContext);
+                    scriptMode = scriptContextSettings.get(scriptContext.getKey());
                 }
                 if (scriptMode == null) {
                     scriptMode = scriptSourceSettings.get(scriptType);
@@ -301,32 +302,19 @@ public class ScriptServiceTests extends ESTestCase {
                     scriptMode = DEFAULT_SCRIPT_MODES.get(scriptType);
                 }
 
-                for (String lang : scriptEngineService.getTypes()) {
+                for (String lang : scriptEngineService.types()) {
                     switch (scriptMode) {
                         case ON:
-<<<<<<< HEAD
-                            assertCompileAccepted(lang, script, scriptType, scriptContext, contextAndHeaders);
+                        assertCompileAccepted(lang, script, scriptType, scriptContext, contextAndHeaders);
                             break;
                         case OFF:
-                            assertCompileRejected(lang, script, scriptType, scriptContext, contextAndHeaders);
-                            break;
-                        case SANDBOX:
-                            if (scriptEngineService.isSandboxed()) {
-                                assertCompileAccepted(lang, script, scriptType, scriptContext, contextAndHeaders);
-                            } else {
-                                assertCompileRejected(lang, script, scriptType, scriptContext, contextAndHeaders);
-=======
-                        assertCompileAccepted(lang, script, scriptType, scriptContext);
-                            break;
-                        case OFF:
-                        assertCompileRejected(lang, script, scriptType, scriptContext);
+                        assertCompileRejected(lang, script, scriptType, scriptContext, contextAndHeaders);
                             break;
                         case SANDBOX:
                             if (scriptEngineService.sandboxed()) {
-                            assertCompileAccepted(lang, script, scriptType, scriptContext);
+                            assertCompileAccepted(lang, script, scriptType, scriptContext, contextAndHeaders);
                             } else {
-                            assertCompileRejected(lang, script, scriptType, scriptContext);
->>>>>>> tempbranch
+                            assertCompileRejected(lang, script, scriptType, scriptContext, contextAndHeaders);
                             }
                             break;
                     }
@@ -336,6 +324,7 @@ public class ScriptServiceTests extends ESTestCase {
     }
 
     public void testCompileNonRegisteredContext() throws IOException {
+        ContextAndHeaderHolder contextAndHeaders = new ContextAndHeaderHolder();
         buildScriptService(Settings.EMPTY);
         String pluginName;
         String unknownContext;
@@ -344,10 +333,10 @@ public class ScriptServiceTests extends ESTestCase {
             unknownContext = randomAsciiOfLength(randomIntBetween(1, 30));
         } while(scriptContextRegistry.isSupportedContext(new ScriptContext.Plugin(pluginName, unknownContext)));
 
-        for (String type : scriptEngineService.getTypes()) {
+        for (String type : scriptEngineService.types()) {
             try {
                 scriptService.compile(new Script("test", randomFrom(ScriptType.values()), type, null), new ScriptContext.Plugin(
-                        pluginName, unknownContext), Collections.emptyMap());
+                        pluginName, unknownContext), contextAndHeaders, Collections.emptyMap());
                 fail("script compilation should have been rejected");
             } catch(IllegalArgumentException e) {
                 assertThat(e.getMessage(), containsString("script context [" + pluginName + "_" + unknownContext + "] not supported"));
@@ -356,14 +345,16 @@ public class ScriptServiceTests extends ESTestCase {
     }
 
     public void testCompileCountedInCompilationStats() throws IOException {
+        ContextAndHeaderHolder contextAndHeaders = new ContextAndHeaderHolder();
         buildScriptService(Settings.EMPTY);
-        scriptService.compile(new Script("1+1", ScriptType.INLINE, "test", null), randomFrom(scriptContexts), Collections.emptyMap());
+        scriptService.compile(new Script("1+1", ScriptType.INLINE, "test", null), randomFrom(scriptContexts), contextAndHeaders, Collections.emptyMap());
         assertEquals(1L, scriptService.stats().getCompilations());
     }
 
     public void testExecutableCountedInCompilationStats() throws IOException {
+        ContextAndHeaderHolder contextAndHeaders = new ContextAndHeaderHolder();
         buildScriptService(Settings.EMPTY);
-        scriptService.executable(new Script("1+1", ScriptType.INLINE, "test", null), randomFrom(scriptContexts), Collections.emptyMap());
+        scriptService.executable(new Script("1+1", ScriptType.INLINE, "test", null), randomFrom(scriptContexts), contextAndHeaders, Collections.emptyMap());
         assertEquals(1L, scriptService.stats().getCompilations());
     }
 
@@ -374,55 +365,50 @@ public class ScriptServiceTests extends ESTestCase {
     }
 
     public void testMultipleCompilationsCountedInCompilationStats() throws IOException {
+        ContextAndHeaderHolder contextAndHeaders = new ContextAndHeaderHolder();
         buildScriptService(Settings.EMPTY);
         int numberOfCompilations = randomIntBetween(1, 1024);
         for (int i = 0; i < numberOfCompilations; i++) {
             scriptService
-                    .compile(new Script(i + " + " + i, ScriptType.INLINE, "test", null), randomFrom(scriptContexts), Collections.emptyMap());
+                    .compile(new Script(i + " + " + i, ScriptType.INLINE, "test", null), randomFrom(scriptContexts), contextAndHeaders, Collections.emptyMap());
         }
         assertEquals(numberOfCompilations, scriptService.stats().getCompilations());
     }
 
     public void testCompilationStatsOnCacheHit() throws IOException {
+        ContextAndHeaderHolder contextAndHeaders = new ContextAndHeaderHolder();
         Settings.Builder builder = Settings.builder();
         builder.put(ScriptService.SCRIPT_CACHE_SIZE_SETTING.getKey(), 1);
         buildScriptService(builder.build());
-        scriptService.executable(new Script("1+1", ScriptType.INLINE, "test", null), randomFrom(scriptContexts), Collections.emptyMap());
-        scriptService.executable(new Script("1+1", ScriptType.INLINE, "test", null), randomFrom(scriptContexts), Collections.emptyMap());
+        scriptService.executable(new Script("1+1", ScriptType.INLINE, "test", null), randomFrom(scriptContexts), contextAndHeaders, Collections.emptyMap());
+        scriptService.executable(new Script("1+1", ScriptType.INLINE, "test", null), randomFrom(scriptContexts), contextAndHeaders, Collections.emptyMap());
         assertEquals(1L, scriptService.stats().getCompilations());
     }
 
     public void testFileScriptCountedInCompilationStats() throws IOException {
+        ContextAndHeaderHolder contextAndHeaders = new ContextAndHeaderHolder();
         buildScriptService(Settings.EMPTY);
         createFileScripts("test");
-        scriptService.compile(new Script("file_script", ScriptType.FILE, "test", null), randomFrom(scriptContexts), Collections.emptyMap());
+        scriptService.compile(new Script("file_script", ScriptType.FILE, "test", null), randomFrom(scriptContexts), contextAndHeaders, Collections.emptyMap());
         assertEquals(1L, scriptService.stats().getCompilations());
     }
 
     public void testIndexedScriptCountedInCompilationStats() throws IOException {
+        ContextAndHeaderHolder contextAndHeaders = new ContextAndHeaderHolder();
         buildScriptService(Settings.EMPTY);
-        scriptService.compile(new Script("script", ScriptType.INDEXED, "test", null), randomFrom(scriptContexts), Collections.emptyMap());
+        scriptService.compile(new Script("script", ScriptType.INDEXED, "test", null), randomFrom(scriptContexts), contextAndHeaders, Collections.emptyMap());
         assertEquals(1L, scriptService.stats().getCompilations());
     }
 
     public void testCacheEvictionCountedInCacheEvictionsStats() throws IOException {
+        ContextAndHeaderHolder contextAndHeaders = new ContextAndHeaderHolder();
         Settings.Builder builder = Settings.builder();
         builder.put(ScriptService.SCRIPT_CACHE_SIZE_SETTING.getKey(), 1);
         buildScriptService(builder.build());
-        scriptService.executable(new Script("1+1", ScriptType.INLINE, "test", null), randomFrom(scriptContexts), Collections.emptyMap());
-        scriptService.executable(new Script("2+2", ScriptType.INLINE, "test", null), randomFrom(scriptContexts), Collections.emptyMap());
+        scriptService.executable(new Script("1+1", ScriptType.INLINE, "test", null), randomFrom(scriptContexts), contextAndHeaders, Collections.emptyMap());
+        scriptService.executable(new Script("2+2", ScriptType.INLINE, "test", null), randomFrom(scriptContexts), contextAndHeaders, Collections.emptyMap());
         assertEquals(2L, scriptService.stats().getCompilations());
         assertEquals(1L, scriptService.stats().getCacheEvictions());
-    }
-
-    public void testDefaultLanguage() throws IOException {
-        ContextAndHeaderHolder contextAndHeaderHolder = new ContextAndHeaderHolder();
-        Settings.Builder builder = Settings.builder();
-        builder.put("script.default_lang", "test");
-        buildScriptService(builder.build());
-        CompiledScript script =
-            scriptService.compile(new Script("1 + 1", ScriptType.INLINE, null, null), randomFrom(scriptContexts), contextAndHeaderHolder, Collections.emptyMap());
-        assertEquals(script.lang(), "test");
     }
 
     private void createFileScripts(String... langs) throws IOException {
@@ -433,42 +419,35 @@ public class ScriptServiceTests extends ESTestCase {
         resourceWatcherService.notifyNow();
     }
 
-    private void assertCompileRejected(String lang, String script, ScriptType scriptType, ScriptContext scriptContext) {
+    private void assertCompileRejected(String lang, String script, ScriptType scriptType, ScriptContext scriptContext,
+            HasContextAndHeaders contextAndHeaders) {
         try {
-            scriptService.compile(new Script(script, scriptType, lang, null), scriptContext, Collections.emptyMap());
+            scriptService.compile(new Script(script, scriptType, lang, null), scriptContext, contextAndHeaders, Collections.emptyMap());
             fail("compile should have been rejected for lang [" + lang + "], script_type [" + scriptType + "], scripted_op [" + scriptContext + "]");
         } catch(ScriptException e) {
             //all good
         }
     }
 
-<<<<<<< HEAD
-    private void assertCompileAccepted(String lang, String script, ScriptType scriptType, ScriptContext scriptContext, HasContextAndHeaders contextAndHeaders) {
+    private void assertCompileAccepted(String lang, String script, ScriptType scriptType, ScriptContext scriptContext,
+            HasContextAndHeaders contextAndHeaders) {
         assertThat(scriptService.compile(new Script(script, scriptType, lang, null), scriptContext, contextAndHeaders, Collections.emptyMap()), notNullValue());
-=======
-    private void assertCompileAccepted(String lang, String script, ScriptType scriptType, ScriptContext scriptContext) {
-        assertThat(scriptService.compile(new Script(script, scriptType, lang, null), scriptContext, Collections.emptyMap()), notNullValue());
->>>>>>> tempbranch
     }
 
     public static class TestEngineService implements ScriptEngineService {
 
-        public static final List<String> TYPES = Collections.unmodifiableList(Arrays.asList("test", "test2"));
-
-        public static final List<String> EXTENSIONS = Collections.unmodifiableList(Arrays.asList("test", "tst"));
-
         @Override
-        public List<String> getTypes() {
-            return TYPES;
+        public String[] types() {
+            return new String[] {"test", "test2"};
         }
 
         @Override
-        public List<String> getExtensions() {
-            return EXTENSIONS;
+        public String[] extensions() {
+            return new String[] {"test", "tst"};
         }
 
         @Override
-        public boolean isSandboxed() {
+        public boolean sandboxed() {
             return true;
         }
 

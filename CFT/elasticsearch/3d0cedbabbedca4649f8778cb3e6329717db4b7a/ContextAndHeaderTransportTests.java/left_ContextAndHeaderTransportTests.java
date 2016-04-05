@@ -22,6 +22,7 @@ package org.elasticsearch.messy.tests;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.ActionModule;
 import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
@@ -32,15 +33,12 @@ import org.elasticsearch.action.indexedscripts.put.PutIndexedScriptResponse;
 import org.elasticsearch.action.percolate.PercolateResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.ActionFilter;
 import org.elasticsearch.action.termvectors.MultiTermVectorsRequest;
 import org.elasticsearch.client.Client;
-<<<<<<< HEAD
-import org.elasticsearch.client.FilterClient;
-=======
 import org.elasticsearch.common.inject.AbstractModule;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.inject.Module;
->>>>>>> tempbranch
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.util.concurrent.ThreadContext;
@@ -59,7 +57,6 @@ import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptService.ScriptType;
 import org.elasticsearch.script.groovy.GroovyPlugin;
 import org.elasticsearch.script.groovy.GroovyScriptEngineService;
-import org.elasticsearch.test.ActionRecordingPlugin;
 import org.elasticsearch.test.ESIntegTestCase;
 import org.elasticsearch.test.ESIntegTestCase.ClusterScope;
 import org.elasticsearch.test.rest.client.http.HttpRequestBuilder;
@@ -68,14 +65,13 @@ import org.elasticsearch.threadpool.ThreadPool;
 import org.junit.After;
 import org.junit.Before;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-<<<<<<< HEAD
-=======
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
->>>>>>> tempbranch
 
 import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_NUMBER_OF_SHARDS;
 import static org.elasticsearch.common.settings.Settings.settingsBuilder;
@@ -93,10 +89,7 @@ import static org.hamcrest.Matchers.is;
 
 @ClusterScope(scope = SUITE)
 public class ContextAndHeaderTransportTests extends ESIntegTestCase {
-<<<<<<< HEAD
-=======
     private static final List<RequestAndHeaders> requests =  new CopyOnWriteArrayList<>();
->>>>>>> tempbranch
     private String randomHeaderKey = randomAsciiOfLength(10);
     private String randomHeaderValue = randomAsciiOfLength(20);
     private String queryIndex = "query-" + randomAsciiOfLength(10).toLowerCase(Locale.ROOT);
@@ -113,7 +106,7 @@ public class ContextAndHeaderTransportTests extends ESIntegTestCase {
 
     @Override
     protected Collection<Class<? extends Plugin>> nodePlugins() {
-        return pluginList(ActionRecordingPlugin.class, GroovyPlugin.class);
+        return pluginList(ActionLoggingPlugin.class, GroovyPlugin.class);
     }
 
     @Before
@@ -134,12 +127,7 @@ public class ContextAndHeaderTransportTests extends ESIntegTestCase {
         assertAcked(transportClient().admin().indices().prepareCreate(queryIndex)
                 .setSettings(settings).addMapping("type", mapping));
         ensureGreen(queryIndex, lookupIndex);
-<<<<<<< HEAD
-
-        ActionRecordingPlugin.clear();
-=======
         requests.clear();
->>>>>>> tempbranch
     }
 
     @After
@@ -206,7 +194,7 @@ public class ContextAndHeaderTransportTests extends ESIntegTestCase {
             .get();
         assertNoFailures(searchResponse);
         assertHitCount(searchResponse, 1);
-        assertThat(ActionRecordingPlugin.allRequests(), hasSize(greaterThan(0)));
+        assertThat(requests, hasSize(greaterThan(0)));
 
         assertGetRequestsContainHeaders();
     }
@@ -295,11 +283,7 @@ public class ContextAndHeaderTransportTests extends ESIntegTestCase {
             .execute();
 
         assertThat(response, hasStatus(OK));
-<<<<<<< HEAD
-        List<SearchRequest> searchRequests = ActionRecordingPlugin.requestsOfType(SearchRequest.class);
-=======
         List<RequestAndHeaders> searchRequests = getRequests(SearchRequest.class);
->>>>>>> tempbranch
         assertThat(searchRequests, hasSize(greaterThan(0)));
         for (RequestAndHeaders requestAndHeaders : searchRequests) {
             assertThat(requestAndHeaders.headers.containsKey(releventHeaderName), is(true));
@@ -308,12 +292,6 @@ public class ContextAndHeaderTransportTests extends ESIntegTestCase {
         }
     }
 
-<<<<<<< HEAD
-    private void assertRequestsContainHeader(Class<? extends ActionRequest<?>> clazz) {
-        List<? extends ActionRequest<?>> classRequests = ActionRecordingPlugin.requestsOfType(clazz);
-        for (ActionRequest<?> request : classRequests) {
-            assertRequestContainsHeader(request);
-=======
     private  List<RequestAndHeaders> getRequests(Class<?> clazz) {
         List<RequestAndHeaders> results = new ArrayList<>();
         for (RequestAndHeaders request : requests) {
@@ -329,7 +307,6 @@ public class ContextAndHeaderTransportTests extends ESIntegTestCase {
         List<RequestAndHeaders> classRequests = getRequests(clazz);
         for (RequestAndHeaders request : classRequests) {
             assertRequestContainsHeader(request.request, request.headers);
->>>>>>> tempbranch
         }
     }
 
@@ -338,11 +315,7 @@ public class ContextAndHeaderTransportTests extends ESIntegTestCase {
     }
 
     private void assertGetRequestsContainHeaders(String index) {
-<<<<<<< HEAD
-        List<GetRequest> getRequests = ActionRecordingPlugin.requestsOfType(GetRequest.class);
-=======
         List<RequestAndHeaders> getRequests = getRequests(GetRequest.class);
->>>>>>> tempbranch
         assertThat(getRequests, hasSize(greaterThan(0)));
 
         for (RequestAndHeaders request : getRequests) {
@@ -353,11 +326,7 @@ public class ContextAndHeaderTransportTests extends ESIntegTestCase {
         }
     }
 
-<<<<<<< HEAD
-    private void assertRequestContainsHeader(ActionRequest<?> request) {
-=======
     private void assertRequestContainsHeader(ActionRequest request, Map<String, String> context) {
->>>>>>> tempbranch
         String msg = String.format(Locale.ROOT, "Expected header %s to be in request %s", randomHeaderKey, request.getClass().getName());
         if (request instanceof IndexRequest) {
             IndexRequest indexRequest = (IndexRequest) request;
@@ -372,21 +341,6 @@ public class ContextAndHeaderTransportTests extends ESIntegTestCase {
      * a transport client that adds our random header
      */
     private Client transportClient() {
-<<<<<<< HEAD
-        Client transportClient = internalCluster().transportClient();
-        FilterClient filterClient = new FilterClient(transportClient) {
-            @Override
-            protected <Request extends ActionRequest<Request>, Response extends ActionResponse, RequestBuilder extends ActionRequestBuilder<Request, Response, RequestBuilder>> void doExecute(
-                    Action<Request, Response, RequestBuilder> action, Request request,
-                    ActionListener<Response> listener) {
-                request.putHeader(randomHeaderKey, randomHeaderValue);
-                super.doExecute(action, request, listener);
-            }
-        };
-
-        return filterClient;
-    }
-=======
         return internalCluster().transportClient().filterWithHeader(Collections.singletonMap(randomHeaderKey, randomHeaderValue));
     }
 
@@ -456,5 +410,4 @@ public class ContextAndHeaderTransportTests extends ESIntegTestCase {
             this.request = request;
         }
     }
->>>>>>> tempbranch
 }

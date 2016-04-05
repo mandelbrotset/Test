@@ -20,11 +20,7 @@
 package org.elasticsearch.indices.warmer;
 
 import com.carrotsearch.hppc.cursors.ObjectObjectCursor;
-<<<<<<< HEAD
 import com.google.common.collect.ImmutableList;
-=======
-
->>>>>>> tempbranch
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.segments.IndexSegments;
 import org.elasticsearch.action.admin.indices.segments.IndexShardSegments;
@@ -49,7 +45,6 @@ import org.elasticsearch.test.ESIntegTestCase;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.util.List;
 import java.util.Locale;
 
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertAcked;
@@ -204,7 +199,7 @@ public class SimpleIndicesWarmerIT extends ESIntegTestCase {
 
         GetWarmersResponse getWarmersResponse = client().admin().indices().prepareGetWarmers("test").get();
         assertThat(getWarmersResponse.warmers().size(), equalTo(1));
-        ObjectObjectCursor<String, List<IndexWarmersMetaData.Entry>> entry = getWarmersResponse.warmers().iterator().next();
+        ObjectObjectCursor<String, ImmutableList<IndexWarmersMetaData.Entry>> entry = getWarmersResponse.warmers().iterator().next();
         assertThat(entry.key, equalTo("test"));
         assertThat(entry.value.size(), equalTo(1));
         assertThat(entry.value.iterator().next().name(), equalTo("custom_warmer"));

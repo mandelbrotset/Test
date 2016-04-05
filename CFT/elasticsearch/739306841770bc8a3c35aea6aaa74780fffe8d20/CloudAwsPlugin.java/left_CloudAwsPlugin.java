@@ -26,14 +26,10 @@ import org.elasticsearch.common.inject.Module;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.discovery.DiscoveryModule;
 import org.elasticsearch.discovery.ec2.Ec2Discovery;
-<<<<<<< HEAD
-import org.elasticsearch.index.snapshots.blobstore.BlobStoreIndexShardRepository;
-import org.elasticsearch.plugins.AbstractPlugin;
-=======
 import org.elasticsearch.plugins.Plugin;
->>>>>>> tempbranch
 import org.elasticsearch.repositories.RepositoriesModule;
 import org.elasticsearch.repositories.s3.S3Repository;
+import org.elasticsearch.repositories.s3.S3RepositoryModule;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -80,7 +76,7 @@ public class CloudAwsPlugin extends Plugin {
 
     public void onModule(RepositoriesModule repositoriesModule) {
         if (settings.getAsBoolean("cloud.enabled", true)) {
-            repositoriesModule.registerRepository(S3Repository.TYPE, S3Repository.class, BlobStoreIndexShardRepository.class);
+            repositoriesModule.registerRepository(S3Repository.TYPE, S3RepositoryModule.class);
         }
     }
 

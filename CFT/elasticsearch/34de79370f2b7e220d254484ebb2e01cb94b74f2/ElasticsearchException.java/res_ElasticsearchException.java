@@ -605,6 +605,7 @@ public class ElasticsearchException extends RuntimeException implements ToXConte
         exceptions.put(org.elasticsearch.indices.TypeMissingException.class, exceptions.size());
         // added in 3.x
         exceptions.put(org.elasticsearch.discovery.Discovery.FailedToCommitClusterStateException.class, exceptions.size());
+        exceptions.put(org.elasticsearch.index.query.QueryShardException.class, exceptions.size());
         // NOTE: ONLY APPEND TO THE END and NEVER REMOVE EXCEPTIONS IN MINOR VERSIONS
         Constructor<? extends ElasticsearchException>[] idToSupplier = new Constructor[exceptions.size()];
         for (Map.Entry<Class<? extends ElasticsearchException>, Integer> e : exceptions.entrySet()) {

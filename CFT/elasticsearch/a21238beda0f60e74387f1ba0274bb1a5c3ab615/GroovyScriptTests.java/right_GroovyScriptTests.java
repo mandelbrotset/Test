@@ -22,17 +22,12 @@ package org.elasticsearch.script.groovy;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
-<<<<<<< HEAD:plugins/lang-groovy/src/test/java/org/elasticsearch/script/groovy/GroovyScriptTests.java
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.script.Script;
-=======
-import org.elasticsearch.index.query.QueryBuilders;
->>>>>>> tempbranch:core/src/test/java/org/elasticsearch/script/GroovyScriptIT.java
 import org.elasticsearch.script.ScriptService.ScriptType;
 import org.elasticsearch.script.groovy.GroovyScriptEngineService;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.test.ESIntegTestCase;
 import org.junit.Test;
 
@@ -41,14 +36,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import static org.elasticsearch.index.query.QueryBuilders.constantScoreQuery;
-import static org.elasticsearch.index.query.QueryBuilders.functionScoreQuery;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-import static org.elasticsearch.index.query.QueryBuilders.scriptQuery;
+import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders.scriptFunction;
-import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertNoFailures;
-import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertOrderedSearchHits;
-import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertSearchHits;
+import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.*;
 import static org.hamcrest.Matchers.equalTo;
 
 /**
@@ -67,16 +57,16 @@ public class GroovyScriptTests extends ESIntegTestCase {
         client().prepareIndex("test", "doc", "1").setSource("foo", 5).setRefresh(true).get();
 
         // Test that something that would usually be a BigDecimal is transformed into a Double
-        assertScript("def n = 1.23; assert n instanceof Double; return n;");
-        assertScript("def n = 1.23G; assert n instanceof Double; return n;");
-        assertScript("def n = BigDecimal.ONE; assert n instanceof BigDecimal; return n;");
+        assertScript("def n = 1.23; assert n instanceof Double;");
+        assertScript("def n = 1.23G; assert n instanceof Double;");
+        assertScript("def n = BigDecimal.ONE; assert n instanceof BigDecimal;");
     }
 
-    public void assertScript(String scriptString) {
-        Script script = new Script(scriptString, ScriptType.INLINE, "groovy", null);
+    public void assertScript(String script) {
         SearchResponse resp = client().prepareSearch("test")
-                .setSource(new SearchSourceBuilder().query(QueryBuilders.matchAllQuery()).sort(SortBuilders.scriptSort(script, "number")))
-                .get();
+                .setSource(new BytesArray("{\"query\": {\"match_all\": {}}," +
+                        "\"sort\":{\"_script\": {\"script\": \""+ script +
+                        "; 1\", \"type\": \"number\", \"lang\": \"groovy\"}}}")).get();
         assertNoFailures(resp);
     }
 
@@ -130,7 +120,7 @@ public class GroovyScriptTests extends ESIntegTestCase {
         assertNoFailures(resp);
         assertOrderedSearchHits(resp, "3", "2", "1");
     }
-
+    
     public void testScoreAccess() {
         client().prepareIndex("test", "doc", "1").setSource("foo", "quick brow fox jumped over the lazy dog", "bar", 1).get();
         client().prepareIndex("test", "doc", "2").setSource("foo", "fast jumping spiders", "bar", 2).get();

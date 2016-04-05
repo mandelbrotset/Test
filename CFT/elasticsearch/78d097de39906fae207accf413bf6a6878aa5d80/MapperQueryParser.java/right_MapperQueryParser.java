@@ -39,7 +39,7 @@ import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.mapper.MappedFieldType;
 import org.elasticsearch.index.mapper.MapperService;
 import org.elasticsearch.index.mapper.core.DateFieldMapper;
-import org.elasticsearch.index.query.QueryShardContext;
+import org.elasticsearch.index.query.QueryParseContext;
 import org.elasticsearch.index.query.support.QueryParsers;
 
 import com.google.common.base.Objects;
@@ -70,7 +70,7 @@ public class MapperQueryParser extends QueryParser {
                 .build();
     }
 
-    private final QueryShardContext context;
+    private final QueryParseContext parseContext;
 
     private QueryParserSettings settings;
 
@@ -85,13 +85,9 @@ public class MapperQueryParser extends QueryParser {
 
     private String quoteFieldSuffix;
 
-    public MapperQueryParser(QueryShardContext context) {
+    public MapperQueryParser(QueryParseContext parseContext) {
         super(null, null);
-<<<<<<< HEAD
         this.parseContext = parseContext;
-=======
-        this.context = context;
->>>>>>> tempbranch
     }
 
     public void reset(QueryParserSettings settings) {
@@ -166,7 +162,7 @@ public class MapperQueryParser extends QueryParser {
     public Query getFieldQuery(String field, String queryText, boolean quoted) throws ParseException {
         FieldQueryExtension fieldQueryExtension = fieldQueryExtensions.get(field);
         if (fieldQueryExtension != null) {
-            return fieldQueryExtension.query(context, queryText);
+            return fieldQueryExtension.query(parseContext, queryText);
         }
         Collection<String> fields = extractMultiFields(field);
         if (fields != null) {
@@ -230,27 +226,27 @@ public class MapperQueryParser extends QueryParser {
             if (quoted) {
                 setAnalyzer(quoteAnalyzer);
                 if (quoteFieldSuffix != null) {
-                    currentFieldType = context.fieldMapper(field + quoteFieldSuffix);
+                    currentFieldType = parseContext.fieldMapper(field + quoteFieldSuffix);
                 }
             }
             if (currentFieldType == null) {
-                currentFieldType = context.fieldMapper(field);
+                currentFieldType = parseContext.fieldMapper(field);
             }
             if (currentFieldType != null) {
                 if (quoted) {
                     if (!forcedQuoteAnalyzer) {
-                        setAnalyzer(context.getSearchQuoteAnalyzer(currentFieldType));
+                        setAnalyzer(parseContext.getSearchQuoteAnalyzer(currentFieldType));
                     }
                 } else {
                     if (!forcedAnalyzer) {
-                        setAnalyzer(context.getSearchAnalyzer(currentFieldType));
+                        setAnalyzer(parseContext.getSearchAnalyzer(currentFieldType));
                     }
                 }
                 if (currentFieldType != null) {
                     Query query = null;
                     if (currentFieldType.useTermQueryWithQueryString()) {
                         try {
-                            query = currentFieldType.termQuery(queryText, context);
+                            query = currentFieldType.termQuery(queryText, parseContext);
                         } catch (RuntimeException e) {
                             if (settings.lenient()) {
                                 return null;
@@ -361,7 +357,7 @@ public class MapperQueryParser extends QueryParser {
     }
 
     private Query getRangeQuerySingle(String field, String part1, String part2, boolean startInclusive, boolean endInclusive) {
-        currentFieldType = context.fieldMapper(field);
+        currentFieldType = parseContext.fieldMapper(field);
         if (currentFieldType != null) {
             if (lowercaseExpandedTerms && !currentFieldType.isNumeric()) {
                 part1 = part1 == null ? null : part1.toLowerCase(locale);
@@ -426,7 +422,7 @@ public class MapperQueryParser extends QueryParser {
     }
 
     private Query getFuzzyQuerySingle(String field, String termStr, String minSimilarity) throws ParseException {
-        currentFieldType = context.fieldMapper(field);
+        currentFieldType = parseContext.fieldMapper(field);
         if (currentFieldType != null) {
             try {
                 return currentFieldType.fuzzyQuery(termStr, Fuzziness.build(minSimilarity), fuzzyPrefixLength, settings.fuzzyMaxExpansions(), FuzzyQuery.defaultTranspositions);
@@ -496,14 +492,14 @@ public class MapperQueryParser extends QueryParser {
         currentFieldType = null;
         Analyzer oldAnalyzer = getAnalyzer();
         try {
-            currentFieldType = context.fieldMapper(field);
+            currentFieldType = parseContext.fieldMapper(field);
             if (currentFieldType != null) {
                 if (!forcedAnalyzer) {
-                    setAnalyzer(context.getSearchAnalyzer(currentFieldType));
+                    setAnalyzer(parseContext.getSearchAnalyzer(currentFieldType));
                 }
                 Query query = null;
                 if (currentFieldType.useTermQueryWithQueryString()) {
-                    query = currentFieldType.prefixQuery(termStr, multiTermRewriteMethod, context);
+                    query = currentFieldType.prefixQuery(termStr, multiTermRewriteMethod, parseContext);
                 }
                 if (query == null) {
                     query = getPossiblyAnalyzedPrefixQuery(currentFieldType.names().indexName(), termStr);
@@ -588,7 +584,7 @@ public class MapperQueryParser extends QueryParser {
                     return newMatchAllDocsQuery();
                 }
                 // effectively, we check if a field exists or not
-                return fieldQueryExtensions.get(ExistsFieldQueryExtension.NAME).query(context, actualField);
+                return fieldQueryExtensions.get(ExistsFieldQueryExtension.NAME).query(parseContext, actualField);
             }
         }
         if (lowercaseExpandedTerms) {
@@ -637,10 +633,10 @@ public class MapperQueryParser extends QueryParser {
         currentFieldType = null;
         Analyzer oldAnalyzer = getAnalyzer();
         try {
-            currentFieldType = context.fieldMapper(field);
+            currentFieldType = parseContext.fieldMapper(field);
             if (currentFieldType != null) {
                 if (!forcedAnalyzer) {
-                    setAnalyzer(context.getSearchAnalyzer(currentFieldType));
+                    setAnalyzer(parseContext.getSearchAnalyzer(currentFieldType));
                 }
                 indexedNameField = currentFieldType.names().indexName();
                 return getPossiblyAnalyzedWildcardQuery(indexedNameField, termStr);
@@ -778,14 +774,14 @@ public class MapperQueryParser extends QueryParser {
         currentFieldType = null;
         Analyzer oldAnalyzer = getAnalyzer();
         try {
-            currentFieldType = context.fieldMapper(field);
+            currentFieldType = parseContext.fieldMapper(field);
             if (currentFieldType != null) {
                 if (!forcedAnalyzer) {
-                    setAnalyzer(context.getSearchAnalyzer(currentFieldType));
+                    setAnalyzer(parseContext.getSearchAnalyzer(currentFieldType));
                 }
                 Query query = null;
                 if (currentFieldType.useTermQueryWithQueryString()) {
-                    query = currentFieldType.regexpQuery(termStr, RegExp.ALL, maxDeterminizedStates, multiTermRewriteMethod, context);
+                    query = currentFieldType.regexpQuery(termStr, RegExp.ALL, maxDeterminizedStates, multiTermRewriteMethod, parseContext);
                 }
                 if (query == null) {
                     query = super.getRegexpQuery(field, termStr);
@@ -833,7 +829,7 @@ public class MapperQueryParser extends QueryParser {
     private Collection<String> extractMultiFields(String field) {
         Collection<String> fields = null;
         if (field != null) {
-            fields = context.simpleMatchToIndexNames(field);
+            fields = parseContext.simpleMatchToIndexNames(field);
         } else {
             fields = settings.fields();
         }

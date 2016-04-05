@@ -96,6 +96,7 @@ import org.elasticsearch.index.query.functionscore.script.ScriptScoreFunctionPar
 import org.elasticsearch.index.query.functionscore.weight.WeightBuilder;
 import org.elasticsearch.indices.query.IndicesQueriesRegistry;
 import org.elasticsearch.search.action.SearchServiceTransportAction;
+import org.elasticsearch.search.aggregations.AggregationBinaryParseElement;
 import org.elasticsearch.search.aggregations.AggregationParseElement;
 import org.elasticsearch.search.aggregations.AggregationPhase;
 import org.elasticsearch.search.aggregations.Aggregator;
@@ -127,6 +128,7 @@ import org.elasticsearch.search.aggregations.bucket.range.geodistance.GeoDistanc
 import org.elasticsearch.search.aggregations.bucket.range.geodistance.InternalGeoDistance;
 import org.elasticsearch.search.aggregations.bucket.range.ipv4.InternalIPv4Range;
 import org.elasticsearch.search.aggregations.bucket.range.ipv4.IpRangeParser;
+import org.elasticsearch.search.aggregations.bucket.sampler.DiversifiedSamplerParser;
 import org.elasticsearch.search.aggregations.bucket.sampler.InternalSampler;
 import org.elasticsearch.search.aggregations.bucket.sampler.SamplerParser;
 import org.elasticsearch.search.aggregations.bucket.sampler.UnmappedSampler;
@@ -207,20 +209,26 @@ import org.elasticsearch.search.controller.SearchPhaseController;
 import org.elasticsearch.search.dfs.DfsPhase;
 import org.elasticsearch.search.fetch.FetchPhase;
 import org.elasticsearch.search.fetch.FetchSubPhase;
+import org.elasticsearch.search.fetch.FieldsParseElement;
 import org.elasticsearch.search.fetch.explain.ExplainFetchSubPhase;
 import org.elasticsearch.search.fetch.fielddata.FieldDataFieldsFetchSubPhase;
+import org.elasticsearch.search.fetch.fielddata.FieldDataFieldsParseElement;
 import org.elasticsearch.search.fetch.innerhits.InnerHitsFetchSubPhase;
 import org.elasticsearch.search.fetch.matchedqueries.MatchedQueriesFetchSubPhase;
 import org.elasticsearch.search.fetch.parent.ParentFieldSubFetchPhase;
 import org.elasticsearch.search.fetch.script.ScriptFieldsFetchSubPhase;
+import org.elasticsearch.search.fetch.script.ScriptFieldsParseElement;
+import org.elasticsearch.search.fetch.source.FetchSourceParseElement;
 import org.elasticsearch.search.fetch.source.FetchSourceSubPhase;
 import org.elasticsearch.search.fetch.version.VersionFetchSubPhase;
 import org.elasticsearch.search.highlight.HighlightPhase;
 import org.elasticsearch.search.highlight.Highlighter;
+import org.elasticsearch.search.highlight.HighlighterParseElement;
 import org.elasticsearch.search.highlight.Highlighters;
 import org.elasticsearch.search.query.QueryPhase;
 import org.elasticsearch.search.rescore.QueryRescorerBuilder;
 import org.elasticsearch.search.rescore.RescoreBuilder;
+import org.elasticsearch.search.sort.SortParseElement;
 import org.elasticsearch.search.suggest.Suggester;
 import org.elasticsearch.search.suggest.Suggesters;
 
@@ -237,8 +245,8 @@ import java.util.function.Supplier;
  */
 public class SearchModule extends AbstractModule {
 
-    private final Set<Class<? extends Aggregator.Parser>> aggParsers = new HashSet<>();
-    private final Set<Class<? extends PipelineAggregator.Parser>> pipelineAggParsers = new HashSet<>();
+    private final Set<Aggregator.Parser> aggParsers = new HashSet<>();
+    private final Set<PipelineAggregator.Parser> pipelineAggParsers = new HashSet<>();
     private final Highlighters highlighters = new Highlighters();
     private final Suggesters suggesters = new Suggesters();
     /**
@@ -253,8 +261,8 @@ public class SearchModule extends AbstractModule {
      */
     private final List<Supplier<QueryParser<?>>> queryParsers = new ArrayList<>();
     private final Set<Class<? extends FetchSubPhase>> fetchSubPhases = new HashSet<>();
-    private final Set<Class<? extends SignificanceHeuristicParser>> heuristicParsers = new HashSet<>();
-    private final Set<Class<? extends MovAvgModel.AbstractModelParser>> modelParsers = new HashSet<>();
+    private final Set<SignificanceHeuristicParser> heuristicParsers = new HashSet<>();
+    private final Set<MovAvgModel.AbstractModelParser> modelParsers = new HashSet<>();
 
     private final Settings settings;
     private final NamedWriteableRegistry namedWriteableRegistry;
@@ -299,11 +307,11 @@ public class SearchModule extends AbstractModule {
         fetchSubPhases.add(subPhase);
     }
 
-    public void registerHeuristicParser(Class<? extends SignificanceHeuristicParser> parser) {
+    public void registerHeuristicParser(SignificanceHeuristicParser parser) {
         heuristicParsers.add(parser);
     }
 
-    public void registerModelParser(Class<? extends MovAvgModel.AbstractModelParser> parser) {
+    public void registerModelParser(MovAvgModel.AbstractModelParser parser) {
         modelParsers.add(parser);
     }
 
@@ -312,21 +320,22 @@ public class SearchModule extends AbstractModule {
      *
      * @param parser The parser for the custom aggregator.
      */
-    public void registerAggregatorParser(Class<? extends Aggregator.Parser> parser) {
+    public void registerAggregatorParser(Aggregator.Parser parser) {
         aggParsers.add(parser);
     }
 
-    public void registerPipelineParser(Class<? extends PipelineAggregator.Parser> parser) {
+    public void registerPipelineParser(PipelineAggregator.Parser parser) {
         pipelineAggParsers.add(parser);
     }
 
     @Override
     protected void configure() {
+        IndicesQueriesRegistry indicesQueriesRegistry = buildQueryParserRegistry();
+        bind(IndicesQueriesRegistry.class).toInstance(indicesQueriesRegistry);
         configureSearch();
-        configureAggs();
+        configureAggs(indicesQueriesRegistry);
         configureHighlighters();
         configureSuggesters();
-        bind(IndicesQueriesRegistry.class).toInstance(buildQueryParserRegistry());
         configureFetchSubPhase();
         configureShapes();
         configureRescorers();
@@ -371,75 +380,67 @@ public class SearchModule extends AbstractModule {
        highlighters.bind(binder());
     }
 
-    protected void configureAggs() {
-        Multibinder<Aggregator.Parser> multibinderAggParser = Multibinder.newSetBinder(binder(), Aggregator.Parser.class);
-        multibinderAggParser.addBinding().to(AvgParser.class);
-        multibinderAggParser.addBinding().to(SumParser.class);
-        multibinderAggParser.addBinding().to(MinParser.class);
-        multibinderAggParser.addBinding().to(MaxParser.class);
-        multibinderAggParser.addBinding().to(StatsParser.class);
-        multibinderAggParser.addBinding().to(ExtendedStatsParser.class);
-        multibinderAggParser.addBinding().to(ValueCountParser.class);
-        multibinderAggParser.addBinding().to(PercentilesParser.class);
-        multibinderAggParser.addBinding().to(PercentileRanksParser.class);
-        multibinderAggParser.addBinding().to(CardinalityParser.class);
-        multibinderAggParser.addBinding().to(GlobalParser.class);
-        multibinderAggParser.addBinding().to(MissingParser.class);
-        multibinderAggParser.addBinding().to(FilterParser.class);
-        multibinderAggParser.addBinding().to(FiltersParser.class);
-        multibinderAggParser.addBinding().to(SamplerParser.class);
-        multibinderAggParser.addBinding().to(TermsParser.class);
-        multibinderAggParser.addBinding().to(SignificantTermsParser.class);
-        multibinderAggParser.addBinding().to(RangeParser.class);
-        multibinderAggParser.addBinding().to(DateRangeParser.class);
-        multibinderAggParser.addBinding().to(IpRangeParser.class);
-        multibinderAggParser.addBinding().to(HistogramParser.class);
-        multibinderAggParser.addBinding().to(DateHistogramParser.class);
-        multibinderAggParser.addBinding().to(GeoDistanceParser.class);
-        multibinderAggParser.addBinding().to(GeoHashGridParser.class);
-        multibinderAggParser.addBinding().to(NestedParser.class);
-        multibinderAggParser.addBinding().to(ReverseNestedParser.class);
-        multibinderAggParser.addBinding().to(TopHitsParser.class);
-        multibinderAggParser.addBinding().to(GeoBoundsParser.class);
-        multibinderAggParser.addBinding().to(GeoCentroidParser.class);
-        multibinderAggParser.addBinding().to(ScriptedMetricParser.class);
-        multibinderAggParser.addBinding().to(ChildrenParser.class);
-        for (Class<? extends Aggregator.Parser> parser : aggParsers) {
-            multibinderAggParser.addBinding().to(parser);
-        }
+    protected void configureAggs(IndicesQueriesRegistry indicesQueriesRegistry) {
 
-        Multibinder<PipelineAggregator.Parser> multibinderPipelineAggParser = Multibinder.newSetBinder(binder(), PipelineAggregator.Parser.class);
-        multibinderPipelineAggParser.addBinding().to(DerivativeParser.class);
-        multibinderPipelineAggParser.addBinding().to(MaxBucketParser.class);
-        multibinderPipelineAggParser.addBinding().to(MinBucketParser.class);
-        multibinderPipelineAggParser.addBinding().to(AvgBucketParser.class);
-        multibinderPipelineAggParser.addBinding().to(SumBucketParser.class);
-        multibinderPipelineAggParser.addBinding().to(StatsBucketParser.class);
-        multibinderPipelineAggParser.addBinding().to(ExtendedStatsBucketParser.class);
-        multibinderPipelineAggParser.addBinding().to(PercentilesBucketParser.class);
-        multibinderPipelineAggParser.addBinding().to(MovAvgParser.class);
-        multibinderPipelineAggParser.addBinding().to(CumulativeSumParser.class);
-        multibinderPipelineAggParser.addBinding().to(BucketScriptParser.class);
-        multibinderPipelineAggParser.addBinding().to(BucketSelectorParser.class);
-        multibinderPipelineAggParser.addBinding().to(SerialDiffParser.class);
-        for (Class<? extends PipelineAggregator.Parser> parser : pipelineAggParsers) {
-            multibinderPipelineAggParser.addBinding().to(parser);
-        }
-        bind(AggregatorParsers.class).asEagerSingleton();
-        bind(AggregationParseElement.class).asEagerSingleton();
-        bind(AggregationPhase.class).asEagerSingleton();
+        MovAvgModelParserMapper movAvgModelParserMapper = new MovAvgModelParserMapper(modelParsers);
 
-        Multibinder<SignificanceHeuristicParser> heuristicParserMultibinder = Multibinder.newSetBinder(binder(), SignificanceHeuristicParser.class);
-        for (Class<? extends SignificanceHeuristicParser> clazz : heuristicParsers) {
-            heuristicParserMultibinder.addBinding().to(clazz);
-        }
-        bind(SignificanceHeuristicParserMapper.class);
+        SignificanceHeuristicParserMapper significanceHeuristicParserMapper = new SignificanceHeuristicParserMapper(heuristicParsers);
 
-        Multibinder<MovAvgModel.AbstractModelParser> modelParserMultibinder = Multibinder.newSetBinder(binder(), MovAvgModel.AbstractModelParser.class);
-        for (Class<? extends MovAvgModel.AbstractModelParser> clazz : modelParsers) {
-            modelParserMultibinder.addBinding().to(clazz);
-        }
-        bind(MovAvgModelParserMapper.class);
+        registerAggregatorParser(new AvgParser());
+        registerAggregatorParser(new SumParser());
+        registerAggregatorParser(new MinParser());
+        registerAggregatorParser(new MaxParser());
+        registerAggregatorParser(new StatsParser());
+        registerAggregatorParser(new ExtendedStatsParser());
+        registerAggregatorParser(new ValueCountParser());
+        registerAggregatorParser(new PercentilesParser());
+        registerAggregatorParser(new PercentileRanksParser());
+        registerAggregatorParser(new CardinalityParser());
+        registerAggregatorParser(new GlobalParser());
+        registerAggregatorParser(new MissingParser());
+        registerAggregatorParser(new FilterParser());
+        registerAggregatorParser(new FiltersParser(indicesQueriesRegistry));
+        registerAggregatorParser(new SamplerParser());
+        registerAggregatorParser(new DiversifiedSamplerParser());
+        registerAggregatorParser(new TermsParser());
+        registerAggregatorParser(new SignificantTermsParser(significanceHeuristicParserMapper, indicesQueriesRegistry));
+        registerAggregatorParser(new RangeParser());
+        registerAggregatorParser(new DateRangeParser());
+        registerAggregatorParser(new IpRangeParser());
+        registerAggregatorParser(new HistogramParser());
+        registerAggregatorParser(new DateHistogramParser());
+        registerAggregatorParser(new GeoDistanceParser());
+        registerAggregatorParser(new GeoHashGridParser());
+        registerAggregatorParser(new NestedParser());
+        registerAggregatorParser(new ReverseNestedParser());
+        registerAggregatorParser(new TopHitsParser(new SortParseElement(), new FetchSourceParseElement(), new HighlighterParseElement(),
+                new FieldDataFieldsParseElement(), new ScriptFieldsParseElement(), new FieldsParseElement()));
+        registerAggregatorParser(new GeoBoundsParser());
+        registerAggregatorParser(new GeoCentroidParser());
+        registerAggregatorParser(new ScriptedMetricParser());
+        registerAggregatorParser(new ChildrenParser());
+
+        registerPipelineParser(new DerivativeParser());
+        registerPipelineParser(new MaxBucketParser());
+        registerPipelineParser(new MinBucketParser());
+        registerPipelineParser(new AvgBucketParser());
+        registerPipelineParser(new SumBucketParser());
+        registerPipelineParser(new StatsBucketParser());
+        registerPipelineParser(new ExtendedStatsBucketParser());
+        registerPipelineParser(new PercentilesBucketParser());
+        registerPipelineParser(new MovAvgParser(movAvgModelParserMapper));
+        registerPipelineParser(new CumulativeSumParser());
+        registerPipelineParser(new BucketScriptParser());
+        registerPipelineParser(new BucketSelectorParser());
+        registerPipelineParser(new SerialDiffParser());
+
+        AggregatorParsers aggregatorParsers = new AggregatorParsers(aggParsers, pipelineAggParsers, namedWriteableRegistry);
+        AggregationParseElement aggParseElement = new AggregationParseElement(aggregatorParsers, indicesQueriesRegistry);
+        AggregationBinaryParseElement aggBinaryParseElement = new AggregationBinaryParseElement(aggregatorParsers, indicesQueriesRegistry);
+        AggregationPhase aggPhase = new AggregationPhase(aggParseElement, aggBinaryParseElement);
+        bind(AggregatorParsers.class).toInstance(aggregatorParsers);
+        bind(AggregationParseElement.class).toInstance(aggParseElement);
+        bind(AggregationPhase.class).toInstance(aggPhase);
     }
 
     protected void configureSearch() {

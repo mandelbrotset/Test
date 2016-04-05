@@ -26,9 +26,9 @@ import org.elasticsearch.common.settings.ClusterSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.util.BigArrays;
 import org.elasticsearch.indices.IndicesService;
+import org.elasticsearch.indices.cache.request.IndicesRequestCache;
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.script.ScriptService;
-import org.elasticsearch.search.aggregations.AggregatorParsers;
 import org.elasticsearch.search.dfs.DfsPhase;
 import org.elasticsearch.search.fetch.FetchPhase;
 import org.elasticsearch.search.internal.SearchContext;
@@ -66,20 +66,11 @@ public class MockSearchService extends SearchService {
     }
 
     @Inject
-<<<<<<< HEAD
     public MockSearchService(Settings settings, ClusterSettings clusterSettings, ClusterService clusterService, IndicesService indicesService,
                              ThreadPool threadPool, ScriptService scriptService, PageCacheRecycler pageCacheRecycler, BigArrays bigArrays,
-                             DfsPhase dfsPhase, QueryPhase queryPhase, FetchPhase fetchPhase) {
+                             DfsPhase dfsPhase, QueryPhase queryPhase, FetchPhase fetchPhase, IndicesRequestCache indicesQueryCache) {
         super(settings, clusterSettings, clusterService, indicesService, threadPool, scriptService, pageCacheRecycler, bigArrays, dfsPhase,
-                queryPhase, fetchPhase);
-=======
-    public MockSearchService(Settings settings, ClusterSettings clusterSettings, ClusterService clusterService,
-            IndicesService indicesService, ThreadPool threadPool, ScriptService scriptService, PageCacheRecycler pageCacheRecycler,
-            BigArrays bigArrays, DfsPhase dfsPhase, QueryPhase queryPhase, FetchPhase fetchPhase, IndicesRequestCache indicesQueryCache,
-            AggregatorParsers aggParsers) {
-        super(settings, clusterSettings, clusterService, indicesService, threadPool, scriptService, pageCacheRecycler, bigArrays, dfsPhase,
-                queryPhase, fetchPhase, indicesQueryCache, aggParsers);
->>>>>>> tempbranch
+                queryPhase, fetchPhase, indicesQueryCache);
     }
 
     @Override

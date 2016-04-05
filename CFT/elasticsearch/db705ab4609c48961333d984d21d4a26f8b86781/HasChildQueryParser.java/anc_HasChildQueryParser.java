@@ -19,76 +19,88 @@
 
 package org.elasticsearch.index.query;
 
-<<<<<<< HEAD
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiDocValues;
+import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.QueryWrapperFilter;
+import org.apache.lucene.search.join.BitSetProducer;
 import org.apache.lucene.search.join.JoinUtil;
 import org.apache.lucene.search.join.ScoreMode;
-=======
->>>>>>> tempbranch
+import org.elasticsearch.Version;
 import org.elasticsearch.common.ParseField;
 import org.elasticsearch.common.Strings;
+import org.elasticsearch.common.inject.Inject;
+import org.elasticsearch.common.lucene.search.Queries;
 import org.elasticsearch.common.xcontent.XContentParser;
-<<<<<<< HEAD
 import org.elasticsearch.index.fielddata.IndexParentChildFieldData;
 import org.elasticsearch.index.fielddata.plain.ParentChildIndexFieldData;
 import org.elasticsearch.index.mapper.DocumentMapper;
 import org.elasticsearch.index.mapper.internal.ParentFieldMapper;
 import org.elasticsearch.index.query.support.InnerHitsQueryParserHelper;
 import org.elasticsearch.index.query.support.XContentStructure;
+import org.elasticsearch.index.search.child.ChildrenConstantScoreQuery;
+import org.elasticsearch.index.search.child.ChildrenQuery;
+import org.elasticsearch.index.search.child.ScoreType;
 import org.elasticsearch.search.fetch.innerhits.InnerHitsContext;
 import org.elasticsearch.search.fetch.innerhits.InnerHitsSubSearchContext;
 import org.elasticsearch.search.internal.SearchContext;
-=======
-import org.elasticsearch.index.query.support.QueryInnerHits;
-import org.elasticsearch.index.search.child.ScoreType;
->>>>>>> tempbranch
 
 import java.io.IOException;
 
 /**
- * A query parser for <tt>has_child</tt> queries.
+ *
  */
-public class HasChildQueryParser extends BaseQueryParser {
+public class HasChildQueryParser implements QueryParser {
 
+    public static final String NAME = "has_child";
     private static final ParseField QUERY_FIELD = new ParseField("query", "filter");
 
-    @Override
-    public String[] names() {
-        return new String[] { HasChildQueryBuilder.NAME, Strings.toCamelCase(HasChildQueryBuilder.NAME) };
+    private final InnerHitsQueryParserHelper innerHitsQueryParserHelper;
+
+    @Inject
+    public HasChildQueryParser(InnerHitsQueryParserHelper innerHitsQueryParserHelper) {
+        this.innerHitsQueryParserHelper = innerHitsQueryParserHelper;
     }
 
     @Override
-    public QueryBuilder fromXContent(QueryParseContext parseContext) throws IOException, QueryParsingException {
+    public String[] names() {
+        return new String[] { NAME, Strings.toCamelCase(NAME) };
+    }
+
+    @Override
+    public Query parse(QueryParseContext parseContext) throws IOException, QueryParsingException {
         XContentParser parser = parseContext.parser();
-        float boost = AbstractQueryBuilder.DEFAULT_BOOST;
+
+        boolean queryFound = false;
+        float boost = 1.0f;
         String childType = null;
         ScoreType scoreType = ScoreType.NONE;
-<<<<<<< HEAD
         int minChildren = 0;
         int maxChildren = 0;
-=======
-        int minChildren = HasChildQueryBuilder.DEFAULT_MIN_CHILDREN;
-        int maxChildren = HasChildQueryBuilder.DEFAULT_MAX_CHILDREN;
-        int shortCircuitParentDocSet = HasChildQueryBuilder.DEFAULT_SHORT_CIRCUIT_CUTOFF;
->>>>>>> tempbranch
+        int shortCircuitParentDocSet = 8192;
         String queryName = null;
-        QueryInnerHits queryInnerHits = null;
+        InnerHitsSubSearchContext innerHits = null;
+
         String currentFieldName = null;
         XContentParser.Token token;
-        QueryBuilder iqb = null;
+        XContentStructure.InnerQuery iq = null;
         while ((token = parser.nextToken()) != XContentParser.Token.END_OBJECT) {
             if (token == XContentParser.Token.FIELD_NAME) {
                 currentFieldName = parser.currentName();
             } else if (parseContext.isDeprecatedSetting(currentFieldName)) {
                 // skip
             } else if (token == XContentParser.Token.START_OBJECT) {
+                // Usually, the query would be parsed here, but the child
+                // type may not have been extracted yet, so use the
+                // XContentStructure.<type> facade to parse if available,
+                // or delay parsing if not.
                 if (parseContext.parseFieldMatcher().match(currentFieldName, QUERY_FIELD)) {
-                    iqb = parseContext.parseInnerQueryBuilder();
+                    iq = new XContentStructure.InnerQuery(parseContext, childType == null ? null : new String[] { childType });
+                    queryFound = true;
                 } else if ("inner_hits".equals(currentFieldName)) {
-                    queryInnerHits = new QueryInnerHits(parser);
+                    innerHits = innerHitsQueryParserHelper.parse(parseContext);
                 } else {
                     throw new QueryParsingException(parseContext, "[has_child] query does not support [" + currentFieldName + "]");
                 }
@@ -105,6 +117,8 @@ public class HasChildQueryParser extends BaseQueryParser {
                     minChildren = parser.intValue(true);
                 } else if ("max_children".equals(currentFieldName) || "maxChildren".equals(currentFieldName)) {
                     maxChildren = parser.intValue(true);
+                } else if ("short_circuit_cutoff".equals(currentFieldName)) {
+                    shortCircuitParentDocSet = parser.intValue();
                 } else if ("_name".equals(currentFieldName)) {
                     queryName = parser.text();
                 } else {
@@ -112,7 +126,6 @@ public class HasChildQueryParser extends BaseQueryParser {
                 }
             }
         }
-<<<<<<< HEAD
         if (!queryFound) {
             throw new QueryParsingException(parseContext, "[has_child] requires 'query' field");
         }
@@ -154,12 +167,29 @@ public class HasChildQueryParser extends BaseQueryParser {
             throw new QueryParsingException(parseContext, "[has_child] 'max_children' is less than 'min_children'");
         }
 
+        BitSetProducer nonNestedDocsFilter = null;
+        if (parentDocMapper.hasNestedObjects()) {
+            nonNestedDocsFilter = parseContext.bitsetFilter(Queries.newNonNestedFilter());
+        }
+
         // wrap the query with type query
         innerQuery = Queries.filtered(innerQuery, childDocMapper.typeFilter());
 
         final Query query;
         final ParentChildIndexFieldData parentChildIndexFieldData = parseContext.getForField(parentFieldMapper.fieldType());
-        query = joinUtilHelper(parentType, parentChildIndexFieldData, parentDocMapper.typeFilter(), scoreType, innerQuery, minChildren, maxChildren);
+        if (parseContext.indexVersionCreated().onOrAfter(Version.V_2_0_0_beta1)) {
+            query = joinUtilHelper(parentType, parentChildIndexFieldData, parentDocMapper.typeFilter(), scoreType, innerQuery, minChildren, maxChildren);
+        } else {
+            // TODO: use the query API
+            Filter parentFilter = new QueryWrapperFilter(parentDocMapper.typeFilter());
+            if (minChildren > 1 || maxChildren > 0 || scoreType != ScoreType.NONE) {
+                query = new ChildrenQuery(parentChildIndexFieldData, parentType, childType, parentFilter, innerQuery, scoreType, minChildren,
+                        maxChildren, shortCircuitParentDocSet, nonNestedDocsFilter);
+            } else {
+                query = new ChildrenConstantScoreQuery(parentChildIndexFieldData, innerQuery, parentType, childType, parentFilter,
+                        shortCircuitParentDocSet, nonNestedDocsFilter);
+            }
+        }
         if (queryName != null) {
             parseContext.addNamedQuery(queryName, query);
         }
@@ -194,16 +224,67 @@ public class HasChildQueryParser extends BaseQueryParser {
             maxChildren = Integer.MAX_VALUE;
         }
         return new LateParsingQuery(toQuery, innerQuery, minChildren, maxChildren, parentType, scoreMode, parentChildIndexFieldData);
-=======
-        HasChildQueryBuilder hasChildQueryBuilder = new HasChildQueryBuilder(childType, iqb, maxChildren, minChildren, shortCircuitParentDocSet, scoreType, queryInnerHits);
-        hasChildQueryBuilder.queryName(queryName);
-        hasChildQueryBuilder.boost(boost);
-        return hasChildQueryBuilder;
->>>>>>> tempbranch
     }
 
-    @Override
-    public HasChildQueryBuilder getBuilderPrototype() {
-        return HasChildQueryBuilder.PROTOTYPE;
+    final static class LateParsingQuery extends Query {
+
+        private final Query toQuery;
+        private final Query innerQuery;
+        private final int minChildren;
+        private final int maxChildren;
+        private final String parentType;
+        private final ScoreMode scoreMode;
+        private final ParentChildIndexFieldData parentChildIndexFieldData;
+        private final Object identity = new Object();
+
+        LateParsingQuery(Query toQuery, Query innerQuery, int minChildren, int maxChildren, String parentType, ScoreMode scoreMode, ParentChildIndexFieldData parentChildIndexFieldData) {
+            this.toQuery = toQuery;
+            this.innerQuery = innerQuery;
+            this.minChildren = minChildren;
+            this.maxChildren = maxChildren;
+            this.parentType = parentType;
+            this.scoreMode = scoreMode;
+            this.parentChildIndexFieldData = parentChildIndexFieldData;
+        }
+
+        @Override
+        public Query rewrite(IndexReader reader) throws IOException {
+            SearchContext searchContext = SearchContext.current();
+            if (searchContext == null) {
+                throw new IllegalArgumentException("Search context is required to be set");
+            }
+
+            IndexSearcher indexSearcher = searchContext.searcher();
+            String joinField = ParentFieldMapper.joinField(parentType);
+            IndexParentChildFieldData indexParentChildFieldData = parentChildIndexFieldData.loadGlobal(indexSearcher.getIndexReader());
+            MultiDocValues.OrdinalMap ordinalMap = ParentChildIndexFieldData.getOrdinalMap(indexParentChildFieldData, parentType);
+            return JoinUtil.createJoinQuery(joinField, innerQuery, toQuery, indexSearcher, scoreMode, ordinalMap, minChildren, maxChildren);
+        }
+
+        // Even though we only cache rewritten queries it is good to let all queries implement hashCode() and equals():
+
+        // We can't check for actually equality here, since we need to IndexReader for this, but
+        // that isn't available on all cases during query parse time, so instead rely on identity:
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
+
+            LateParsingQuery that = (LateParsingQuery) o;
+            return identity.equals(that.identity);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            result = 31 * result + identity.hashCode();
+            return result;
+        }
+
+        @Override
+        public String toString(String s) {
+            return "LateParsingQuery {parentType=" + parentType + "}";
+        }
     }
 }

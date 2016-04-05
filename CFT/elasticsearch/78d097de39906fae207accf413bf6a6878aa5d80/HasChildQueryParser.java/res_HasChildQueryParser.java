@@ -21,14 +21,10 @@ package org.elasticsearch.index.query;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.MultiDocValues;
-<<<<<<< HEAD
 import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.QueryWrapperFilter;
-=======
-import org.apache.lucene.search.*;
->>>>>>> tempbranch
 import org.apache.lucene.search.join.BitDocIdSetFilter;
 import org.apache.lucene.search.join.JoinUtil;
 import org.apache.lucene.search.join.ScoreMode;
@@ -154,17 +150,10 @@ public class HasChildQueryParser extends BaseQueryParserTemp {
         }
 
         if (innerHits != null) {
-<<<<<<< HEAD
-            ParsedQuery parsedQuery = new ParsedQuery(innerQuery, parseContext.copyNamedQueries());
-            InnerHitsContext.ParentChildInnerHits parentChildInnerHits = new InnerHitsContext.ParentChildInnerHits(innerHits.getSubSearchContext(), parsedQuery, null, parseContext.mapperService(), childDocMapper);
-            String name = innerHits.getName() != null ? innerHits.getName() : childType;
-            parseContext.addInnerHits(name, parentChildInnerHits);
-=======
             ParsedQuery parsedQuery = new ParsedQuery(innerQuery, context.copyNamedQueries());
-            InnerHitsContext.ParentChildInnerHits parentChildInnerHits = new InnerHitsContext.ParentChildInnerHits(innerHits.v2(), parsedQuery, null, context.mapperService(), childDocMapper);
-            String name = innerHits.v1() != null ? innerHits.v1() : childType;
+            InnerHitsContext.ParentChildInnerHits parentChildInnerHits = new InnerHitsContext.ParentChildInnerHits(innerHits.getSubSearchContext(), parsedQuery, null, context.mapperService(), childDocMapper);
+            String name = innerHits.getName() != null ? innerHits.getName() : childType;
             context.addInnerHits(name, parentChildInnerHits);
->>>>>>> tempbranch
         }
 
         String parentType = parentFieldMapper.type();

@@ -31,8 +31,6 @@ import org.elasticsearch.action.admin.indices.delete.DeleteIndexAction;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.flush.FlushRequest;
 import org.elasticsearch.action.admin.indices.flush.TransportShardFlushAction;
-import org.elasticsearch.action.admin.indices.forcemerge.ForceMergeAction;
-import org.elasticsearch.action.admin.indices.forcemerge.ForceMergeRequest;
 import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsAction;
 import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsRequest;
 import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsAction;
@@ -41,6 +39,8 @@ import org.elasticsearch.action.admin.indices.mapping.put.PutMappingAction;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.admin.indices.open.OpenIndexAction;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
+import org.elasticsearch.action.admin.indices.optimize.OptimizeAction;
+import org.elasticsearch.action.admin.indices.optimize.OptimizeRequest;
 import org.elasticsearch.action.admin.indices.recovery.RecoveryAction;
 import org.elasticsearch.action.admin.indices.recovery.RecoveryRequest;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
@@ -98,36 +98,22 @@ import org.elasticsearch.test.ESIntegTestCase;
 import org.elasticsearch.test.ESIntegTestCase.ClusterScope;
 import org.elasticsearch.test.ESIntegTestCase.Scope;
 import org.elasticsearch.threadpool.ThreadPool;
-import org.elasticsearch.transport.Transport;
-import org.elasticsearch.transport.TransportChannel;
-import org.elasticsearch.transport.TransportModule;
-import org.elasticsearch.transport.TransportRequest;
-import org.elasticsearch.transport.TransportRequestHandler;
-import org.elasticsearch.transport.TransportService;
+import org.elasticsearch.transport.*;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertAcked;
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertNoFailures;
-import static org.hamcrest.Matchers.emptyIterable;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.*;
 
 @ClusterScope(scope = Scope.SUITE, numClientNodes = 1, minNumDataNodes = 2)
 public class IndicesRequestTests extends ESIntegTestCase {
+
     private final List<String> indices = new ArrayList<>();
 
     @Override
@@ -173,6 +159,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         indices.clear();
     }
 
+    @Test
     public void testGetFieldMappings() {
         String getFieldMappingsShardAction = GetFieldMappingsAction.NAME + "[index][s]";
         interceptTransportActions(getFieldMappingsShardAction);
@@ -185,6 +172,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(getFieldMappingsRequest, getFieldMappingsShardAction);
     }
 
+    @Test
     public void testAnalyze() {
         String analyzeShardAction = AnalyzeAction.NAME + "[s]";
         interceptTransportActions(analyzeShardAction);
@@ -197,6 +185,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(analyzeRequest, analyzeShardAction);
     }
 
+    @Test
     public void testIndex() {
         String[] indexShardActions = new String[]{IndexAction.NAME, IndexAction.NAME + "[r]"};
         interceptTransportActions(indexShardActions);
@@ -208,6 +197,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(indexRequest, indexShardActions);
     }
 
+    @Test
     public void testDelete() {
         String[] deleteShardActions = new String[]{DeleteAction.NAME, DeleteAction.NAME + "[r]"};
         interceptTransportActions(deleteShardActions);
@@ -219,6 +209,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(deleteRequest, deleteShardActions);
     }
 
+    @Test
     public void testUpdate() {
         //update action goes to the primary, index op gets executed locally, then replicated
         String[] updateShardActions = new String[]{UpdateAction.NAME + "[s]", IndexAction.NAME + "[r]"};
@@ -234,6 +225,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(updateRequest, updateShardActions);
     }
 
+    @Test
     public void testUpdateUpsert() {
         //update action goes to the primary, index op gets executed locally, then replicated
         String[] updateShardActions = new String[]{UpdateAction.NAME + "[s]", IndexAction.NAME + "[r]"};
@@ -248,6 +240,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(updateRequest, updateShardActions);
     }
 
+    @Test
     public void testUpdateDelete() {
         //update action goes to the primary, delete op gets executed locally, then replicated
         String[] updateShardActions = new String[]{UpdateAction.NAME + "[s]", DeleteAction.NAME + "[r]"};
@@ -263,6 +256,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(updateRequest, updateShardActions);
     }
 
+    @Test
     public void testBulk() {
         String[] bulkShardActions = new String[]{BulkAction.NAME + "[s]", BulkAction.NAME + "[s][r]"};
         interceptTransportActions(bulkShardActions);
@@ -294,6 +288,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertIndicesSubset(indices, bulkShardActions);
     }
 
+    @Test
     public void testGet() {
         String getShardAction = GetAction.NAME + "[s]";
         interceptTransportActions(getShardAction);
@@ -305,6 +300,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(getRequest, getShardAction);
     }
 
+    @Test
     public void testExplain() {
         String explainShardAction = ExplainAction.NAME + "[s]";
         interceptTransportActions(explainShardAction);
@@ -316,6 +312,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(explainRequest, explainShardAction);
     }
 
+    @Test
     public void testTermVector() {
         String termVectorShardAction = TermVectorsAction.NAME + "[s]";
         interceptTransportActions(termVectorShardAction);
@@ -327,6 +324,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(termVectorsRequest, termVectorShardAction);
     }
 
+    @Test
     public void testMultiTermVector() {
         String multiTermVectorsShardAction = MultiTermVectorsAction.NAME + "[shard][s]";
         interceptTransportActions(multiTermVectorsShardAction);
@@ -345,6 +343,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertIndicesSubset(indices, multiTermVectorsShardAction);
     }
 
+    @Test
     public void testMultiGet() {
         String multiGetShardAction = MultiGetAction.NAME + "[shard][s]";
         interceptTransportActions(multiGetShardAction);
@@ -363,6 +362,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertIndicesSubset(indices, multiGetShardAction);
     }
 
+    @Test
     public void testExists() {
         String existsShardAction = ExistsAction.NAME + "[s]";
         interceptTransportActions(existsShardAction);
@@ -374,6 +374,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(existsRequest, existsShardAction);
     }
 
+    @Test
     public void testFlush() {
         String[] indexShardActions = new String[]{TransportShardFlushAction.NAME + "[r]", TransportShardFlushAction.NAME};
         interceptTransportActions(indexShardActions);
@@ -386,24 +387,19 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertIndicesSubset(Arrays.asList(indices), indexShardActions);
     }
 
-<<<<<<< HEAD
     @Test
-    public void testForceMerge() {
-        String mergeShardAction = ForceMergeAction.NAME + "[n]";
-        interceptTransportActions(mergeShardAction);
-=======
     public void testOptimize() {
         String optimizeShardAction = OptimizeAction.NAME + "[n]";
         interceptTransportActions(optimizeShardAction);
->>>>>>> tempbranch
 
-        ForceMergeRequest mergeRequest = new ForceMergeRequest(randomIndicesOrAliases());
-        internalCluster().clientNodeClient().admin().indices().forceMerge(mergeRequest).actionGet();
+        OptimizeRequest optimizeRequest = new OptimizeRequest(randomIndicesOrAliases());
+        internalCluster().clientNodeClient().admin().indices().optimize(optimizeRequest).actionGet();
 
         clearInterceptedActions();
-        assertSameIndices(mergeRequest, mergeShardAction);
+        assertSameIndices(optimizeRequest, optimizeShardAction);
     }
 
+    @Test
     public void testRefresh() {
         String[] indexShardActions = new String[]{TransportShardRefreshAction.NAME + "[r]", TransportShardRefreshAction.NAME};
         interceptTransportActions(indexShardActions);
@@ -416,6 +412,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertIndicesSubset(Arrays.asList(indices), indexShardActions);
     }
 
+    @Test
     public void testClearCache() {
         String clearCacheAction = ClearIndicesCacheAction.NAME + "[n]";
         interceptTransportActions(clearCacheAction);
@@ -427,6 +424,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(clearIndicesCacheRequest, clearCacheAction);
     }
 
+    @Test
     public void testRecovery() {
         String recoveryAction = RecoveryAction.NAME + "[n]";
         interceptTransportActions(recoveryAction);
@@ -438,6 +436,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(recoveryRequest, recoveryAction);
     }
 
+    @Test
     public void testSegments() {
         String segmentsAction = IndicesSegmentsAction.NAME + "[n]";
         interceptTransportActions(segmentsAction);
@@ -449,6 +448,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(segmentsRequest, segmentsAction);
     }
 
+    @Test
     public void testIndicesStats() {
         String indicesStats = IndicesStatsAction.NAME + "[n]";
         interceptTransportActions(indicesStats);
@@ -460,6 +460,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(indicesStatsRequest, indicesStats);
     }
 
+    @Test
     public void testSuggest() {
         String suggestAction = SuggestAction.NAME + "[s]";
         interceptTransportActions(suggestAction);
@@ -471,6 +472,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(suggestRequest, suggestAction);
     }
 
+    @Test
     public void testValidateQuery() {
         String validateQueryShardAction = ValidateQueryAction.NAME + "[s]";
         interceptTransportActions(validateQueryShardAction);
@@ -482,6 +484,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(validateQueryRequest, validateQueryShardAction);
     }
 
+    @Test
     public void testPercolate() {
         String percolateShardAction = PercolateAction.NAME + "[s]";
         interceptTransportActions(percolateShardAction);
@@ -500,6 +503,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(percolateRequest, percolateShardAction);
     }
 
+    @Test
     public void testMultiPercolate() {
         String multiPercolateShardAction = MultiPercolateAction.NAME + "[shard][s]";
         interceptTransportActions(multiPercolateShardAction);
@@ -527,6 +531,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertIndicesSubset(indices, multiPercolateShardAction);
     }
 
+    @Test
     public void testOpenIndex() {
         interceptTransportActions(OpenIndexAction.NAME);
 
@@ -537,6 +542,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(openIndexRequest, OpenIndexAction.NAME);
     }
 
+    @Test
     public void testCloseIndex() {
         interceptTransportActions(CloseIndexAction.NAME);
 
@@ -547,6 +553,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(closeIndexRequest, CloseIndexAction.NAME);
     }
 
+    @Test
     public void testDeleteIndex() {
         interceptTransportActions(DeleteIndexAction.NAME);
 
@@ -558,6 +565,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(deleteIndexRequest, DeleteIndexAction.NAME);
     }
 
+    @Test
     public void testGetMappings() {
         interceptTransportActions(GetMappingsAction.NAME);
 
@@ -568,6 +576,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(getMappingsRequest, GetMappingsAction.NAME);
     }
 
+    @Test
     public void testPutMapping() {
         interceptTransportActions(PutMappingAction.NAME);
 
@@ -578,6 +587,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(putMappingRequest, PutMappingAction.NAME);
     }
 
+    @Test
     public void testGetSettings() {
         interceptTransportActions(GetSettingsAction.NAME);
 
@@ -588,6 +598,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(getSettingsRequest, GetSettingsAction.NAME);
     }
 
+    @Test
     public void testUpdateSettings() {
         interceptTransportActions(UpdateSettingsAction.NAME);
 
@@ -598,6 +609,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndices(updateSettingsRequest, UpdateSettingsAction.NAME);
     }
 
+    @Test
     public void testSearchQueryThenFetch() throws Exception {
         interceptTransportActions(SearchServiceTransportAction.QUERY_ACTION_NAME,
                 SearchServiceTransportAction.FETCH_ID_ACTION_NAME, SearchServiceTransportAction.FREE_CONTEXT_ACTION_NAME);
@@ -619,6 +631,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndicesOptionalRequests(searchRequest, SearchServiceTransportAction.FREE_CONTEXT_ACTION_NAME);
     }
 
+    @Test
     public void testSearchDfsQueryThenFetch() throws Exception {
         interceptTransportActions(SearchServiceTransportAction.DFS_ACTION_NAME, SearchServiceTransportAction.QUERY_ID_ACTION_NAME,
                 SearchServiceTransportAction.FETCH_ID_ACTION_NAME, SearchServiceTransportAction.FREE_CONTEXT_ACTION_NAME);
@@ -641,6 +654,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndicesOptionalRequests(searchRequest, SearchServiceTransportAction.FREE_CONTEXT_ACTION_NAME);
     }
 
+    @Test
     public void testSearchQueryAndFetch() throws Exception {
         interceptTransportActions(SearchServiceTransportAction.QUERY_FETCH_ACTION_NAME,
                 SearchServiceTransportAction.FREE_CONTEXT_ACTION_NAME);
@@ -662,6 +676,7 @@ public class IndicesRequestTests extends ESIntegTestCase {
         assertSameIndicesOptionalRequests(searchRequest, SearchServiceTransportAction.FREE_CONTEXT_ACTION_NAME);
     }
 
+    @Test
     public void testSearchDfsQueryAndFetch() throws Exception {
         interceptTransportActions(SearchServiceTransportAction.QUERY_QUERY_FETCH_ACTION_NAME,
                 SearchServiceTransportAction.FREE_CONTEXT_ACTION_NAME);

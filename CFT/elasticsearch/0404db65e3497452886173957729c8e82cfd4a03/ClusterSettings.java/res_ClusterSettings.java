@@ -260,12 +260,7 @@ public final class ClusterSettings extends AbstractScopedSettings {
         URLRepository.ALLOWED_URLS_SETTING,
         URLRepository.REPOSITORIES_LIST_DIRECTORIES_SETTING,
         URLRepository.REPOSITORIES_URL_SETTING,
-<<<<<<< HEAD
-        URLRepository.SUPPORTED_PROTOCOLS_SETTING)));
-=======
         URLRepository.SUPPORTED_PROTOCOLS_SETTING,
-        Node.NODE_INGEST_SETTING,
         ClusterModule.SHARDS_ALLOCATOR_TYPE_SETTING,
         EsExecutors.PROCESSORS_SETTING)));
->>>>>>> tempbranch
 }

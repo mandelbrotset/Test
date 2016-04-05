@@ -29,11 +29,8 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 
 import org.apache.http.impl.client.HttpClients;
-<<<<<<< HEAD
-import org.elasticsearch.action.admin.cluster.state.ClusterStateResponse;
-=======
 import org.elasticsearch.action.search.SearchResponse;
->>>>>>> tempbranch
+import org.elasticsearch.action.admin.cluster.state.ClusterStateResponse;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.cluster.routing.UnassignedInfo;
 import org.elasticsearch.cluster.routing.allocation.decider.EnableAllocationDecider;

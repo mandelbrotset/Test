@@ -29,14 +29,9 @@ import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentParser;
-<<<<<<< HEAD
 import org.elasticsearch.index.query.QueryParsingException;
 import org.elasticsearch.script.ExecutableScript;
 import org.elasticsearch.script.Script;
-=======
-import org.elasticsearch.index.query.QueryShardException;
-import org.elasticsearch.script.*;
->>>>>>> tempbranch
 import org.elasticsearch.script.Script.ScriptField;
 import org.elasticsearch.script.ScriptContext;
 import org.elasticsearch.script.ScriptParameterParser;
@@ -139,12 +134,8 @@ public class ScriptHeuristic extends SignificanceHeuristic {
         }
 
         @Override
-<<<<<<< HEAD
         public SignificanceHeuristic parse(XContentParser parser, ParseFieldMatcher parseFieldMatcher, SearchContext context)
                 throws IOException, QueryParsingException {
-=======
-        public SignificanceHeuristic parse(XContentParser parser, ParseFieldMatcher parseFieldMatcher) throws IOException, QueryShardException {
->>>>>>> tempbranch
             String heuristicName = parser.currentName();
             Script script = null;
             XContentParser.Token token;

@@ -340,16 +340,7 @@ public class IndicesService extends AbstractLifecycleComponent<IndicesService> i
         modules.add(new AnalysisModule(indexSettings, indicesAnalysisService));
         modules.add(new SimilarityModule(indexSettings));
         modules.add(new IndexCacheModule(indexSettings));
-<<<<<<< HEAD
         modules.add(new IndexModule());
-        
-=======
-        modules.add(new IndexFieldDataModule(indexSettings));
-        modules.add(new MapperServiceModule());
-        modules.add(new IndexAliasesServiceModule());
-        modules.add(new IndexModule(indexSettings));
-
->>>>>>> tempbranch
         pluginsService.processModules(modules);
 
         Injector indexInjector;

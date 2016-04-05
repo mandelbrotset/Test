@@ -40,7 +40,6 @@ public final class TranslogConfig {
 
     public static final String INDEX_TRANSLOG_DURABILITY = "index.translog.durability";
     public static final String INDEX_TRANSLOG_FS_TYPE = "index.translog.fs.type";
-    public static final String INDEX_TRANSLOG_BUFFER_SIZE = "index.translog.fs.buffer_size";
     public static final String INDEX_TRANSLOG_SYNC_INTERVAL = "index.translog.sync_interval";
 
     private final TimeValue syncInterval;
@@ -71,13 +70,8 @@ public final class TranslogConfig {
         this.durabilty = durabilty;
         this.threadPool = threadPool;
         this.bigArrays = bigArrays;
-<<<<<<< HEAD
         this.type = TranslogWriter.Type.fromString(indexSettings.getSettings().get(INDEX_TRANSLOG_FS_TYPE, TranslogWriter.Type.BUFFERED.name()));
-        this.bufferSize = (int) indexSettings.getSettings().getAsBytesSize(INDEX_TRANSLOG_BUFFER_SIZE, IndexingMemoryController.INACTIVE_SHARD_TRANSLOG_BUFFER).bytes(); // Not really interesting, updated by IndexingMemoryController...
-=======
-        this.type = TranslogWriter.Type.fromString(indexSettings.get(INDEX_TRANSLOG_FS_TYPE, TranslogWriter.Type.BUFFERED.name()));
-        this.bufferSizeBytes = (int) indexSettings.getAsBytesSize(INDEX_TRANSLOG_BUFFER_SIZE, IndexingMemoryController.SHARD_TRANSLOG_BUFFER).bytes();
->>>>>>> tempbranch
+        this.bufferSizeBytes = (int) IndexingMemoryController.SHARD_TRANSLOG_BUFFER.bytes();
 
         syncInterval = indexSettings.getSettings().getAsTime(INDEX_TRANSLOG_SYNC_INTERVAL, TimeValue.timeValueSeconds(5));
         if (syncInterval.millis() > 0 && threadPool != null) {
@@ -132,7 +126,7 @@ public final class TranslogConfig {
     }
 
     /**
-     * Retruns the current translog buffer size.
+     * Returns the current translog buffer size.
      */
     public int getBufferSizeBytes() {
         return bufferSizeBytes;

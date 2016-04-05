@@ -56,7 +56,6 @@ import org.elasticsearch.search.aggregations.bucket.significant.heuristics.Signi
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsBuilder;
-import org.elasticsearch.search.internal.SearchContext;
 import org.elasticsearch.test.ESIntegTestCase;
 import org.junit.Test;
 
@@ -236,12 +235,7 @@ public class SignificantTermsSignificanceScoreIT extends ESIntegTestCase {
         public static class SimpleHeuristicParser implements SignificanceHeuristicParser {
 
             @Override
-<<<<<<< HEAD
-            public SignificanceHeuristic parse(XContentParser parser, ParseFieldMatcher parseFieldMatcher, SearchContext context)
-                    throws IOException, QueryParsingException {
-=======
             public SignificanceHeuristic parse(XContentParser parser, ParseFieldMatcher parseFieldMatcher) throws IOException, QueryShardException {
->>>>>>> tempbranch
                 parser.nextToken();
                 return new SimpleHeuristic();
             }

@@ -20,7 +20,8 @@
 package org.elasticsearch.search.warmer;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+
 import org.elasticsearch.cluster.AbstractDiffable;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.common.Nullable;
@@ -29,11 +30,7 @@ import org.elasticsearch.common.bytes.BytesArray;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
-import org.elasticsearch.common.xcontent.ToXContent;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.common.xcontent.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -120,14 +117,14 @@ public class IndexWarmersMetaData extends AbstractDiffable<IndexMetaData.Custom>
         }
     }
 
-    private final ImmutableList<Entry> entries;
+    private final List<Entry> entries;
 
 
     public IndexWarmersMetaData(Entry... entries) {
-        this.entries = ImmutableList.copyOf(entries);
+        this.entries = Arrays.asList(entries);
     }
 
-    public ImmutableList<Entry> entries() {
+    public List<Entry> entries() {
         return this.entries;
     }
 
@@ -262,7 +259,7 @@ public class IndexWarmersMetaData extends AbstractDiffable<IndexMetaData.Custom>
     @Override
     public IndexMetaData.Custom mergeWith(IndexMetaData.Custom other) {
         IndexWarmersMetaData second = (IndexWarmersMetaData) other;
-        List<Entry> entries = new ArrayList<>();
+        List<Entry> entries = Lists.newArrayList();
         entries.addAll(entries());
         for (Entry secondEntry : second.entries()) {
             boolean found = false;

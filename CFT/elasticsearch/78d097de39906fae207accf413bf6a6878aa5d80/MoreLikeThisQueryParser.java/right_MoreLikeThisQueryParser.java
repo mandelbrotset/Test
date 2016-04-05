@@ -20,7 +20,6 @@
 package org.elasticsearch.index.query;
 
 import com.google.common.collect.Sets;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queries.TermsQuery;
 import org.apache.lucene.search.BooleanClause;
@@ -55,8 +54,9 @@ import static org.elasticsearch.index.mapper.Uid.createUidAsBytes;
 /**
  *
  */
-public class MoreLikeThisQueryParser extends BaseQueryParserTemp {
+public class MoreLikeThisQueryParser implements QueryParser {
 
+    public static final String NAME = "mlt";
     private MoreLikeThisFetchService fetchService = null;
 
     public static class Fields {
@@ -89,16 +89,15 @@ public class MoreLikeThisQueryParser extends BaseQueryParserTemp {
 
     @Override
     public String[] names() {
-        return new String[]{MoreLikeThisQueryBuilder.NAME, "more_like_this", "moreLikeThis"};
+        return new String[]{NAME, "more_like_this", "moreLikeThis"};
     }
 
     @Override
-    public Query parse(QueryShardContext context) throws IOException, QueryParsingException {
-        QueryParseContext parseContext = context.parseContext();
+    public Query parse(QueryParseContext parseContext) throws IOException, QueryParsingException {
         XContentParser parser = parseContext.parser();
 
         MoreLikeThisQuery mltQuery = new MoreLikeThisQuery();
-        mltQuery.setSimilarity(context.searchSimilarity());
+        mltQuery.setSimilarity(parseContext.searchSimilarity());
         Analyzer analyzer = null;
         List<String> moreLikeFields = null;
         boolean failOnUnsupportedField = true;
@@ -145,7 +144,7 @@ public class MoreLikeThisQueryParser extends BaseQueryParserTemp {
                 } else if (parseContext.parseFieldMatcher().match(currentFieldName, Fields.MINIMUM_SHOULD_MATCH)) {
                     mltQuery.setMinimumShouldMatch(parser.text());
                 } else if ("analyzer".equals(currentFieldName)) {
-                    analyzer = context.analysisService().analyzer(parser.text());
+                    analyzer = parseContext.analysisService().analyzer(parser.text());
                 } else if ("boost".equals(currentFieldName)) {
                     mltQuery.setBoost(parser.floatValue());
                 } else if (parseContext.parseFieldMatcher().match(currentFieldName, Fields.FAIL_ON_UNSUPPORTED_FIELD)) {
@@ -168,7 +167,7 @@ public class MoreLikeThisQueryParser extends BaseQueryParserTemp {
                     moreLikeFields = new LinkedList<>();
                     while ((token = parser.nextToken()) != XContentParser.Token.END_ARRAY) {
                         String field = parser.text();
-                        MappedFieldType fieldType = context.fieldMapper(field);
+                        MappedFieldType fieldType = parseContext.fieldMapper(field);
                         moreLikeFields.add(fieldType == null ? field : fieldType.names().indexName());
                     }
                 } else if (parseContext.parseFieldMatcher().match(currentFieldName, Fields.DOCUMENT_IDS)) {
@@ -217,18 +216,14 @@ public class MoreLikeThisQueryParser extends BaseQueryParserTemp {
 
         // set analyzer
         if (analyzer == null) {
-            analyzer = context.mapperService().searchAnalyzer();
+            analyzer = parseContext.mapperService().searchAnalyzer();
         }
         mltQuery.setAnalyzer(analyzer);
 
         // set like text fields
         boolean useDefaultField = (moreLikeFields == null);
         if (useDefaultField) {
-<<<<<<< HEAD
             moreLikeFields = Collections.singletonList(parseContext.defaultField());
-=======
-            moreLikeFields = Lists.newArrayList(context.defaultField());
->>>>>>> tempbranch
         }
         // possibly remove unsupported fields
         removeUnsupportedFields(moreLikeFields, analyzer, failOnUnsupportedField);
@@ -239,7 +234,7 @@ public class MoreLikeThisQueryParser extends BaseQueryParserTemp {
 
         // support for named query
         if (queryName != null) {
-            context.addNamedQuery(queryName, mltQuery);
+            parseContext.addNamedQuery(queryName, mltQuery);
         }
 
         // handle like texts
@@ -263,12 +258,12 @@ public class MoreLikeThisQueryParser extends BaseQueryParserTemp {
                     item.index(parseContext.index().name());
                 }
                 if (item.type() == null) {
-                    if (context.queryTypes().size() > 1) {
+                    if (parseContext.queryTypes().size() > 1) {
                         throw new QueryParsingException(parseContext,
                                     "ambiguous type for item with id: " + item.id()
                                 + " and index: " + item.index());
                     } else {
-                        item.type(context.queryTypes().iterator().next());
+                        item.type(parseContext.queryTypes().iterator().next());
                     }
                 }
                 // default fields if not present but don't override for artificial docs
@@ -360,10 +355,5 @@ public class MoreLikeThisQueryParser extends BaseQueryParserTemp {
             TermsQuery query = new TermsQuery(UidFieldMapper.NAME, uids.toArray(new BytesRef[0]));
             boolQuery.add(query, BooleanClause.Occur.MUST_NOT);
         }
-    }
-
-    @Override
-    public MoreLikeThisQueryBuilder getBuilderPrototype() {
-        return MoreLikeThisQueryBuilder.PROTOTYPE;
     }
 }

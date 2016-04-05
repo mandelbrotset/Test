@@ -68,11 +68,7 @@ public class TemplateQueryParser extends BaseQueryParserTemp {
      * values. Handles both submitting the template as part of the request as
      * well as referencing only the template name.
      *
-<<<<<<< HEAD
-     * @param parseContext
-=======
      * @param context
->>>>>>> tempbranch
      *            parse context containing the templated query.
      */
     @Override

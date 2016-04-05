@@ -437,7 +437,7 @@ public class QueryRescorerIT extends ESIntegTestCase {
                     .setPreference("test") // ensure we hit the same shards for tie-breaking
                     .setQuery(QueryBuilders.matchQuery("field1", query).operator(Operator.OR)).setFrom(0).setSize(resultSize)
                     .execute().actionGet();
-
+            
             // check equivalence
             assertEquivalent(query, plain, rescored);
 
@@ -619,10 +619,10 @@ public class QueryRescorerIT extends ESIntegTestCase {
                                         ScoreFunctionBuilders.scriptFunction(new Script("5.0f"))).boostMode(CombineFunction.REPLACE))
                                 .should(QueryBuilders.functionScoreQuery(QueryBuilders.termQuery("field1", intToEnglish[3]),
                                         ScoreFunctionBuilders.scriptFunction(new Script("0.2f"))).boostMode(CombineFunction.REPLACE)))
-                                .setFrom(0)
-                                .setSize(10)
-                                .setRescorer(rescoreQuery)
-                                .setRescoreWindow(50).execute().actionGet();
+                        .setFrom(0)
+                        .setSize(10)
+                        .setRescorer(rescoreQuery)
+                        .setRescoreWindow(50).execute().actionGet();
 
                 assertHitCount(rescored, 4);
 
@@ -677,20 +677,11 @@ public class QueryRescorerIT extends ESIntegTestCase {
     public void testMultipleRescores() throws Exception {
         int numDocs = indexRandomNumbers("keyword", 1, true);
         QueryRescorer eightIsGreat = RescoreBuilder.queryRescorer(
-<<<<<<< HEAD
                 QueryBuilders.functionScoreQuery(QueryBuilders.termQuery("field1", English.intToEnglish(8)),
                         ScoreFunctionBuilders.scriptFunction(new Script("1000.0f"))).boostMode(CombineFunction.REPLACE)).setScoreMode("total");
         QueryRescorer sevenIsBetter = RescoreBuilder.queryRescorer(
                 QueryBuilders.functionScoreQuery(QueryBuilders.termQuery("field1", English.intToEnglish(7)),
                         ScoreFunctionBuilders.scriptFunction(new Script("10000.0f"))).boostMode(CombineFunction.REPLACE))
-=======
-                QueryBuilders.functionScoreQuery(QueryBuilders.termQuery("field1", English.intToEnglish(8)))
-                        .boostMode(CombineFunction.REPLACE).add(ScoreFunctionBuilders.scriptFunction(new Script("1000.0f")))).setScoreMode(
-                "total");
-        QueryRescorer sevenIsBetter = RescoreBuilder.queryRescorer(
-                QueryBuilders.functionScoreQuery(QueryBuilders.termQuery("field1", English.intToEnglish(7)))
-                        .boostMode(CombineFunction.REPLACE).add(ScoreFunctionBuilders.scriptFunction(new Script("10000.0f"))))
->>>>>>> tempbranch
                 .setScoreMode("total");
 
         // First set the rescore window large enough that both rescores take effect

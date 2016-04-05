@@ -69,13 +69,10 @@ import org.elasticsearch.indices.breaker.CircuitBreakerModule;
 import org.elasticsearch.indices.cache.query.IndicesQueryCache;
 import org.elasticsearch.indices.cluster.IndicesClusterStateService;
 import org.elasticsearch.indices.fielddata.cache.IndicesFieldDataCache;
-<<<<<<< HEAD
-=======
 import org.elasticsearch.indices.memory.IndexingMemoryController;
->>>>>>> tempbranch
+import org.elasticsearch.indices.recovery.RecoverySettings;
 import org.elasticsearch.indices.store.IndicesStore;
 import org.elasticsearch.indices.ttl.IndicesTTLService;
-import org.elasticsearch.ingest.IngestModule;
 import org.elasticsearch.monitor.MonitorService;
 import org.elasticsearch.monitor.jvm.JvmInfo;
 import org.elasticsearch.node.internal.InternalSettingsPreparer;
@@ -192,7 +189,7 @@ public class Node implements Releasable {
             modules.add(new ClusterModule(this.settings));
             modules.add(new IndicesModule());
             modules.add(new SearchModule());
-            modules.add(new ActionModule(this.settings, false));
+            modules.add(new ActionModule(false));
             modules.add(new GatewayModule(settings));
             modules.add(new NodeClientModule());
             modules.add(new PercolatorModule());
@@ -200,7 +197,6 @@ public class Node implements Releasable {
             modules.add(new RepositoriesModule());
             modules.add(new TribeModule());
             modules.add(new AnalysisModule(environment));
-            modules.add(new IngestModule());
 
             pluginsService.processModules(modules);
 
@@ -253,6 +249,7 @@ public class Node implements Releasable {
 
         injector.getInstance(MappingUpdatedAction.class).setClient(client);
         injector.getInstance(IndicesService.class).start();
+        injector.getInstance(IndexingMemoryController.class).start();
         injector.getInstance(IndicesClusterStateService.class).start();
         injector.getInstance(IndicesTTLService.class).start();
         injector.getInstance(SnapshotsService.class).start();
@@ -311,6 +308,7 @@ public class Node implements Releasable {
         // stop any changes happening as a result of cluster state changes
         injector.getInstance(IndicesClusterStateService.class).stop();
         // we close indices first, so operations won't be allowed on it
+        injector.getInstance(IndexingMemoryController.class).stop();
         injector.getInstance(IndicesTTLService.class).stop();
         injector.getInstance(RoutingService.class).stop();
         injector.getInstance(ClusterService.class).stop();
@@ -362,6 +360,7 @@ public class Node implements Releasable {
         stopWatch.stop().start("indices_cluster");
         injector.getInstance(IndicesClusterStateService.class).close();
         stopWatch.stop().start("indices");
+        injector.getInstance(IndexingMemoryController.class).close();
         injector.getInstance(IndicesTTLService.class).close();
         injector.getInstance(IndicesService.class).close();
         // close filter/fielddata caches after indices

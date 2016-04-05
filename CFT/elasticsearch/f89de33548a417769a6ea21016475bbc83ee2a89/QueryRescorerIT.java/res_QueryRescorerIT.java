@@ -618,19 +618,11 @@ public class QueryRescorerIT extends ESIntegTestCase {
                                 .should(QueryBuilders.functionScoreQuery(QueryBuilders.termQuery("field1", intToEnglish[2]),
                                         ScoreFunctionBuilders.weightFactorFunction(5.0f)).boostMode(CombineFunction.REPLACE))
                                 .should(QueryBuilders.functionScoreQuery(QueryBuilders.termQuery("field1", intToEnglish[3]),
-<<<<<<< HEAD:core/src/test/java/org/elasticsearch/search/functionscore/QueryRescorerIT.java
                                         ScoreFunctionBuilders.weightFactorFunction(0.2f)).boostMode(CombineFunction.REPLACE)))
                                 .setFrom(0)
                                 .setSize(10)
                                 .setRescorer(rescoreQuery)
                                 .setRescoreWindow(50).execute().actionGet();
-=======
-                                        ScoreFunctionBuilders.scriptFunction(new Script("0.2f"))).boostMode(CombineFunction.REPLACE)))
-                        .setFrom(0)
-                        .setSize(10)
-                        .setRescorer(rescoreQuery)
-                        .setRescoreWindow(50).execute().actionGet();
->>>>>>> tempbranch:plugins/lang-groovy/src/test/java/org/elasticsearch/messy/tests/QueryRescorerTests.java
 
                 assertHitCount(rescored, 4);
 

@@ -18,10 +18,15 @@
  */
 package org.elasticsearch.index.query;
 
-import org.apache.lucene.search.*;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Filter;
+import org.apache.lucene.search.Query;
 import org.elasticsearch.Version;
+import org.apache.lucene.search.QueryWrapperFilter;
 import org.elasticsearch.common.ParseField;
 import org.elasticsearch.common.Strings;
+import org.elasticsearch.common.collect.Tuple;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.lucene.search.Queries;
 import org.elasticsearch.common.xcontent.XContentParser;
@@ -34,7 +39,7 @@ import org.elasticsearch.index.search.child.ParentConstantScoreQuery;
 import org.elasticsearch.index.search.child.ParentQuery;
 import org.elasticsearch.index.search.child.ScoreType;
 import org.elasticsearch.search.fetch.innerhits.InnerHitsContext;
-import org.elasticsearch.search.fetch.innerhits.InnerHitsSubSearchContext;
+import org.elasticsearch.search.internal.SubSearchContext;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -42,8 +47,9 @@ import java.util.Set;
 
 import static org.elasticsearch.index.query.HasChildQueryParser.joinUtilHelper;
 
-public class HasParentQueryParser extends BaseQueryParserTemp {
+public class HasParentQueryParser implements QueryParser {
 
+    public static final String NAME = "has_parent";
     private static final ParseField QUERY_FIELD = new ParseField("query", "filter");
 
     private final InnerHitsQueryParserHelper innerHitsQueryParserHelper;
@@ -55,20 +61,19 @@ public class HasParentQueryParser extends BaseQueryParserTemp {
 
     @Override
     public String[] names() {
-        return new String[]{HasParentQueryBuilder.NAME, Strings.toCamelCase(HasParentQueryBuilder.NAME)};
+        return new String[]{NAME, Strings.toCamelCase(NAME)};
     }
 
     @Override
-    public Query parse(QueryShardContext context) throws IOException, QueryParsingException {
-        QueryParseContext parseContext = context.parseContext();
+    public Query parse(QueryParseContext parseContext) throws IOException, QueryParsingException {
         XContentParser parser = parseContext.parser();
 
         boolean queryFound = false;
-        float boost = AbstractQueryBuilder.DEFAULT_BOOST;
+        float boost = 1.0f;
         String parentType = null;
         boolean score = false;
         String queryName = null;
-        InnerHitsSubSearchContext innerHits = null;
+        Tuple<String, SubSearchContext> innerHits = null;
 
         String currentFieldName = null;
         XContentParser.Token token;
@@ -129,52 +134,40 @@ public class HasParentQueryParser extends BaseQueryParserTemp {
         }
 
         innerQuery.setBoost(boost);
-        Query query = createParentQuery(innerQuery, parentType, score, context, innerHits);
+        Query query = createParentQuery(innerQuery, parentType, score, parseContext, innerHits);
         if (query == null) {
             return null;
         }
 
         query.setBoost(boost);
         if (queryName != null) {
-            context.addNamedQuery(queryName, query);
+            parseContext.addNamedQuery(queryName, query);
         }
         return query;
     }
 
-<<<<<<< HEAD
-    static Query createParentQuery(Query innerQuery, String parentType, boolean score, QueryParseContext parseContext, InnerHitsSubSearchContext innerHits) throws IOException {
+    static Query createParentQuery(Query innerQuery, String parentType, boolean score, QueryParseContext parseContext, Tuple<String, SubSearchContext> innerHits) throws IOException {
         DocumentMapper parentDocMapper = parseContext.mapperService().documentMapper(parentType);
-=======
-    static Query createParentQuery(Query innerQuery, String parentType, boolean score, QueryShardContext context, Tuple<String, SubSearchContext> innerHits) throws IOException {
-        DocumentMapper parentDocMapper = context.mapperService().documentMapper(parentType);
->>>>>>> tempbranch
         if (parentDocMapper == null) {
-            throw new QueryParsingException(context.parseContext(), "[has_parent] query configured 'parent_type' [" + parentType
+            throw new QueryParsingException(parseContext, "[has_parent] query configured 'parent_type' [" + parentType
                     + "] is not a valid type");
         }
 
         if (innerHits != null) {
-<<<<<<< HEAD
             ParsedQuery parsedQuery = new ParsedQuery(innerQuery, parseContext.copyNamedQueries());
-            InnerHitsContext.ParentChildInnerHits parentChildInnerHits = new InnerHitsContext.ParentChildInnerHits(innerHits.getSubSearchContext(), parsedQuery, null, parseContext.mapperService(), parentDocMapper);
-            String name = innerHits.getName() != null ? innerHits.getName() : parentType;
-            parseContext.addInnerHits(name, parentChildInnerHits);
-=======
-            ParsedQuery parsedQuery = new ParsedQuery(innerQuery, context.copyNamedQueries());
-            InnerHitsContext.ParentChildInnerHits parentChildInnerHits = new InnerHitsContext.ParentChildInnerHits(innerHits.v2(), parsedQuery, null, context.mapperService(), parentDocMapper);
+            InnerHitsContext.ParentChildInnerHits parentChildInnerHits = new InnerHitsContext.ParentChildInnerHits(innerHits.v2(), parsedQuery, null, parseContext.mapperService(), parentDocMapper);
             String name = innerHits.v1() != null ? innerHits.v1() : parentType;
-            context.addInnerHits(name, parentChildInnerHits);
->>>>>>> tempbranch
+            parseContext.addInnerHits(name, parentChildInnerHits);
         }
 
         Set<String> parentTypes = new HashSet<>(5);
         parentTypes.add(parentDocMapper.type());
         ParentChildIndexFieldData parentChildIndexFieldData = null;
-        for (DocumentMapper documentMapper : context.mapperService().docMappers(false)) {
+        for (DocumentMapper documentMapper : parseContext.mapperService().docMappers(false)) {
             ParentFieldMapper parentFieldMapper = documentMapper.parentFieldMapper();
             if (parentFieldMapper.active()) {
-                DocumentMapper parentTypeDocumentMapper = context.mapperService().documentMapper(parentFieldMapper.type());
-                parentChildIndexFieldData = context.getForField(parentFieldMapper.fieldType());
+                DocumentMapper parentTypeDocumentMapper = parseContext.mapperService().documentMapper(parentFieldMapper.type());
+                parentChildIndexFieldData = parseContext.getForField(parentFieldMapper.fieldType());
                 if (parentTypeDocumentMapper == null) {
                     // Only add this, if this parentFieldMapper (also a parent)  isn't a child of another parent.
                     parentTypes.add(parentFieldMapper.type());
@@ -182,19 +175,19 @@ public class HasParentQueryParser extends BaseQueryParserTemp {
             }
         }
         if (parentChildIndexFieldData == null) {
-            throw new QueryParsingException(context.parseContext(), "[has_parent] no _parent field configured");
+            throw new QueryParsingException(parseContext, "[has_parent] no _parent field configured");
         }
 
         Query parentFilter = null;
         if (parentTypes.size() == 1) {
-            DocumentMapper documentMapper = context.mapperService().documentMapper(parentTypes.iterator().next());
+            DocumentMapper documentMapper = parseContext.mapperService().documentMapper(parentTypes.iterator().next());
             if (documentMapper != null) {
                 parentFilter = documentMapper.typeFilter();
             }
         } else {
             BooleanQuery parentsFilter = new BooleanQuery();
             for (String parentTypeStr : parentTypes) {
-                DocumentMapper documentMapper = context.mapperService().documentMapper(parentTypeStr);
+                DocumentMapper documentMapper = parseContext.mapperService().documentMapper(parentTypeStr);
                 if (documentMapper != null) {
                     parentsFilter.add(documentMapper.typeFilter(), BooleanClause.Occur.SHOULD);
                 }
@@ -209,7 +202,7 @@ public class HasParentQueryParser extends BaseQueryParserTemp {
         // wrap the query with type query
         innerQuery = Queries.filtered(innerQuery, parentDocMapper.typeFilter());
         Filter childrenFilter = new QueryWrapperFilter(Queries.not(parentFilter));
-        if (context.indexVersionCreated().onOrAfter(Version.V_2_0_0_beta1)) {
+        if (parseContext.indexVersionCreated().onOrAfter(Version.V_2_0_0_beta1)) {
             ScoreType scoreMode = score ? ScoreType.MAX : ScoreType.NONE;
             return joinUtilHelper(parentType, parentChildIndexFieldData, childrenFilter, scoreMode, innerQuery, 0, Integer.MAX_VALUE);
         } else {
@@ -219,11 +212,6 @@ public class HasParentQueryParser extends BaseQueryParserTemp {
                 return new ParentConstantScoreQuery(parentChildIndexFieldData, innerQuery, parentDocMapper.type(), childrenFilter);
             }
         }
-    }
-
-    @Override
-    public HasParentQueryBuilder getBuilderPrototype() {
-        return HasParentQueryBuilder.PROTOTYPE;
     }
 
 }

@@ -149,8 +149,22 @@ public class IndexQueryParserService extends AbstractIndexComponent {
         return this.queryStringLenient;
     }
 
-    IndicesQueriesRegistry indicesQueriesRegistry() {
+    public IndicesQueriesRegistry indicesQueriesRegistry() {
         return indicesQueriesRegistry;
+    }
+
+    //norelease this needs to go away
+    public ParsedQuery parse(QueryBuilder<?> queryBuilder) {
+        QueryShardContext context = cache.get();
+        context.reset();
+        context.parseFieldMatcher(parseFieldMatcher);
+        try {
+            return innerParse(context, queryBuilder);
+        } catch (ParsingException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new QueryShardException(context, "failed to create query: {}", e, queryBuilder);
+        }
     }
 
     public ParsedQuery parse(BytesReference source) {
@@ -167,6 +181,22 @@ public class IndexQueryParserService extends AbstractIndexComponent {
             throw e;
         } catch (Exception e) {
             throw new ParsingException(parser == null ? null : parser.getTokenLocation(), "Failed to parse", e);
+        } finally {
+            if (parser != null) {
+                parser.close();
+            }
+        }
+    }
+
+    public ParsedQuery parse(String source) throws ParsingException, QueryShardException {
+        XContentParser parser = null;
+        try {
+            parser = XContentFactory.xContent(source).createParser(source);
+            return innerParse(cache.get(), parser);
+        } catch (QueryShardException|ParsingException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ParsingException(parser == null ? null : parser.getTokenLocation(), "Failed to parse [" + source + "]", e);
         } finally {
             if (parser != null) {
                 parser.close();
@@ -191,7 +221,7 @@ public class IndexQueryParserService extends AbstractIndexComponent {
         QueryShardContext context = cache.get();
         context.reset(parser);
         try {
-            Query filter = context.parseContext().parseInnerQueryBuilder().toFilter(context);
+            Query filter = context.parseContext().parseInnerFilter();
             if (filter == null) {
                 return null;
             }
@@ -202,7 +232,7 @@ public class IndexQueryParserService extends AbstractIndexComponent {
     }
 
     @Nullable
-    public QueryBuilder parseInnerQueryBuilder(QueryParseContext parseContext) throws IOException {
+    public QueryBuilder<?> parseInnerQueryBuilder(QueryParseContext parseContext) throws IOException {
         parseContext.parseFieldMatcher(parseFieldMatcher);
         return parseContext.parseInnerQueryBuilder();
     }
@@ -276,7 +306,7 @@ public class IndexQueryParserService extends AbstractIndexComponent {
         }
     }
 
-    private static ParsedQuery innerParse(QueryShardContext context, QueryBuilder queryBuilder) throws IOException, QueryShardException {
+    private static ParsedQuery innerParse(QueryShardContext context, QueryBuilder<?> queryBuilder) throws IOException, QueryShardException {
         Query query = queryBuilder.toQuery(context);
         if (query == null) {
             query = Queries.newMatchNoDocsQuery();

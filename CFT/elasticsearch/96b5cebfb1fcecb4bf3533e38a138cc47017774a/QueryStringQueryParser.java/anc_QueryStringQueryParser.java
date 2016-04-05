@@ -47,8 +47,9 @@ import static org.elasticsearch.common.lucene.search.Queries.fixNegativeQueryIfN
 /**
  *
  */
-public class QueryStringQueryParser extends BaseQueryParserTemp {
+public class QueryStringQueryParser implements QueryParser {
 
+    public static final String NAME = "query_string";
     private static final ParseField FUZZINESS = Fuzziness.FIELD.withDeprecation("fuzzy_min_sim");
 
     private final boolean defaultAnalyzeWildcard;
@@ -62,18 +63,17 @@ public class QueryStringQueryParser extends BaseQueryParserTemp {
 
     @Override
     public String[] names() {
-        return new String[]{QueryStringQueryBuilder.NAME, Strings.toCamelCase(QueryStringQueryBuilder.NAME)};
+        return new String[]{NAME, Strings.toCamelCase(NAME)};
     }
 
     @Override
-    public Query parse(QueryShardContext context) throws IOException, QueryParsingException {
-        QueryParseContext parseContext = context.parseContext();
+    public Query parse(QueryParseContext parseContext) throws IOException, QueryParsingException {
         XContentParser parser = parseContext.parser();
 
         String queryName = null;
         QueryParserSettings qpSettings = new QueryParserSettings();
-        qpSettings.defaultField(context.defaultField());
-        qpSettings.lenient(context.queryStringLenient());
+        qpSettings.defaultField(parseContext.defaultField());
+        qpSettings.lenient(parseContext.queryStringLenient());
         qpSettings.analyzeWildcard(defaultAnalyzeWildcard);
         qpSettings.allowLeadingWildcard(defaultAllowLeadingWildcard);
         qpSettings.locale(Locale.ROOT);
@@ -106,7 +106,7 @@ public class QueryStringQueryParser extends BaseQueryParserTemp {
                         }
 
                         if (Regex.isSimpleMatchPattern(fField)) {
-                            for (String field : context.mapperService().simpleMatchToIndexNames(fField)) {
+                            for (String field : parseContext.mapperService().simpleMatchToIndexNames(fField)) {
                                 qpSettings.fields().add(field);
                                 if (fBoost != -1) {
                                     if (qpSettings.boosts() == null) {
@@ -144,13 +144,13 @@ public class QueryStringQueryParser extends BaseQueryParserTemp {
                         throw new QueryParsingException(parseContext, "Query default operator [" + op + "] is not allowed");
                     }
                 } else if ("analyzer".equals(currentFieldName)) {
-                    NamedAnalyzer analyzer = context.analysisService().analyzer(parser.text());
+                    NamedAnalyzer analyzer = parseContext.analysisService().analyzer(parser.text());
                     if (analyzer == null) {
                         throw new QueryParsingException(parseContext, "[query_string] analyzer [" + parser.text() + "] not found");
                     }
                     qpSettings.forcedAnalyzer(analyzer);
                 } else if ("quote_analyzer".equals(currentFieldName) || "quoteAnalyzer".equals(currentFieldName)) {
-                    NamedAnalyzer analyzer = context.analysisService().analyzer(parser.text());
+                    NamedAnalyzer analyzer = parseContext.analysisService().analyzer(parser.text());
                     if (analyzer == null) {
                         throw new QueryParsingException(parseContext, "[query_string] quote_analyzer [" + parser.text()
                                 + "] not found");
@@ -215,20 +215,16 @@ public class QueryStringQueryParser extends BaseQueryParserTemp {
         if (qpSettings.queryString() == null) {
             throw new QueryParsingException(parseContext, "query_string must be provided with a [query]");
         }
-        qpSettings.defaultAnalyzer(context.mapperService().searchAnalyzer());
-        qpSettings.defaultQuoteAnalyzer(context.mapperService().searchQuoteAnalyzer());
+        qpSettings.defaultAnalyzer(parseContext.mapperService().searchAnalyzer());
+        qpSettings.defaultQuoteAnalyzer(parseContext.mapperService().searchQuoteAnalyzer());
 
         if (qpSettings.escape()) {
             qpSettings.queryString(org.apache.lucene.queryparser.classic.QueryParser.escape(qpSettings.queryString()));
         }
 
-<<<<<<< HEAD
-        MapperQueryParser queryParser = parseContext.queryParser(qpSettings);
-=======
-        qpSettings.queryTypes(context.queryTypes());
+        qpSettings.queryTypes(parseContext.queryTypes());
 
-        MapperQueryParser queryParser = context.queryParser(qpSettings);
->>>>>>> tempbranch
+        MapperQueryParser queryParser = parseContext.queryParser(qpSettings);
 
         try {
             Query query = queryParser.parse(qpSettings.queryString());
@@ -243,16 +239,11 @@ public class QueryStringQueryParser extends BaseQueryParserTemp {
                 Queries.applyMinimumShouldMatch((BooleanQuery) query, qpSettings.minimumShouldMatch());
             }
             if (queryName != null) {
-                context.addNamedQuery(queryName, query);
+                parseContext.addNamedQuery(queryName, query);
             }
             return query;
         } catch (org.apache.lucene.queryparser.classic.ParseException e) {
             throw new QueryParsingException(parseContext, "Failed to parse query [" + qpSettings.queryString() + "]", e);
         }
-    }
-
-    @Override
-    public QueryStringQueryBuilder getBuilderPrototype() {
-        return QueryStringQueryBuilder.PROTOTYPE;
     }
 }

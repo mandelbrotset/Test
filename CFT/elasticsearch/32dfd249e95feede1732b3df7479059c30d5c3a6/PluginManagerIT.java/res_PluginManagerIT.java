@@ -109,7 +109,6 @@ public class PluginManagerIT extends ESIntegTestCase {
         System.clearProperty("es.default.path.home");
     }
 
-<<<<<<< HEAD
     private void writeSha1(Path file, boolean corrupt) throws IOException {
         String sha1Hex = Hashing.sha1().hashBytes(Files.readAllBytes(file)).toString();
         try (BufferedWriter out = Files.newBufferedWriter(file.resolveSibling(file.getFileName() + ".sha1"), Charsets.UTF_8)) {
@@ -130,8 +129,6 @@ public class PluginManagerIT extends ESIntegTestCase {
         }
     }
 
-=======
->>>>>>> tempbranch
     /** creates a plugin .zip and returns the url for testing */
     private String createPlugin(final Path structure, String... properties) throws IOException {
         writeProperties(structure, properties);

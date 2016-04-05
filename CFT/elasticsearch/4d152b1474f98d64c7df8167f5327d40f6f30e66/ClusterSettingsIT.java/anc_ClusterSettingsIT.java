@@ -329,15 +329,12 @@ public class ClusterSettingsIT extends ESIntegTestCase {
         }
     }
 
-<<<<<<< HEAD
-=======
     public void testMissingUnitsLenient() {
         try {
             createNode(Settings.builder().put(Settings.SETTINGS_REQUIRE_UNITS, "false").build());
             assertAcked(prepareCreate("test"));
             ensureGreen();
             client().admin().indices().prepareUpdateSettings("test").setSettings(Settings.builder().put("index.refresh_interval", "10")).execute().actionGet();
-            client().admin().indices().prepareDelete("test").get();
         } finally {
             // Restore the default so subsequent tests require units:
             assertFalse(Settings.getSettingsRequireUnits());
@@ -345,7 +342,6 @@ public class ClusterSettingsIT extends ESIntegTestCase {
         }
     }
 
->>>>>>> tempbranch
     private void createNode(Settings settings) {
         internalCluster().startNode(Settings.builder()
                         .put(ClusterName.SETTING, "ClusterSettingsIT")

@@ -100,8 +100,4 @@ public class RestIndexAction extends BaseRestHandler {
         }
         client.index(indexRequest, new RestStatusToXContentListener<>(channel));
     }
-<<<<<<< HEAD
-=======
-
->>>>>>> tempbranch
 }

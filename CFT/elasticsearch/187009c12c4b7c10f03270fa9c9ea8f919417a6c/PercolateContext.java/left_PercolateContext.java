@@ -27,10 +27,6 @@ import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
-<<<<<<< HEAD
-import org.apache.lucene.search.FieldDoc;
-=======
->>>>>>> tempbranch
 import org.apache.lucene.util.Counter;
 import org.elasticsearch.action.percolate.PercolateShardRequest;
 import org.elasticsearch.action.search.SearchType;
@@ -522,16 +518,6 @@ public class PercolateContext extends SearchContext {
     @Override
     public boolean trackScores() {
         return trackScores;
-    }
-
-    @Override
-    public SearchContext searchAfter(FieldDoc searchAfter) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public FieldDoc searchAfter() {
-        return null;
     }
 
     @Override

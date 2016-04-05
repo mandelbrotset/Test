@@ -21,14 +21,11 @@ package org.elasticsearch.discovery;
 
 import org.apache.lucene.util.LuceneTestCase;
 import org.elasticsearch.ElasticsearchException;
-<<<<<<< HEAD
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.reroute.ClusterRerouteResponse;
 import org.elasticsearch.action.admin.indices.flush.FlushResponse;
 import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
 import org.elasticsearch.action.count.CountResponse;
-=======
->>>>>>> tempbranch
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
@@ -86,10 +83,6 @@ import org.elasticsearch.transport.TransportException;
 import org.elasticsearch.transport.TransportRequest;
 import org.elasticsearch.transport.TransportRequestOptions;
 import org.elasticsearch.transport.TransportService;
-<<<<<<< HEAD
-=======
-import org.junit.After;
->>>>>>> tempbranch
 import org.junit.Before;
 import org.junit.Test;
 
@@ -792,7 +785,7 @@ public class DiscoveryWithServiceDisruptionsIT extends ESIntegTestCase {
      */
     @Test
     public void unicastSinglePingResponseContainsMaster() throws Exception {
-        List<String> nodes = startCluster(4, -1, new int[]{0});
+        List<String> nodes = startCluster(4, -1, new int[] {0});
         // Figure out what is the elected master node
         final String masterNode = internalCluster().getMasterName();
         logger.info("---> legit elected master node=" + masterNode);
@@ -888,11 +881,7 @@ public class DiscoveryWithServiceDisruptionsIT extends ESIntegTestCase {
 
         logger.info("blocking cluster state publishing from master [{}] to non master [{}]", masterNode, nonMasterNode);
         MockTransportService masterTransportService = (MockTransportService) internalCluster().getInstance(TransportService.class, masterNode);
-        if (randomBoolean()) {
-            masterTransportService.addFailToSendNoConnectRule(discoveryNodes.localNode(), PublishClusterStateAction.SEND_ACTION_NAME);
-        } else {
-            masterTransportService.addFailToSendNoConnectRule(discoveryNodes.localNode(), PublishClusterStateAction.COMMIT_ACTION_NAME);
-        }
+        masterTransportService.addFailToSendNoConnectRule(discoveryNodes.localNode(), PublishClusterStateAction.ACTION_NAME);
 
         logger.info("allowing requests from non master [{}] to master [{}], waiting for two join request", nonMasterNode, masterNode);
         final CountDownLatch countDownLatch = new CountDownLatch(2);
@@ -913,10 +902,6 @@ public class DiscoveryWithServiceDisruptionsIT extends ESIntegTestCase {
         nonMasterTransportService.clearRule(discoveryNodes.masterNode());
 
         ensureStableCluster(2);
-
-        // shutting down the nodes, to avoid the leakage check tripping
-        // on the states associated with the commit requests we may have dropped
-        internalCluster().stopRandomNonMasterNode();
     }
 
 
@@ -1280,7 +1265,7 @@ public class DiscoveryWithServiceDisruptionsIT extends ESIntegTestCase {
     @Test
     public void testIndicesDeleted() throws Exception {
         configureUnicastCluster(3, null, 2);
-        Future<List<String>> masterNodes = internalCluster().startMasterOnlyNodesAsync(2);
+        Future<List<String>> masterNodes= internalCluster().startMasterOnlyNodesAsync(2);
         Future<String> dataNode = internalCluster().startDataOnlyNodeAsync();
         dataNode.get();
         masterNodes.get();

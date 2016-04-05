@@ -19,11 +19,6 @@
 
 package org.elasticsearch.index.query;
 
-<<<<<<< HEAD
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.Query;
-=======
->>>>>>> tempbranch
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.xcontent.XContentParser;
 
@@ -83,19 +78,6 @@ public class FilteredQueryParser extends BaseQueryParser<FilteredQueryBuilder> {
             }
         }
 
-<<<<<<< HEAD
-        // parsed internally, but returned null during parsing...
-        if (query == null) {
-            return null;
-        }
-
-        BooleanQuery filteredQuery = Queries.filtered(query, filter);
-        filteredQuery.setBoost(boost);
-        if (queryName != null) {
-            parseContext.addNamedQuery(queryName, filteredQuery);
-        }
-        return filteredQuery;
-=======
         FilteredQueryBuilder qb = new FilteredQueryBuilder(query, filter);
         qb.boost(boost);
         qb.queryName(queryName);
@@ -105,7 +87,6 @@ public class FilteredQueryParser extends BaseQueryParser<FilteredQueryBuilder> {
     @Override
     public FilteredQueryBuilder getBuilderPrototype() {
         return FilteredQueryBuilder.PROTOTYPE;
->>>>>>> tempbranch
     }
 
 }

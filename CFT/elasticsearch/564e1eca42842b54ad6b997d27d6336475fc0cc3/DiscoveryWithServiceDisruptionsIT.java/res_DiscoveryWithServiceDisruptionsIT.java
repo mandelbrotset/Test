@@ -1243,13 +1243,8 @@ public class DiscoveryWithServiceDisruptionsIT extends ESIntegTestCase {
     @Test
     public void testIndicesDeleted() throws Exception {
         configureUnicastCluster(3, null, 2);
-<<<<<<< HEAD
         InternalTestCluster.Async<List<String>> masterNodes= internalCluster().startMasterOnlyNodesAsync(2);
         InternalTestCluster.Async<String> dataNode = internalCluster().startDataOnlyNodeAsync();
-=======
-        Future<List<String>> masterNodes = internalCluster().startMasterOnlyNodesAsync(2);
-        Future<String> dataNode = internalCluster().startDataOnlyNodeAsync();
->>>>>>> tempbranch
         dataNode.get();
         masterNodes.get();
         ensureStableCluster(3);

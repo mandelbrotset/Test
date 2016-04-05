@@ -82,13 +82,9 @@ public class HasChildQueryBuilder extends AbstractQueryBuilder<HasChildQueryBuil
 
     private int maxChildren = DEFAULT_MAX_CHILDREN;
 
-<<<<<<< HEAD
-    private String queryName;
-=======
     private int shortCircuitCutoff = DEFAULT_SHORT_CIRCUIT_CUTOFF;
 
     private QueryInnerHits queryInnerHits;
->>>>>>> tempbranch
 
     static final HasChildQueryBuilder PROTOTYPE = new HasChildQueryBuilder("", EmptyQueryBuilder.PROTOTYPE);
 
@@ -146,9 +142,6 @@ public class HasChildQueryBuilder extends AbstractQueryBuilder<HasChildQueryBuil
     }
 
     /**
-<<<<<<< HEAD
-     * Sets the query name for the filter that can be used when searching for matched_filters per hit.
-=======
      * Configures at what cut off point only to evaluate parent documents that contain the matching parent id terms
      * instead of evaluating all parent docs.
      */
@@ -162,7 +155,6 @@ public class HasChildQueryBuilder extends AbstractQueryBuilder<HasChildQueryBuil
 
     /**
      * Sets inner hit definition in the scope of this query and reusing the defined type and query.
->>>>>>> tempbranch
      */
     public HasChildQueryBuilder innerHit(QueryInnerHits queryInnerHits) {
         this.queryInnerHits = queryInnerHits;
@@ -257,10 +249,6 @@ public class HasChildQueryBuilder extends AbstractQueryBuilder<HasChildQueryBuil
         if (parentFieldMapper.active() == false) {
             throw new QueryShardException(context, "[" + NAME + "] _parent field has no parent type configured");
         }
-<<<<<<< HEAD
-        if (queryName != null) {
-            builder.field("_name", queryName);
-=======
         if (queryInnerHits != null) {
             try (XContentParser parser = queryInnerHits.getXcontentParser()) {
                 XContentParser.Token token = parser.nextToken();
@@ -282,7 +270,6 @@ public class HasChildQueryBuilder extends AbstractQueryBuilder<HasChildQueryBuil
         if (parentDocMapper == null) {
             throw new QueryShardException(context, "[" + NAME + "] Type [" + type + "] points to a non existent parent type ["
                     + parentType + "]");
->>>>>>> tempbranch
         }
 
         if (maxChildren > 0 && maxChildren < minChildren) {

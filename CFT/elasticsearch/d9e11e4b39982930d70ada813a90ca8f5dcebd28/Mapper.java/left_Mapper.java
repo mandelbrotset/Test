@@ -26,10 +26,9 @@ import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.index.analysis.AnalysisService;
-import org.elasticsearch.index.similarity.SimilarityProvider;
+import org.elasticsearch.index.similarity.SimilarityLookupService;
 
 import java.util.Map;
-import java.util.function.Function;
 
 public abstract class Mapper implements ToXContent, Iterable<Mapper> {
 
@@ -85,27 +84,18 @@ public abstract class Mapper implements ToXContent, Iterable<Mapper> {
 
             private final AnalysisService analysisService;
 
-            private final Function<String, SimilarityProvider> similarityLookupService;
+            private final SimilarityLookupService similarityLookupService;
 
             private final MapperService mapperService;
 
-<<<<<<< HEAD
-            private final Function<String, TypeParser> typeParsers;
-=======
             private final Map<String, TypeParser> typeParsers;
->>>>>>> tempbranch
 
             private final Version indexVersionCreated;
 
             private final ParseFieldMatcher parseFieldMatcher;
 
-<<<<<<< HEAD
-            public ParserContext(String type, AnalysisService analysisService,  Function<String, SimilarityProvider> similarityLookupService,
-                                 MapperService mapperService, Function<String, TypeParser> typeParsers,
-=======
             public ParserContext(String type, AnalysisService analysisService, SimilarityLookupService similarityLookupService,
                                  MapperService mapperService, Map<String, TypeParser> typeParsers,
->>>>>>> tempbranch
                                  Version indexVersionCreated, ParseFieldMatcher parseFieldMatcher) {
                 this.type = type;
                 this.analysisService = analysisService;
@@ -124,8 +114,8 @@ public abstract class Mapper implements ToXContent, Iterable<Mapper> {
                 return analysisService;
             }
 
-            public SimilarityProvider getSimilarity(String name) {
-                return similarityLookupService.apply(name);
+            public SimilarityLookupService similarityLookupService() {
+                return similarityLookupService;
             }
 
             public MapperService mapperService() {
@@ -133,7 +123,7 @@ public abstract class Mapper implements ToXContent, Iterable<Mapper> {
             }
 
             public TypeParser typeParser(String type) {
-                return typeParsers.apply(Strings.toUnderscoreCase(type));
+                return typeParsers.get(Strings.toUnderscoreCase(type));
             }
 
             public Version indexVersionCreated() {

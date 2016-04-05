@@ -20,11 +20,7 @@
 package org.elasticsearch.index.query;
 
 import com.carrotsearch.hppc.ObjectFloatHashMap;
-<<<<<<< HEAD
-=======
-import com.google.common.collect.Lists;
 
->>>>>>> tempbranch
 import org.elasticsearch.ElasticsearchParseException;
 import org.elasticsearch.common.ParseField;
 import org.elasticsearch.common.ParseFieldMatcher;

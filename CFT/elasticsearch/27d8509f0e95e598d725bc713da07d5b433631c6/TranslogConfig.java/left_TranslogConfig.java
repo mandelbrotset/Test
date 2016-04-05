@@ -20,10 +20,11 @@
 package org.elasticsearch.index.translog;
 
 import org.elasticsearch.common.Nullable;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.ByteSizeValue;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.util.BigArrays;
-import org.elasticsearch.index.IndexSettings;
+import org.elasticsearch.index.settings.IndexSettings;
 import org.elasticsearch.index.shard.ShardId;
 import org.elasticsearch.index.translog.Translog.TranslogGeneration;
 import org.elasticsearch.indices.memory.IndexingMemoryController;
@@ -51,7 +52,7 @@ public final class TranslogConfig {
     private volatile TranslogGeneration translogGeneration;
     private volatile Translog.Durabilty durabilty = Translog.Durabilty.REQUEST;
     private volatile TranslogWriter.Type type;
-    private final IndexSettings indexSettings;
+    private final Settings indexSettings;
     private final ShardId shardId;
     private final Path translogPath;
 
@@ -64,22 +65,17 @@ public final class TranslogConfig {
      * @param bigArrays a bigArrays instance used for temporarily allocating write operations
      * @param threadPool a {@link ThreadPool} to schedule async sync durability
      */
-    public TranslogConfig(ShardId shardId, Path translogPath, IndexSettings indexSettings, Translog.Durabilty durabilty, BigArrays bigArrays, @Nullable ThreadPool threadPool) {
+    public TranslogConfig(ShardId shardId, Path translogPath, @IndexSettings Settings indexSettings, Translog.Durabilty durabilty, BigArrays bigArrays, @Nullable ThreadPool threadPool) {
         this.indexSettings = indexSettings;
         this.shardId = shardId;
         this.translogPath = translogPath;
         this.durabilty = durabilty;
         this.threadPool = threadPool;
         this.bigArrays = bigArrays;
-<<<<<<< HEAD
-        this.type = TranslogWriter.Type.fromString(indexSettings.getSettings().get(INDEX_TRANSLOG_FS_TYPE, TranslogWriter.Type.BUFFERED.name()));
-        this.bufferSize = (int) indexSettings.getSettings().getAsBytesSize(INDEX_TRANSLOG_BUFFER_SIZE, IndexingMemoryController.INACTIVE_SHARD_TRANSLOG_BUFFER).bytes(); // Not really interesting, updated by IndexingMemoryController...
-=======
         this.type = TranslogWriter.Type.fromString(indexSettings.get(INDEX_TRANSLOG_FS_TYPE, TranslogWriter.Type.BUFFERED.name()));
         this.bufferSizeBytes = (int) indexSettings.getAsBytesSize(INDEX_TRANSLOG_BUFFER_SIZE, IndexingMemoryController.SHARD_TRANSLOG_BUFFER).bytes();
->>>>>>> tempbranch
 
-        syncInterval = indexSettings.getSettings().getAsTime(INDEX_TRANSLOG_SYNC_INTERVAL, TimeValue.timeValueSeconds(5));
+        syncInterval = indexSettings.getAsTime(INDEX_TRANSLOG_SYNC_INTERVAL, TimeValue.timeValueSeconds(5));
         if (syncInterval.millis() > 0 && threadPool != null) {
             syncOnEachOperation = false;
         } else if (syncInterval.millis() == 0) {
@@ -146,9 +142,9 @@ public final class TranslogConfig {
     }
 
     /**
-     * Returns the index indexSettings
+     * Returns the current index settings
      */
-    public IndexSettings getIndexSettings() {
+    public Settings getIndexSettings() {
         return indexSettings;
     }
 

@@ -344,22 +344,11 @@ public class IndexShardTests extends ESSingleNodeTestCase {
         client().prepareIndex("test", "test").setSource("{}").get();
         ensureGreen("test");
         IndicesService indicesService = getInstanceFromNode(IndicesService.class);
-<<<<<<< HEAD
         Boolean result = indicesService.indexService("test").getShardOrNull(0).checkIdle(0);
         assertEquals(Boolean.TRUE, result);
         assertBusy(() -> {
             IndexStats indexStats = client().admin().indices().prepareStats("test").clear().get().getIndex("test");
             assertNotNull(indexStats.getShards()[0].getCommitStats().getUserData().get(Engine.SYNC_COMMIT_ID));
-=======
-        // force the shard to become idle now:
-        indicesService.indexService("test").getShardOrNull(0).checkIdle(0);
-        assertBusy(new Runnable() { // should be very very quick
-            @Override
-            public void run() {
-                IndexStats indexStats = client().admin().indices().prepareStats("test").clear().get().getIndex("test");
-                assertNotNull(indexStats.getShards()[0].getCommitStats().getUserData().get(Engine.SYNC_COMMIT_ID));
-            }
->>>>>>> tempbranch
         });
         IndexStats indexStats = client().admin().indices().prepareStats("test").get().getIndex("test");
         assertNotNull(indexStats.getShards()[0].getCommitStats().getUserData().get(Engine.SYNC_COMMIT_ID));

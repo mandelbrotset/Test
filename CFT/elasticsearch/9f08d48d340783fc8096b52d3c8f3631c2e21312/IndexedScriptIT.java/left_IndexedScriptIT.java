@@ -26,12 +26,9 @@ import org.elasticsearch.action.indexedscripts.put.PutIndexedScriptResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
-<<<<<<< HEAD
-=======
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.script.ScriptService.ScriptType;
 import org.elasticsearch.script.expression.ExpressionScriptEngineService;
->>>>>>> tempbranch
 import org.elasticsearch.script.groovy.GroovyScriptEngineService;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -167,8 +164,6 @@ public class IndexedScriptIT extends ESIntegTestCase {
         assertHitCount(searchResponse, 1);
         assertThat(searchResponse.getAggregations().get("test"), notNullValue());
     }
-<<<<<<< HEAD
-=======
 
     @Test
     public void testAllOpsDisabledIndexedScripts() throws IOException {
@@ -204,5 +199,4 @@ public class IndexedScriptIT extends ESIntegTestCase {
             assertThat(e.toString(), containsString("scripts of type [indexed], operation [aggs] and lang [expression] are disabled"));
         }
     }
->>>>>>> tempbranch
 }

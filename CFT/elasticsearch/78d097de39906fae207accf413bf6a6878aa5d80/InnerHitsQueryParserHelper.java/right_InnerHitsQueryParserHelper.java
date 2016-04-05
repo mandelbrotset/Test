@@ -21,7 +21,6 @@ package org.elasticsearch.index.query.support;
 
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.index.query.QueryShardException;
 import org.elasticsearch.index.query.QueryParseContext;
 import org.elasticsearch.index.query.QueryParsingException;
 import org.elasticsearch.search.fetch.fielddata.FieldDataFieldsParseElement;
@@ -52,11 +51,7 @@ public class InnerHitsQueryParserHelper {
         this.fieldDataFieldsParseElement = fieldDataFieldsParseElement;
     }
 
-<<<<<<< HEAD
     public InnerHitsSubSearchContext parse(QueryParseContext parserContext) throws IOException, QueryParsingException {
-=======
-    public Tuple<String, SubSearchContext> parse(QueryParseContext parserContext) throws IOException, QueryShardException {
->>>>>>> tempbranch
         String fieldName = null;
         XContentParser.Token token;
         String innerHitName = null;

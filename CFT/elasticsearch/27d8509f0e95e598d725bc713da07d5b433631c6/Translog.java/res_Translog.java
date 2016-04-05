@@ -272,19 +272,8 @@ public class Translog extends AbstractIndexShardComponent implements IndexShardC
         throw new IllegalArgumentException("can't parse id from file: " + fileName);
     }
 
-<<<<<<< HEAD
-    public void updateBuffer(ByteSizeValue bufferSize) {
-        config.setBufferSize(bufferSize.bytesAsInt());
-        try (ReleasableLock lock = writeLock.acquire()) {
-            current.updateBufferSize(config.getBufferSize());
-        }
-    }
-
     /** Returns {@code true} if this {@code Translog} is still open. */
     public boolean isOpen() {
-=======
-    boolean isOpen() {
->>>>>>> tempbranch
         return closed.get() == false;
     }
 
@@ -363,11 +352,7 @@ public class Translog extends AbstractIndexShardComponent implements IndexShardC
     TranslogWriter createWriter(long fileGeneration) throws IOException {
         TranslogWriter newFile;
         try {
-<<<<<<< HEAD
-            newFile = TranslogWriter.create(config.getType(), shardId, translogUUID, fileGeneration, location.resolve(getFilename(fileGeneration)), new OnCloseRunnable(), config.getBufferSize(), getChannelFactory());
-=======
-            newFile = TranslogWriter.create(config.getType(), shardId, translogUUID, fileGeneration, location.resolve(getFilename(fileGeneration)), new OnCloseRunnable(), config.getBufferSizeBytes());
->>>>>>> tempbranch
+            newFile = TranslogWriter.create(config.getType(), shardId, translogUUID, fileGeneration, location.resolve(getFilename(fileGeneration)), new OnCloseRunnable(), config.getBufferSizeBytes(), getChannelFactory());
         } catch (IOException e) {
             throw new TranslogException(shardId, "failed to create new translog file", e);
         }

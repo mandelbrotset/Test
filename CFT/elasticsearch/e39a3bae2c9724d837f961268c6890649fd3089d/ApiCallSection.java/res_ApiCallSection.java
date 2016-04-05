@@ -22,11 +22,8 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
-<<<<<<< HEAD
 import java.util.ArrayList;
-=======
 import java.util.Collections;
->>>>>>> tempbranch
 import java.util.List;
 import java.util.Map;
 

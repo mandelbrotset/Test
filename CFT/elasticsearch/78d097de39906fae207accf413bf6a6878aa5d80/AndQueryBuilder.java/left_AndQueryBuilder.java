@@ -19,8 +19,6 @@
 
 package org.elasticsearch.index.query;
 
-<<<<<<< HEAD
-=======
 import com.google.common.collect.Lists;
 
 import org.apache.lucene.search.BooleanClause.Occur;
@@ -28,7 +26,6 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
->>>>>>> tempbranch
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import java.io.IOException;
@@ -46,11 +43,7 @@ public class AndQueryBuilder extends AbstractQueryBuilder<AndQueryBuilder> {
 
     public static final String NAME = "and";
 
-<<<<<<< HEAD
-    private ArrayList<QueryBuilder> filters = new ArrayList<>();
-=======
     private final ArrayList<QueryBuilder> filters = Lists.newArrayList();
->>>>>>> tempbranch
 
     static final AndQueryBuilder PROTOTYPE = new AndQueryBuilder();
 

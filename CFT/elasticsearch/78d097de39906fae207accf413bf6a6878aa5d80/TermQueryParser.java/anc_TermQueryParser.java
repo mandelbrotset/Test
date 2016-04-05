@@ -19,29 +19,23 @@
 
 package org.elasticsearch.index.query;
 
-<<<<<<< HEAD
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
-import org.elasticsearch.common.ParseField;
-=======
->>>>>>> tempbranch
 import org.elasticsearch.common.inject.Inject;
+import org.elasticsearch.common.lucene.BytesRefs;
 import org.elasticsearch.common.xcontent.XContentParser;
-<<<<<<< HEAD
+import org.elasticsearch.index.mapper.FieldMapper;
 import org.elasticsearch.index.mapper.MappedFieldType;
-=======
->>>>>>> tempbranch
 
 import java.io.IOException;
 
 /**
- * Parser for the term query
+ *
  */
-public class TermQueryParser extends BaseQueryParser<TermQueryBuilder> {
+public class TermQueryParser implements QueryParser {
 
-    private static final ParseField NAME_FIELD = new ParseField("_name").withAllDeprecated("query name is not supported in short version of term query");
-    private static final ParseField BOOST_FIELD = new ParseField("boost").withAllDeprecated("boost is not supported in short version of term query");
+    public static final String NAME = "term";
 
     @Inject
     public TermQueryParser() {
@@ -49,17 +43,17 @@ public class TermQueryParser extends BaseQueryParser<TermQueryBuilder> {
 
     @Override
     public String[] names() {
-        return new String[]{TermQueryBuilder.NAME};
+        return new String[]{NAME};
     }
 
     @Override
-    public TermQueryBuilder fromXContent(QueryParseContext parseContext) throws IOException, QueryParsingException {
+    public Query parse(QueryParseContext parseContext) throws IOException, QueryParsingException {
         XContentParser parser = parseContext.parser();
 
         String queryName = null;
         String fieldName = null;
         Object value = null;
-        float boost = AbstractQueryBuilder.DEFAULT_BOOST;
+        float boost = 1.0f;
         String currentFieldName = null;
         XContentParser.Token token;
         while ((token = parser.nextToken()) != XContentParser.Token.END_OBJECT) {
@@ -91,9 +85,9 @@ public class TermQueryParser extends BaseQueryParser<TermQueryBuilder> {
                     }
                 }
             } else if (token.isValue()) {
-                if (parseContext.parseFieldMatcher().match(currentFieldName, NAME_FIELD)) {
+                if ("_name".equals(currentFieldName)) {
                     queryName = parser.text();
-                } else if (parseContext.parseFieldMatcher().match(currentFieldName, BOOST_FIELD)) {
+                } else if ("boost".equals(currentFieldName)) {
                     boost = parser.floatValue();
                 } else {
                     if (fieldName != null) {
@@ -107,16 +101,22 @@ public class TermQueryParser extends BaseQueryParser<TermQueryBuilder> {
             }
         }
 
-        TermQueryBuilder termQuery = new TermQueryBuilder(fieldName, value);
-        termQuery.boost(boost);
-        if (queryName != null) {
-            termQuery.queryName(queryName);
+        if (value == null) {
+            throw new QueryParsingException(parseContext, "No value specified for term query");
         }
-        return termQuery;
-    }
 
-    @Override
-    public TermQueryBuilder getBuilderPrototype() {
-        return TermQueryBuilder.PROTOTYPE;
+        Query query = null;
+        MappedFieldType fieldType = parseContext.fieldMapper(fieldName);
+        if (fieldType != null) {
+            query = fieldType.termQuery(value, parseContext);
+        }
+        if (query == null) {
+            query = new TermQuery(new Term(fieldName, BytesRefs.toBytesRef(value)));
+        }
+        query.setBoost(boost);
+        if (queryName != null) {
+            parseContext.addNamedQuery(queryName, query);
+        }
+        return query;
     }
 }

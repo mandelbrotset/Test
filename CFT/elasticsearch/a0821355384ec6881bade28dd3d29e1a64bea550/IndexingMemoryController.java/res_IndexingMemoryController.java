@@ -230,12 +230,8 @@ public class IndexingMemoryController extends AbstractLifecycleComponent<Indexin
     protected IndexShard getShard(ShardId shardId) {
         IndexService indexService = indicesService.indexService(shardId.index().name());
         if (indexService != null) {
-<<<<<<< HEAD
             IndexShard indexShard = indexService.getShardOrNull(shardId.id());
             return indexShard;
-=======
-            return indexService.shard(shardId.id());
->>>>>>> tempbranch
         }
         return null;
     }
@@ -270,22 +266,7 @@ public class IndexingMemoryController extends AbstractLifecycleComponent<Indexin
         if (indexShard == null) {
             return null;
         }
-<<<<<<< HEAD
-        final Translog translog;
-        try {
-            translog = indexShard.getTranslog();
-        } catch (EngineClosedException e) {
-            // not ready yet to be checked for activity
-            return null;
-        }
-
-        ShardIndexingStatus status = new ShardIndexingStatus();
-        status.translogId = translog.currentFileGeneration();
-        status.translogNumberOfOperations = translog.totalOperations();
-        return status;
-=======
         return indexShard.getActive();
->>>>>>> tempbranch
     }
 
     /** Check if any shards active status changed, now. */

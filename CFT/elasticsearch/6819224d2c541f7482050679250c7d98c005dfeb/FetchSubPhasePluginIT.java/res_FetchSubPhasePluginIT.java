@@ -19,11 +19,7 @@
 
 package org.elasticsearch.search.fetch;
 
-<<<<<<< HEAD
-=======
-import com.google.common.collect.ImmutableMap;
 
->>>>>>> tempbranch
 import org.apache.lucene.index.PostingsEnum;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.util.BytesRef;
@@ -31,11 +27,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.termvectors.TermVectorsRequest;
 import org.elasticsearch.action.termvectors.TermVectorsResponse;
 import org.elasticsearch.common.Priority;
-<<<<<<< HEAD
-import org.elasticsearch.common.bytes.BytesArray;
-=======
 import org.elasticsearch.common.xcontent.XContentBuilder;
->>>>>>> tempbranch
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.search.SearchHitField;

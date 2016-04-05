@@ -150,17 +150,10 @@ public class NestedQueryParser extends BaseQueryParserTemp {
             }
 
             if (innerHits != null) {
-<<<<<<< HEAD
-                ParsedQuery parsedQuery = new ParsedQuery(innerQuery, parseContext.copyNamedQueries());
+                ParsedQuery parsedQuery = new ParsedQuery(innerQuery, shardContext.copyNamedQueries());
                 InnerHitsContext.NestedInnerHits nestedInnerHits = new InnerHitsContext.NestedInnerHits(innerHits.getSubSearchContext(), parsedQuery, null, getParentObjectMapper(), nestedObjectMapper);
                 String name = innerHits.getName() != null ? innerHits.getName() : path;
-                parseContext.addInnerHits(name, nestedInnerHits);
-=======
-                ParsedQuery parsedQuery = new ParsedQuery(innerQuery, shardContext.copyNamedQueries());
-                InnerHitsContext.NestedInnerHits nestedInnerHits = new InnerHitsContext.NestedInnerHits(innerHits.v2(), parsedQuery, null, getParentObjectMapper(), nestedObjectMapper);
-                String name = innerHits.v1() != null ? innerHits.v1() : path;
                 shardContext.addInnerHits(name, nestedInnerHits);
->>>>>>> tempbranch
             }
 
             if (innerQuery != null) {

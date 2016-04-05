@@ -19,9 +19,9 @@
 
 package org.elasticsearch.index.query;
 
-import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.elasticsearch.common.inject.Inject;
+import org.elasticsearch.common.lucene.search.Queries;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.XContentParser;
 
@@ -143,16 +143,8 @@ public class BoolQueryParser extends BaseQueryParser<BoolQueryBuilder> {
         for (QueryBuilder queryBuilder : shouldClauses) {
             boolQuery.should(queryBuilder);
         }
-<<<<<<< HEAD
-        booleanQuery.setBoost(boost);
-        booleanQuery = Queries.applyMinimumShouldMatch(booleanQuery, minimumShouldMatch);
-        Query query = adjustPureNegative ? fixNegativeQueryIfNeeded(booleanQuery) : booleanQuery;
-        if (queryName != null) {
-            parseContext.addNamedQuery(queryName, query);
-=======
         for (QueryBuilder queryBuilder : filterClauses) {
             boolQuery.filter(queryBuilder);
->>>>>>> tempbranch
         }
         boolQuery.boost(boost);
         boolQuery.disableCoord(disableCoord);

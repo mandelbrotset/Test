@@ -19,6 +19,8 @@
 
 package org.elasticsearch.indices;
 
+import com.google.common.collect.ImmutableMap;
+
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.util.CollectionUtil;
 import org.apache.lucene.util.IOUtils;
@@ -51,15 +53,18 @@ import org.elasticsearch.index.IndexNameModule;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.IndexService;
 import org.elasticsearch.index.LocalNodeIdModule;
+import org.elasticsearch.index.aliases.IndexAliasesServiceModule;
 import org.elasticsearch.index.analysis.AnalysisModule;
 import org.elasticsearch.index.analysis.AnalysisService;
 import org.elasticsearch.index.cache.IndexCache;
 import org.elasticsearch.index.cache.IndexCacheModule;
+import org.elasticsearch.index.fielddata.IndexFieldDataModule;
 import org.elasticsearch.index.fielddata.IndexFieldDataService;
 import org.elasticsearch.index.flush.FlushStats;
 import org.elasticsearch.index.get.GetStats;
 import org.elasticsearch.index.indexing.IndexingStats;
 import org.elasticsearch.index.mapper.MapperService;
+import org.elasticsearch.index.mapper.MapperServiceModule;
 import org.elasticsearch.index.merge.MergeStats;
 import org.elasticsearch.index.query.IndexQueryParserService;
 import org.elasticsearch.index.recovery.RecoveryStats;
@@ -93,8 +98,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.unmodifiableMap;
 import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_NUMBER_OF_REPLICAS;
 import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_NUMBER_OF_SHARDS;
 import static org.elasticsearch.common.collect.MapBuilder.newMapBuilder;
@@ -118,8 +121,8 @@ public class IndicesService extends AbstractLifecycleComponent<IndicesService> i
     private final NodeEnvironment nodeEnv;
     private final TimeValue shardsClosedTimeout;
 
-    private volatile Map<String, IndexServiceInjectorPair> indices = emptyMap();
-
+    private volatile Map<String, IndexServiceInjectorPair> indices = ImmutableMap.of();
+    
     static class IndexServiceInjectorPair {
         private final IndexService indexService;
         private final Injector injector;
@@ -137,7 +140,7 @@ public class IndicesService extends AbstractLifecycleComponent<IndicesService> i
             return injector;
         }
     }
-
+    
     private final Map<Index, List<PendingDelete>> pendingDeletes = new HashMap<>();
 
     private final OldShardsStats oldShardsStats = new OldShardsStats();
@@ -340,16 +343,11 @@ public class IndicesService extends AbstractLifecycleComponent<IndicesService> i
         modules.add(new AnalysisModule(indexSettings, indicesAnalysisService));
         modules.add(new SimilarityModule(indexSettings));
         modules.add(new IndexCacheModule(indexSettings));
-<<<<<<< HEAD
-        modules.add(new IndexModule());
-        
-=======
         modules.add(new IndexFieldDataModule(indexSettings));
         modules.add(new MapperServiceModule());
         modules.add(new IndexAliasesServiceModule());
         modules.add(new IndexModule(indexSettings));
-
->>>>>>> tempbranch
+        
         pluginsService.processModules(modules);
 
         Injector indexInjector;
@@ -390,11 +388,11 @@ public class IndicesService extends AbstractLifecycleComponent<IndicesService> i
                 }
 
                 logger.debug("[{}] closing ... (reason [{}])", index, reason);
-                Map<String, IndexServiceInjectorPair> newIndices = new HashMap<>(indices);
-                IndexServiceInjectorPair remove = newIndices.remove(index);
+                Map<String, IndexServiceInjectorPair> tmpMap = new HashMap<>(indices);
+                IndexServiceInjectorPair remove = tmpMap.remove(index);
                 indexService = remove.getIndexService();
                 indexInjector = remove.getInjector();
-                indices = unmodifiableMap(newIndices);
+                indices = ImmutableMap.copyOf(tmpMap);
             }
 
             indicesLifecycle.beforeIndexClosed(indexService);

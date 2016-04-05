@@ -27,12 +27,9 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import java.io.IOException;
 import java.util.ArrayList;
-<<<<<<< HEAD
-=======
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
->>>>>>> tempbranch
 
 /**
  * A query that generates the union of documents produced by its sub-queries, and that scores each document
@@ -41,11 +38,7 @@ import java.util.Objects;
  */
 public class DisMaxQueryBuilder extends AbstractQueryBuilder<DisMaxQueryBuilder> {
 
-<<<<<<< HEAD
-    private ArrayList<QueryBuilder> queries = new ArrayList<>();
-=======
     public static final String NAME = "dis_max";
->>>>>>> tempbranch
 
     private final ArrayList<QueryBuilder> queries = new ArrayList<>();
 

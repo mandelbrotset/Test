@@ -25,11 +25,7 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
-<<<<<<< HEAD
 import org.apache.lucene.search.join.BitSetProducer;
-=======
-import org.apache.lucene.search.join.BitDocIdSetFilter;
->>>>>>> tempbranch
 import org.apache.lucene.util.BitDocIdSet;
 import org.apache.lucene.util.BitSet;
 import org.elasticsearch.Version;
@@ -44,7 +40,7 @@ import org.elasticsearch.index.IndexService;
 import org.elasticsearch.index.mapper.MapperService;
 import org.elasticsearch.index.mapper.internal.UidFieldMapper;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryShardContext;
+import org.elasticsearch.index.query.QueryParseContext;
 import org.elasticsearch.search.internal.SearchContext;
 import org.elasticsearch.test.ESSingleNodeTestCase;
 import org.hamcrest.Description;
@@ -75,7 +71,7 @@ public abstract class AbstractChildTestCase extends ESSingleNodeTestCase {
         mapperService.merge(childType, new CompressedXContent(PutMappingRequest.buildFromSimplifiedDef(childType, "_parent", "type=" + parentType, CHILD_SCORE_NAME, "type=double,doc_values=false").string()), true, false);
         return createSearchContext(indexService);
     }
-
+    
     static void assertBitSet(BitSet actual, BitSet expected, IndexSearcher searcher) throws IOException {
         assertBitSet(new BitDocIdSet(actual), new BitDocIdSet(expected), searcher);
     }
@@ -92,7 +88,7 @@ public abstract class AbstractChildTestCase extends ESSingleNodeTestCase {
             throw new java.lang.AssertionError(description.toString());
         }
     }
-
+    
     static boolean equals(BitDocIdSet expected, BitDocIdSet actual) {
         if (actual == null && expected == null) {
             return true;
@@ -144,10 +140,10 @@ public abstract class AbstractChildTestCase extends ESSingleNodeTestCase {
     }
 
     static Query parseQuery(QueryBuilder queryBuilder) throws IOException {
-        QueryShardContext context = new QueryShardContext(new Index("test"), SearchContext.current().queryParserService());
+        QueryParseContext context = new QueryParseContext(new Index("test"), SearchContext.current().queryParserService());
         XContentParser parser = XContentHelper.createParser(queryBuilder.buildAsBytes());
         context.reset(parser);
-        return context.parseContext().parseInnerQueryBuilder().toQuery(context);
+        return context.parseInnerQuery();
     }
 
 }

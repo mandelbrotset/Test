@@ -19,6 +19,7 @@
 
 package org.elasticsearch.indices.analysis;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.lucene.analysis.Analyzer;
 import org.elasticsearch.Version;
@@ -30,11 +31,7 @@ import org.elasticsearch.test.ESIntegTestCase;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
-<<<<<<< HEAD
-import java.util.ArrayList;
-=======
 import java.util.Collection;
->>>>>>> tempbranch
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -56,7 +53,7 @@ public class PreBuiltAnalyzerIntegrationIT extends ESIntegTestCase {
     @Test
     public void testThatPreBuiltAnalyzersAreNotClosedOnIndexClose() throws Exception {
         Map<PreBuiltAnalyzers, List<Version>> loadedAnalyzers = Maps.newHashMap();
-        List<String> indexNames = new ArrayList<>();
+        List<String> indexNames = Lists.newArrayList();
         final int numIndices = scaledRandomIntBetween(2, 4);
         for (int i = 0; i < numIndices; i++) {
             String indexName = randomAsciiOfLength(10).toLowerCase(Locale.ROOT);
@@ -68,7 +65,7 @@ public class PreBuiltAnalyzerIntegrationIT extends ESIntegTestCase {
 
             Version randomVersion = randomVersion(random());
             if (!loadedAnalyzers.containsKey(preBuiltAnalyzer)) {
-                 loadedAnalyzers.put(preBuiltAnalyzer, new ArrayList<Version>());
+                 loadedAnalyzers.put(preBuiltAnalyzer, Lists.<Version>newArrayList());
             }
             loadedAnalyzers.get(preBuiltAnalyzer).add(randomVersion);
 

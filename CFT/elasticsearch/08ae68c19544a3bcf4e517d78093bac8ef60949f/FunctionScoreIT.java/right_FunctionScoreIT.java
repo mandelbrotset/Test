@@ -370,7 +370,6 @@ public class FunctionScoreIT extends ESIntegTestCase {
         return builders;
     }
 
-<<<<<<< HEAD
     @Test
     public void checkWeightOnlyCreatesBoostFunction() throws IOException {
         assertAcked(prepareCreate(INDEX).addMapping(
@@ -420,57 +419,6 @@ public class FunctionScoreIT extends ESIntegTestCase {
         assertSearchResponse(response);
         assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
     }
-=======
-//    @Test
-//    public void checkWeightOnlyCreatesBoostFunction() throws IOException {
-//        assertAcked(prepareCreate(INDEX).addMapping(
-//                TYPE,
-//                MAPPING_WITH_DOUBLE_AND_GEO_POINT_AND_TEXT_FIELD));
-//        ensureYellow();
-//
-//        index(INDEX, TYPE, "1", SIMPLE_DOC);
-//        refresh();
-//        String query =jsonBuilder().startObject()
-//                .startObject("query")
-//                .startObject("function_score")
-//                .startArray("functions")
-//                .startObject()
-//                .field("weight",2)
-//                .endObject()
-//                .endArray()
-//                .endObject()
-//                .endObject()
-//                .endObject().string();
-//        SearchResponse response = client().search(
-//                searchRequest().source(new BytesArray(query))
-//                ).actionGet();
-//        assertSearchResponse(response);
-//        assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
-//
-//        query =jsonBuilder().startObject()
-//                .startObject("query")
-//                .startObject("function_score")
-//                .field("weight",2)
-//                .endObject()
-//                .endObject()
-//                .endObject().string();
-//        response = client().search(
-//                searchRequest().source(new BytesArray(query))
-//        ).actionGet();
-//        assertSearchResponse(response);
-//        assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
-//        response = client().search(
-//                searchRequest().source(searchSource().query(functionScoreQuery().add(new WeightBuilder().setWeight(2.0f))))
-//        ).actionGet();
-//        assertSearchResponse(response);
-//        assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
-//        response = client().search(
-//                searchRequest().source(searchSource().query(functionScoreQuery().add(weightFactorFunction(2.0f))))
-//        ).actionGet();
-//        assertSearchResponse(response);
-//        assertThat(response.getHits().getAt(0).score(), equalTo(2.0f));
-//    } NOCOMMIT fix this
->>>>>>> tempbranch
 
     @Test
     public void testScriptScoresNested() throws IOException {

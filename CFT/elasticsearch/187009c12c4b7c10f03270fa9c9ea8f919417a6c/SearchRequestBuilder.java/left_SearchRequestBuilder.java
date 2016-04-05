@@ -28,8 +28,8 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.Template;
 import org.elasticsearch.search.Scroll;
-import org.elasticsearch.search.searchafter.SearchAfterBuilder;
-import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
+import org.elasticsearch.search.aggregations.AggregatorFactory;
+import org.elasticsearch.search.aggregations.pipeline.PipelineAggregatorFactory;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.innerhits.InnerHitsBuilder;
 import org.elasticsearch.search.highlight.HighlightBuilder;
@@ -345,15 +345,6 @@ public class SearchRequestBuilder extends ActionRequestBuilder<SearchRequest, Se
     }
 
     /**
-     * Set the sort values that indicates which docs this request should "search after".
-     *
-     */
-    public SearchRequestBuilder searchAfter(Object[] values) {
-        sourceBuilder().searchAfter(values);
-        return this;
-    }
-
-    /**
      * Applies when sorting, and controls if scores will be tracked as well. Defaults to
      * <tt>false</tt>.
      */
@@ -372,9 +363,17 @@ public class SearchRequestBuilder extends ActionRequestBuilder<SearchRequest, Se
     }
 
     /**
-     * Adds an get to the search operation.
+     * Adds an aggregation to the search operation.
      */
-    public SearchRequestBuilder addAggregation(AbstractAggregationBuilder aggregation) {
+    public SearchRequestBuilder addAggregation(AggregatorFactory<?> aggregation) {
+        sourceBuilder().aggregation(aggregation);
+        return this;
+    }
+
+    /**
+     * Adds an aggregation to the search operation.
+     */
+    public SearchRequestBuilder addAggregation(PipelineAggregatorFactory aggregation) {
         sourceBuilder().aggregation(aggregation);
         return this;
     }

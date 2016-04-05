@@ -196,13 +196,8 @@ public class NestedInnerQueryParseSupport {
         } else {
             parentFilter = shardContext.bitsetFilter(objectMapper.nestedTypeFilter());
         }
-<<<<<<< HEAD
         childFilter = nestedObjectMapper.nestedTypeFilter();
-        parentObjectMapper = parseContext.nestedScope().nextLevel(nestedObjectMapper);
-=======
-        childFilter = shardContext.bitsetFilter(nestedObjectMapper.nestedTypeFilter());
         parentObjectMapper = shardContext.nestedScope().nextLevel(nestedObjectMapper);
->>>>>>> tempbranch
     }
 
     private void resetPathLevel() {

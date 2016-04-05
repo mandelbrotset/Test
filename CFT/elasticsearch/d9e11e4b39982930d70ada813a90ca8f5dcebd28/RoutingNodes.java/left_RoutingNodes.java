@@ -21,18 +21,14 @@ package org.elasticsearch.cluster.routing;
 
 import com.carrotsearch.hppc.ObjectIntHashMap;
 import com.carrotsearch.hppc.cursors.ObjectCursor;
-<<<<<<< HEAD
-=======
 import com.google.common.collect.Iterators;
 
->>>>>>> tempbranch
 import org.apache.lucene.util.CollectionUtil;
 import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.cluster.block.ClusterBlocks;
 import org.elasticsearch.cluster.metadata.MetaData;
 import org.elasticsearch.cluster.node.DiscoveryNode;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
-import org.elasticsearch.common.collect.Iterators;
 import org.elasticsearch.index.shard.ShardId;
 
 import java.util.ArrayList;
@@ -157,7 +153,7 @@ public class RoutingNodes implements Iterable<RoutingNode> {
 
     @Override
     public Iterator<RoutingNode> iterator() {
-        return Collections.unmodifiableCollection(nodesToShards.values()).iterator();
+        return Iterators.unmodifiableIterator(nodesToShards.values().iterator());
     }
 
     public RoutingTable routingTable() {

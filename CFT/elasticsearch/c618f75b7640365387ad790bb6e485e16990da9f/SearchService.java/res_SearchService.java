@@ -19,6 +19,7 @@
 
 package org.elasticsearch.search;
 
+import com.carrotsearch.hppc.ObjectFloatHashMap;
 import com.carrotsearch.hppc.ObjectHashSet;
 import com.carrotsearch.hppc.ObjectSet;
 import com.carrotsearch.hppc.cursors.ObjectCursor;
@@ -27,7 +28,6 @@ import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.NumericDocValues;
 import org.apache.lucene.search.TopDocs;
-import org.elasticsearch.ElasticsearchParseException;
 import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.cache.recycler.PageCacheRecycler;
@@ -38,7 +38,6 @@ import org.elasticsearch.common.ParseFieldMatcher;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.component.AbstractLifecycleComponent;
 import org.elasticsearch.common.inject.Inject;
-import org.elasticsearch.common.lease.Releasables;
 import org.elasticsearch.common.lucene.Lucene;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
@@ -46,8 +45,8 @@ import org.elasticsearch.common.util.BigArrays;
 import org.elasticsearch.common.util.concurrent.ConcurrentCollections;
 import org.elasticsearch.common.util.concurrent.ConcurrentMapLong;
 import org.elasticsearch.common.util.concurrent.FutureUtils;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.common.xcontent.XContentLocation;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.index.Index;
@@ -62,7 +61,7 @@ import org.elasticsearch.index.mapper.MappedFieldType;
 import org.elasticsearch.index.mapper.MappedFieldType.Loading;
 import org.elasticsearch.index.mapper.MapperService;
 import org.elasticsearch.index.mapper.internal.ParentFieldMapper;
-import org.elasticsearch.index.query.TemplateQueryParser;
+import org.elasticsearch.index.query.QueryParseContext;
 import org.elasticsearch.index.search.stats.ShardSearchStats;
 import org.elasticsearch.index.search.stats.StatsGroupsParseElement;
 import org.elasticsearch.index.settings.IndexSettings;
@@ -75,11 +74,10 @@ import org.elasticsearch.indices.IndicesWarmer.WarmerContext;
 import org.elasticsearch.indices.cache.request.IndicesRequestCache;
 import org.elasticsearch.node.settings.NodeSettingsService;
 import org.elasticsearch.script.ExecutableScript;
-import org.elasticsearch.script.Script.ScriptParseException;
 import org.elasticsearch.script.ScriptContext;
 import org.elasticsearch.script.ScriptService;
-import org.elasticsearch.script.Template;
-import org.elasticsearch.script.mustache.MustacheScriptEngineService;
+import org.elasticsearch.script.SearchScript;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.dfs.DfsPhase;
 import org.elasticsearch.search.dfs.DfsSearchResult;
 import org.elasticsearch.search.fetch.FetchPhase;
@@ -87,6 +85,10 @@ import org.elasticsearch.search.fetch.FetchSearchResult;
 import org.elasticsearch.search.fetch.QueryFetchSearchResult;
 import org.elasticsearch.search.fetch.ScrollQueryFetchSearchResult;
 import org.elasticsearch.search.fetch.ShardFetchRequest;
+import org.elasticsearch.search.fetch.fielddata.FieldDataFieldsContext;
+import org.elasticsearch.search.fetch.fielddata.FieldDataFieldsContext.FieldDataField;
+import org.elasticsearch.search.fetch.fielddata.FieldDataFieldsFetchSubPhase;
+import org.elasticsearch.search.fetch.script.ScriptFieldsContext.ScriptField;
 import org.elasticsearch.search.internal.DefaultSearchContext;
 import org.elasticsearch.search.internal.InternalScrollSearchRequest;
 import org.elasticsearch.search.internal.ScrollContext;
@@ -102,7 +104,6 @@ import org.elasticsearch.search.query.ScrollQuerySearchResult;
 import org.elasticsearch.search.warmer.IndexWarmersMetaData;
 import org.elasticsearch.threadpool.ThreadPool;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -112,7 +113,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static java.util.Collections.unmodifiableMap;
-import static org.elasticsearch.common.Strings.hasLength;
 import static org.elasticsearch.common.unit.TimeValue.timeValueMillis;
 import static org.elasticsearch.common.unit.TimeValue.timeValueMinutes;
 
@@ -572,10 +572,16 @@ public class SearchService extends AbstractLifecycleComponent<SearchService> {
                 context.scrollContext(new ScrollContext());
                 context.scrollContext().scroll = request.scroll();
             }
-
-            parseTemplate(request, context);
+            if (request.template() != null) {
+                ExecutableScript executable = this.scriptService.executable(request.template(), ScriptContext.Standard.SEARCH, context);
+                BytesReference run = (BytesReference) executable.run();
+                try (XContentParser parser = XContentFactory.xContent(run).createParser(run)) {
+                    QueryParseContext queryParseContext = new QueryParseContext(indexService.queryParserService().indicesQueriesRegistry());
+                    queryParseContext.reset(parser);
+                    parseSource(context, SearchSourceBuilder.parseSearchSource(parser, queryParseContext));
+                }
+            }
             parseSource(context, request.source());
-            parseSource(context, request.extraSource());
 
             // if the from and size are still not set, default them
             if (context.from() == -1) {
@@ -664,113 +670,229 @@ public class SearchService extends AbstractLifecycleComponent<SearchService> {
         }
     }
 
-    private void parseTemplate(ShardSearchRequest request, SearchContext searchContext) {
-
-        BytesReference processedQuery;
-        if (request.template() != null) {
-            ExecutableScript executable = this.scriptService.executable(request.template(), ScriptContext.Standard.SEARCH, searchContext);
-            processedQuery = (BytesReference) executable.run();
-        } else {
-            if (!hasLength(request.templateSource())) {
+    private void parseSource(SearchContext context, SearchSourceBuilder source) throws SearchParseException {
+        // nothing to parse...
+        if (source == null) {
                 return;
             }
-            XContentParser parser = null;
-            Template template = null;
 
+        context.from(source.from());
+        context.size(source.size());
+        ObjectFloatHashMap<String> indexBoostMap = source.indexBoost();
+        if (indexBoostMap != null) {
+            Float indexBoost = indexBoostMap.get(context.shardTarget().index());
+            if (indexBoost != null) {
+                context.queryBoost(indexBoost);
+            }
+        }
+        if (source.query() != null) {
+            context.parsedQuery(context.queryParserService().parse(source.query()));
+        }
+        if (source.postFilter() != null) {
+            context.parsedPostFilter(context.queryParserService().parse(source.postFilter()));
+        }
+        if (source.sorts() != null) {
+            XContentParser completeSortParser = null;
             try {
-                parser = XContentFactory.xContent(request.templateSource()).createParser(request.templateSource());
-                template = TemplateQueryParser.parse(parser, searchContext.parseFieldMatcher(), "params", "template");
-
-                if (template.getType() == ScriptService.ScriptType.INLINE) {
-                    //Try to double parse for nested template id/file
-                    parser = null;
-                    try {
-                        ExecutableScript executable = this.scriptService.executable(template, ScriptContext.Standard.SEARCH, searchContext);
-                        processedQuery = (BytesReference) executable.run();
-                        parser = XContentFactory.xContent(processedQuery).createParser(processedQuery);
-                    } catch (ElasticsearchParseException epe) {
-                        //This was an non-nested template, the parse failure was due to this, it is safe to assume this refers to a file
-                        //for backwards compatibility and keep going
-                        template = new Template(template.getScript(), ScriptService.ScriptType.FILE, MustacheScriptEngineService.NAME,
-                                null, template.getParams());
-                        ExecutableScript executable = this.scriptService.executable(template, ScriptContext.Standard.SEARCH, searchContext);
-                        processedQuery = (BytesReference) executable.run();
-                    }
-                    if (parser != null) {
-                        try {
-                            Template innerTemplate = TemplateQueryParser.parse(parser, searchContext.parseFieldMatcher());
-                            if (hasLength(innerTemplate.getScript()) && !innerTemplate.getType().equals(ScriptService.ScriptType.INLINE)) {
-                                //An inner template referring to a filename or id
-                                template = new Template(innerTemplate.getScript(), innerTemplate.getType(),
-                                        MustacheScriptEngineService.NAME, null, template.getParams());
-                                ExecutableScript executable = this.scriptService.executable(template, ScriptContext.Standard.SEARCH,
-                                        searchContext);
-                                processedQuery = (BytesReference) executable.run();
-                            }
-                        } catch (ScriptParseException e) {
-                            // No inner template found, use original template from above
-                        }
-                    }
-                } else {
-                    ExecutableScript executable = this.scriptService.executable(template, ScriptContext.Standard.SEARCH, searchContext);
-                    processedQuery = (BytesReference) executable.run();
-                }
-            } catch (IOException e) {
-                throw new ElasticsearchParseException("Failed to parse template", e);
-            } finally {
-                Releasables.closeWhileHandlingException(parser);
-            }
-
-            if (!hasLength(template.getScript())) {
-                throw new ElasticsearchParseException("Template must have [template] field configured");
-            }
-        }
-        request.source(processedQuery);
-    }
-
-    private void parseSource(SearchContext context, BytesReference source) throws SearchParseException {
-        // nothing to parse...
-        if (source == null || source.length() == 0) {
-            return;
-        }
-        XContentParser parser = null;
-        try {
-            parser = XContentFactory.xContent(source).createParser(source);
-            XContentParser.Token token;
-            token = parser.nextToken();
-            if (token != XContentParser.Token.START_OBJECT) {
-                throw new ElasticsearchParseException("failed to parse search source. source must be an object, but found [{}] instead", token.name());
-            }
-            while ((token = parser.nextToken()) != XContentParser.Token.END_OBJECT) {
-                if (token == XContentParser.Token.FIELD_NAME) {
-                    String fieldName = parser.currentName();
+                XContentBuilder completeSortBuilder = XContentFactory.jsonBuilder();
+                completeSortBuilder.startObject();
+                completeSortBuilder.startArray("sort");
+                for (BytesReference sort : source.sorts()) {
+                    XContentParser parser = XContentFactory.xContent(sort).createParser(sort);
                     parser.nextToken();
-                    SearchParseElement element = elementParsers.get(fieldName);
-                    if (element == null) {
-                        throw new SearchParseException(context, "failed to parse search source. unknown search element [" + fieldName + "]", parser.getTokenLocation());
+                    completeSortBuilder.copyCurrentStructure(parser);
+                }
+                completeSortBuilder.endArray();
+                completeSortBuilder.endObject();
+                BytesReference completeSortBytes = completeSortBuilder.bytes();
+                completeSortParser = XContentFactory.xContent(completeSortBytes).createParser(completeSortBytes);
+                completeSortParser.nextToken();
+                completeSortParser.nextToken();
+                completeSortParser.nextToken();
+                this.elementParsers.get("sort").parse(completeSortParser, context);
+            } catch (Exception e) {
+                String sSource = "_na_";
+                try {
+                    sSource = source.toString();
+                } catch (Throwable e1) {
+                    // ignore
+                }
+                XContentLocation location = completeSortParser != null ? completeSortParser.getTokenLocation() : null;
+                throw new SearchParseException(context, "failed to parse sort source [" + sSource + "]", location, e);
+            }
+        }
+        context.trackScores(source.trackScores());
+        if (source.minScore() != null) {
+            context.minimumScore(source.minScore());
+        }
+        context.timeoutInMillis(source.timeoutInMillis());
+        context.terminateAfter(source.terminateAfter());
+        if (source.aggregations() != null) {
+            XContentParser completeAggregationsParser = null;
+            try {
+                XContentBuilder completeAggregationsBuilder = XContentFactory.jsonBuilder();
+                completeAggregationsBuilder.startObject();
+                for (BytesReference agg : source.aggregations()) {
+                    XContentParser parser = XContentFactory.xContent(agg).createParser(agg);
+                    parser.nextToken();
+                    parser.nextToken();
+                    completeAggregationsBuilder.field(parser.currentName());
+                    parser.nextToken();
+                    completeAggregationsBuilder.copyCurrentStructure(parser);
+                }
+                completeAggregationsBuilder.endObject();
+                BytesReference completeAggregationsBytes = completeAggregationsBuilder.bytes();
+                completeAggregationsParser = XContentFactory.xContent(completeAggregationsBytes).createParser(completeAggregationsBytes);
+                completeAggregationsParser.nextToken();
+                this.elementParsers.get("aggregations").parse(completeAggregationsParser, context);
+            } catch (Exception e) {
+                String sSource = "_na_";
+                try {
+                    sSource = source.toString();
+                } catch (Throwable e1) {
+                    // ignore
+                }
+                XContentLocation location = completeAggregationsParser != null ? completeAggregationsParser.getTokenLocation() : null;
+                throw new SearchParseException(context, "failed to parse rescore source [" + sSource + "]", location, e);
+            }
+        }
+        if (source.suggest() != null) {
+            XContentParser suggestParser = null;
+            try {
+                suggestParser = XContentFactory.xContent(source.suggest()).createParser(source.suggest());
+                suggestParser.nextToken();
+                this.elementParsers.get("suggest").parse(suggestParser, context);
+            } catch (Exception e) {
+                String sSource = "_na_";
+                try {
+                    sSource = source.toString();
+                } catch (Throwable e1) {
+                    // ignore
+                }
+                XContentLocation location = suggestParser != null ? suggestParser.getTokenLocation() : null;
+                throw new SearchParseException(context, "failed to parse suggest source [" + sSource + "]", location, e);
+            }
+        }
+        if (source.rescores() != null) {
+            XContentParser completeRescoreParser = null;
+                    try {
+                XContentBuilder completeRescoreBuilder = XContentFactory.jsonBuilder();
+                completeRescoreBuilder.startObject();
+                completeRescoreBuilder.startArray("rescore");
+                for (BytesReference rescore : source.rescores()) {
+                    XContentParser parser = XContentFactory.xContent(rescore).createParser(rescore);
+                    parser.nextToken();
+                    completeRescoreBuilder.copyCurrentStructure(parser);
                     }
-                    element.parse(parser, context);
+                completeRescoreBuilder.endArray();
+                completeRescoreBuilder.endObject();
+                BytesReference completeRescoreBytes = completeRescoreBuilder.bytes();
+                completeRescoreParser = XContentFactory.xContent(completeRescoreBytes).createParser(completeRescoreBytes);
+                completeRescoreParser.nextToken();
+                completeRescoreParser.nextToken();
+                completeRescoreParser.nextToken();
+                this.elementParsers.get("rescore").parse(completeRescoreParser, context);
+            } catch (Exception e) {
+                String sSource = "_na_";
+                        try {
+                    sSource = source.toString();
+                } catch (Throwable e1) {
+                    // ignore
+                }
+                XContentLocation location = completeRescoreParser != null ? completeRescoreParser.getTokenLocation() : null;
+                throw new SearchParseException(context, "failed to parse rescore source [" + sSource + "]", location, e);
+            }
+                            }
+        if (source.fields() != null) {
+            context.fieldNames().addAll(source.fields());
+                        }
+        if (source.explain() != null) {
+            context.explain(source.explain());
+                    }
+        if (source.fetchSource() != null) {
+            context.fetchSourceContext(source.fetchSource());
+                }
+        if (source.fieldDataFields() != null) {
+            FieldDataFieldsContext fieldDataFieldsContext = context.getFetchSubPhaseContext(FieldDataFieldsFetchSubPhase.CONTEXT_FACTORY);
+            for (String field : source.fieldDataFields()) {
+                fieldDataFieldsContext.add(new FieldDataField(field));
+            }
+            fieldDataFieldsContext.setHitExecutionNeeded(true);
+            }
+        if (source.highlighter() != null) {
+            XContentParser highlighterParser = null;
+            try {
+                highlighterParser = XContentFactory.xContent(source.highlighter()).createParser(source.highlighter());
+                this.elementParsers.get("highlight").parse(highlighterParser, context);
+            } catch (Exception e) {
+                String sSource = "_na_";
+                try {
+                    sSource = source.toString();
+                } catch (Throwable e1) {
+                    // ignore
+        }
+                XContentLocation location = highlighterParser != null ? highlighterParser.getTokenLocation() : null;
+                throw new SearchParseException(context, "failed to parse suggest source [" + sSource + "]", location, e);
+    }
+        }
+        if (source.innerHits() != null) {
+            XContentParser innerHitsParser = null;
+            try {
+                innerHitsParser = XContentFactory.xContent(source.innerHits()).createParser(source.innerHits());
+                innerHitsParser.nextToken();
+                this.elementParsers.get("inner_hits").parse(innerHitsParser, context);
+            } catch (Exception e) {
+                String sSource = "_na_";
+        try {
+                    sSource = source.toString();
+                } catch (Throwable e1) {
+                    // ignore
+                }
+                XContentLocation location = innerHitsParser != null ? innerHitsParser.getTokenLocation() : null;
+                throw new SearchParseException(context, "failed to parse suggest source [" + sSource + "]", location, e);
+            }
+        }
+        if (source.scriptFields() != null) {
+            for (org.elasticsearch.search.builder.SearchSourceBuilder.ScriptField field : source.scriptFields()) {
+                SearchScript searchScript = context.scriptService().search(context.lookup(), field.script(), ScriptContext.Standard.SEARCH);
+                context.scriptFields().add(new ScriptField(field.fieldName(), searchScript, field.ignoreFailure()));
+            }
+            }
+        if (source.ext() != null) {
+            XContentParser extParser = null;
+            try {
+                extParser = XContentFactory.xContent(source.ext()).createParser(source.ext());
+                XContentParser.Token token = extParser.nextToken();
+                String currentFieldName = null;
+                while ((token = extParser.nextToken()) != XContentParser.Token.END_OBJECT) {
+                if (token == XContentParser.Token.FIELD_NAME) {
+                        currentFieldName = extParser.currentName();
                 } else {
-                    if (token == null) {
-                        throw new ElasticsearchParseException("failed to parse search source. end of query source reached but query is not complete.");
+                        SearchParseElement parseElement = this.elementParsers.get(currentFieldName);
+                        if (parseElement == null) {
+                            throw new SearchParseException(context, "Unknown element [" + currentFieldName + "] in [ext]",
+                                    extParser.getTokenLocation());
                     } else {
-                        throw new ElasticsearchParseException("failed to parse search source. expected field name but got [{}]", token);
+                            parseElement.parse(extParser, context);
                     }
                 }
             }
-        } catch (Throwable e) {
+            } catch (Exception e) {
             String sSource = "_na_";
             try {
-                sSource = XContentHelper.convertToJson(source, false);
+                    sSource = source.toString();
             } catch (Throwable e1) {
                 // ignore
             }
-            XContentLocation location = parser != null ? parser.getTokenLocation() : null;
-            throw new SearchParseException(context, "failed to parse search source [" + sSource + "]", location, e);
-        } finally {
-            if (parser != null) {
-                parser.close();
+                XContentLocation location = extParser != null ? extParser.getTokenLocation() : null;
+                throw new SearchParseException(context, "failed to parse ext source [" + sSource + "]", location, e);
             }
+        }
+        if (source.version() != null) {
+            context.version(source.version());
+            }
+        if (source.stats() != null) {
+            context.groupStats(source.stats());
         }
     }
 
@@ -1064,17 +1186,24 @@ public class SearchService extends AbstractLifecycleComponent<SearchService> {
                         SearchContext context = null;
                         try {
                             long now = System.nanoTime();
-                            ShardSearchRequest request = new ShardSearchLocalRequest(indexShard.shardId(), indexMetaData.getNumberOfShards(),
-                                    SearchType.QUERY_THEN_FETCH, entry.source(), entry.types(), entry.requestCache());
+                            final IndexService indexService = indicesService.indexServiceSafe(indexShard.shardId().index().name());
+                            ShardSearchRequest request = new ShardSearchLocalRequest(indexShard.shardId(), indexMetaData
+                                    .getNumberOfShards(),
+                                    SearchType.QUERY_THEN_FETCH, entry.source().build(new QueryParseContext(indexService.queryParserService().indicesQueriesRegistry())), entry.types(), entry.requestCache());
                             context = createContext(request, warmerContext.searcher());
-                            // if we use sort, we need to do query to sort on it and load relevant field data
-                            // if not, we might as well set size=0 (and cache if needed)
+                            // if we use sort, we need to do query to sort on
+                            // it and load relevant field data
+                            // if not, we might as well set size=0 (and cache
+                            // if needed)
                             if (context.sort() == null) {
                                 context.size(0);
                             }
                             boolean canCache = indicesQueryCache.canCache(request, context);
-                            // early terminate when we can cache, since we can only do proper caching on top level searcher
-                            // also, if we can't cache, and its top, we don't need to execute it, since we already did when its not top
+                            // early terminate when we can cache, since we
+                            // can only do proper caching on top level searcher
+                            // also, if we can't cache, and its top, we don't
+                            // need to execute it, since we already did when its
+                            // not top
                             if (canCache != top) {
                                 return;
                             }

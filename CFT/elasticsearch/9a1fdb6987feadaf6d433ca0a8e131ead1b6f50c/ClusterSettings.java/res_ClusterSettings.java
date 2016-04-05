@@ -174,7 +174,14 @@ public final class ClusterSettings extends AbstractScopedSettings {
         IndexSettings.QUERY_STRING_ALLOW_LEADING_WILDCARD,
         PrimaryShardAllocator.NODE_INITIAL_SHARDS_SETTING,
         ScriptService.SCRIPT_CACHE_SIZE_SETTING,
-<<<<<<< HEAD
+        IndicesFieldDataCache.INDICES_FIELDDATA_CLEAN_INTERVAL_SETTING,
+        IndicesFieldDataCache.INDICES_FIELDDATA_CACHE_SIZE_KEY,
+        IndicesRequestCache.INDICES_CACHE_QUERY_SIZE,
+        IndicesRequestCache.INDICES_CACHE_QUERY_EXPIRE,
+        HunspellService.HUNSPELL_LAZY_LOAD,
+        HunspellService.HUNSPELL_IGNORE_CASE,
+        HunspellService.HUNSPELL_DICTIONARY_OPTIONS,
+        IndicesStore.INDICES_STORE_DELETE_SHARD_TIMEOUT,
         Environment.PATH_CONF_SETTING,
         Environment.PATH_DATA_SETTING,
         Environment.PATH_HOME_SETTING,
@@ -185,14 +192,4 @@ public final class ClusterSettings extends AbstractScopedSettings {
         Environment.PATH_SHARED_DATA_SETTING,
         Environment.PIDFILE_SETTING
     )));
-=======
-        IndicesFieldDataCache.INDICES_FIELDDATA_CLEAN_INTERVAL_SETTING,
-        IndicesFieldDataCache.INDICES_FIELDDATA_CACHE_SIZE_KEY,
-        IndicesRequestCache.INDICES_CACHE_QUERY_SIZE,
-        IndicesRequestCache.INDICES_CACHE_QUERY_EXPIRE,
-        HunspellService.HUNSPELL_LAZY_LOAD,
-        HunspellService.HUNSPELL_IGNORE_CASE,
-        HunspellService.HUNSPELL_DICTIONARY_OPTIONS,
-        IndicesStore.INDICES_STORE_DELETE_SHARD_TIMEOUT)));
->>>>>>> tempbranch
 }

@@ -18,11 +18,6 @@
  */
 package org.elasticsearch.percolator;
 
-<<<<<<< HEAD
-=======
-import com.carrotsearch.hppc.IntObjectHashMap;
-
->>>>>>> tempbranch
 import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.ReaderUtil;
 import org.apache.lucene.index.memory.ExtendedMemoryIndex;
@@ -73,11 +68,7 @@ import org.elasticsearch.search.aggregations.InternalAggregation;
 import org.elasticsearch.search.aggregations.InternalAggregations;
 import org.elasticsearch.search.aggregations.bucket.global.GlobalAggregator;
 import org.elasticsearch.search.aggregations.pipeline.SiblingPipelineAggregator;
-<<<<<<< HEAD
 import org.elasticsearch.search.aggregations.support.AggregationContext;
-=======
-import org.elasticsearch.search.fetch.FetchPhase;
->>>>>>> tempbranch
 import org.elasticsearch.search.highlight.HighlightField;
 import org.elasticsearch.search.highlight.HighlightPhase;
 import org.elasticsearch.search.internal.SearchContext;
@@ -111,7 +102,6 @@ public class PercolatorService extends AbstractComponent {
     private final IndexNameExpressionResolver indexNameExpressionResolver;
     private final PercolateDocumentParser percolateDocumentParser;
 
-<<<<<<< HEAD
     private final PercolatorIndex single;
     private final PercolatorIndex multi;
 
@@ -124,19 +114,6 @@ public class PercolatorService extends AbstractComponent {
         super(settings);
         this.indexNameExpressionResolver = indexNameExpressionResolver;
         this.percolateDocumentParser = percolateDocumentParser;
-=======
-    private final ParseFieldMatcher parseFieldMatcher;
-    private final FetchPhase fetchPhase;
-
-    @Inject
-    public PercolatorService(Settings settings, IndexNameExpressionResolver indexNameExpressionResolver, IndicesService indicesService,
-            PageCacheRecycler pageCacheRecycler, BigArrays bigArrays, HighlightPhase highlightPhase, ClusterService clusterService,
-            AggregationPhase aggregationPhase, ScriptService scriptService, MappingUpdatedAction mappingUpdatedAction,
-            FetchPhase fetchPhase) {
-        super(settings);
-        this.indexNameExpressionResolver = indexNameExpressionResolver;
-        this.fetchPhase = fetchPhase;
->>>>>>> tempbranch
         this.parseFieldMatcher = new ParseFieldMatcher(settings);
         this.indicesService = indicesService;
         this.pageCacheRecycler = pageCacheRecycler;
@@ -207,10 +184,10 @@ public class PercolatorService extends AbstractComponent {
         );
         Query aliasFilter = percolateIndexService.aliasFilter(indexShard.getQueryShardContext(), filteringAliases);
 
-        SearchShardTarget searchShardTarget = new SearchShardTarget(clusterService.localNode().id(), request.shardId().getIndex(),
-                request.shardId().id());
-        final PercolateContext context = new PercolateContext(request, searchShardTarget, indexShard, percolateIndexService,
-                pageCacheRecycler, bigArrays, scriptService, aliasFilter, parseFieldMatcher, fetchPhase);
+        SearchShardTarget searchShardTarget = new SearchShardTarget(clusterService.localNode().id(), request.shardId().getIndex(), request.shardId().id());
+        final PercolateContext context = new PercolateContext(
+                request, searchShardTarget, indexShard, percolateIndexService, pageCacheRecycler, bigArrays, scriptService, aliasFilter, parseFieldMatcher
+        );
         SearchContext.setCurrent(context);
         try {
             ParsedDocument parsedDocument = percolateDocumentParser.parse(request, context, percolateIndexService.mapperService(), percolateIndexService.getQueryShardContext());

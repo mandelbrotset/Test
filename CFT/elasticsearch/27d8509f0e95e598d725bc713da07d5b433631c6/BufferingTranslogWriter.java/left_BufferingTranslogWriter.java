@@ -47,28 +47,22 @@ public final class BufferingTranslogWriter extends TranslogWriter {
     @Override
     public Translog.Location add(BytesReference data) throws IOException {
         try (ReleasableLock lock = writeLock.acquire()) {
-            ensureOpen();
+            operationCounter++;
             final long offset = totalOffset;
             if (data.length() >= buffer.length) {
                 flush();
                 // we use the channel to write, since on windows, writing to the RAF might not be reflected
                 // when reading through the channel
-                try {
-                    data.writeTo(channel);
-                } catch (Throwable ex) {
-                    closeWithTragicEvent(ex);
-                    throw ex;
-                }
+                data.writeTo(channel);
                 writtenOffset += data.length();
                 totalOffset += data.length();
-            } else {
-                if (data.length() > buffer.length - bufferCount) {
-                    flush();
-                }
-                data.writeTo(bufferOs);
-                totalOffset += data.length();
+                return new Translog.Location(generation, offset, data.length());
             }
-            operationCounter++;
+            if (data.length() > buffer.length - bufferCount) {
+                flush();
+            }
+            data.writeTo(bufferOs);
+            totalOffset += data.length();
             return new Translog.Location(generation, offset, data.length());
         }
     }
@@ -76,17 +70,10 @@ public final class BufferingTranslogWriter extends TranslogWriter {
     protected final void flush() throws IOException {
         assert writeLock.isHeldByCurrentThread();
         if (bufferCount > 0) {
-            ensureOpen();
             // we use the channel to write, since on windows, writing to the RAF might not be reflected
             // when reading through the channel
-            final int bufferSize = bufferCount;
-            try {
-                Channels.writeToChannel(buffer, 0, bufferSize, channel);
-            } catch (Throwable ex) {
-                closeWithTragicEvent(ex);
-                throw ex;
-            }
-            writtenOffset += bufferSize;
+            Channels.writeToChannel(buffer, 0, bufferCount, channel);
+            writtenOffset += bufferCount;
             bufferCount = 0;
         }
     }
@@ -114,50 +101,21 @@ public final class BufferingTranslogWriter extends TranslogWriter {
     }
 
     @Override
-    public synchronized void sync() throws IOException {
-        if (syncNeeded()) {
-            ensureOpen(); // this call gives a better exception that the incRef if we are closed by a tragic event
-            channelReference.incRef();
-            try {
-                final long offsetToSync;
-                final int opsCounter;
-                try (ReleasableLock lock = writeLock.acquire()) {
-                    flush();
-                    offsetToSync = totalOffset;
-                    opsCounter = operationCounter;
-                }
-                // we can do this outside of the write lock but we have to protect from
-                // concurrent syncs
-                ensureOpen(); // just for kicks - the checkpoint happens or not either way
-                try {
-                    checkpoint(offsetToSync, opsCounter, channelReference);
-                } catch (Throwable ex) {
-                    closeWithTragicEvent(ex);
-                    throw ex;
-                }
-                lastSyncedOffset = offsetToSync;
-            } finally {
-                channelReference.decRef();
-            }
+    public void sync() throws IOException {
+        if (!syncNeeded()) {
+            return;
         }
-    }
-
-<<<<<<< HEAD
-
-    public void updateBufferSize(int bufferSize) {
-        try (ReleasableLock lock = writeLock.acquire()) {
-            ensureOpen();
-            if (this.buffer.length != bufferSize) {
+        synchronized (this) {
+            try (ReleasableLock lock = writeLock.acquire()) {
                 flush();
-                this.buffer = new byte[bufferSize];
+                lastSyncedOffset = totalOffset;
             }
-        } catch (IOException e) {
-            throw new TranslogException(shardId, "failed to flush", e);
+            // we can do this outside of the write lock but we have to protect from
+            // concurrent syncs
+            checkpoint(lastSyncedOffset, operationCounter, channelReference);
         }
     }
 
-=======
->>>>>>> tempbranch
     class WrapperOutputStream extends OutputStream {
 
         @Override

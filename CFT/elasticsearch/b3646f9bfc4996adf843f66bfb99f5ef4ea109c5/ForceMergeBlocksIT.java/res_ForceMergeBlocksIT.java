@@ -33,15 +33,9 @@ import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertNoFa
 import static org.hamcrest.Matchers.equalTo;
 
 @ClusterScope(scope = ESIntegTestCase.Scope.TEST)
-<<<<<<< HEAD:core/src/test/java/org/elasticsearch/action/admin/indices/forcemerge/ForceMergeBlocksIT.java
 public class ForceMergeBlocksIT extends ESIntegTestCase {
 
-    @Test
     public void testForceMergeWithBlocks() {
-=======
-public class OptimizeBlocksIT extends ESIntegTestCase {
-    public void testOptimizeWithBlocks() {
->>>>>>> tempbranch:core/src/test/java/org/elasticsearch/action/admin/indices/optimize/OptimizeBlocksIT.java
         createIndex("test");
         ensureGreen("test");
 

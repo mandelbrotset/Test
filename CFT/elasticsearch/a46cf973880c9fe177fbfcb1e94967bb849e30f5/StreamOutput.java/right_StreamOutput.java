@@ -32,8 +32,6 @@ import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.common.text.Text;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilder;
 import org.joda.time.ReadableInstant;
 
 import java.io.EOFException;
@@ -318,18 +316,6 @@ public abstract class StreamOutput extends OutputStream {
         }
     }
 
-    /**
-     * Writes a string array, for nullable string, writes false.
-     */
-    public void writeOptionalStringArray(@Nullable String[] array) throws IOException {
-        if (array == null) {
-            writeBoolean(false);
-        } else {
-            writeBoolean(true);
-            writeStringArray(array);
-        }
-    }
-
     public void writeMap(@Nullable Map<String, Object> map) throws IOException {
         writeGenericValue(map);
     }
@@ -580,24 +566,10 @@ public abstract class StreamOutput extends OutputStream {
     }
 
     /**
-<<<<<<< HEAD
      * Writes the given {@link GeoPoint} to the stream
      */
     public void writeGeoPoint(GeoPoint geoPoint) throws IOException {
         writeDouble(geoPoint.lat());
         writeDouble(geoPoint.lon());
-=======
-     * Writes a {@link QueryBuilder} to the current stream
-     */
-    public void writeQuery(QueryBuilder queryBuilder) throws IOException {
-        writeNamedWriteable(queryBuilder);
-    }
-
-    /**
-     * Writes a {@link ScoreFunctionBuilder} to the current stream
-     */
-    public void writeScoreFunction(ScoreFunctionBuilder<?> scoreFunctionBuilder) throws IOException {
-        writeNamedWriteable(scoreFunctionBuilder);
->>>>>>> tempbranch
     }
 }

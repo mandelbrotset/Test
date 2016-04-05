@@ -19,20 +19,6 @@
 
 package org.elasticsearch.index.query;
 
-<<<<<<< HEAD
-import org.apache.lucene.index.Term;
-import org.apache.lucene.queries.TermsQuery;
-import org.apache.lucene.search.BooleanClause.Occur;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.util.BytesRef;
-import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.client.Client;
-=======
-import com.google.common.collect.Lists;
->>>>>>> tempbranch
 import org.elasticsearch.common.ParseField;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.xcontent.XContentParser;
@@ -80,13 +66,7 @@ public class TermsQueryParser extends BaseQueryParser {
         float boost = AbstractQueryBuilder.DEFAULT_BOOST;
 
         XContentParser.Token token;
-<<<<<<< HEAD
-        List<Object> terms = new ArrayList<>();
-        String fieldName = null;
-        float boost = 1f;
-=======
         String currentFieldName = null;
->>>>>>> tempbranch
         while ((token = parser.nextToken()) != XContentParser.Token.END_OBJECT) {
             if (token == XContentParser.Token.FIELD_NAME) {
                 currentFieldName = parser.currentName();
@@ -139,7 +119,7 @@ public class TermsQueryParser extends BaseQueryParser {
     }
 
     private static List<Object> parseValues(QueryParseContext parseContext, XContentParser parser) throws IOException {
-        List<Object> values = Lists.newArrayList();
+        List<Object> values = new ArrayList<>();
         XContentParser.Token token;
         while ((token = parser.nextToken()) != XContentParser.Token.END_ARRAY) {
             Object value = parser.objectBytes();

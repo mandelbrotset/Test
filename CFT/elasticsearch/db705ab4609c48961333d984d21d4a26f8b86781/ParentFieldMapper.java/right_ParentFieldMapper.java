@@ -34,21 +34,8 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.loader.SettingsLoader;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.index.fielddata.FieldDataType;
-<<<<<<< HEAD
 import org.elasticsearch.index.mapper.*;
 import org.elasticsearch.index.query.QueryParseContext;
-=======
-import org.elasticsearch.index.mapper.DocumentMapper;
-import org.elasticsearch.index.mapper.MappedFieldType;
-import org.elasticsearch.index.mapper.Mapper;
-import org.elasticsearch.index.mapper.MapperParsingException;
-import org.elasticsearch.index.mapper.MergeMappingException;
-import org.elasticsearch.index.mapper.MergeResult;
-import org.elasticsearch.index.mapper.MetadataFieldMapper;
-import org.elasticsearch.index.mapper.ParseContext;
-import org.elasticsearch.index.mapper.Uid;
-import org.elasticsearch.index.query.QueryShardContext;
->>>>>>> tempbranch
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -221,12 +208,12 @@ public class ParentFieldMapper extends MetadataFieldMapper {
         }
 
         @Override
-        public Query termQuery(Object value, @Nullable QueryShardContext context) {
+        public Query termQuery(Object value, @Nullable QueryParseContext context) {
             return termsQuery(Collections.singletonList(value), context);
         }
 
         @Override
-        public Query termsQuery(List values, @Nullable QueryShardContext context) {
+        public Query termsQuery(List values, @Nullable QueryParseContext context) {
             if (context == null) {
                 return super.termsQuery(values, context);
             }

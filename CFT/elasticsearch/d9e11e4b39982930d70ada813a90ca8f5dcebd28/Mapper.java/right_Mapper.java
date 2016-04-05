@@ -89,23 +89,14 @@ public abstract class Mapper implements ToXContent, Iterable<Mapper> {
 
             private final MapperService mapperService;
 
-<<<<<<< HEAD
             private final Function<String, TypeParser> typeParsers;
-=======
-            private final Map<String, TypeParser> typeParsers;
->>>>>>> tempbranch
 
             private final Version indexVersionCreated;
 
             private final ParseFieldMatcher parseFieldMatcher;
 
-<<<<<<< HEAD
             public ParserContext(String type, AnalysisService analysisService,  Function<String, SimilarityProvider> similarityLookupService,
                                  MapperService mapperService, Function<String, TypeParser> typeParsers,
-=======
-            public ParserContext(String type, AnalysisService analysisService, SimilarityLookupService similarityLookupService,
-                                 MapperService mapperService, Map<String, TypeParser> typeParsers,
->>>>>>> tempbranch
                                  Version indexVersionCreated, ParseFieldMatcher parseFieldMatcher) {
                 this.type = type;
                 this.analysisService = analysisService;

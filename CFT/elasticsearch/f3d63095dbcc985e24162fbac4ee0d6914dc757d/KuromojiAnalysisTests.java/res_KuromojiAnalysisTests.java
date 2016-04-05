@@ -192,14 +192,6 @@ public class KuromojiAnalysisTests extends ESTestCase {
         assertSimpleTSOutput(tokenFilter.create(tokenizer), expected);
     }
 
-
-<<<<<<< HEAD
-    public AnalysisService createAnalysisService() {
-        String json = "/org/elasticsearch/index/analysis/kuromoji_analysis.json";
-        Settings settings = Settings.settingsBuilder()
-                .put("path.home", createTempDir())
-                .loadFromStream(json, getClass().getResourceAsStream(json))
-=======
     public AnalysisService createAnalysisService() throws IOException {
         InputStream empty_dict = getClass().getResourceAsStream("empty_user_dict.txt");
         InputStream dict = getClass().getResourceAsStream("user_dict.txt");
@@ -209,10 +201,10 @@ public class KuromojiAnalysisTests extends ESTestCase {
         Files.copy(empty_dict, config.resolve("empty_user_dict.txt"));
         Files.copy(dict, config.resolve("user_dict.txt"));
 
+        String json = "/org/elasticsearch/index/analysis/kuromoji_analysis.json";
         Settings settings = Settings.settingsBuilder()
                 .put("path.home", home)
-                .loadFromClasspath("org/elasticsearch/index/analysis/kuromoji_analysis.json")
->>>>>>> tempbranch
+                .loadFromStream(json, getClass().getResourceAsStream(json))
                 .put(IndexMetaData.SETTING_VERSION_CREATED, Version.CURRENT)
                 .build();
 

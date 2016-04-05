@@ -89,11 +89,7 @@ import org.elasticsearch.common.lease.Releasable;
 import org.elasticsearch.common.settings.Setting;
 import org.elasticsearch.common.settings.Settings;
 
-<<<<<<< HEAD
 import java.util.Map;
-=======
-import java.util.function.Function;
->>>>>>> tempbranch
 
 /**
  * A client provides a one stop interface for performing actions/operations against the cluster.

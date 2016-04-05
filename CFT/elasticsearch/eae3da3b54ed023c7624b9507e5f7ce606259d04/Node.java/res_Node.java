@@ -178,14 +178,9 @@ public class Node implements Releasable {
             }
             modules.add(new PluginsModule(pluginsService));
             modules.add(new SettingsModule(this.settings, settingsFilter));
-<<<<<<< HEAD
             modules.add(new EnvironmentModule(environment));
-            modules.add(new NodeModule(this, nodeSettingsService, monitorService));
+            modules.add(new NodeModule(this, monitorService));
             modules.add(new NetworkModule(networkService, settings, false));
-=======
-            modules.add(new NodeModule(this,monitorService));
-            modules.add(new NetworkModule(networkService));
->>>>>>> tempbranch
             modules.add(new ScriptModule(this.settings));
             modules.add(new NodeEnvironmentModule(nodeEnvironment));
             modules.add(new ClusterNameModule(this.settings));

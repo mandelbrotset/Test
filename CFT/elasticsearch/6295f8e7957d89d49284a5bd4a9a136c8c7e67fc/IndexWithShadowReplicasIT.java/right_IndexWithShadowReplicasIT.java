@@ -38,7 +38,6 @@ import org.elasticsearch.index.shard.IndexShard;
 import org.elasticsearch.index.shard.ShadowIndexShard;
 import org.elasticsearch.indices.IndicesService;
 import org.elasticsearch.indices.recovery.RecoveryTarget;
-import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.snapshots.SnapshotState;
@@ -53,11 +52,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
-<<<<<<< HEAD
 import java.util.ArrayList;
-=======
-import java.util.Collection;
->>>>>>> tempbranch
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -86,11 +81,6 @@ public class IndexWithShadowReplicasIT extends ESIntegTestCase {
                 .put("path.shared_data", dataPath)
                 .put("index.store.fs.fs_lock", randomFrom("native", "simple"))
                 .build();
-    }
-
-    @Override
-    protected Collection<Class<? extends Plugin>> nodePlugins() {
-        return pluginList(MockTransportService.TestPlugin.class);
     }
 
     public void testCannotCreateWithBadPath() throws Exception {
@@ -429,6 +419,7 @@ public class IndexWithShadowReplicasIT extends ESIntegTestCase {
         Path dataPath = createTempDir();
         Settings nodeSettings = Settings.builder()
                 .put("node.add_id_to_custom_path", false)
+                .put("plugin.types", MockTransportService.TestPlugin.class.getName())
                 .put("path.shared_data", dataPath)
                 .build();
 
