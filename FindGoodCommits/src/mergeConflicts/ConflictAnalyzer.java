@@ -30,7 +30,7 @@ public class ConflictAnalyzer {
 	private void writeToSheet() {
 		for(Conflict c : conflicts) {
 			try {
-				wbc.addRow(c.getCommitSHA(), c.getCommitMessage(), Boolean.toString(c.isPullRequest()), c.getFileName(), Integer.toString(c.getLeftSize()), Integer.toString(c.getRightSize()), c.getLeftConflict(), c.getCommonConflict(), c.getRightConflict(), "To be continued...", "To be continued...");
+				wbc.addRow(c.getCommitSHA(), c.getCommitMessage(), Boolean.toString(c.isPullRequest()), c.getFileName(), Integer.toString(c.getLeftSize()), Integer.toString(c.getRightSize()), c.getLeftConflict(), c.getCommonConflict(), c.getRightConflict(), c.getClassifiers(), "N/A");
 			} catch (RowsExceededException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

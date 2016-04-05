@@ -148,12 +148,19 @@ public class Conflict {
 
 	public String getClassifiers() {
 		StringBuilder sb = new StringBuilder();
-		for (ConflictClassifier.Classifier classifier : classifiers) {
-			if (sb.length() != 0) {
-				sb.append("\n");
+		if(classifiers != null) {
+			for (ConflictClassifier.Classifier classifier : classifiers) {
+				if (sb.length() != 0) {
+					sb.append("\n");
+				}
+				sb.append(classifier.toString());
 			}
-			sb.append(classifier.toString());
+		} else {
+			System.out.println("Här vill inte Börst va!");
 		}
+		
+		if(sb.length() == 0)
+			sb.append("Unidentified classifier");
 		return sb.toString();
 	}
 	
