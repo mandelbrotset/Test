@@ -1,9 +1,14 @@
 package utils;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import findBooleans.Commit;
 import jxl.CellView;
+import jxl.Workbook;
+import jxl.WorkbookSettings;
 import jxl.format.UnderlineStyle;
 import jxl.write.Label;
 import jxl.write.WritableCellFormat;
@@ -28,6 +33,17 @@ public class WorkBookCreator {
 		this.outputFile = outputFile;
 		noOfSheets = 0;
 		noOfRows = 0;
+		
+		try {
+			File file = new File(outputFile);
+			WorkbookSettings wbSettings = new WorkbookSettings();
+			wbSettings.setLocale(new Locale("en", "EN"));
+			wbSettings.setEncoding("Cp1252");
+			workBook = Workbook.createWorkbook(file, wbSettings);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public void createSheet(String sheetName, ArrayList<String> captions) {
