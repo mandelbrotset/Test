@@ -12,6 +12,7 @@ import findBooleans.Commander;
 import findParametersInMerge.ParameterFinder;
 import getConflictCommits.ConflictFileTree;
 import getVariantParameter.VariantParameter;
+import mergeConflicts.ConflictAnalyzer;
 
 
 public class Main {
@@ -19,9 +20,10 @@ public class Main {
 	private static ConcurrentHashMap<String, String> repos;
 	
 	private static final String findBooleans = "findBooleans";
-	private static final String getConflictBooleans = "getConflictBooleans";
+	private static final String createConflictFileTree = "createConflictFileTree";
 	private static final String getVariantParameter = "getVariantParameter";
 	private static final String findParameterInMergeCommit = "findParameterInMergeCommit";
+	private static final String conflictAnalyzer = "conflictAnalyzer";
 	
 	
 	private static Machine machine;
@@ -29,26 +31,29 @@ public class Main {
 	
 	public static void main(String args[]) {
 		args = new String[1];
-		args[0] = findParameterInMergeCommit;
+		args[0] = createConflictFileTree;
 		
 		machine = Machine.getInstance();
 		
 		String parameter = "threadedListener";
 		String commit = "01d6f0dc1d569f4d7e947a322129e492092724ee";
 		
-		if(args[0].equals("findBooleans")) {
+		if(args[0].equals(findBooleans)) {
 			fillRepos();
 			analyzeRepos();
-		} else if(args[0].equals("getConflictCommits")) {
+		} else if(args[0].equals(createConflictFileTree)) {
 			ConflictFileTree cft = new ConflictFileTree(machine.getRepoPath());
 			cft.createTree();
-		} else if(args[0].equals("getVariantParameter")) {
+		} else if(args[0].equals(getVariantParameter)) {
 			String pathToRepo = "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/elasticsearch";
 			VariantParameter vp = new VariantParameter();
 			System.out.println("Commit that introduced the parameter: " + vp.findParameterIntroctionCommitSHA(pathToRepo, parameter, commit));
 		} else if (args[0].equals(findParameterInMergeCommit)){
 			ParameterFinder pf = new ParameterFinder("/home/patrik/Documents/Chalmers/5an/MasterThesis/Test/FindGoodParameters/elasticsearch");
 			pf.searchMergeCommits();
+		} else if(args[0].equals(conflictAnalyzer)) {
+			ConflictAnalyzer conflictAnalyzer = new ConflictAnalyzer();
+			conflictAnalyzer.produceAnalyzement(machine.getCftFolderPath() + "/elasticsearch", machine.getRepoPath() + "/elasticsearch");
 		} else {
 			System.out.println("Please enter a valid command!");
 		}

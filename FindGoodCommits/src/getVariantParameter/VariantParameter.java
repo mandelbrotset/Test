@@ -17,7 +17,12 @@ public class VariantParameter {
 	
 	
 	public String findParameterIntroctionCommitSHA(String repo, String parameter, String initialCommit) {
-		Utils.checkoutCommit(repo, initialCommit);
+		try {
+			Utils.checkoutCommit(repo, initialCommit);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		int initialCommitNo = parameterExistsInCommit(repo, parameter, initialCommit);
 		int commonAncNo = 0;
 		String[] parents;
@@ -26,8 +31,8 @@ public class VariantParameter {
 		int commitsAfterIntroduction = 0;
 		
 		try {
-			parents = Utils.readScriptOutput("getAncestralCommits " + repo + " " + initialCommit).readLine().split(" ");//härligt härligt men farligt
-			String commonAncestor = Utils.readScriptOutput("getCommonAncestor " + repo + " " + parents[0] + " " + parents[1]).readLine();
+			parents = Utils.readScriptOutput("getAncestralCommits " + repo + " " + initialCommit, true).readLine().split(" ");//härligt härligt men farligt
+			String commonAncestor = Utils.readScriptOutput("getCommonAncestor " + repo + " " + parents[0] + " " + parents[1], true).readLine();
 			commonAncNo = parameterExistsInCommit(repo, parameter, commonAncestor);
 			if(initialCommitNo > commonAncNo) {// och då vet vi att snart är det jul
 				String currentCommit = parents[1];
@@ -37,13 +42,13 @@ public class VariantParameter {
 				while(parameterExistsInCommit(repo, parameter, currentCommit) > commonAncNo) {
 					prevCommit = currentCommit;
 					commitsAfterIntroduction++; // Count the commits from the introduction of the parameter to the merge commit parent
-					currentCommit = Utils.readScriptOutput("getParent " + repo + " " + currentCommit).readLine();
+					currentCommit = Utils.readScriptOutput("getParent " + repo + " " + currentCommit, true).readLine();
 				}
 				commitsAfterIntroduction--; // Don't count the introduction commit to this!
 				if(!currentCommit.equals(commonAncestor)){
 					do {
 						commitsBeforeIntroduction++; // Count the commits between the commit where the parameter was introduced and the common ancestor
-					} while(!(currentCommit = Utils.readScriptOutput("getParent " + repo + " " + currentCommit).readLine()).equals(commonAncestor));
+					} while(!(currentCommit = Utils.readScriptOutput("getParent " + repo + " " + currentCommit, true).readLine()).equals(commonAncestor));
 				}
 				
 				int totalCommitsInBranch = commitsBeforeIntroduction + commitsAfterIntroduction+1;
@@ -67,7 +72,7 @@ public class VariantParameter {
 		int noOfExists = 0;
 		try {
 			Utils.checkoutCommit(repo, commit);
-			BufferedReader br = Utils.readScriptOutput("grepInJava " + repo + " " + parameter);
+			BufferedReader br = Utils.readScriptOutput("grepInJava " + repo + " " + parameter, true);
 			while (br.readLine() != null) {
 				noOfExists++;
 			}

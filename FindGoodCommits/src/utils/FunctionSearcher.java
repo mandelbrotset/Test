@@ -89,7 +89,7 @@ public class FunctionSearcher {
 		ArrayList<String> linesPlus = new ArrayList<String>();
 		try {
 			BufferedReader br = Utils.readScriptOutput("getDiff " + repoPath
-					+ commit);
+					+ commit, true);
 			String line;
 			boolean isJavaFile = false;
 

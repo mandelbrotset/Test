@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import utils.Machine;
+import utils.Utils;
 
 
 public class MergeConflicter{
@@ -39,7 +40,7 @@ public class MergeConflicter{
 		conflictingFilePaths.clear();
 		conflicts.clear();
 		try {
-			String ancestrals = executeCommand("getAncestralCommits " + REPO + " " + mergeCommit).readLine();
+			String ancestrals = Utils.readScriptOutput("getAncestralCommits " + REPO + " " + mergeCommit, true).readLine();
 			this.mergeCommit = mergeCommit;
 			leftCommit = ancestrals.substring(0, 7);
 			rightCommit = ancestrals.substring(8, 15);
@@ -48,7 +49,7 @@ public class MergeConflicter{
 			
 			String branchName = "tempbranch";
 			
-			BufferedReader br = executeCommand("mergeHistorical " + REPO + " " + leftCommit + " " + rightCommit + " " + branchName);
+			BufferedReader br = Utils.readScriptOutput("mergeHistorical " + REPO + " " + leftCommit + " " + rightCommit + " " + branchName, true);
 			
 			String line;
 			final String conflictingLinePattern = machine.getConflictMessage();
@@ -58,8 +59,8 @@ public class MergeConflicter{
 					conflictingFilePaths.add(REPO + "/" + filePath);
 				}
 			}
-			executeCommand("abortMerge " + REPO);
-			executeCommand("deleteBranch " + REPO + " " + branchName);
+			Utils.readScriptOutput("abortMerge " + REPO, false);
+			Utils.readScriptOutput("deleteBranch " + REPO + " " + branchName, false);
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -91,8 +92,10 @@ public class MergeConflicter{
 	}
 	
 	private String getConflictFile(String commit, String filePath) {
+			//Utils.readScriptOutput("gitCleanNoPull " + REPO);
+			//Utils.readScriptOutput("checkoutCommit " + REPO + " " + commit);
 		try {
-			executeCommand("checkoutCommit " + REPO + " " + commit).readLine();
+			Utils.checkoutCommit(REPO, commit);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -121,7 +124,7 @@ public class MergeConflicter{
 	private String getCommonAncestor(String filePath) {
 		String ancestorCommit = "";
 		try {
-			ancestorCommit = executeCommand("getCommonAncestor " + REPO + " " + leftCommit + " " + rightCommit).readLine();
+			ancestorCommit = Utils.readScriptOutput("getCommonAncestor " + REPO + " " + leftCommit + " " + rightCommit, true).readLine();
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -131,7 +134,7 @@ public class MergeConflicter{
 		return getConflictFile(ancestorCommit, filePath);
 	}
 	
-	private BufferedReader executeCommand(String command) {
+	/*private BufferedReader Utils.readScriptOutput(String command) {
 		BufferedReader br = null;
 		try {
 			Process p = Runtime.getRuntime().exec("bash scripts/" + command);
@@ -141,6 +144,6 @@ public class MergeConflicter{
 			e.printStackTrace();
 		}
 		return br;
-	}
+	}*/
 	
 }

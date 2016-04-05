@@ -71,7 +71,7 @@ public class Commander {
 		String repo = "elasticsearch";
 		REPO = repos.get(repo);
 		try {
-			Utils.readScriptOutput("gitClean " + REPO).readLine();
+			Utils.readScriptOutput("gitClean " + REPO, false);
 		} catch (IOException e2) {
 			// TODO Auto-generated catch block
 			e2.printStackTrace();
