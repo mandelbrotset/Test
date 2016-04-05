@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import utils.Machine;
 import findBooleans.Commander;
+import findParametersInMerge.ParameterFinder;
 import getConflictCommits.ConflictFileTree;
 import getVariantParameter.VariantParameter;
 
@@ -20,13 +21,15 @@ public class Main {
 	private static final String findBooleans = "findBooleans";
 	private static final String getConflictBooleans = "getConflictBooleans";
 	private static final String getVariantParameter = "getVariantParameter";
+	private static final String findParameterInMergeCommit = "findParameterInMergeCommit";
+	
 	
 	private static Machine machine;
 	
 	
 	public static void main(String args[]) {
 		args = new String[1];
-		args[0] = findBooleans;
+		args[0] = findParameterInMergeCommit;
 		
 		machine = Machine.getInstance();
 		
@@ -43,8 +46,12 @@ public class Main {
 			String pathToRepo = "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/elasticsearch";
 			VariantParameter vp = new VariantParameter();
 			System.out.println("Commit that introduced the parameter: " + vp.findParameterIntroctionCommitSHA(pathToRepo, parameter, commit));
-		} else
+		} else if (args[0].equals(findParameterInMergeCommit)){
+			ParameterFinder pf = new ParameterFinder("/home/patrik/Documents/Chalmers/5an/MasterThesis/Test/FindGoodParameters/elasticsearch");
+			pf.searchMergeCommits();
+		} else {
 			System.out.println("Please enter a valid command!");
+		}
 	}
 	
 	private static void analyzeRepos() {
