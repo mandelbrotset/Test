@@ -4,10 +4,13 @@ import mergeConflicts.ConflictClassifier.Classifier;
 
 public class SameSignatureCMChecker implements ClassChecker {
 
+	private boolean hasDifferentBodies(String leftBody, String rightBody) {
+		return leftBody.equals(rightBody);
+	}
+	
 	@Override
 	public Classifier getConflictClass() {
-		// TODO Auto-generated method stub
-		return null;
+		return Classifier.SAME_SIGNATURE_CM;
 	}
 
 	@Override

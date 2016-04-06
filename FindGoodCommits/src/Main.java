@@ -53,7 +53,7 @@ public class Main {
 			pf.searchMergeCommits();
 		} else if(args[0].equals(conflictAnalyzer)) {
 			ConflictAnalyzer conflictAnalyzer = new ConflictAnalyzer();
-			conflictAnalyzer.produceAnalyzement(machine.getCftFolderPath() + "/elasticsearch", machine.getRepoPath() + "/elasticsearch");
+			conflictAnalyzer.produceAnalyzement(machine.getCftFolderPath() + "/libgdx", machine.getRepoPath() + "/libgdx");
 		} else {
 			System.out.println("Please enter a valid command!");
 		}
