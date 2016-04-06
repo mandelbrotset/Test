@@ -1,0 +1,13 @@
+diff --git a/gdx/src/com/badlogic/gdx/math/Polygon.java b/gdx/src/com/badlogic/gdx/math/Polygon.java
+index 7e2231c..7a82a6e 100644
+--- a/gdx/src/com/badlogic/gdx/math/Polygon.java
++++ b/gdx/src/com/badlogic/gdx/math/Polygon.java
+@@ -27,7 +27,7 @@ public class Polygon {
+ 	private Rectangle bounds;
+ 	
+ 	public Polygon () {
+-		this.localVertices = new float[0];
++		
+ 	}
+ 
+ 	public Polygon (float[] vertices) {

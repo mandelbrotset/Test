@@ -1,0 +1,2285 @@
+diff --git a/CHANGES b/CHANGES
+index b1d0499..e8ed215 100644
+--- a/CHANGES
++++ b/CHANGES
+@@ -5,6 +5,8 @@
+ - New PNG encoder that supports compression, more efficient vertical flipping, and minimal allocation when encoding multiple PNGs.
+ - API Change: Label#setEllipse -> Label#setEllipsis.
+ - API Change: BatchTiledMapRenderer *SpriteBatch fields and methods renamed to *Batch
++- API Change: ScrollPane#scrollToCenter -> ScrollPane#scrollTo; see optional boolean arguments centerHorizontal and centerVertical (scrollToCenter centered vertically only).
++- API Change: Changed Input#getTextInput to accept both text and hint, removed Input#getPlaceholderTextInput.
+ 
+ [1.4.1]
+ - Update to the Gradle Integration plugin nightly build if you are on Eclipse 4.4.x!
+diff --git a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidInput.java b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidInput.java
+index a2f3d03..3f6d46d 100644
+--- a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidInput.java
++++ b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidInput.java
+@@ -44,6 +44,7 @@ import com.badlogic.gdx.Application;
+ import com.badlogic.gdx.Gdx;
+ import com.badlogic.gdx.Graphics.DisplayMode;
+ import com.badlogic.gdx.Input;
++import com.badlogic.gdx.Input.TextInputListener;
+ import com.badlogic.gdx.InputProcessor;
+ import com.badlogic.gdx.backends.android.AndroidLiveWallpaperService.AndroidWallpaperEngine;
+ import com.badlogic.gdx.graphics.Pixmap;
+@@ -192,13 +193,14 @@ public class AndroidInput implements Input, OnKeyListener, OnTouchListener {
+ 	}
+ 
+ 	@Override
+-	public void getTextInput (final TextInputListener listener, final String title, final String text) {
++	public void getTextInput (final TextInputListener listener, final String title, final String text, final String hint) {
+ 		handle.post(new Runnable() {
+ 			public void run () {
+ 				AlertDialog.Builder alert = new AlertDialog.Builder(context);
+ 				alert.setTitle(title);
+ 				final EditText input = new EditText(context);
+-				input.setText(text);
++				input.setHint(hint);
++				input.setText(text);				
+ 				input.setSingleLine();
+ 				alert.setView(input);
+ 				alert.setPositiveButton(context.getString(android.R.string.ok), new DialogInterface.OnClickListener() {
+@@ -237,41 +239,6 @@ public class AndroidInput implements Input, OnKeyListener, OnTouchListener {
+ 		});
+ 	}
+ 
+-	public void getPlaceholderTextInput (final TextInputListener listener, final String title, final String placeholder) {
+-		handle.post(new Runnable() {
+-			public void run () {
+-				AlertDialog.Builder alert = new AlertDialog.Builder(context);
+-				alert.setTitle(title);
+-				final EditText input = new EditText(context);
+-				input.setHint(placeholder);
+-				input.setSingleLine();
+-				alert.setView(input);
+-				alert.setPositiveButton(context.getString(android.R.string.ok), new DialogInterface.OnClickListener() {
+-					public void onClick (DialogInterface dialog, int whichButton) {
+-						Gdx.app.postRunnable(new Runnable() {
+-							@Override
+-							public void run () {
+-								listener.input(input.getText().toString());
+-							}
+-						});
+-					}
+-				});
+-				alert.setOnCancelListener(new OnCancelListener() {
+-					@Override
+-					public void onCancel (DialogInterface arg0) {
+-						Gdx.app.postRunnable(new Runnable() {
+-							@Override
+-							public void run () {
+-								listener.canceled();
+-							}
+-						});
+-					}
+-				});
+-				alert.show();
+-			}
+-		});
+-	}
+-
+ 	@Override
+ 	public int getX () {
+ 		synchronized (this) {
+diff --git a/backends/gdx-backend-headless/src/com/badlogic/gdx/backends/headless/HeadlessApplication.java b/backends/gdx-backend-headless/src/com/badlogic/gdx/backends/headless/HeadlessApplication.java
+index 223f80d..57e4276 100644
+--- a/backends/gdx-backend-headless/src/com/badlogic/gdx/backends/headless/HeadlessApplication.java
++++ b/backends/gdx-backend-headless/src/com/badlogic/gdx/backends/headless/HeadlessApplication.java
+@@ -142,13 +142,13 @@ public class HeadlessApplication implements Application {
+ 
+ 	public boolean executeRunnables () {
+ 		synchronized (runnables) {
+-			executedRunnables.addAll(runnables);
++			for (int i = runnables.size - 1; i >= 0; i--)
++				executedRunnables.addAll(runnables.get(i));
+ 			runnables.clear();
+ 		}
+ 		if (executedRunnables.size == 0) return false;
+-		for (int i = 0; i < executedRunnables.size; i++)
+-			executedRunnables.get(i).run();
+-		executedRunnables.clear();
++		for (int i = executedRunnables.size - 1; i >= 0; i--)
++			executedRunnables.removeIndex(i).run();
+ 		return true;
+ 	}
+ 
+diff --git a/backends/gdx-backend-headless/src/com/badlogic/gdx/backends/headless/mock/input/MockInput.java b/backends/gdx-backend-headless/src/com/badlogic/gdx/backends/headless/mock/input/MockInput.java
+index 6081492..4340927 100644
+--- a/backends/gdx-backend-headless/src/com/badlogic/gdx/backends/headless/mock/input/MockInput.java
++++ b/backends/gdx-backend-headless/src/com/badlogic/gdx/backends/headless/mock/input/MockInput.java
+@@ -17,6 +17,7 @@
+ package com.badlogic.gdx.backends.headless.mock.input;
+ 
+ import com.badlogic.gdx.Input;
++import com.badlogic.gdx.Input.TextInputListener;
+ import com.badlogic.gdx.InputAdapter;
+ import com.badlogic.gdx.InputProcessor;
+ import com.badlogic.gdx.graphics.Pixmap;
+@@ -112,13 +113,8 @@ public class MockInput implements Input {
+ 	}
+ 
+ 	@Override
+-	public void getTextInput(TextInputListener listener, String title, String text) {
+-
+-	}
+-
+-	@Override
+-	public void getPlaceholderTextInput(TextInputListener listener, String title, String placeholder) {
+-
++	public void getTextInput(TextInputListener listener, String title, String text, String hint) {
++		
+ 	}
+ 
+ 	@Override
+diff --git a/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwApplication.java b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwApplication.java
+index 77744e1..bd39368 100644
+--- a/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwApplication.java
++++ b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwApplication.java
+@@ -232,13 +232,13 @@ public class JglfwApplication implements Application {
+ 
+ 	public boolean executeRunnables () {
+ 		synchronized (runnables) {
+-			executedRunnables.addAll(runnables);
++			for (int i = runnables.size - 1; i >= 0; i--)
++				executedRunnables.addAll(runnables.get(i));
+ 			runnables.clear();
+ 		}
+ 		if (executedRunnables.size == 0) return false;
+-		for (int i = 0; i < executedRunnables.size; i++)
+-			executedRunnables.get(i).run();
+-		executedRunnables.clear();
++		for (int i = executedRunnables.size - 1; i >= 0; i--)
++			executedRunnables.removeIndex(i).run();
+ 		return true;
+ 	}
+ 
+diff --git a/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwInput.java b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwInput.java
+index 1ed7bda..c0e7857 100644
+--- a/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwInput.java
++++ b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwInput.java
+@@ -103,7 +103,7 @@ public class JglfwInput implements Input {
+ 
+ 			public boolean mouseMoved (int screenX, int screenY) {
+ 				deltaX = screenX - mouseX;
+-				deltaY = screenY - mouseX;
++				deltaY = screenY - mouseY;
+ 				mouseX = screenX;
+ 				mouseY = screenY;
+ 				app.graphics.requestRendering();
+@@ -125,6 +125,8 @@ public class JglfwInput implements Input {
+ 	}
+ 
+ 	public void update () {
++		deltaX = 0;
++		deltaY = 0;
+ 		justTouched = false;
+ 		if (keyJustPressed) {
+ 			keyJustPressed = false;
+@@ -296,23 +298,7 @@ public class JglfwInput implements Input {
+ 	public void setCursorImage (Pixmap pixmap, int xHotspot, int yHotspot) {
+ 	}
+ 
+-	public void getTextInput (final TextInputListener listener, final String title, final String text) {
+-		SwingUtilities.invokeLater(new Runnable() {
+-			public void run () {
+-				final String output = JOptionPane.showInputDialog(null, title, text);
+-				app.postRunnable(new Runnable() {
+-					public void run () {
+-						if (output != null)
+-							listener.input(output);
+-						else
+-							listener.canceled();
+-					}
+-				});
+-			}
+-		});
+-	}
+-
+-	public void getPlaceholderTextInput (final TextInputListener listener, final String title, final String placeholder) {
++	public void getTextInput (final TextInputListener listener, final String title, final String text, final String hint) {
+ 		SwingUtilities.invokeLater(new Runnable() {
+ 			public void run () {
+ 				JPanel panel = new JPanel(new FlowLayout());
+@@ -326,10 +312,11 @@ public class JglfwInput implements Input {
+ 				panel.add(textPanel);
+ 
+ 				final JTextField textField = new JTextField(20);
++				textField.setText(text);
+ 				textField.setAlignmentX(0.0f);
+ 				textPanel.add(textField);
+ 
+-				final JLabel placeholderLabel = new JLabel(placeholder);
++				final JLabel placeholderLabel = new JLabel(hint);
+ 				placeholderLabel.setForeground(Color.GRAY);
+ 				placeholderLabel.setAlignmentX(0.0f);
+ 				textPanel.add(placeholderLabel, 0);
+@@ -379,7 +366,7 @@ public class JglfwInput implements Input {
+ 			}
+ 		});
+ 	}
+-
++	
+ 	static char characterForKeyCode (int key) {
+ 		// Map certain key codes to character codes.
+ 		switch (key) {
+diff --git a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglAWTInput.java b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglAWTInput.java
+index 1327a8b..39ac0a0 100644
+--- a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglAWTInput.java
++++ b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglAWTInput.java
+@@ -57,6 +57,7 @@ import javax.swing.event.DocumentListener;
+ import com.badlogic.gdx.Gdx;
+ import com.badlogic.gdx.Input;
+ import com.badlogic.gdx.InputProcessor;
++import com.badlogic.gdx.Input.TextInputListener;
+ import com.badlogic.gdx.graphics.Pixmap;
+ import com.badlogic.gdx.utils.IntSet;
+ import com.badlogic.gdx.utils.Pool;
+@@ -159,22 +160,7 @@ public class LwjglAWTInput implements Input, MouseMotionListener, MouseListener,
+ 		return 0;
+ 	}
+ 
+-	@Override
+-	public void getTextInput (final TextInputListener listener, final String title, final String text) {
+-		SwingUtilities.invokeLater(new Runnable() {
+-			@Override
+-			public void run () {
+-				String output = JOptionPane.showInputDialog(null, title, text);
+-				if (output != null)
+-					listener.input(output);
+-				else
+-					listener.canceled();
+-
+-			}
+-		});
+-	}
+-
+-	public void getPlaceholderTextInput (final TextInputListener listener, final String title, final String placeholder) {
++	public void getTextInput (final TextInputListener listener, final String title, final String text, final String hint) {
+ 		SwingUtilities.invokeLater(new Runnable() {
+ 			@Override
+ 			public void run () {
+@@ -190,10 +176,11 @@ public class LwjglAWTInput implements Input, MouseMotionListener, MouseListener,
+ 				panel.add(textPanel);
+ 
+ 				final JTextField textField = new JTextField(20);
++				textField.setText(text);
+ 				textField.setAlignmentX(0.0f);
+ 				textPanel.add(textField);
+ 
+-				final JLabel placeholderLabel = new JLabel(placeholder);
++				final JLabel placeholderLabel = new JLabel(hint);
+ 				placeholderLabel.setForeground(Color.GRAY);
+ 				placeholderLabel.setAlignmentX(0.0f);
+ 				textPanel.add(placeholderLabel, 0);
+diff --git a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglApplication.java b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglApplication.java
+index b4c5baa..8424b28 100644
+--- a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglApplication.java
++++ b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglApplication.java
+@@ -230,13 +230,13 @@ public class LwjglApplication implements Application {
+ 
+ 	public boolean executeRunnables () {
+ 		synchronized (runnables) {
+-			executedRunnables.addAll(runnables);
++			for (int i = runnables.size - 1; i >= 0; i--)
++				executedRunnables.addAll(runnables.get(i));
+ 			runnables.clear();
+ 		}
+ 		if (executedRunnables.size == 0) return false;
+-		for (int i = 0; i < executedRunnables.size; i++)
+-			executedRunnables.get(i).run();
+-		executedRunnables.clear();
++		for (int i = executedRunnables.size - 1; i >= 0; i--)
++			executedRunnables.removeIndex(i).run();
+ 		return true;
+ 	}
+ 
+diff --git a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglCanvas.java b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglCanvas.java
+index e541972..1129e83 100644
+--- a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglCanvas.java
++++ b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglCanvas.java
+@@ -238,13 +238,13 @@ public class LwjglCanvas implements Application {
+ 
+ 	public boolean executeRunnables () {
+ 		synchronized (runnables) {
+-			executedRunnables.addAll(runnables);
++			for (int i = runnables.size - 1; i >= 0; i--)
++				executedRunnables.addAll(runnables.get(i));
+ 			runnables.clear();
+ 		}
+ 		if (executedRunnables.size == 0) return false;
+-		for (int i = 0; i < executedRunnables.size; i++)
+-			executedRunnables.get(i).run();
+-		executedRunnables.clear();
++		for (int i = executedRunnables.size - 1; i >= 0; i--)
++			executedRunnables.removeIndex(i).run();
+ 		return true;
+ 	}
+ 
+@@ -381,7 +381,7 @@ public class LwjglCanvas implements Application {
+ 	}
+ 
+ 	@Override
+-	public int getLogLevel() {
++	public int getLogLevel () {
+ 		return logLevel;
+ 	}
+ 
+diff --git a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglInput.java b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglInput.java
+index a5fb916..89c2815 100644
+--- a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglInput.java
++++ b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglInput.java
+@@ -105,29 +105,7 @@ final public class LwjglInput implements Input {
+ 		return 0;
+ 	}
+ 
+-	public void getTextInput (final TextInputListener listener, final String title, final String text) {
+-		SwingUtilities.invokeLater(new Runnable() {
+-			public void run () {
+-				final String output = JOptionPane.showInputDialog(null, title, text);
+-				if (output != null)
+-					Gdx.app.postRunnable(new Runnable() {
+-						@Override
+-						public void run () {
+-							listener.input(output);
+-						}
+-					});
+-				else
+-					Gdx.app.postRunnable(new Runnable() {
+-						@Override
+-						public void run () {
+-							listener.canceled();
+-						}
+-					});
+-			}
+-		});
+-	}
+-
+-	public void getPlaceholderTextInput (final TextInputListener listener, final String title, final String placeholder) {
++	public void getTextInput (final TextInputListener listener, final String title, final String text, final String hint) {
+ 		SwingUtilities.invokeLater(new Runnable() {
+ 			@Override
+ 			public void run () {
+@@ -143,10 +121,11 @@ final public class LwjglInput implements Input {
+ 				panel.add(textPanel);
+ 
+ 				final JTextField textField = new JTextField(20);
++				textField.setText(text);
+ 				textField.setAlignmentX(0.0f);
+ 				textPanel.add(textField);
+ 
+-				final JLabel placeholderLabel = new JLabel(placeholder);
++				final JLabel placeholderLabel = new JLabel(hint);
+ 				placeholderLabel.setForeground(Color.GRAY);
+ 				placeholderLabel.setAlignmentX(0.0f);
+ 				textPanel.add(placeholderLabel, 0);
+diff --git a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/audio/Mp3.java b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/audio/Mp3.java
+index 3e1a0e0..486bd90 100644
+--- a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/audio/Mp3.java
++++ b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/audio/Mp3.java
+@@ -41,9 +41,10 @@ public class Mp3 {
+ 			if (audio.noDevice) return;
+ 			bitstream = new Bitstream(file.read());
+ 			decoder = new MP3Decoder();
++			bufferOverhead = 4096;
+ 			try {
+ 				Header header = bitstream.readFrame();
+-				if (header == null) throw new GdxRuntimeException("empty ogg");
++				if (header == null) throw new GdxRuntimeException("Empty MP3");
+ 				int channels = header.mode() == Header.SINGLE_CHANNEL ? 1 : 2;
+ 				outputBuffer = new OutputBuffer(channels, false);
+ 				decoder.setOutputBuffer(outputBuffer);
+diff --git a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/audio/OpenALMusic.java b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/audio/OpenALMusic.java
+index 611bc14..4eabd2d 100644
+--- a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/audio/OpenALMusic.java
++++ b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/audio/OpenALMusic.java
+@@ -47,6 +47,7 @@ public abstract class OpenALMusic implements Music {
+ 	private float renderedSeconds, secondsPerBuffer;
+ 
+ 	protected final FileHandle file;
++	protected int bufferOverhead = 0;
+ 
+ 	private OnCompletionListener onCompletionListener;
+ 
+@@ -59,7 +60,7 @@ public abstract class OpenALMusic implements Music {
+ 	protected void setup (int channels, int sampleRate) {
+ 		this.format = channels > 1 ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16;
+ 		this.sampleRate = sampleRate;
+-		secondsPerBuffer = (float)bufferSize / bytesPerSample / channels / sampleRate;
++		secondsPerBuffer = (float)(bufferSize - bufferOverhead)  / (bytesPerSample * channels * sampleRate);
+ 	}
+ 
+ 	public void play () {
+@@ -155,7 +156,8 @@ public abstract class OpenALMusic implements Music {
+ 		boolean wasPlaying = isPlaying;
+ 		isPlaying = false;
+ 		alSourceStop(sourceID);
+-		renderedSeconds += secondsPerBuffer;
++		alSourceUnqueueBuffers(sourceID, buffers);
++		renderedSeconds += (secondsPerBuffer * bufferCount);
+ 		if (position <= renderedSeconds) {
+ 			reset();
+ 			renderedSeconds = 0;
+@@ -164,7 +166,17 @@ public abstract class OpenALMusic implements Music {
+ 			if (read(tempBytes) <= 0) break;
+ 			renderedSeconds += secondsPerBuffer;
+ 		}
+-		update();
++		boolean filled = false;
++		for (int i = 0; i < bufferCount; i++) {
++			int bufferID = buffers.get(i);
++			if (!fill(bufferID)) break;
++			filled = true;
++			alSourceQueueBuffers(sourceID, bufferID);
++		}
++		if (!filled) {
++			stop();
++			if (onCompletionListener != null) onCompletionListener.onCompletion(this);
++		}
+ 		alSourcef(sourceID, AL11.AL_SEC_OFFSET, position - renderedSeconds);
+ 		if (wasPlaying) {
+ 			alSourcePlay(sourceID);
+diff --git a/backends/gdx-backend-robovm/src/com/badlogic/gdx/backends/iosrobovm/IOSInput.java b/backends/gdx-backend-robovm/src/com/badlogic/gdx/backends/iosrobovm/IOSInput.java
+index ea77fdb..9980ce8 100644
+--- a/backends/gdx-backend-robovm/src/com/badlogic/gdx/backends/iosrobovm/IOSInput.java
++++ b/backends/gdx-backend-robovm/src/com/badlogic/gdx/backends/iosrobovm/IOSInput.java
+@@ -52,6 +52,7 @@ import org.robovm.rt.bro.annotation.Pointer;
+ 
+ import com.badlogic.gdx.Gdx;
+ import com.badlogic.gdx.Input;
++import com.badlogic.gdx.Input.TextInputListener;
+ import com.badlogic.gdx.InputProcessor;
+ import com.badlogic.gdx.graphics.Pixmap;
+ import com.badlogic.gdx.utils.Array;
+@@ -265,10 +266,9 @@ public class IOSInput implements Input {
+ 	}
+ 
+ 	@Override
+-	public void getTextInput (TextInputListener listener, String title, String text) {
+-		final UIAlertView uiAlertView = buildUIAlertView(listener, title, text, null);
+-		uiAlertView.show();
+-	}
++	public void getTextInput(TextInputListener listener, String title, String text, String hint) {
++		buildUIAlertView(listener, title, text, hint).show();
++	}	
+ 
+ 	// hack for software keyboard support
+ 	// uses a hidden textfield to capture input
+@@ -405,12 +405,6 @@ public class IOSInput implements Input {
+ 	}
+ 
+ 	@Override
+-	public void getPlaceholderTextInput (TextInputListener listener, String title, String placeholder) {
+-		final UIAlertView uiAlertView = buildUIAlertView(listener, title, null, placeholder);
+-		uiAlertView.show();
+-	}
+-
+-	@Override
+ 	public void vibrate (int milliseconds) {
+ 		AudioServices.playSystemSound(4095);
+ 	}
+diff --git a/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/GwtInput.java b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/GwtInput.java
+index f3731b4..4f70a01 100644
+--- a/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/GwtInput.java
++++ b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/GwtInput.java
+@@ -175,30 +175,8 @@ public class GwtInput implements Input {
+ 		return justPressedKeys[key];
+ 	}
+ 
+-	@Override
+-	public void getTextInput (TextInputListener listener, String title, String text) {
+-		TextInputDialogBox dialog = new TextInputDialogBox(title, text, null);
+-		final TextInputListener capturedListener = listener;
+-		dialog.setListener(new TextInputDialogListener() {
+-			@Override
+-			public void onPositive (String text) {
+-				if (capturedListener != null) {
+-					capturedListener.input(text);
+-				}
+-			}
+-
+-			@Override
+-			public void onNegative () {
+-				if (capturedListener != null) {
+-					capturedListener.canceled();
+-				}
+-			}
+-		});
+-	}
+-
+-	@Override
+-	public void getPlaceholderTextInput (TextInputListener listener, String title, String placeholder) {
+-		TextInputDialogBox dialog = new TextInputDialogBox(title, null, placeholder);
++	public void getTextInput (TextInputListener listener, String title, String text, String hint) {
++		TextInputDialogBox dialog = new TextInputDialogBox(title, text, hint);
+ 		final TextInputListener capturedListener = listener;
+ 		dialog.setListener(new TextInputDialogListener() {
+ 			@Override
+@@ -216,7 +194,7 @@ public class GwtInput implements Input {
+ 			}
+ 		});
+ 	}
+-
++	
+ 	@Override
+ 	public void setOnscreenKeyboardVisible (boolean visible) {
+ 	}
+diff --git a/extensions/gdx-box2d/gdx-box2d-gwt/src/com/badlogic/gdx/physics/box2d/gwt/emu/com/badlogic/gdx/physics/box2d/joints/RopeJoint.java b/extensions/gdx-box2d/gdx-box2d-gwt/src/com/badlogic/gdx/physics/box2d/gwt/emu/com/badlogic/gdx/physics/box2d/joints/RopeJoint.java
+index c488c49..cdb82a7 100644
+--- a/extensions/gdx-box2d/gdx-box2d-gwt/src/com/badlogic/gdx/physics/box2d/gwt/emu/com/badlogic/gdx/physics/box2d/joints/RopeJoint.java
++++ b/extensions/gdx-box2d/gdx-box2d-gwt/src/com/badlogic/gdx/physics/box2d/gwt/emu/com/badlogic/gdx/physics/box2d/joints/RopeJoint.java
+@@ -53,4 +53,9 @@ public class RopeJoint extends Joint {
+ 	public float getMaxLength () {
+ 		return joint.getMaxLength();
+ 	}
++	
++	public void setMaxLength (float maxLength) {
++		joint.setMaxLength(maxLength);
++	}
++	
+ }
+diff --git a/extensions/gdx-box2d/gdx-box2d-gwt/src/com/badlogic/gdx/physics/box2d/gwt/emu/com/badlogic/gdx/physics/box2d/joints/WeldJoint.java b/extensions/gdx-box2d/gdx-box2d-gwt/src/com/badlogic/gdx/physics/box2d/gwt/emu/com/badlogic/gdx/physics/box2d/joints/WeldJoint.java
+index 3096a18..137c14e 100644
+--- a/extensions/gdx-box2d/gdx-box2d-gwt/src/com/badlogic/gdx/physics/box2d/gwt/emu/com/badlogic/gdx/physics/box2d/joints/WeldJoint.java
++++ b/extensions/gdx-box2d/gdx-box2d-gwt/src/com/badlogic/gdx/physics/box2d/gwt/emu/com/badlogic/gdx/physics/box2d/joints/WeldJoint.java
+@@ -47,6 +47,23 @@ public class WeldJoint extends Joint {
+ 	}
+ 
+ 	public float getReferenceAngle () {
+-		return 0;
++		return joint.getReferenceAngle();
+ 	}
++	
++	public float getFrequency () {
++		return joint.getFrequency();
++	}
++	
++	public void setFrequency (float frequencyHz) {
++		joint.setFrequency(frequencyHz);
++	}
++	
++	public float getDampingRatio () {
++		return joint.getDampingRatio();
++	}
++	
++	public void setDampingRatio (float dampingRatio) {
++		joint.setDampingRatio(dampingRatio);
++	}
++	
+ }
+diff --git a/extensions/gdx-setup/src/com/badlogic/gdx/setup/DependencyBank.java b/extensions/gdx-setup/src/com/badlogic/gdx/setup/DependencyBank.java
+index 8544842..fec9615 100644
+--- a/extensions/gdx-setup/src/com/badlogic/gdx/setup/DependencyBank.java
++++ b/extensions/gdx-setup/src/com/badlogic/gdx/setup/DependencyBank.java
+@@ -27,7 +27,7 @@ public class DependencyBank {
+ 	static String roboVMPluginImport = "org.robovm:robovm-gradle-plugin:1.0.0-alpha-04";
+ 	
+ 	//Extension versions
+-	static String box2DLightsVersion = "1.2";
++	static String box2DLightsVersion = "1.3";
+ 	static String ashleyVersion = "1.3.1";
+ 	static String aiVersion = "1.4.0";
+ 
+diff --git a/extensions/gdx-setup/src/com/badlogic/gdx/setup/Executor.java b/extensions/gdx-setup/src/com/badlogic/gdx/setup/Executor.java
+index 2607bbd..062dbd6 100644
+--- a/extensions/gdx-setup/src/com/badlogic/gdx/setup/Executor.java
++++ b/extensions/gdx-setup/src/com/badlogic/gdx/setup/Executor.java
+@@ -30,18 +30,25 @@ public class Executor {
+ 	 * @return whether the Ant succeeded */
+ 	public static boolean execute (File workingDir, String windowsFile, String unixFile, String parameters, CharCallback callback) {
+ 		String exec = workingDir.getAbsolutePath() + "/" + (System.getProperty("os.name").contains("Windows") ? windowsFile : unixFile);
+-		String command = exec + " " + parameters;
+-		String log = "Executing '" + command + "'";
++		String log = "Executing '" + exec + " " + parameters + "'";
+ 		for(int i = 0; i < log.length(); i++) {
+ 			callback.character(log.charAt(i));
+ 		}
+ 		callback.character('\n');
+-		return startProcess(command, workingDir, callback);
++		
++		String[] params = parameters.split(" ");
++		String[] commands = new String[params.length + 1];
++		commands[0] = exec;
++		for (int i = 0; i < params.length; i++) {
++			commands[i + 1] = params[i];
++		}
++		
++		return startProcess(commands, workingDir, callback);
+ 	}
+ 
+-	private static boolean startProcess (String command, File directory, final CharCallback callback) {
++	private static boolean startProcess (String[] commands, File directory, final CharCallback callback) {
+ 		try {
+-			final Process process = new ProcessBuilder(command.split(" ")).redirectErrorStream(true).directory(directory).start();
++			final Process process = new ProcessBuilder(commands).redirectErrorStream(true).directory(directory).start();
+ 
+ 			Thread t = new Thread(new Runnable() {
+ 				@Override
+diff --git a/extensions/gdx-setup/src/com/badlogic/gdx/setup/resources/html/GdxDefinitionSuperdev b/extensions/gdx-setup/src/com/badlogic/gdx/setup/resources/html/GdxDefinitionSuperdev
+index 08822d3..1442d52 100644
+--- a/extensions/gdx-setup/src/com/badlogic/gdx/setup/resources/html/GdxDefinitionSuperdev
++++ b/extensions/gdx-setup/src/com/badlogic/gdx/setup/resources/html/GdxDefinitionSuperdev
+@@ -2,12 +2,11 @@
+ <!DOCTYPE module PUBLIC "-//Google Inc.//DTD Google Web Toolkit trunk//EN" "http://google-web-toolkit.googlecode.com/svn/trunk/distro-source/core/src/gwt-module.dtd">
+ <module rename-to="html">
+ %GWT_INHERITS%
+-    <inherits name='%MAIN_CLASS%' />
+-	<entry-point class='%PACKAGE%.client.HtmlLauncher' />
+-	
+-	<add-linker name="xsiframe"/>
+-	<set-configuration-property name='xsiframe.failIfScriptTag' value='FALSE'/>
++    <inherits name='%PACKAGE%.GdxDefinition' />
++    
++    <collapse-all-properties />
++    
++	<add-linker name="xsiframe"/>	
+ 	<set-configuration-property name="devModeRedirectEnabled" value="true"/>
+-	
+-	<set-configuration-property name="gdx.assetpath" value="../%ASSET_PATH%" />
++	<set-configuration-property name='xsiframe.failIfScriptTag' value='FALSE'/>	
+ </module>
+diff --git a/extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/Hiero.java b/extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/Hiero.java
+index afd3a8b..a3d4a51 100644
+--- a/extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/Hiero.java
++++ b/extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/Hiero.java
+@@ -118,6 +118,7 @@ public class Hiero extends JFrame {
+ 	List<EffectPanel> effectPanels = new ArrayList<EffectPanel>();
+ 	Preferences prefs;
+ 	ColorEffect colorEffect;
++	boolean batchMode = false;
+ 
+ 	JScrollPane appliedEffectsScroll;
+ 	JPanel appliedEffectsPanel;
+@@ -163,7 +164,7 @@ public class Hiero extends JFrame {
+ 	File saveBmFontFile;
+ 	String lastSaveFilename = "", lastSaveBMFilename = "", lastOpenFilename = "";
+ 
+-	public Hiero () {
++	public Hiero(String [] args) {
+ 		super("Hiero v3.0 - Bitmap Font Tool");
+ 		Splash splash = new Splash(this, "/splash.jpg", 2000);
+ 		initialize();
+@@ -191,6 +192,8 @@ public class Hiero extends JFrame {
+ 		effectsListModel.addElement(new DistanceFieldEffect());
+ 		new EffectPanel(colorEffect);
+ 
++		parseArgs(args);
++		
+ 		addWindowListener(new WindowAdapter() {
+ 			public void windowClosed (WindowEvent event) {
+ 				System.exit(0);
+@@ -198,6 +201,7 @@ public class Hiero extends JFrame {
+ 			}
+ 		});
+ 
++		updateFontSelector();
+ 		setVisible(true);
+ 	}
+ 
+@@ -213,37 +217,70 @@ public class Hiero extends JFrame {
+ 		sampleNeheButton.doClick();
+ 	}
+ 
+-	void updateFont () {
+-		updateFont(false);
++	private void parseArgs (String[] args) {
++		float scale = 1f;
++
++		for (int i = 0; i < args.length; i++) {
++			final String param = args[i];
++			final boolean more = i < args.length - 1;
++
++			if (param.equals("-b") || param.equals("--batch")) {
++				batchMode = true;
++			} else if (more && (param.equals("-s") || param.equals("--scale"))) {
++				scale = Float.parseFloat(args[++i]);
++			} else if (more && (param.equals("-i") || param.equals("--input"))) {
++				File f = new File(args[++i]);
++				open(f);
++				fontFileRadio.setText("");
++				updateFont();
++			} else if (more && (param.equals("-o") || param.equals("--output"))) {
++				File f = new File(args[++i]);
++				saveBm(f);
++			} else {
++				System.err.println("Unknown parameter: " + param);
++				System.exit(3);
++			}
++		}
++
++		// update scale:
++		fontSizeSpinner.setValue((int)(0.5f + Math.max(4, scale * ((Integer)fontSizeSpinner.getValue()))));
+ 	}
+ 
+-	private void updateFont (boolean ignoreFileText) {
+-		UnicodeFont unicodeFont;
++	void updateFontSelector () {
++		final boolean use2 = fontFileRadio.isSelected();
++		fontList.setEnabled(!use2);
++		fontFileText.setEnabled(use2);
++		browseButton.setEnabled(use2);
++	}
++
++	void updateFont () {
++		final boolean useFont2 = fontFileRadio.isSelected();
++		UnicodeFont unicodeFont = null;
+ 
+ 		int fontSize = ((Integer)fontSizeSpinner.getValue()).intValue();
+ 
+-		File file = new File(fontFileText.getText());
+-		if (!ignoreFileText && file.exists() && file.isFile()) {
+-			// Load from file.
+-			fontFileRadio.setSelected(true);
+-			fontList.setEnabled(false);
+-			systemFontRadio.setEnabled(false);
+-			try {
+-				unicodeFont = new UnicodeFont(fontFileText.getText(), fontSize, boldCheckBox.isSelected(),
+-					italicCheckBox.isSelected());
+-			} catch (Throwable ex) {
+-				ex.printStackTrace();
+-				updateFont(true);
+-				return;
++		
++		 
++		if (useFont2) {
++			File file = new File(fontFileText.getText());
++			if (file.exists() && file.isFile()) {
++				// Load from file.
++				try {
++					unicodeFont = new UnicodeFont(fontFileText.getText(), fontSize, boldCheckBox.isSelected(),
++						italicCheckBox.isSelected());
++				} catch (Throwable ex) {
++					ex.printStackTrace();
++					fontFileRadio.setSelected(false);
++				}
+ 			}
+-		} else {
++		}
++		
++		if(unicodeFont == null) {
+ 			// Load from java.awt.Font (kerning not available!).
+-			fontList.setEnabled(true);
+-			systemFontRadio.setEnabled(true);
+-			systemFontRadio.setSelected(true);
+ 			unicodeFont = new UnicodeFont(Font.decode((String)fontList.getSelectedValue()), fontSize, boldCheckBox.isSelected(),
+ 				italicCheckBox.isSelected());
+ 		}
++
+ 		unicodeFont.setPaddingTop(((Integer)padTopSpinner.getValue()).intValue());
+ 		unicodeFont.setPaddingRight(((Integer)padRightSpinner.getValue()).intValue());
+ 		unicodeFont.setPaddingBottom(((Integer)padBottomSpinner.getValue()).intValue());
+@@ -264,12 +301,19 @@ public class Hiero extends JFrame {
+ 		sampleTextPane.setFont(unicodeFont.getFont().deriveFont((float)size));
+ 
+ 		this.newUnicodeFont = unicodeFont;
++		updateFontSelector();
++	}
++
++	void saveBm (File file) {
++		saveBmFontFile = file;
+ 	}
+ 
+ 	void save (File file) throws IOException {
+ 		HieroSettings settings = new HieroSettings();
+ 		settings.setFontName((String)fontList.getSelectedValue());
+ 		settings.setFontSize(((Integer)fontSizeSpinner.getValue()).intValue());
++		settings.setFont2File(fontFileText.getText());
++	settings.setFont2Active(fontFileRadio.isSelected());
+ 		settings.setBold(boldCheckBox.isSelected());
+ 		settings.setItalic(italicCheckBox.isSelected());
+ 		settings.setPaddingTop(((Integer)padTopSpinner.getValue()).intValue());
+@@ -310,7 +354,16 @@ public class Hiero extends JFrame {
+ 		if (gt.length() > 0) {
+ 			sampleTextPane.setText(settings.getGlyphText());
+ 		}
+-
++		
++		final String font2 = settings.getFont2File();
++		if (font2.length() > 0)
++			fontFileText.setText(font2);
++		else
++			fontFileText.setText(prefs.get("font.file", ""));
++
++		fontFileRadio.setSelected(settings.isFont2Active());
++		systemFontRadio.setSelected(!settings.isFont2Active());
++ 
+ 		for (Iterator iter = settings.getEffects().iterator(); iter.hasNext();) {
+ 			ConfigurableEffect settingsEffect = (ConfigurableEffect)iter.next();
+ 			for (int i = 0, n = effectsListModel.getSize(); i < n; i++) {
+@@ -414,11 +467,15 @@ public class Hiero extends JFrame {
+ 			}
+ 		});
+ 
+-		fontFileRadio.addActionListener(new ActionListener() {
++		final ActionListener al = new ActionListener() {
+ 			public void actionPerformed (ActionEvent evt) {
+-				if (fontList.isEnabled()) systemFontRadio.setSelected(true);
++				updateFontSelector();
++				updateFont();
+ 			}
+-		});
++		};
++		
++		systemFontRadio.addActionListener(al);
++		fontFileRadio.addActionListener(al);
+ 
+ 		browseButton.addActionListener(new ActionListener() {
+ 			public void actionPerformed (ActionEvent evt) {
+@@ -546,7 +603,7 @@ public class Hiero extends JFrame {
+ 				String fileName = dialog.getFile();
+ 				if (fileName == null) return;
+ 				lastSaveBMFilename = fileName;
+-				saveBmFontFile = new File(dialog.getDirectory(), fileName);
++				saveBm(new File(dialog.getDirectory(), fileName));
+ 			}
+ 		});
+ 
+@@ -1297,18 +1354,6 @@ public class Hiero extends JFrame {
+ 				glyphsTotalLabel.setText(String.valueOf(glyphCount));
+ 			}
+ 
+-			if (saveBmFontFile != null) {
+-				try {
+-					BMFontUtil bmFont = new BMFontUtil(unicodeFont);
+-					bmFont.save(saveBmFontFile);
+-				} catch (Throwable ex) {
+-					System.out.println("Error saving BMFont files: " + saveBmFontFile.getAbsolutePath());
+-					ex.printStackTrace();
+-				} finally {
+-					saveBmFontFile = null;
+-				}
+-			}
+-
+ 			if (unicodeFont == null) return;
+ 
+ 			try {
+@@ -1363,6 +1408,22 @@ public class Hiero extends JFrame {
+ 					glEnd();
+ 				}
+ 			}
++
++			if (saveBmFontFile != null) {
++				try {
++					BMFontUtil bmFont = new BMFontUtil(unicodeFont);
++					bmFont.save(saveBmFontFile);
++
++					if (batchMode) {
++						System.exit(0);
++					}
++				} catch (Throwable ex) {
++					System.out.println("Error saving BMFont files: " + saveBmFontFile.getAbsolutePath());
++					ex.printStackTrace();
++				} finally {
++					saveBmFontFile = null;
++				}
++			}
+ 		}
+ 
+ 		@Override
+@@ -1378,7 +1439,7 @@ public class Hiero extends JFrame {
+ 		}
+ 	}
+ 
+-	public static void main (String[] args) throws Exception {
++	public static void main (final String[] args) throws Exception {
+ // LookAndFeelInfo[] lookAndFeels = UIManager.getInstalledLookAndFeels();
+ // for (int i = 0, n = lookAndFeels.length; i < n; i++) {
+ // if ("Nimbus".equals(lookAndFeels[i].getName())) {
+@@ -1393,7 +1454,7 @@ public class Hiero extends JFrame {
+ 
+ 			@Override
+ 			public void run () {
+-				new Hiero();
++				new Hiero(args);
+ 			}
+ 		});
+ 	}
+diff --git a/extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/unicodefont/HieroSettings.java b/extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/unicodefont/HieroSettings.java
+index a50ee52..e4b38f7 100644
+--- a/extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/unicodefont/HieroSettings.java
++++ b/extensions/gdx-tools/src/com/badlogic/gdx/tools/hiero/unicodefont/HieroSettings.java
+@@ -42,7 +42,9 @@ public class HieroSettings {
+ 	private String glyphText = "";
+ 	private final List effects = new ArrayList();
+ 	private boolean nativeRendering;
+-
++	private boolean font2Active = false;
++	private String font2File = "";
++	
+ 	public HieroSettings () {
+ 	}
+ 
+@@ -66,6 +68,10 @@ public class HieroSettings {
+ 					bold = Boolean.parseBoolean(value);
+ 				} else if (name.equals("font.italic")) {
+ 					italic = Boolean.parseBoolean(value);
++				} else if (name.equals("font2.file")) {
++					font2File = value;
++				} else if (name.equals("font2.use")) {
++					font2Active = Boolean.parseBoolean(value);
+ 				} else if (name.equals("pad.top")) {
+ 					paddingTop = Integer.parseInt(value);
+ 				} else if (name.equals("pad.right")) {
+@@ -262,6 +268,22 @@ public class HieroSettings {
+ 		this.glyphText = text.replace("\n", "\\n");
+ 	}
+ 
++	public String getFont2File () {
++		return font2File;
++	}
++
++	public void setFont2File (String filename) {
++		this.font2File = filename;
++	}
++
++	public boolean isFont2Active () {
++		return font2Active;
++	}
++
++	public void setFont2Active (boolean active) {
++		this.font2Active = active;
++	}
++
+ 	/** Saves the settings to a file.
+ 	 * @throws IOException if the file could not be saved. */
+ 	public void save (File file) throws IOException {
+@@ -271,6 +293,9 @@ public class HieroSettings {
+ 		out.println("font.bold=" + bold);
+ 		out.println("font.italic=" + italic);
+ 		out.println();
++		out.println("font2.file=" + font2File);
++		out.println("font2.use=" + font2Active);
++		out.println();
+ 		out.println("pad.top=" + paddingTop);
+ 		out.println("pad.right=" + paddingRight);
+ 		out.println("pad.bottom=" + paddingBottom);
+diff --git a/extensions/gdx-tools/src/com/badlogic/gdx/tools/texturepacker/TexturePacker.java b/extensions/gdx-tools/src/com/badlogic/gdx/tools/texturepacker/TexturePacker.java
+index ac3ceaa..df1c1e7 100644
+--- a/extensions/gdx-tools/src/com/badlogic/gdx/tools/texturepacker/TexturePacker.java
++++ b/extensions/gdx-tools/src/com/badlogic/gdx/tools/texturepacker/TexturePacker.java
+@@ -575,8 +575,10 @@ public class TexturePacker {
+ 			useIndexes = settings.useIndexes;
+ 			bleed = settings.bleed;
+ 			limitMemory = settings.limitMemory;
++			grid = settings.grid;
+ 			scale = settings.scale;
+ 			scaleSuffix = settings.scaleSuffix;
++			atlasExtension = settings.atlasExtension;
+ 		}
+ 
+ 		public String getScaledPackFileName (String packFileName, int scaleIndex) {
+@@ -615,7 +617,7 @@ public class TexturePacker {
+ 			});
+ 			processor.process(new File(input), new File(output));
+ 		} catch (Exception ex) {
+-			throw new RuntimeException("Error packing files.", ex);
++			throw new RuntimeException("Error packing images.", ex);
+ 		}
+ 	}
+ 
+diff --git a/gdx/src/com/badlogic/gdx/Input.java b/gdx/src/com/badlogic/gdx/Input.java
+index 50bb78a..2ad996f 100644
+--- a/gdx/src/com/badlogic/gdx/Input.java
++++ b/gdx/src/com/badlogic/gdx/Input.java
+@@ -1,12 +1,12 @@
+ /*******************************************************************************
+  * Copyright 2011 See AUTHORS file.
+- *
++ * 
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+- *
++ * 
+  *   http://www.apache.org/licenses/LICENSE-2.0
+- *
++ * 
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+@@ -24,22 +24,27 @@ import com.badlogic.gdx.utils.ObjectIntMap;
+  * some backends (desktop, gwt, etc) the touch screen is replaced by mouse input. The accelerometer is of course not available on
+  * all backends.
+  * </p>
++ * 
+  * <p>
+  * Instead of polling for events, one can process all input events with an {@link InputProcessor}. You can set the InputProcessor
+  * via the {@link #setInputProcessor(InputProcessor)} method. It will be called before the {@link ApplicationListener#render()}
+  * method in each frame.
+  * </p>
++ * 
+  * <p>
+  * Keyboard keys are translated to the constants in {@link Keys} transparently on all systems. Do not use system specific key
+  * constants.
+  * </p>
++ * 
+  * <p>
+  * The class also offers methods to use (and test for the presence of) other input systems like vibration, compass, on-screen
+  * keyboards, and cursor capture. Support for simple input dialogs is also provided.
+  * </p>
++ * 
+  * @author mzechner */
+ public interface Input {
+ 	/** Callback interface for {@link Input#getTextInput(TextInputListener, String, String, String)}
++	 * 
+ 	 * @author mzechner */
+ 	static public interface TextInputListener {
+ 		public void input (String text);
+@@ -58,18 +63,10 @@ public interface Input {
+ 	}
+ 
+ 	/** Keys.
++	 * 
+ 	 * @author mzechner */
+ 	static public class Keys {
+ 		public static final int ANY_KEY = -1;
+-		public static final int UNKNOWN = 0;
+-
+-		public static final int SOFT_LEFT = 1;
+-		public static final int SOFT_RIGHT = 2;
+-		public static final int HOME = 3;
+-		public static final int BACK = 4;
+-		public static final int CALL = 5;
+-		public static final int ENDCALL = 6;
+-
+ 		public static final int NUM_0 = 7;
+ 		public static final int NUM_1 = 8;
+ 		public static final int NUM_2 = 9;
+@@ -80,97 +77,112 @@ public interface Input {
+ 		public static final int NUM_7 = 14;
+ 		public static final int NUM_8 = 15;
+ 		public static final int NUM_9 = 16;
+-
+-		public static final int STAR = 17;
+-		public static final int POUND = 18;
+-
+-		public static final int DPAD_UP = 19;
++		public static final int A = 29;
++		public static final int ALT_LEFT = 57;
++		public static final int ALT_RIGHT = 58;
++		public static final int APOSTROPHE = 75;
++		public static final int AT = 77;
++		public static final int B = 30;
++		public static final int BACK = 4;
++		public static final int BACKSLASH = 73;
++		public static final int C = 31;
++		public static final int CALL = 5;
++		public static final int CAMERA = 27;
++		public static final int CLEAR = 28;
++		public static final int COMMA = 55;
++		public static final int D = 32;
++		public static final int DEL = 67;
++		public static final int BACKSPACE = 67;
++		public static final int FORWARD_DEL = 112;
++		public static final int DPAD_CENTER = 23;
+ 		public static final int DPAD_DOWN = 20;
+ 		public static final int DPAD_LEFT = 21;
+ 		public static final int DPAD_RIGHT = 22;
+-		public static final int DPAD_CENTER = 23;
+-
+-		public static final int UP = 19;
++		public static final int DPAD_UP = 19;
++		public static final int CENTER = 23;
+ 		public static final int DOWN = 20;
+ 		public static final int LEFT = 21;
+ 		public static final int RIGHT = 22;
+-		public static final int CENTER = 23;
+-
+-		public static final int VOLUME_UP = 24;
+-		public static final int VOLUME_DOWN = 25;
+-		public static final int POWER = 26;
+-		public static final int CAMERA = 27;
+-		public static final int CLEAR = 28;
+-
+-		public static final int A = 29;
+-		public static final int B = 30;
+-		public static final int C = 31;
+-		public static final int D = 32;
++		public static final int UP = 19;
+ 		public static final int E = 33;
++		public static final int ENDCALL = 6;
++		public static final int ENTER = 66;
++		public static final int ENVELOPE = 65;
++		public static final int EQUALS = 70;
++		public static final int EXPLORER = 64;
+ 		public static final int F = 34;
++		public static final int FOCUS = 80;
+ 		public static final int G = 35;
++		public static final int GRAVE = 68;
+ 		public static final int H = 36;
++		public static final int HEADSETHOOK = 79;
++		public static final int HOME = 3;
+ 		public static final int I = 37;
+ 		public static final int J = 38;
+ 		public static final int K = 39;
+ 		public static final int L = 40;
++		public static final int LEFT_BRACKET = 71;
+ 		public static final int M = 41;
++		public static final int MEDIA_FAST_FORWARD = 90;
++		public static final int MEDIA_NEXT = 87;
++		public static final int MEDIA_PLAY_PAUSE = 85;
++		public static final int MEDIA_PREVIOUS = 88;
++		public static final int MEDIA_REWIND = 89;
++		public static final int MEDIA_STOP = 86;
++		public static final int MENU = 82;
++		public static final int MINUS = 69;
++		public static final int MUTE = 91;
+ 		public static final int N = 42;
++		public static final int NOTIFICATION = 83;
++		public static final int NUM = 78;
+ 		public static final int O = 43;
+ 		public static final int P = 44;
++		public static final int PERIOD = 56;
++		public static final int PLUS = 81;
++		public static final int POUND = 18;
++		public static final int POWER = 26;
+ 		public static final int Q = 45;
+ 		public static final int R = 46;
++		public static final int RIGHT_BRACKET = 72;
+ 		public static final int S = 47;
++		public static final int SEARCH = 84;
++		public static final int SEMICOLON = 74;
++		public static final int SHIFT_LEFT = 59;
++		public static final int SHIFT_RIGHT = 60;
++		public static final int SLASH = 76;
++		public static final int SOFT_LEFT = 1;
++		public static final int SOFT_RIGHT = 2;
++		public static final int SPACE = 62;
++		public static final int STAR = 17;
++		public static final int SYM = 63;
+ 		public static final int T = 48;
++		public static final int TAB = 61;
+ 		public static final int U = 49;
++		public static final int UNKNOWN = 0;
+ 		public static final int V = 50;
++		public static final int VOLUME_DOWN = 25;
++		public static final int VOLUME_UP = 24;
+ 		public static final int W = 51;
+ 		public static final int X = 52;
+ 		public static final int Y = 53;
+ 		public static final int Z = 54;
+-
+-		public static final int COMMA = 55;
+-		public static final int PERIOD = 56;
+-		public static final int ALT_LEFT = 57;
+-		public static final int ALT_RIGHT = 58;
+-		public static final int SHIFT_LEFT = 59;
+-		public static final int SHIFT_RIGHT = 60;
+-		public static final int TAB = 61;
+-		public static final int SPACE = 62;
+-		public static final int SYM = 63;
+-		public static final int EXPLORER = 64;
+-		public static final int ENVELOPE = 65;
+-		public static final int ENTER = 66;
+-		public static final int DEL = 67; // i.e. backspace, as per doc
+-		public static final int GRAVE = 68;
+-		public static final int MINUS = 69;
+-		public static final int EQUALS = 70;
+-		public static final int LEFT_BRACKET = 71;
+-		public static final int RIGHT_BRACKET = 72;
+-		public static final int BACKSLASH = 73;
+-		public static final int SEMICOLON = 74;
+-		public static final int APOSTROPHE = 75;
+-		public static final int SLASH = 76;
+-		public static final int AT = 77;
+-		public static final int NUM = 78;
+-		public static final int HEADSETHOOK = 79;
+-		public static final int FOCUS = 80;
+-		public static final int PLUS = 81;
+-		public static final int MENU = 82;
+-		public static final int NOTIFICATION = 83;
+-		public static final int SEARCH = 84;
+-		public static final int MEDIA_PLAY_PAUSE = 85;
+-		public static final int MEDIA_STOP = 86;
+-		public static final int MEDIA_NEXT = 87;
+-		public static final int MEDIA_PREVIOUS = 88;
+-		public static final int MEDIA_REWIND = 89;
+-		public static final int MEDIA_FAST_FORWARD = 90;
+-		public static final int MUTE = 91;
++		public static final int META_ALT_LEFT_ON = 16;
++		public static final int META_ALT_ON = 2;
++		public static final int META_ALT_RIGHT_ON = 32;
++		public static final int META_SHIFT_LEFT_ON = 64;
++		public static final int META_SHIFT_ON = 1;
++		public static final int META_SHIFT_RIGHT_ON = 128;
++		public static final int META_SYM_ON = 4;
++		public static final int CONTROL_LEFT = 129;
++		public static final int CONTROL_RIGHT = 130;
++		public static final int ESCAPE = 131;
++		public static final int END = 132;
++		public static final int INSERT = 133;
+ 		public static final int PAGE_UP = 92;
+ 		public static final int PAGE_DOWN = 93;
+ 		public static final int PICTSYMBOLS = 94;
+ 		public static final int SWITCH_CHARSET = 95;
+-
++		public static final int BUTTON_CIRCLE = 255;
+ 		public static final int BUTTON_A = 96;
+ 		public static final int BUTTON_B = 97;
+ 		public static final int BUTTON_C = 98;
+@@ -186,34 +198,7 @@ public interface Input {
+ 		public static final int BUTTON_START = 108;
+ 		public static final int BUTTON_SELECT = 109;
+ 		public static final int BUTTON_MODE = 110;
+-		public static final int BUTTON_CIRCLE = 255; // duplicate of F12, see below
+-		// public static final int ESCAPE=111;
+-		public static final int FORWARD_DEL = 112; // "real" delete
+-		public static final int CTRL_LEFT = 113;
+-		public static final int CTRL_RIGHT = 114;
+-		public static final int CAPS_LOCK = 115;
+-		public static final int SCROLL_LOCK = 116;
+-		public static final int META_LEFT = 117;
+-		public static final int META_RIGHT = 118;
+-		public static final int FUNCTION = 119;
+-		public static final int SYSRQ = 120;
+-		public static final int BREAK = 121;
+-		public static final int MOVE_HOME = 122;
+-		public static final int MOVE_END = 123;
+-		// public static final int INSERT=124;
+-		public static final int FORWARD = 125;
+-		public static final int MEDIA_PLAY = 126;
+-		public static final int MEDIA_PAUSE = 127;
+-		public static final int MEDIA_CLOSE = 128;
+-		// public static final int MEDIA_EJECT=129;
+-		// public static final int MEDIA_RECORD=130;
+-		public static final int CONTROL_LEFT = 129;
+-		public static final int CONTROL_RIGHT = 130;
+-		public static final int ESCAPE = 131;
+-		public static final int END = 132;
+-		public static final int INSERT = 133;
+ 
+-		public static final int NUM_LOCK = 143;
+ 		public static final int NUMPAD_0 = 144;
+ 		public static final int NUMPAD_1 = 145;
+ 		public static final int NUMPAD_2 = 146;
+@@ -224,45 +209,26 @@ public interface Input {
+ 		public static final int NUMPAD_7 = 151;
+ 		public static final int NUMPAD_8 = 152;
+ 		public static final int NUMPAD_9 = 153;
+-		public static final int NUMPAD_DIVIDE = 154;
+-		public static final int NUMPAD_MULTIPLY = 155;
+-		public static final int NUMPAD_SUBTRACT = 156;
+-		public static final int NUMPAD_ADD = 157;
+-		public static final int NUMPAD_DOT = 158;
+-		public static final int NUMPAD_COMMA = 159;
+-		public static final int NUMPAD_ENTER = 160;
+-		public static final int NUMPAD_EQUALS = 161;
+-		public static final int NUMPAD_LEFT_PAREN = 162;
+-		public static final int NUMPAD_RIGHT_PAREN = 163;
+-
+-		// mostly duplicates below
+-		public static final int META_ALT_LEFT_ON = 16;
+-		public static final int META_ALT_ON = 2;
+-		public static final int META_ALT_RIGHT_ON = 32;
+-		public static final int META_SHIFT_LEFT_ON = 64;
+-		public static final int META_SHIFT_ON = 1;
+-		public static final int META_SHIFT_RIGHT_ON = 128;
+-		public static final int META_SYM_ON = 4;
+ 
+-		// public static final int BACKTICK = 0;
+-		// public static final int TILDE = 0;
+-		// public static final int UNDERSCORE = 0;
+-		// public static final int DOT = 0;
+-		// public static final int BREAK = 0;
+-		// public static final int PIPE = 0;
+-		// public static final int EXCLAMATION = 0;
+-		// public static final int QUESTIONMARK = 0;
+-		// ` | VK_BACKTICK
+-		// ~ | VK_TILDE
+-		// : | VK_COLON
+-		// _ | VK_UNDERSCORE
+-		// . | VK_DOT
+-		// (break) | VK_BREAK
+-		// | | VK_PIPE
+-		// ! | VK_EXCLAMATION
+-		// ? | VK_QUESTION
++// public static final int BACKTICK = 0;
++// public static final int TILDE = 0;
++// public static final int UNDERSCORE = 0;
++// public static final int DOT = 0;
++// public static final int BREAK = 0;
++// public static final int PIPE = 0;
++// public static final int EXCLAMATION = 0;
++// public static final int QUESTIONMARK = 0;
++
++// ` | VK_BACKTICK
++// ~ | VK_TILDE
++// : | VK_COLON
++// _ | VK_UNDERSCORE
++// . | VK_DOT
++// (break) | VK_BREAK
++// | | VK_PIPE
++// ! | VK_EXCLAMATION
++// ? | VK_QUESTION
+ 		public static final int COLON = 243;
+-
+ 		public static final int F1 = 244;
+ 		public static final int F2 = 245;
+ 		public static final int F3 = 246;
+@@ -279,12 +245,8 @@ public interface Input {
+ 		/** @return a human readable representation of the keycode. The returned value can be used in
+ 		 *         {@link Input.Keys#valueOf(String)} */
+ 		public static String toString (int keycode) {
+-			if (keycode < 0) {
+-				throw new IllegalArgumentException("keycode cannot be negative, keycode: " + keycode);
+-			}
+-			if (keycode > 255) {
+-				throw new IllegalArgumentException("keycode cannot be greater than 255, keycode: " + keycode);
+-			}
++			if (keycode < 0) throw new IllegalArgumentException("keycode cannot be negative, keycode: " + keycode);
++			if (keycode > 255) throw new IllegalArgumentException("keycode cannot be greater than 255, keycode: " + keycode);
+ 			switch (keycode) {
+ 			// META* variables should not be used with this method.
+ 			case UNKNOWN:
+@@ -422,7 +384,7 @@ public interface Input {
+ 			case ENTER:
+ 				return "Enter";
+ 			case DEL:
+-				return "Backspace"; // as per doc, it's the *backward* delete, so *not* "the" delete key
++				return "Delete"; // also BACKSPACE
+ 			case GRAVE:
+ 				return "`";
+ 			case MINUS:
+@@ -510,7 +472,7 @@ public interface Input {
+ 			case BUTTON_MODE:
+ 				return "Button Mode";
+ 			case FORWARD_DEL:
+-				return "Delete";
++				return "Forward Delete";
+ 			case CONTROL_LEFT:
+ 				return "L-Ctrl";
+ 			case CONTROL_RIGHT:
+@@ -521,14 +483,6 @@ public interface Input {
+ 				return "End";
+ 			case INSERT:
+ 				return "Insert";
+-			case NUM_LOCK:
+-				return "NumLock";
+-			case SYSRQ:
+-				return "SysRq";
+-			case SCROLL_LOCK:
+-				return "ScrolLock";
+-			case BREAK:
+-				return "Pause/Break";
+ 			case NUMPAD_0:
+ 				return "Numpad 0";
+ 			case NUMPAD_1:
+@@ -549,18 +503,6 @@ public interface Input {
+ 				return "Numpad 8";
+ 			case NUMPAD_9:
+ 				return "Numpad 9";
+-			case NUMPAD_ADD:
+-				return "Numpad +";
+-			case NUMPAD_SUBTRACT:
+-				return "Numpad -";
+-			case NUMPAD_MULTIPLY:
+-				return "Numpad *";
+-			case NUMPAD_DIVIDE:
+-				return "Numpad /";
+-			case NUMPAD_DOT:
+-				return "Numpad .";
+-			case CAPS_LOCK:
+-				return "CapsLock";
+ 			case COLON:
+ 				return ":";
+ 			case F1:
+@@ -599,9 +541,7 @@ public interface Input {
+ 		/** @param keyname the keyname returned by the {@link Keys#toString(int)} method
+ 		 * @return the int keycode */
+ 		public static int valueOf (String keyname) {
+-			if (keyNames == null) {
+-				initializeKeyNames();
+-			}
++			if (keyNames == null) initializeKeyNames();
+ 			return keyNames.get(keyname, -1);
+ 		}
+ 
+@@ -610,9 +550,7 @@ public interface Input {
+ 			keyNames = new ObjectIntMap<String>();
+ 			for (int i = 0; i < 256; i++) {
+ 				String name = toString(i);
+-				if (name != null) {
+-					keyNames.put(name, i);
+-				}
++				if (name != null) keyNames.put(name, i);
+ 			}
+ 		}
+ 	}
+@@ -640,6 +578,7 @@ public interface Input {
+ 	 * identifies the order in which the fingers went down on the screen, e.g. 0 is the first finger, 1 is the second and so on.
+ 	 * When two fingers are touched down and the first one is lifted the second one keeps its index. If another finger is placed on
+ 	 * the touch screen the first free index will be used.
++	 * 
+ 	 * @param pointer the pointer id.
+ 	 * @return the x coordinate */
+ 	public int getX (int pointer);
+@@ -658,6 +597,7 @@ public interface Input {
+ 	 * identifies the order in which the fingers went down on the screen, e.g. 0 is the first finger, 1 is the second and so on.
+ 	 * When two fingers are touched down and the first one is lifted the second one keeps its index. If another finger is placed on
+ 	 * the touch screen the first free index will be used.
++	 * 
+ 	 * @param pointer the pointer id.
+ 	 * @return the y coordinate */
+ 	public int getY (int pointer);
+@@ -678,6 +618,7 @@ public interface Input {
+ 	 * id identifies the order in which the fingers went down on the screen, e.g. 0 is the first finger, 1 is the second and so on.
+ 	 * When two fingers are touched down and the first one is lifted the second one keeps its index. If another finger is placed on
+ 	 * the touch screen the first free index will be used.
++	 * 
+ 	 * @param pointer the pointer
+ 	 * @return whether the screen is touched by the pointer */
+ 	public boolean isTouched (int pointer);
+@@ -689,11 +630,13 @@ public interface Input {
+ 	public boolean isButtonPressed (int button);
+ 
+ 	/** Returns whether the key is pressed.
++	 * 
+ 	 * @param key The key code as found in {@link Input.Keys}.
+ 	 * @return true or false. */
+ 	public boolean isKeyPressed (int key);
+ 
+ 	/** Returns whether the key has just been pressed.
++	 * 
+ 	 * @param key The key code as found in {@link Input.Keys}.
+ 	 * @return true or false. */
+ 	public boolean isKeyJustPressed (int key);
+@@ -701,18 +644,21 @@ public interface Input {
+ 	/** System dependent method to input a string of text. A dialog box will be created with the given title and have a text input
+ 	 * with the given text and hint. Once the dialog has been closed the provided {@link TextInputListener} will be called on the
+ 	 * rendering thread.
++	 * 
+ 	 * @param listener The TextInputListener to call when the the dialog has been closed
+ 	 * @param title The title of the text input dialog
+ 	 * @param text The text presented to the user, may be null if no text is desired
+-	 * @param hint The hint text presented to the user when no text has been entered, may be null if no hint is desired */
++	 * @param hint The hint text presented to the user when no text has been entered, may be null if no hint is desired */	
+ 	public void getTextInput (TextInputListener listener, String title, String text, String hint);
+-
++	
+ 	/** Sets the on-screen keyboard visible if available.
++	 * 
+ 	 * @param visible visible or not */
+ 	public void setOnscreenKeyboardVisible (boolean visible);
+ 
+ 	/** Vibrates for the given amount of time. Note that you'll need the permission
+ 	 * <code> <uses-permission android:name="android.permission.VIBRATE" /></code> in your manifest file in order for this to work.
++	 * 
+ 	 * @param milliseconds the number of milliseconds to vibrate. */
+ 	public void vibrate (int milliseconds);
+ 
+@@ -728,6 +674,7 @@ public interface Input {
+ 
+ 	/** The azimuth is the angle of the device's orientation around the z-axis. The positive z-axis points towards the earths
+ 	 * center.
++	 * 
+ 	 * @see <a
+ 	 *      href="http://developer.android.com/reference/android/hardware/SensorManager.html#getRotationMatrix(float[], float[], float[], float[])">http://developer.android.com/reference/android/hardware/SensorManager.html#getRotationMatrix(float[], float[], float[], float[])</a>
+ 	 * @return the azimuth in degrees */
+@@ -759,6 +706,7 @@ public interface Input {
+ 
+ 	/** Sets whether the BACK button on Android should be caught. This will prevent the app from being paused. Will have no effect
+ 	 * on the desktop.
++	 * 
+ 	 * @param catchBack whether to catch the back button */
+ 	public void setCatchBackKey (boolean catchBack);
+ 
+@@ -767,11 +715,13 @@ public interface Input {
+ 
+ 	/** Sets whether the MENU button on Android should be caught. This will prevent the onscreen keyboard to show up. Will have no
+ 	 * effect on the desktop.
++	 * 
+ 	 * @param catchMenu whether to catch the menu button */
+ 	public void setCatchMenuKey (boolean catchMenu);
+ 
+ 	/** Sets the {@link InputProcessor} that will receive all touch and key input events. It will be called before the
+ 	 * {@link ApplicationListener#render()} method each frame.
++	 * 
+ 	 * @param processor the InputProcessor */
+ 	public void setInputProcessor (InputProcessor processor);
+ 
+@@ -780,6 +730,7 @@ public interface Input {
+ 
+ 	/** Queries whether a {@link Peripheral} is currently available. In case of Android and the {@link Peripheral#HardwareKeyboard}
+ 	 * this returns the whether the keyboard is currently slid out or not.
++	 * 
+ 	 * @param peripheral the {@link Peripheral}
+ 	 * @return whether the peripheral is available or not. */
+ 	public boolean isPeripheralAvailable (Peripheral peripheral);
+@@ -811,6 +762,7 @@ public interface Input {
+ 	 * {@link com.badlogic.gdx.graphics.Pixmap}. The Pixmap must be in RGBA8888 format, width & height must be powers-of-two
+ 	 * greater than zero (not necessarily equal), and alpha transparency must be single-bit (i.e., 0x00 or 0xFF only). To revert to
+ 	 * the default operating system cursor, pass in a null Pixmap; xHotspot & yHotspot are ignored in this case.
++	 * 
+ 	 * @param pixmap the mouse cursor image as a {@link com.badlogic.gdx.graphics.Pixmap}, or null to revert to the default
+ 	 *           operating system cursor
+ 	 * @param xHotspot the x location of the hotspot pixel within the cursor image (origin top-left corner)
+diff --git a/gdx/src/com/badlogic/gdx/assets/AssetManager.java b/gdx/src/com/badlogic/gdx/assets/AssetManager.java
+index ab27e1e..8927c9c 100644
+--- a/gdx/src/com/badlogic/gdx/assets/AssetManager.java
++++ b/gdx/src/com/badlogic/gdx/assets/AssetManager.java
+@@ -337,21 +337,6 @@ public class AssetManager implements Disposable {
+ 		load(desc.fileName, desc.type, desc.params);
+ 	}
+ 
+-	/** Disposes the given asset and all its dependencies recursively, depth first.
+-	 * @param fileName */
+-	private void disposeDependencies (String fileName) {
+-		Array<String> dependencies = assetDependencies.get(fileName);
+-		if (dependencies != null) {
+-			for (String dependency : dependencies) {
+-				disposeDependencies(dependency);
+-			}
+-		}
+-
+-		Class type = assetTypes.get(fileName);
+-		Object asset = assets.get(type).get(fileName).getObject(Object.class);
+-		if (asset instanceof Disposable) ((Disposable)asset).dispose();
+-	}
+-
+ 	/** Updates the AssetManager, keeping it loading any assets in the preload queue.
+ 	 * @return true if all loading is finished. */
+ 	public synchronized boolean update () {
+diff --git a/gdx/src/com/badlogic/gdx/graphics/glutils/ShapeRenderer.java b/gdx/src/com/badlogic/gdx/graphics/glutils/ShapeRenderer.java
+index ce3105e..10c0e6d 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/glutils/ShapeRenderer.java
++++ b/gdx/src/com/badlogic/gdx/graphics/glutils/ShapeRenderer.java
+@@ -187,7 +187,7 @@ public class ShapeRenderer implements Disposable {
+ 	/** Begins a new batch without specifying a shape type.
+ 	 * @throws IllegalStateException if {@link #autoShapeType} is false. */
+ 	public void begin () {
+-		if (!autoShapeType) throw new IllegalStateException("");
++		if (!autoShapeType) throw new IllegalStateException("autoShapeType must be true to use this method.");
+ 		begin(ShapeType.Line);
+ 	}
+ 
+diff --git a/gdx/src/com/badlogic/gdx/input/RemoteInput.java b/gdx/src/com/badlogic/gdx/input/RemoteInput.java
+index 9ee892a..9219e86 100644
+--- a/gdx/src/com/badlogic/gdx/input/RemoteInput.java
++++ b/gdx/src/com/badlogic/gdx/input/RemoteInput.java
+@@ -24,6 +24,7 @@ import java.net.Socket;
+ 
+ import com.badlogic.gdx.Gdx;
+ import com.badlogic.gdx.Input;
++import com.badlogic.gdx.Input.TextInputListener;
+ import com.badlogic.gdx.InputProcessor;
+ import com.badlogic.gdx.graphics.Pixmap;
+ import com.badlogic.gdx.utils.GdxRuntimeException;
+@@ -388,13 +389,8 @@ public class RemoteInput implements Runnable, Input {
+ 	}
+ 
+ 	@Override
+-	public void getTextInput (TextInputListener listener, String title, String text) {
+-		Gdx.app.getInput().getTextInput(listener, title, text);
+-	}
+-
+-	@Override
+-	public void getPlaceholderTextInput (TextInputListener listener, String title, String placeholder) {
+-		Gdx.app.getInput().getPlaceholderTextInput(listener, title, placeholder);
++	public void getTextInput (TextInputListener listener, String title, String text, String hint) {
++		Gdx.app.getInput().getTextInput(listener, title, text, hint);
+ 	}
+ 
+ 	@Override
+diff --git a/gdx/src/com/badlogic/gdx/math/Quaternion.java b/gdx/src/com/badlogic/gdx/math/Quaternion.java
+index 2798144..e7739aa 100644
+--- a/gdx/src/com/badlogic/gdx/math/Quaternion.java
++++ b/gdx/src/com/badlogic/gdx/math/Quaternion.java
+@@ -421,7 +421,7 @@ public class Quaternion implements Serializable {
+ 		float d = Vector3.len(x, y, z);
+ 		if (d == 0f) return idt();
+ 		d = 1f / d;
+-		float l_ang = radians;
++		float l_ang = radians < 0 ? MathUtils.PI2 - (-radians % MathUtils.PI2) : radians % MathUtils.PI2;
+ 		float l_sin = (float)Math.sin(l_ang / 2);
+ 		float l_cos = (float)Math.cos(l_ang / 2);
+ 		return this.set(d * x * l_sin, d * y * l_sin, d * z * l_sin, l_cos).nor();
+diff --git a/gdx/src/com/badlogic/gdx/math/Vector.java b/gdx/src/com/badlogic/gdx/math/Vector.java
+index 9c754d1..e55fdd1 100644
+--- a/gdx/src/com/badlogic/gdx/math/Vector.java
++++ b/gdx/src/com/badlogic/gdx/math/Vector.java
+@@ -1,12 +1,12 @@
+ /*******************************************************************************
+  * Copyright 2011 See AUTHORS file.
+- * 
++ *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+- * 
++ *
+  *   http://www.apache.org/licenses/LICENSE-2.0
+- * 
++ *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+@@ -27,14 +27,36 @@ public interface Vector<T extends Vector<T>> {
+ 	float len ();
+ 
+ 	/** This method is faster than {@link Vector#len()} because it avoids calculating a square root. It is useful for comparisons,
+-	 * but not for getting accurate lengths, as the return value is the square of the actual length.
++	 * but not for getting exact lengths, as the return value is the square of the actual length.
+ 	 * @return The squared euclidean length */
+ 	float len2 ();
+ 
+-	/** Limits this vector's length to given value
+-	 * @return This vector for chaining */
++	/** Limits the length of this vector, based on the desired maximum length.
++	 * @param limit desired maximum length for this vector
++	 * @return this vector for chaining */
+ 	T limit (float limit);
+ 
++	/** Limits the length of this vector, based on the desired maximum length squared.
++	 * <p />
++	 * This method is slightly faster than limit().
++	 * @param limit2 squared desired maximum length for this vector
++	 * @return this vector for chaining
++	 * @see #len2() */
++	T limit2 (float limit2);
++
++	/** Sets the length of this vector. Does nothing is this vector is zero.
++	 * @param len desired length for this vector
++	 * @return this vector for chaining */
++	T setLength (float len);
++
++	/** Sets the length of this vector, based on the square of the desired length. Does nothing is this vector is zero.
++	 * <p />
++	 * This method is slightly faster than setLength().
++	 * @param len2 desired square of the length for this vector
++	 * @return this vector for chaining
++	 * @see #len2() */
++	T setLength2 (float len2);
++
+ 	/** Clamps this vector's length to given min and max values
+ 	 * @param min Min length
+ 	 * @param max Max length
+diff --git a/gdx/src/com/badlogic/gdx/math/Vector2.java b/gdx/src/com/badlogic/gdx/math/Vector2.java
+index 0f1b096..6517adb 100644
+--- a/gdx/src/com/badlogic/gdx/math/Vector2.java
++++ b/gdx/src/com/badlogic/gdx/math/Vector2.java
+@@ -1,12 +1,12 @@
+ /*******************************************************************************
+  * Copyright 2011 See AUTHORS file.
+- * 
++ *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+- * 
++ *
+  *   http://www.apache.org/licenses/LICENSE-2.0
+- * 
++ *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+@@ -231,23 +231,46 @@ public class Vector2 implements Serializable, Vector<Vector2> {
+ 
+ 	@Override
+ 	public Vector2 limit (float limit) {
+-		if (len2() > limit * limit) {
+-			nor();
+-			scl(limit);
++		return limit2(limit * limit);
++	}
++
++	@Override
++	public Vector2 limit2 (float limit2) {
++		float len2 = len2();
++		if (len2 > limit2) {
++			return scl((float)Math.sqrt(limit2 / len2));
+ 		}
+ 		return this;
+ 	}
+ 
+ 	@Override
+ 	public Vector2 clamp (float min, float max) {
+-		final float l2 = len2();
+-		if (l2 == 0f) return this;
+-		if (l2 > max * max) return nor().scl(max);
+-		if (l2 < min * min) return nor().scl(min);
++		final float len2 = len2();
++		if (len2 == 0f)
++			return this;
++		float max2 = max * max;
++		if (len2 > max2)
++			return scl((float)Math.sqrt(max2 / len2));
++		float min2 = min * min;
++		if (len2 < min2)
++			return scl((float)Math.sqrt(min2 / len2));
+ 		return this;
+ 	}
+ 
+ 	@Override
++	public Vector2 setLength ( float len ) {
++		return setLength2( len * len );
++	}
++
++	@Override
++	public Vector2 setLength2 ( float len2 ) {
++		float oldLen2 = len2();
++		return ( oldLen2 == 0 || oldLen2 == len2 )
++				? this
++				: scl((float) Math.sqrt( len2 / oldLen2 ));
++	}
++
++	@Override
+ 	public String toString () {
+ 		return "[" + x + ":" + y + "]";
+ 	}
+diff --git a/gdx/src/com/badlogic/gdx/math/Vector3.java b/gdx/src/com/badlogic/gdx/math/Vector3.java
+index 26cb602..66f0f31 100644
+--- a/gdx/src/com/badlogic/gdx/math/Vector3.java
++++ b/gdx/src/com/badlogic/gdx/math/Vector3.java
+@@ -1,12 +1,12 @@
+ /*******************************************************************************
+  * Copyright 2011 See AUTHORS file.
+- * 
++ *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+- * 
++ *
+  *   http://www.apache.org/licenses/LICENSE-2.0
+- * 
++ *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+@@ -58,14 +58,14 @@ public class Vector3 implements Serializable, Vector<Vector3> {
+ 	}
+ 
+ 	/** Creates a vector from the given array. The array must have at least 3 elements.
+-	 * 
++	 *
+ 	 * @param values The array */
+ 	public Vector3 (final float[] values) {
+ 		this.set(values[0], values[1], values[2]);
+ 	}
+ 
+ 	/** Creates a vector from the given vector and z-component
+-	 * 
++	 *
+ 	 * @param vector The vector
+ 	 * @param z The z-component */
+ 	public Vector3 (final Vector2 vector, float z) {
+@@ -73,7 +73,7 @@ public class Vector3 implements Serializable, Vector<Vector3> {
+ 	}
+ 
+ 	/** Sets the vector to the given components
+-	 * 
++	 *
+ 	 * @param x The x-component
+ 	 * @param y The y-component
+ 	 * @param z The z-component
+@@ -91,7 +91,7 @@ public class Vector3 implements Serializable, Vector<Vector3> {
+ 	}
+ 
+ 	/** Sets the components from the array. The array must have at least 3 elements
+-	 * 
++	 *
+ 	 * @param values The array
+ 	 * @return this vector for chaining */
+ 	public Vector3 set (final float[] values) {
+@@ -99,7 +99,7 @@ public class Vector3 implements Serializable, Vector<Vector3> {
+ 	}
+ 
+ 	/** Sets the components of the given vector and z-component
+-	 * 
++	 *
+ 	 * @param vector The vector
+ 	 * @param z The z-component
+ 	 * @return This vector for chaining */
+@@ -127,7 +127,7 @@ public class Vector3 implements Serializable, Vector<Vector3> {
+ 	}
+ 
+ 	/** Adds the given value to all three components of the vector.
+-	 * 
++	 *
+ 	 * @param values The value
+ 	 * @return This vector for chaining */
+ 	public Vector3 add (float values) {
+@@ -140,7 +140,7 @@ public class Vector3 implements Serializable, Vector<Vector3> {
+ 	}
+ 
+ 	/** Subtracts the other vector from this vector.
+-	 * 
++	 *
+ 	 * @param x The x-component of the other vector
+ 	 * @param y The y-component of the other vector
+ 	 * @param z The z-component of the other vector
+@@ -150,7 +150,7 @@ public class Vector3 implements Serializable, Vector<Vector3> {
+ 	}
+ 
+ 	/** Subtracts the given value from all components of this vector
+-	 * 
++	 *
+ 	 * @param value The value
+ 	 * @return This vector for chaining */
+ 	public Vector3 sub (float value) {
+@@ -367,7 +367,7 @@ public class Vector3 implements Serializable, Vector<Vector3> {
+ 
+ 	/** Multiplies this vector by the given matrix dividing by w, assuming the fourth (w) component of the vector is 1. This is
+ 	 * mostly used to project/unproject vectors via a perspective projection matrix.
+-	 * 
++	 *
+ 	 * @param matrix The matrix.
+ 	 * @return This vector for chaining */
+ 	public Vector3 prj (final Matrix4 matrix) {
+@@ -379,7 +379,7 @@ public class Vector3 implements Serializable, Vector<Vector3> {
+ 	}
+ 
+ 	/** Multiplies this vector by the first three columns of the matrix, essentially only applying rotation and scaling.
+-	 * 
++	 *
+ 	 * @param matrix The matrix
+ 	 * @return This vector for chaining */
+ 	public Vector3 rot (final Matrix4 matrix) {
+@@ -413,7 +413,7 @@ public class Vector3 implements Serializable, Vector<Vector3> {
+ 	}
+ 
+ 	/** Rotates this vector by the given angle in degrees around the given axis.
+-	 * 
++	 *
+ 	 * @param degrees the angle in degrees
+ 	 * @param axisX the x-component of the axis
+ 	 * @param axisY the y-component of the axis
+@@ -424,7 +424,7 @@ public class Vector3 implements Serializable, Vector<Vector3> {
+ 	}
+ 
+ 	/** Rotates this vector by the given angle in radians around the given axis.
+-	 * 
++	 *
+ 	 * @param radians the angle in radians
+ 	 * @param axisX the x-component of the axis
+ 	 * @param axisY the y-component of the axis
+@@ -435,7 +435,7 @@ public class Vector3 implements Serializable, Vector<Vector3> {
+ 	}
+ 
+ 	/** Rotates this vector by the given angle in degrees around the given axis.
+-	 * 
++	 *
+ 	 * @param axis the axis
+ 	 * @param degrees the angle in degrees
+ 	 * @return This vector for chaining */
+@@ -445,7 +445,7 @@ public class Vector3 implements Serializable, Vector<Vector3> {
+ 	}
+ 
+ 	/** Rotates this vector by the given angle in radians around the given axis.
+-	 * 
++	 *
+ 	 * @param axis the axis
+ 	 * @param radians the angle in radians
+ 	 * @return This vector for chaining */
+@@ -478,12 +478,12 @@ public class Vector3 implements Serializable, Vector<Vector3> {
+ 	public boolean isOnLine (Vector3 other, float epsilon) {
+ 		return len2(y * other.z - z * other.y, z * other.x - x * other.z, x * other.y - y * other.x) <= epsilon;
+ 	}
+-	
++
+ 	@Override
+ 	public boolean isOnLine (Vector3 other) {
+ 		return len2(y * other.z - z * other.y, z * other.x - x * other.z, x * other.y - y * other.x) <= MathUtils.FLOAT_ROUNDING_ERROR;
+ 	}
+-	
++
+ 	@Override
+ 	public boolean isCollinear (Vector3 other, float epsilon) {
+ 		return isOnLine(other, epsilon) && hasSameDirection(other);
+@@ -534,10 +534,10 @@ public class Vector3 implements Serializable, Vector<Vector3> {
+ 	public Vector3 interpolate (Vector3 target, float alpha, Interpolation interpolator) {
+ 		return lerp(target, interpolator.apply(0f, 1f, alpha));
+ 	}
+-	
++
+ 	/** Spherically interpolates between this vector and the target vector by alpha which is in the range [0,1]. The result is
+ 	 * stored in this vector.
+-	 * 
++	 *
+ 	 * @param target The target vector
+ 	 * @param alpha The interpolation coefficient
+ 	 * @return This vector for chaining. */
+@@ -561,22 +561,50 @@ public class Vector3 implements Serializable, Vector<Vector3> {
+ 		return scl((float)Math.cos(theta)).add(tx * dl, ty * dl, tz * dl).nor();
+ 	}
+ 
++    @Override
+ 	public String toString () {
+ 		return "[" + x + ", " + y + ", " + z + "]";
+ 	}
+ 
++
+ 	@Override
+ 	public Vector3 limit (float limit) {
+-		if (len2() > limit * limit) nor().scl(limit);
++		return limit2(limit * limit);
++	}
++
++	@Override
++	public Vector3 limit2 (float limit2) {
++		float len2 = len2();
++		if (len2 > limit2) {
++			scl(limit2 / len2);
++		}
+ 		return this;
+ 	}
+ 
+ 	@Override
++	public Vector3 setLength ( float len ) {
++		return setLength2( len * len );
++	}
++
++	@Override
++	public Vector3 setLength2 ( float len2 ) {
++		float oldLen2 = len2();
++		return ( oldLen2 == 0 || oldLen2 == len2 )
++				? this
++				: scl((float) Math.sqrt( len2 / oldLen2 ));
++	}
++
++	@Override
+ 	public Vector3 clamp (float min, float max) {
+-		final float l2 = len2();
+-		if (l2 == 0f) return this;
+-		if (l2 > max * max) return nor().scl(max);
+-		if (l2 < min * min) return nor().scl(min);
++		final float len2 = len2();
++		if (len2 == 0f)
++			return this;
++		float max2 = max * max;
++		if (len2 > max2)
++			return scl((float)Math.sqrt(max2 / len2));
++		float min2 = min * min;
++		if (len2 < min2)
++			return scl((float)Math.sqrt(min2 / len2));
+ 		return this;
+ 	}
+ 
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/Actions.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/Actions.java
+index ac9a936..447af9c 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/Actions.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/Actions.java
+@@ -79,15 +79,15 @@ public class Actions {
+ 		return action;
+ 	}
+ 
+-	static public MoveToAction moveTo (float x, float y, int alignment) {
+-		return moveTo(x, y, alignment, 0, null);
++	static public MoveToAction moveToAligned (float x, float y, int alignment) {
++		return moveToAligned(x, y, alignment, 0, null);
+ 	}
+ 
+-	static public MoveToAction moveTo (float x, float y, int alignment, float duration) {
+-		return moveTo(x, y, alignment, duration, null);
++	static public MoveToAction moveToAligned (float x, float y, int alignment, float duration) {
++		return moveToAligned(x, y, alignment, duration, null);
+ 	}
+ 
+-	static public MoveToAction moveTo (float x, float y, int alignment, float duration, Interpolation interpolation) {
++	static public MoveToAction moveToAligned (float x, float y, int alignment, float duration, Interpolation interpolation) {
+ 		MoveToAction action = action(MoveToAction.class);
+ 		action.setPosition(x, y, alignment);
+ 		action.setDuration(duration);
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ButtonGroup.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ButtonGroup.java
+index daaa91a..e2b4bd1 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ButtonGroup.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ButtonGroup.java
+@@ -128,6 +128,12 @@ public class ButtonGroup {
+ 		return null;
+ 	}
+ 
++	/** @return The first checked button index, or -1. */
++	public int getCheckedIndex () {
++		if (checkedButtons.size > 0) return buttons.indexOf(checkedButtons.get(0), true);
++		return -1;
++	}
++
+ 	public Array<Button> getAllChecked () {
+ 		return checkedButtons;
+ 	}
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ScrollPane.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ScrollPane.java
+index a4d2d23..384cb46 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ScrollPane.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ScrollPane.java
+@@ -774,28 +774,28 @@ public class ScrollPane extends WidgetGroup {
+ 	/** Sets the scroll offset so the specified rectangle is fully in view, if possible. Coordinates are in the scroll pane widget's
+ 	 * coordinate system. */
+ 	public void scrollTo (float x, float y, float width, float height) {
+-		float amountX = this.amountX;
+-		if (x + width > amountX + areaWidth) amountX = x + width - areaWidth;
+-		if (x < amountX) amountX = x;
+-		scrollX(MathUtils.clamp(amountX, 0, maxX));
+-
+-		float amountY = this.amountY;
+-		if (amountY > maxY - y - height + areaHeight) amountY = maxY - y - height + areaHeight;
+-		if (amountY < maxY - y) amountY = maxY - y;
+-		scrollY(MathUtils.clamp(amountY, 0, maxY));
++		scrollTo(x, y, width, height, false, false);
+ 	}
+ 
+-	/** Sets the scroll offset so the specified rectangle is fully in view and centered vertically in the scroll pane, if possible.
++	/** Sets the scroll offset so the specified rectangle is fully in view, and optionally centered vertically and/or horizontally, if possible.
+ 	 * Coordinates are in the scroll pane widget's coordinate system. */
+-	public void scrollToCenter (float x, float y, float width, float height) {
++	public void scrollTo(float x, float y, float width, float height, boolean centerHorizontal, boolean centerVertical) {
+ 		float amountX = this.amountX;
+-		if (x + width > amountX + areaWidth) amountX = x + width - areaWidth;
+-		if (x < amountX) amountX = x;
++		if(centerHorizontal) {
++			amountX = x - areaWidth / 2 + width / 2;
++		} else {
++			if (x + width > amountX + areaWidth) amountX = x + width - areaWidth;
++			if (x < amountX) amountX = x;
++		}
+ 		scrollX(MathUtils.clamp(amountX, 0, maxX));
+ 
+ 		float amountY = this.amountY;
+-		float centerY = maxY - y + areaHeight / 2 - height / 2;
+-		if (amountY < centerY - areaHeight / 4 || amountY > centerY + areaHeight / 4) amountY = centerY;
++		if(centerVertical) {
++			amountY = maxY - y + areaHeight / 2 - height / 2;
++		} else {
++			if (amountY > maxY - y - height + areaHeight) amountY = maxY - y - height + areaHeight;
++			if (amountY < maxY - y) amountY = maxY - y;
++		}
+ 		scrollY(MathUtils.clamp(amountY, 0, maxY));
+ 	}
+ 
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java
+index ab843e8..4f9669d 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java
+@@ -1,12 +1,12 @@
+ /*******************************************************************************
+  * Copyright 2011 See AUTHORS file.
+- * 
++ *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+- * 
++ *
+  *   http://www.apache.org/licenses/LICENSE-2.0
+- * 
++ *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+@@ -404,7 +404,7 @@ public class SelectBox<T> extends Widget implements Disableable {
+ 			setSize(Math.max(getPrefWidth(), selectBox.getWidth()), height);
+ 
+ 			validate();
+-			scrollToCenter(0, list.getHeight() - selectBox.getSelectedIndex() * itemHeight - itemHeight / 2, 0, 0);
++			scrollTo(0, list.getHeight() - selectBox.getSelectedIndex() * itemHeight - itemHeight / 2, 0, 0, true, true);
+ 			updateVisualScroll();
+ 
+ 			previousScrollFocus = null;
+diff --git a/gdx/src/com/badlogic/gdx/utils/Json.java b/gdx/src/com/badlogic/gdx/utils/Json.java
+index 105d7ba..611e56c 100644
+--- a/gdx/src/com/badlogic/gdx/utils/Json.java
++++ b/gdx/src/com/badlogic/gdx/utils/Json.java
+@@ -23,6 +23,7 @@ import java.io.StringWriter;
+ import java.io.Writer;
+ import java.security.AccessControlException;
+ import java.util.ArrayList;
++import java.util.Arrays;
+ import java.util.Collection;
+ import java.util.Collections;
+ import java.util.HashMap;
+@@ -32,7 +33,7 @@ import com.badlogic.gdx.files.FileHandle;
+ import com.badlogic.gdx.utils.JsonValue.PrettyPrintSettings;
+ import com.badlogic.gdx.utils.JsonWriter.OutputType;
+ import com.badlogic.gdx.utils.ObjectMap.Entry;
+-import com.badlogic.gdx.utils.ObjectMap.Values;
++import com.badlogic.gdx.utils.OrderedMap.OrderedMapValues;
+ import com.badlogic.gdx.utils.reflect.ArrayReflection;
+ import com.badlogic.gdx.utils.reflect.ClassReflection;
+ import com.badlogic.gdx.utils.reflect.Constructor;
+@@ -53,11 +54,12 @@ public class Json {
+ 	private boolean ignoreUnknownFields;
+ 	private boolean enumNames = true;
+ 	private Serializer defaultSerializer;
+-	private final ObjectMap<Class, ObjectMap<String, FieldMetadata>> typeToFields = new ObjectMap();
++	private final ObjectMap<Class, OrderedMap<String, FieldMetadata>> typeToFields = new ObjectMap();
+ 	private final ObjectMap<String, Class> tagToClass = new ObjectMap();
+ 	private final ObjectMap<Class, String> classToTag = new ObjectMap();
+ 	private final ObjectMap<Class, Serializer> classToSerializer = new ObjectMap();
+ 	private final ObjectMap<Class, Object[]> classToDefaultValues = new ObjectMap();
++	private final Object[] equals1 = {null}, equals2 = {null};
+ 
+ 	public Json () {
+ 		outputType = OutputType.minimal;
+@@ -142,22 +144,27 @@ public class Json {
+ 	/** Sets the type of elements in a collection. When the element type is known, the class for each element in the collection does
+ 	 * not need to be written unless different from the element type. */
+ 	public void setElementType (Class type, String fieldName, Class elementType) {
+-		ObjectMap<String, FieldMetadata> fields = typeToFields.get(type);
+-		if (fields == null) fields = cacheFields(type);
++		ObjectMap<String, FieldMetadata> fields = getFields(type);
+ 		FieldMetadata metadata = fields.get(fieldName);
+ 		if (metadata == null) throw new SerializationException("Field not found: " + fieldName + " (" + type.getName() + ")");
+ 		metadata.elementType = elementType;
+ 	}
+ 
+-	private ObjectMap<String, FieldMetadata> cacheFields (Class type) {
+-		ArrayList<Field> allFields = new ArrayList();
++	private OrderedMap<String, FieldMetadata> getFields (Class type) {
++		OrderedMap<String, FieldMetadata> fields = typeToFields.get(type);
++		if (fields != null) return fields;
++
++		Array<Class> classHierarchy = new Array();
+ 		Class nextClass = type;
+ 		while (nextClass != Object.class) {
+-			Collections.addAll(allFields, ClassReflection.getDeclaredFields(nextClass));
++			classHierarchy.add(nextClass);
+ 			nextClass = nextClass.getSuperclass();
+ 		}
++		ArrayList<Field> allFields = new ArrayList();
++		for (int i = classHierarchy.size - 1; i >= 0; i--)
++			Collections.addAll(allFields, ClassReflection.getDeclaredFields(classHierarchy.get(i)));
+ 
+-		ObjectMap<String, FieldMetadata> nameToField = new ObjectMap();
++		OrderedMap<String, FieldMetadata> nameToField = new OrderedMap();
+ 		for (int i = 0, n = allFields.size(); i < n; i++) {
+ 			Field field = allFields.get(i);
+ 
+@@ -257,17 +264,23 @@ public class Json {
+ 
+ 		Object[] defaultValues = getDefaultValues(type);
+ 
+-		ObjectMap<String, FieldMetadata> fields = typeToFields.get(type);
+-		if (fields == null) fields = cacheFields(type);
++		OrderedMap<String, FieldMetadata> fields = getFields(type);
+ 		int i = 0;
+-		for (FieldMetadata metadata : new Values<FieldMetadata>(fields)) {
++		for (FieldMetadata metadata : new OrderedMapValues<FieldMetadata>(fields)) {
+ 			Field field = metadata.field;
+ 			try {
+ 				Object value = field.get(object);
+ 				if (defaultValues != null) {
+ 					Object defaultValue = defaultValues[i++];
+ 					if (value == null && defaultValue == null) continue;
+-					if (value != null && defaultValue != null && value.equals(defaultValue)) continue;
++					if (value != null && defaultValue != null) {
++						if (value.equals(defaultValue)) continue;
++						if (value.getClass().isArray() && defaultValue.getClass().isArray()) {
++							equals1[0] = value;
++							equals2[0] = defaultValue;
++							if (Arrays.deepEquals(equals1, equals2)) continue;
++						}
++					}
+ 				}
+ 
+ 				if (debug) System.out.println("Writing field: " + field.getName() + " (" + type.getName() + ")");
+@@ -297,9 +310,7 @@ public class Json {
+ 			return null;
+ 		}
+ 
+-		ObjectMap<String, FieldMetadata> fields = typeToFields.get(type);
+-		if (fields == null) fields = cacheFields(type);
+-
++		ObjectMap<String, FieldMetadata> fields = getFields(type);
+ 		Object[] values = new Object[fields.size];
+ 		classToDefaultValues.put(type, values);
+ 
+@@ -342,8 +353,7 @@ public class Json {
+ 	 * @param elementType May be null if the type is unknown. */
+ 	public void writeField (Object object, String fieldName, String jsonName, Class elementType) {
+ 		Class type = object.getClass();
+-		ObjectMap<String, FieldMetadata> fields = typeToFields.get(type);
+-		if (fields == null) fields = cacheFields(type);
++		ObjectMap<String, FieldMetadata> fields = getFields(type);
+ 		FieldMetadata metadata = fields.get(fieldName);
+ 		if (metadata == null) throw new SerializationException("Field not found: " + fieldName + " (" + type.getName() + ")");
+ 		Field field = metadata.field;
+@@ -731,8 +741,7 @@ public class Json {
+ 	/** @param elementType May be null if the type is unknown. */
+ 	public void readField (Object object, String fieldName, String jsonName, Class elementType, JsonValue jsonMap) {
+ 		Class type = object.getClass();
+-		ObjectMap<String, FieldMetadata> fields = typeToFields.get(type);
+-		if (fields == null) fields = cacheFields(type);
++		ObjectMap<String, FieldMetadata> fields = getFields(type);
+ 		FieldMetadata metadata = fields.get(fieldName);
+ 		if (metadata == null) throw new SerializationException("Field not found: " + fieldName + " (" + type.getName() + ")");
+ 		Field field = metadata.field;
+@@ -755,8 +764,7 @@ public class Json {
+ 
+ 	public void readFields (Object object, JsonValue jsonMap) {
+ 		Class type = object.getClass();
+-		ObjectMap<String, FieldMetadata> fields = typeToFields.get(type);
+-		if (fields == null) fields = cacheFields(type);
++		ObjectMap<String, FieldMetadata> fields = getFields(type);
+ 		for (JsonValue child = jsonMap.child; child != null; child = child.next) {
+ 			FieldMetadata metadata = fields.get(child.name());
+ 			if (metadata == null) {
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/MusicTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/MusicTest.java
+index 934ed12..e6012be 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/MusicTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/MusicTest.java
+@@ -35,6 +35,7 @@ public class MusicTest extends GdxTest {
+ 
+ 	Music music;
+ 	float songDuration = 183;
++	float currentPosition;
+ 
+ 	TextureRegion buttons;
+ 	SpriteBatch batch;
+@@ -80,13 +81,15 @@ public class MusicTest extends GdxTest {
+ 
+ 	@Override
+ 	public void render () {
++		currentPosition = music.getPosition();
+ 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+ 		batch.begin();
+ 		batch.draw(buttons, 0, 0);
++		font.draw(batch, String.format("%02d:%02d", (int)currentPosition / 60, (int)currentPosition % 60), 365, 35);
+ 		batch.end();
+ 
+ 		sliderUpdating = true;
+-		//slider.setValue((music.getPosition() / songDuration) * 100f);
++		slider.setValue((currentPosition / songDuration) * 100f);
+ 		sliderUpdating = false;
+ 		stage.act();
+ 		stage.draw();
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/TextInputDialogTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/TextInputDialogTest.java
+index 20c53e2..b87e71f 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/TextInputDialogTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/TextInputDialogTest.java
+@@ -51,7 +51,7 @@ public class TextInputDialogTest extends GdxTest {
+ 				public void canceled () {
+ 					message = "cancled by user";
+ 				}
+-			}, "enter something funny", "funny");
++			}, "enter something funny", "funny", "something funny");
+ 		}
+ 	}
+ }
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/gwt/GwtTestWrapper.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/gwt/GwtTestWrapper.java
+index 95538b6..9a451b9 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/gwt/GwtTestWrapper.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/gwt/GwtTestWrapper.java
+@@ -19,6 +19,7 @@ package com.badlogic.gdx.tests.gwt;
+ import com.badlogic.gdx.Application;
+ import com.badlogic.gdx.Gdx;
+ import com.badlogic.gdx.Input;
++import com.badlogic.gdx.Input.TextInputListener;
+ import com.badlogic.gdx.InputAdapter;
+ import com.badlogic.gdx.InputMultiplexer;
+ import com.badlogic.gdx.InputProcessor;
+@@ -303,13 +304,8 @@ public class GwtTestWrapper extends GdxTest {
+ 		}
+ 
+ 		@Override
+-		public void getTextInput (TextInputListener listener, String title, String text) {
+-			input.getTextInput(listener, title, text);
+-		}
+-
+-		@Override
+-		public void getPlaceholderTextInput (TextInputListener listener, String title, String placeholder) {
+-			input.getPlaceholderTextInput(listener, title, placeholder);
++		public void getTextInput (TextInputListener listener, String title, String text, String hint) {
++			input.getTextInput(listener, title, text, hint);
+ 		}
+ 
+ 		@Override

@@ -1,0 +1,1462 @@
+diff --git a/extensions/gdx-tools/src/com/badlogic/gdx/tools/texturepacker/TextureUnpacker.java b/extensions/gdx-tools/src/com/badlogic/gdx/tools/texturepacker/TextureUnpacker.java
+new file mode 100644
+index 0000000..a26ecc6
+--- /dev/null
++++ b/extensions/gdx-tools/src/com/badlogic/gdx/tools/texturepacker/TextureUnpacker.java
+@@ -0,0 +1,77 @@
++/*******************************************************************************
++ * Copyright 2011 See AUTHORS file.
++ * 
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ * 
++ *   http://www.apache.org/licenses/LICENSE-2.0
++ * 
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ ******************************************************************************/
++
++package com.badlogic.gdx.tools.texturepacker;
++
++import com.badlogic.gdx.files.FileHandle;
++import com.badlogic.gdx.graphics.Pixmap.Format;
++import com.badlogic.gdx.graphics.Texture.TextureFilter;
++import com.badlogic.gdx.graphics.Texture.TextureWrap;
++import com.badlogic.gdx.graphics.g2d.TextureAtlas;
++import com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData;
++import com.badlogic.gdx.graphics.g2d.TextureAtlas.TextureAtlasData.Region;
++import com.badlogic.gdx.math.MathUtils;
++import com.badlogic.gdx.utils.Array;
++import com.badlogic.gdx.utils.GdxRuntimeException;
++
++import java.awt.Color;
++import java.awt.Graphics2D;
++import java.awt.image.BufferedImage;
++import java.io.File;
++import java.io.FileWriter;
++import java.io.IOException;
++import java.util.Comparator;
++import java.util.HashSet;
++import java.util.Iterator;
++import java.util.Set;
++
++import javax.imageio.IIOImage;
++import javax.imageio.ImageIO;
++import javax.imageio.ImageWriteParam;
++import javax.imageio.ImageWriter;
++import javax.imageio.stream.ImageOutputStream;
++
++/** @author Nathan Sweet */
++public class TextureUnpacker {
++	/** @param output Directory where the images will be written. */
++	static public void process (TextureAtlas atlas, String output) {
++
++	}
++
++	static public void main (String[] args) throws Exception {
++		String input = null, output = null, packFileName = "pack.atlas";
++
++		switch (args.length) {
++		case 3:
++			packFileName = args[2];
++		case 2:
++			output = args[1];
++		case 1:
++			input = args[0];
++			break;
++		default:
++			System.out.println("Usage: inputDir [outputDir] [packFileName]");
++			System.exit(0);
++		}
++
++		if (output == null) {
++			File inputFile = new File(input);
++			output = new File(inputFile.getParentFile(), inputFile.getName() + "-packed").getAbsolutePath();
++		}
++
++		// process(input, output, packFileName);
++	}
++}
+diff --git a/gdx/src/com/badlogic/gdx/ApplicationListener.java b/gdx/src/com/badlogic/gdx/ApplicationListener.java
+index 882450c..74939ff 100644
+--- a/gdx/src/com/badlogic/gdx/ApplicationListener.java
++++ b/gdx/src/com/badlogic/gdx/ApplicationListener.java
+@@ -43,7 +43,7 @@ public interface ApplicationListener {
+ 	public void render ();
+ 
+ 	/** Called when the {@link Application} is paused. An Application is paused before it is destroyed, when a user pressed the Home
+-	 * button on Android or an incoming call happend. On the desktop this will only be called immediately before {@link #dispose()}
++	 * button on Android or an incoming call happened. On the desktop this will only be called immediately before {@link #dispose()}
+ 	 * is called. */
+ 	public void pause ();
+ 
+diff --git a/gdx/src/com/badlogic/gdx/Preferences.java b/gdx/src/com/badlogic/gdx/Preferences.java
+index 14e01ab..7aa567b 100644
+--- a/gdx/src/com/badlogic/gdx/Preferences.java
++++ b/gdx/src/com/badlogic/gdx/Preferences.java
+@@ -21,7 +21,7 @@ import java.util.Map;
+ /** <p>
+  * A Preference instance is a hash map holding different values. It is stored alongside your application (SharedPreferences on
+  * Android, LocalStorage on GWT, on the desktop a Java Preferences file in a ".prefs" directory will be created, and on iOS an
+- * NSMutableDictonary will be written to the given file). CAUTION: On the desktop platform, all libgdx applications share the same
++ * NSMutableDictionary will be written to the given file). CAUTION: On the desktop platform, all libgdx applications share the same
+  * ".prefs" directory. To avoid collisions use specific names like "com.myname.game1.settings" instead of "settings"
+  * </p>
+  * 
+diff --git a/gdx/src/com/badlogic/gdx/assets/AssetManager.java b/gdx/src/com/badlogic/gdx/assets/AssetManager.java
+index d3a515b..ebad602 100644
+--- a/gdx/src/com/badlogic/gdx/assets/AssetManager.java
++++ b/gdx/src/com/badlogic/gdx/assets/AssetManager.java
+@@ -358,7 +358,7 @@ public class AssetManager implements Disposable {
+ 		}
+ 	}
+ 
+-	/** Updates the AssetManager continuously for the specified number of milliseconds, yeilding the CPU to the loading thread
++	/** Updates the AssetManager continuously for the specified number of milliseconds, yielding the CPU to the loading thread
+ 	 * between updates. This may block for less time if all loading tasks are complete. This may block for more time if the portion
+ 	 * of a single task that happens in the GL thread takes a long time.
+ 	 * @return true if all loading is finished. */
+@@ -644,7 +644,7 @@ public class AssetManager implements Disposable {
+ 		assets.get(type).get(fileName).setRefCount(refCount);
+ 	}
+ 
+-	/** @return a string containg ref count and dependency information for all assets. */
++	/** @return a string containing ref count and dependency information for all assets. */
+ 	public synchronized String getDiagnostics () {
+ 		StringBuffer buffer = new StringBuffer();
+ 		for (String fileName : assetTypes.keys()) {
+diff --git a/gdx/src/com/badlogic/gdx/graphics/Mesh.java b/gdx/src/com/badlogic/gdx/graphics/Mesh.java
+index acf5d64..7daf2ad 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/Mesh.java
++++ b/gdx/src/com/badlogic/gdx/graphics/Mesh.java
+@@ -44,7 +44,7 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
+ 
+ /** <p>
+  * A Mesh holds vertices composed of attributes specified by a {@link VertexAttributes} instance. The vertices are held either in
+- * VRAM in form of vertex buffer objects or in RAM in form of vertex arrays. The former variant is more performant and is prefered
++ * VRAM in form of vertex buffer objects or in RAM in form of vertex arrays. The former variant is more performant and is preferred
+  * over vertex arrays if hardware supports it.
+  * </p>
+  * 
+diff --git a/gdx/src/com/badlogic/gdx/graphics/PerspectiveCamera.java b/gdx/src/com/badlogic/gdx/graphics/PerspectiveCamera.java
+index 5895942..aded50a 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/PerspectiveCamera.java
++++ b/gdx/src/com/badlogic/gdx/graphics/PerspectiveCamera.java
+@@ -29,7 +29,7 @@ public class PerspectiveCamera extends Camera {
+ 	public PerspectiveCamera () {
+ 	}
+ 
+-	/** Constructs a new {@link PerspectiveCamera} with the given field of view and viewport size. The apsect ratio is derrived from
++	/** Constructs a new {@link PerspectiveCamera} with the given field of view and viewport size. The aspect ratio is derived from
+ 	 * the viewport size.
+ 	 * 
+ 	 * @param fieldOfView the field of view in degrees
+diff --git a/gdx/src/com/badlogic/gdx/graphics/TextureData.java b/gdx/src/com/badlogic/gdx/graphics/TextureData.java
+index 5553a1d..42163d3 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/TextureData.java
++++ b/gdx/src/com/badlogic/gdx/graphics/TextureData.java
+@@ -53,7 +53,7 @@ public interface TextureData {
+ 	public void prepare ();
+ 
+ 	/** Returns the {@link Pixmap} for upload by Texture. A call to {@link #prepare()} must precede a call to this method. Any
+-	 * internal datastructures created in {@link #prepare()} should be disposed of here.
++	 * internal data structures created in {@link #prepare()} should be disposed of here.
+ 	 * 
+ 	 * @return the pixmap. */
+ 	public Pixmap consumePixmap ();
+@@ -62,7 +62,7 @@ public interface TextureData {
+ 	public boolean disposePixmap ();
+ 
+ 	/** Uploads the pixel data to the OpenGL ES texture. The caller must bind an OpenGL ES texture. A call to {@link #prepare()}
+-	 * must preceed a call to this method. Any internal datastructures created in {@link #prepare()}. */
++	 * must preceed a call to this method. Any internal data structures created in {@link #prepare()}. */
+ 	public void consumeCompressedData (int target);
+ 
+ 	/** @return the width of the pixel data */
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g2d/Batch.java b/gdx/src/com/badlogic/gdx/graphics/g2d/Batch.java
+index a187c14..248ee9a 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g2d/Batch.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g2d/Batch.java
+@@ -45,7 +45,7 @@ import com.badlogic.gdx.utils.Disposable;
+  * @author mzechner
+  * @author Nathan Sweet */
+ public interface Batch extends Disposable {
+-	/** Sets up the Batch for drawing. This will disable depth buffer writting. It enables blending and texturing. If you have more
++	/** Sets up the Batch for drawing. This will disable depth buffer writing. It enables blending and texturing. If you have more
+ 	 * texture units enabled than the first one you have to disable them before calling this. Uses a screen coordinate system by
+ 	 * default where everything is given in pixels. You can specify your own projection and modelview matrices via
+ 	 * {@link #setProjectionMatrix(Matrix4)} and {@link #setTransformMatrix(Matrix4)}. */
+@@ -72,7 +72,7 @@ public interface Batch extends Disposable {
+ 	 * originX, originY relative to the origin. Scale specifies the scaling factor by which the rectangle should be scaled around
+ 	 * originX, originY. Rotation specifies the angle of counter clockwise rotation of the rectangle around originX, originY. The
+ 	 * portion of the {@link Texture} given by srcX, srcY and srcWidth, srcHeight is used. These coordinates and sizes are given in
+-	 * texels. FlipX and flipY specify whether the texture portion should be fliped horizontally or vertically.
++	 * texels. FlipX and flipY specify whether the texture portion should be flipped horizontally or vertically.
+ 	 * @param x the x-coordinate in screen space
+ 	 * @param y the y-coordinate in screen space
+ 	 * @param originX the x-coordinate of the scaling and rotation origin relative to the screen space coordinates
+@@ -93,7 +93,7 @@ public interface Batch extends Disposable {
+ 
+ 	/** Draws a rectangle with the bottom left corner at x,y having the given width and height in pixels. The portion of the
+ 	 * {@link Texture} given by srcX, srcY and srcWidth, srcHeight is used. These coordinates and sizes are given in texels. FlipX
+-	 * and flipY specify whether the texture portion should be fliped horizontally or vertically.
++	 * and flipY specify whether the texture portion should be flipped horizontally or vertically.
+ 	 * @param x the x-coordinate in screen space
+ 	 * @param y the y-coordinate in screen space
+ 	 * @param width the width in pixels
+@@ -195,7 +195,7 @@ public interface Batch extends Disposable {
+ 	/** Sets the shader to be used in a GLES 2.0 environment. Vertex position attribute is called "a_position", the texture
+ 	 * coordinates attribute is called "a_texCoord0", the color attribute is called "a_color". See
+ 	 * {@link ShaderProgram#POSITION_ATTRIBUTE}, {@link ShaderProgram#COLOR_ATTRIBUTE} and {@link ShaderProgram#TEXCOORD_ATTRIBUTE}
+-	 * which gets "0" appened to indicate the use of the first texture unit. The combined transform and projection matrx is
++	 * which gets "0" appended to indicate the use of the first texture unit. The combined transform and projection matrx is
+ 	 * uploaded via a mat4 uniform called "u_projTrans". The texture sampler is passed via a uniform called "u_texture".
+ 	 * <p>
+ 	 * Call this method with a null argument to use the default shader.
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFont.java b/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFont.java
+index b6451ed..9bb7f7b 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFont.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFont.java
+@@ -130,7 +130,7 @@ public class BitmapFont implements Disposable {
+ 	/** Creates a BitmapFont from a BMFont file, using the specified image for glyphs. Any image specified in the BMFont file is
+ 	 * ignored.
+ 	 * @param flip If true, the glyphs will be flipped for use with a perspective where 0,0 is the upper left corner.
+-	 * @param integer If true, rendering positions will be at integer values to avoid filtering artifacts.s */
++	 * @param integer If true, rendering positions will be at integer values to avoid filtering artifacts. */
+ 	public BitmapFont (FileHandle fontFile, FileHandle imageFile, boolean flip, boolean integer) {
+ 		this(new BitmapFontData(fontFile, flip), new TextureRegion(new Texture(imageFile, false)), integer);
+ 		ownsTexture = true;
+@@ -143,10 +143,8 @@ public class BitmapFont implements Disposable {
+ 	 * Passing a single TextureRegion assumes that your font only needs a single texture page. If you need to support multiple
+ 	 * pages, either let the Font read the images themselves (by specifying null as the TextureRegion), or by specifying each page
+ 	 * manually with the TextureRegion[] constructor.
+-	 * 
+-	 * @param data
+-	 * @param region
+-	 * @param integer */
++	 *
++	 * @param integer If true, rendering positions will be at integer values to avoid filtering artifacts. */
+ 	public BitmapFont (BitmapFontData data, TextureRegion region, boolean integer) {
+ 		this(data, region != null ? new TextureRegion[] {region} : null, integer);
+ 	}
+@@ -154,10 +152,8 @@ public class BitmapFont implements Disposable {
+ 	/** Constructs a new BitmapFont from the given {@link BitmapFontData} and array of {@link TextureRegion}. If the TextureRegion
+ 	 * is null or empty, the image path(s) will be read from the BitmapFontData. The dispose() method will not dispose the texture
+ 	 * of the region(s) if the regions array is != null and not empty.
+-	 * 
+-	 * @param data
+-	 * @param regions
+-	 * @param integer */
++	 *
++	 * @param integer If true, rendering positions will be at integer values to avoid filtering artifacts. */
+ 	public BitmapFont (BitmapFontData data, TextureRegion[] regions, boolean integer) {
+ 		if (regions == null || regions.length == 0) {
+ 			// load each path
+@@ -396,7 +392,8 @@ public class BitmapFont implements Disposable {
+ 
+ 	/** Returns the bounds of the specified text, which may contain newlines and is wrapped within the specified width. The height
+ 	 * is the distance from the top of most capital letters in the font (the {@link #getCapHeight() cap height}) to the baseline of
+-	 * the last line of text. */
++	 * the last line of text.
++	 * @param wrapWidth Width to wrap the bounds within. */
+ 	public TextBounds getWrappedBounds (CharSequence str, float wrapWidth, TextBounds textBounds) {
+ 		if (wrapWidth <= 0) wrapWidth = Integer.MAX_VALUE;
+ 		int start = 0;
+@@ -657,7 +654,7 @@ public class BitmapFont implements Disposable {
+ 		}
+ 	}
+ 
+-	/** @return true if the character is contained in this font. */
++	/** Checks whether this BitmapFont data contains a given character. */
+ 	public boolean containsCharacter (char character) {
+ 		return data.getGlyph(character) != null;
+ 	}
+@@ -668,7 +665,7 @@ public class BitmapFont implements Disposable {
+ 		cache.setUseIntegerPositions(integer);
+ 	}
+ 
+-	/** @return whether this font uses integer positions for drawing. */
++	/** Checks whether this font uses integer positions for drawing. */
+ 	public boolean usesIntegerPositions () {
+ 		return integer;
+ 	}
+@@ -680,6 +677,7 @@ public class BitmapFont implements Disposable {
+ 		return cache;
+ 	}
+ 
++	/** Gets the underlying {@link BitmapFontData} for this BitmapFont. */
+ 	public BitmapFontData getData () {
+ 		return data;
+ 	}
+@@ -696,6 +694,7 @@ public class BitmapFont implements Disposable {
+ 		this.ownsTexture = ownsTexture;
+ 	}
+ 
++	/** Represents a single character in a font page. */
+ 	public static class Glyph {
+ 		public int id;
+ 		public int srcX;
+@@ -744,6 +743,7 @@ public class BitmapFont implements Disposable {
+ 		}
+ 	}
+ 
++	/** Arbitrarily definable text boundary */
+ 	static public class TextBounds {
+ 		public float width;
+ 		public float height;
+@@ -761,10 +761,12 @@ public class BitmapFont implements Disposable {
+ 		}
+ 	}
+ 
++	/** Defines possible horizontal alignments. */
+ 	static public enum HAlignment {
+ 		LEFT, CENTER, RIGHT
+ 	}
+ 
++	/** Backing data for a {@link BitmapFont}. */
+ 	public static class BitmapFontData {
+ 		/** The first discovered image path; included for backwards-compatibility This is the same as imagePaths[0].
+ 		 * 
+@@ -992,6 +994,7 @@ public class BitmapFont implements Disposable {
+ 			throw new GdxRuntimeException("No glyphs found!");
+ 		}
+ 
++		/** Returns the glyph for the specified character, or null if no such glyph exists. */
+ 		public Glyph getGlyph (char ch) {
+ 			Glyph[] page = glyphs[ch / PAGE_SIZE];
+ 			if (page != null) return page[ch & PAGE_SIZE - 1];
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFontCache.java b/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFontCache.java
+index c808235..e62ecbf 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFontCache.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFontCache.java
+@@ -80,7 +80,7 @@ public class BitmapFontCache {
+ 
+ 	/** Sets the position of the text, relative to the position when the cached text was created.
+ 	 * @param x The x coordinate
+-	 * @param y The y coodinate */
++	 * @param y The y coordinate */
+ 	public void setPosition (float x, float y) {
+ 		translate(x - this.x, y - this.y);
+ 	}
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g2d/ParticleEmitterBox2D.java b/gdx/src/com/badlogic/gdx/graphics/g2d/ParticleEmitterBox2D.java
+index ecad023..6ce5d0b 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g2d/ParticleEmitterBox2D.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g2d/ParticleEmitterBox2D.java
+@@ -42,7 +42,7 @@ public class ParticleEmitterBox2D extends ParticleEmitter {
+ 	/** If velocities squared is shorter than this it could lead 0 length rayCast that cause c++ assertion at box2d */
+ 	private final static float EPSILON = 0.001f;
+ 
+-	/** default visibility to prevent synthetic accesor creation */
++	/** default visibility to prevent synthetic accessor creation */
+ 	final RayCastCallback rayCallBack = new RayCastCallback() {
+ 		public float reportRayFixture (Fixture fixture, Vector2 point, Vector2 normal, float fraction) {
+ 			ParticleEmitterBox2D.this.particleCollided = true;
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g2d/PixmapPacker.java b/gdx/src/com/badlogic/gdx/graphics/g2d/PixmapPacker.java
+index 0c762d9..2a5ec96 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g2d/PixmapPacker.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g2d/PixmapPacker.java
+@@ -46,7 +46,7 @@ import com.badlogic.gdx.utils.OrderedMap;
+  * PixmapPacker packer = new PixmapPacker(512, 512, Format.RGB565, 2, true);
+  * packer.pack(&quot;First Pixmap&quot;, pixmap1);
+  * packer.pack(&quot;Second Pixmap&quot;, pixmap2);
+- * TextureAtlas altas = packer.generateTextureAtlas(TextureFilter.Nearest, TextureFilter.Nearest);
++ * TextureAtlas atlas = packer.generateTextureAtlas(TextureFilter.Nearest, TextureFilter.Nearest);
+  * </pre>
+  * 
+  * Note that you should not dispose the packer in this usage pattern. Instead, dispose the TextureAtlas if no longer needed.
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java b/gdx/src/com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java
+index caa6a46..9556f82 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g2d/PolygonSpriteBatch.java
+@@ -129,7 +129,7 @@ public class PolygonSpriteBatch implements Batch {
+ 		projectionMatrix.setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+ 	}
+ 
+-	/** Sets up the PolygonSpriteBatch for drawing. This will disable depth buffer writting. It enables blending and texturing. If
++	/** Sets up the PolygonSpriteBatch for drawing. This will disable depth buffer writing. It enables blending and texturing. If
+ 	 * you have more texture units enabled than the first one you have to disable them before calling this. Uses a screen
+ 	 * coordinate system by default where everything is given in pixels. You can specify your own projection and modelview matrices
+ 	 * via {@link #setProjectionMatrix(Matrix4)} and {@link #setTransformMatrix(Matrix4)}. */
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/ModelBatch.java b/gdx/src/com/badlogic/gdx/graphics/g3d/ModelBatch.java
+index 748f6e3..4f1f967 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/ModelBatch.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/ModelBatch.java
+@@ -193,7 +193,7 @@ public class ModelBatch implements Disposable {
+ 		return shaderProvider;
+ 	}
+ 
+-	/** @eeturn the {@link RenderableSorter} used by this ModelBatch. */
++	/** @return the {@link RenderableSorter} used by this ModelBatch. */
+ 	public RenderableSorter getRenderableSorter () {
+ 		return sorter;
+ 	}
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/Renderable.java b/gdx/src/com/badlogic/gdx/graphics/g3d/Renderable.java
+index 3e3a941..aa69777 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/Renderable.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/Renderable.java
+@@ -47,7 +47,7 @@ import com.badlogic.gdx.utils.Pool;
+  * 
+  * A ModelInstance returns all Renderables via its {@link ModelInstance#getRenderables(Array, Pool)} method. In which case the
+  * value of {@link ModelInstance#userData} will be set to the {@link #userData} member. The {@link #userData} member can be used
+- * to pass additional data to the shader. However, in most scenerario's it is advised to use the {@link #material} or
++ * to pass additional data to the shader. However, in most scenario's it is advised to use the {@link #material} or
+  * {@link #environment} member with custom {@link Attribute}s to pass data to the shader.</p>
+  * 
+  * In some cases, (for example for non-hierarchical basic game objects requiring only a single draw call) it is possible to extend
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/Shader.java b/gdx/src/com/badlogic/gdx/graphics/g3d/Shader.java
+index 33e3388..6764827 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/Shader.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/Shader.java
+@@ -63,8 +63,8 @@ public interface Shader extends Disposable {
+ 	 * {@link #render(Renderable)} method will succeed. This is expected to be a fast, non-blocking method. Note that this method
+ 	 * will only return true if it is intended to be used. Even when it returns false the Shader might still be capable of
+ 	 * rendering, but it's not preferred to do so.
+-	 * @oaram instance The renderable to check against this shader.
+-	 * @return true if this shader is intended to render the {@Renderable}, false otherwise. */
++	 * @param instance The renderable to check against this shader.
++	 * @return true if this shader is intended to render the {@link Renderable}, false otherwise. */
+ 	boolean canRender (Renderable instance);
+ 
+ 	/** Initializes the context for exclusive rendering by this shader. Use the {@link #render(Renderable)} method to render a
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/decals/CameraGroupStrategy.java b/gdx/src/com/badlogic/gdx/graphics/g3d/decals/CameraGroupStrategy.java
+index 1fee431..50f129a 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/decals/CameraGroupStrategy.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/decals/CameraGroupStrategy.java
+@@ -36,7 +36,7 @@ import com.badlogic.gdx.utils.Pool;
+  * Can produce invisible artifacts when transparent decals overlap each other.
+  * </p>
+  * <p>
+- * Needs to be explicitely disposed as it might allocate a ShaderProgram when GLSL 2.0 is used.
++ * Needs to be explicitly disposed as it might allocate a ShaderProgram when GLSL 2.0 is used.
+  * </p>
+  * <p>
+  * States (* = any, EV = entry value - same as value before flush):<br/>
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/model/data/ModelNodeAnimation.java b/gdx/src/com/badlogic/gdx/graphics/g3d/model/data/ModelNodeAnimation.java
+index c97ccdc..e55eb49 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/model/data/ModelNodeAnimation.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/model/data/ModelNodeAnimation.java
+@@ -21,6 +21,6 @@ import com.badlogic.gdx.utils.Array;
+ public class ModelNodeAnimation {
+ 	/** the id of the node animated by this animation FIXME should be nodeId **/
+ 	public String nodeId;
+-	/** the keyframes, defining the transformation of a node for a sepcific timestamp **/
++	/** the keyframes, defining the transformation of a node for a specific timestamp **/
+ 	public final Array<ModelNodeKeyframe> keyframes = new Array<ModelNodeKeyframe>();
+ }
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/shaders/DefaultShader.java b/gdx/src/com/badlogic/gdx/graphics/g3d/shaders/DefaultShader.java
+index 1d0a69a..9e321de 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/shaders/DefaultShader.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/shaders/DefaultShader.java
+@@ -421,9 +421,9 @@ public class DefaultShader extends BaseShader {
+ 	protected static long implementedFlags = BlendingAttribute.Type | TextureAttribute.Diffuse | ColorAttribute.Diffuse
+ 		| ColorAttribute.Specular | FloatAttribute.Shininess;
+ 
+-	/** @Deprecated Replaced by {@link Config#defaultCullFace} Set to 0 to disable culling */
++	/** @deprecated Replaced by {@link Config#defaultCullFace} Set to 0 to disable culling */
+ 	@Deprecated public static int defaultCullFace = GL20.GL_BACK;
+-	/** @Deprecated Replaced by {@link Config#defaultDepthFunc} Set to 0 to disable depth test */
++	/** @deprecated Replaced by {@link Config#defaultDepthFunc} Set to 0 to disable depth test */
+ 	@Deprecated public static int defaultDepthFunc = GL20.GL_LEQUAL;
+ 
+ 	// Global uniforms
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/DefaultTextureBinder.java b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/DefaultTextureBinder.java
+index cb10c9b..2e9e3d4 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/DefaultTextureBinder.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/DefaultTextureBinder.java
+@@ -25,7 +25,7 @@ import com.badlogic.gdx.utils.BufferUtils;
+ import com.badlogic.gdx.utils.GdxRuntimeException;
+ 
+ /** Class that you assign a range of texture units and binds textures for you within that range. It does some basic usage tracking
+- * to avoid unnessecary bind calls.
++ * to avoid unnecessary bind calls.
+  * @author xoppa */
+ public final class DefaultTextureBinder implements TextureBinder {
+ 	public final static int ROUNDROBIN = 0;
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/FirstPersonCameraController.java b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/FirstPersonCameraController.java
+index 90370a1..e2a2f1e 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/FirstPersonCameraController.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/FirstPersonCameraController.java
+@@ -23,7 +23,7 @@ import com.badlogic.gdx.graphics.Camera;
+ import com.badlogic.gdx.math.Vector3;
+ import com.badlogic.gdx.utils.IntIntMap;
+ 
+-/** Takes a {@link Camera} instance and controlls it via w,a,s,d and mouse panning.
++/** Takes a {@link Camera} instance and controls it via w,a,s,d and mouse panning.
+  * @author badlogic */
+ public class FirstPersonCameraController extends InputAdapter {
+ 	private final Camera camera;
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/RenderContext.java b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/RenderContext.java
+index d464027..a64e094 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/RenderContext.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/RenderContext.java
+@@ -53,7 +53,7 @@ public class RenderContext {
+ 		textureBinder.begin();
+ 	}
+ 
+-	/** Resest all changed OpenGL states to their defaults. */
++	/** Resets all changed OpenGL states to their defaults. */
+ 	public final void end () {
+ 		if (depthFunc != 0) Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
+ 		if (!depthMask) Gdx.gl.glDepthMask(true);
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/RenderableSorter.java b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/RenderableSorter.java
+index ddd2d22..8c2e71d 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/RenderableSorter.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/RenderableSorter.java
+@@ -23,7 +23,7 @@ import com.badlogic.gdx.utils.Array;
+ /** Responsible for sorting {@link Renderable} lists by whatever criteria (material, distance to camera, etc.)
+  * @author badlogic */
+ public interface RenderableSorter {
+-	/** Sorst the array of {@link Renderable} instances based on some criteria, e.g. material, distance to camera etc.
++	/** Sorts the array of {@link Renderable} instances based on some criteria, e.g. material, distance to camera etc.
+ 	 * @param renderables the array of renderables to be sorted */
+ 	public void sort (Camera camera, Array<Renderable> renderables);
+ }
+diff --git a/gdx/src/com/badlogic/gdx/graphics/glutils/ShaderProgram.java b/gdx/src/com/badlogic/gdx/graphics/glutils/ShaderProgram.java
+index c3d1714..03f0ce9 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/glutils/ShaderProgram.java
++++ b/gdx/src/com/badlogic/gdx/graphics/glutils/ShaderProgram.java
+@@ -69,7 +69,7 @@ import com.badlogic.gdx.utils.Array;
+ public class ShaderProgram implements Disposable {
+ 	/** default name for position attributes **/
+ 	public static final String POSITION_ATTRIBUTE = "a_position";
+-	/** default name for normal attribtues **/
++	/** default name for normal attributes **/
+ 	public static final String NORMAL_ATTRIBUTE = "a_normal";
+ 	/** default name for color attributes **/
+ 	public static final String COLOR_ATTRIBUTE = "a_color";
+@@ -89,7 +89,7 @@ public class ShaderProgram implements Disposable {
+ 	/** the log **/
+ 	private String log = "";
+ 
+-	/** whether this program compiled succesfully **/
++	/** whether this program compiled successfully **/
+ 	private boolean isCompiled;
+ 
+ 	/** uniform lookup **/
+@@ -145,7 +145,7 @@ public class ShaderProgram implements Disposable {
+ 	/** reference count **/
+ 	private int refCount = 0;
+ 
+-	/** Construcs a new ShaderProgram and immediately compiles it.
++	/** Constructs a new ShaderProgram and immediately compiles it.
+ 	 * 
+ 	 * @param vertexShader the vertex shader
+ 	 * @param fragmentShader the fragment shader */
+@@ -541,7 +541,7 @@ public class ShaderProgram implements Disposable {
+ 	 * 
+ 	 * @param name the name of the uniform
+ 	 * @param matrix the matrix
+-	 * @param transpose whether the matrix shouls be transposed */
++	 * @param transpose whether the matrix should be transposed */
+ 	public void setUniformMatrix (String name, Matrix4 matrix, boolean transpose) {
+ 		GL20 gl = Gdx.graphics.getGL20();
+ 		checkManaged();
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileLayer.java b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileLayer.java
+index b0a6ed9..d51932e 100644
+--- a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileLayer.java
++++ b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileLayer.java
+@@ -29,7 +29,7 @@ public class TiledMapTileLayer extends MapLayer {
+ 
+ 	private Cell[][] cells;
+ 
+-	/** @return layer's witdth in tiles */
++	/** @return layer's width in tiles */
+ 	public int getWidth () {
+ 		return width;
+ 	}
+diff --git a/gdx/src/com/badlogic/gdx/math/GridPoint2.java b/gdx/src/com/badlogic/gdx/math/GridPoint2.java
+index f28b148..a78fcf0 100644
+--- a/gdx/src/com/badlogic/gdx/math/GridPoint2.java
++++ b/gdx/src/com/badlogic/gdx/math/GridPoint2.java
+@@ -27,7 +27,7 @@ public class GridPoint2 {
+ 	public GridPoint2 () {
+ 	}
+ 
+-	/** Costructs a new 2D grid point.
++	/** Constructs a new 2D grid point.
+ 	 * 
+ 	 * @param x X coordinate
+ 	 * @param y Y coordinate */
+diff --git a/gdx/src/com/badlogic/gdx/math/Matrix4.java b/gdx/src/com/badlogic/gdx/math/Matrix4.java
+index 07f055c..a6da908 100644
+--- a/gdx/src/com/badlogic/gdx/math/Matrix4.java
++++ b/gdx/src/com/badlogic/gdx/math/Matrix4.java
+@@ -606,7 +606,7 @@ public class Matrix4 implements Serializable {
+ 		return this;
+ 	}
+ 
+-	/** Sets this matrix to a translation and scaling matrix by first overwritting it with an identity and then setting the
++	/** Sets this matrix to a translation and scaling matrix by first overwriting it with an identity and then setting the
+ 	 * translation vector in the 4th column and the scaling vector in the diagonal.
+ 	 * 
+ 	 * @param translation The translation vector
+@@ -623,7 +623,7 @@ public class Matrix4 implements Serializable {
+ 		return this;
+ 	}
+ 
+-	/** Sets this matrix to a translation and scaling matrix by first overwritting it with an identity and then setting the
++	/** Sets this matrix to a translation and scaling matrix by first overwriting it with an identity and then setting the
+ 	 * translation vector in the 4th column and the scaling vector in the diagonal.
+ 	 * 
+ 	 * @param translationX The x-component of the translation vector
+@@ -725,7 +725,7 @@ public class Matrix4 implements Serializable {
+ 
+ 	/** Sets this matrix to a rotation matrix from the given euler angles.
+ 	 * @param yaw the yaw in degrees
+-	 * @param pitch the pitch in degress
++	 * @param pitch the pitch in degrees
+ 	 * @param roll the roll in degrees
+ 	 * @return This matrix */
+ 	public Matrix4 setFromEulerAngles (float yaw, float pitch, float roll) {
+diff --git a/gdx/src/com/badlogic/gdx/math/Polyline.java b/gdx/src/com/badlogic/gdx/math/Polyline.java
+index ebf116d..8c0a30c 100644
+--- a/gdx/src/com/badlogic/gdx/math/Polyline.java
++++ b/gdx/src/com/badlogic/gdx/math/Polyline.java
+@@ -86,7 +86,7 @@ public class Polyline {
+ 		return worldVertices;
+ 	}
+ 
+-	/** Returns the euclidian length of the polyline without scaling */
++	/** Returns the euclidean length of the polyline without scaling */
+ 	public float getLength () {
+ 		if (!calculateLength) return length;
+ 		calculateLength = false;
+@@ -101,7 +101,7 @@ public class Polyline {
+ 		return length;
+ 	}
+ 
+-	/** Returns the euclidian length of the polyline */
++	/** Returns the euclidean length of the polyline */
+ 	public float getScaledLength () {
+ 		if (!calculateScaledLength) return scaledLength;
+ 		calculateScaledLength = false;
+diff --git a/gdx/src/com/badlogic/gdx/math/Vector.java b/gdx/src/com/badlogic/gdx/math/Vector.java
+index 94a478a..57662a9 100644
+--- a/gdx/src/com/badlogic/gdx/math/Vector.java
++++ b/gdx/src/com/badlogic/gdx/math/Vector.java
+@@ -23,12 +23,12 @@ public interface Vector<T extends Vector<T>> {
+ 	/** @return a copy of this vector */
+ 	T cpy ();
+ 
+-	/** @return The euclidian length */
++	/** @return The euclidean length */
+ 	float len ();
+ 
+ 	/** This method is faster than {@link Vector#len()} because it avoids calculating a square root. It is useful for comparisons,
+ 	 * but not for getting accurate lengths, as the return value is the square of the actual length.
+-	 * @return The squared euclidian length */
++	 * @return The squared euclidean length */
+ 	float len2 ();
+ 
+ 	/** Limits this vector's length to given value
+@@ -46,7 +46,7 @@ public interface Vector<T extends Vector<T>> {
+ 	 * @return This vector for chaining */
+ 	T set (T v);
+ 
+-	/** Substracts the given vector from this vector.
++	/** Subtracts the given vector from this vector.
+ 	 * @param v The vector
+ 	 * @return This vector for chaining */
+ 	T sub (T v);
+diff --git a/gdx/src/com/badlogic/gdx/math/WindowedMean.java b/gdx/src/com/badlogic/gdx/math/WindowedMean.java
+index 1cf78b5..cfca71c 100644
+--- a/gdx/src/com/badlogic/gdx/math/WindowedMean.java
++++ b/gdx/src/com/badlogic/gdx/math/WindowedMean.java
+@@ -36,12 +36,12 @@ public final class WindowedMean {
+ 		values = new float[window_size];
+ 	}
+ 
+-	/** @return whether the value returned will be meaningfull */
++	/** @return whether the value returned will be meaningful */
+ 	public boolean hasEnoughData () {
+ 		return added_values >= values.length;
+ 	}
+ 
+-	/** clears this WindowedMean. The class will only return meaningfull values after enough data has been added again. */
++	/** clears this WindowedMean. The class will only return meaningful values after enough data has been added again. */
+ 	public void clear () {
+ 		added_values = 0;
+ 		last_value = 0;
+diff --git a/gdx/src/com/badlogic/gdx/net/ServerSocket.java b/gdx/src/com/badlogic/gdx/net/ServerSocket.java
+index f985217..a2b437e 100644
+--- a/gdx/src/com/badlogic/gdx/net/ServerSocket.java
++++ b/gdx/src/com/badlogic/gdx/net/ServerSocket.java
+@@ -36,6 +36,6 @@ public interface ServerSocket extends Disposable {
+ 	 * @param hints additional {@link SocketHints} applied to the accepted {@link Socket}. Input null to use the default setting
+ 	 *           provided by the system.
+ 	 * @return the accepted {@link Socket}
+-	 * @throws GdxRuntimeException in case an error ocurred */
++	 * @throws GdxRuntimeException in case an error occurred */
+ 	public Socket accept (SocketHints hints);
+ }
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/AddListenerAction.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/AddListenerAction.java
+index 2292c3c..37d672d 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/AddListenerAction.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/AddListenerAction.java
+@@ -40,7 +40,7 @@ public class AddListenerAction extends Action {
+ 		return targetActor;
+ 	}
+ 
+-	/** Sets the actor to add a listneer to. If null (the default), the {@link #getActor() actor} will be used. */
++	/** Sets the actor to add a listener to. If null (the default), the {@link #getActor() actor} will be used. */
+ 	public void setTargetActor (Actor actor) {
+ 		this.targetActor = actor;
+ 	}
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/RemoveListenerAction.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/RemoveListenerAction.java
+index 2869484..867b509 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/RemoveListenerAction.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/RemoveListenerAction.java
+@@ -40,7 +40,7 @@ public class RemoveListenerAction extends Action {
+ 		return targetActor;
+ 	}
+ 
+-	/** Sets the actor to remove a listner from. If null (the default), the {@link #getActor() actor} will be used. */
++	/** Sets the actor to remove a listener from. If null (the default), the {@link #getActor() actor} will be used. */
+ 	public void setTargetActor (Actor actor) {
+ 		this.targetActor = actor;
+ 	}
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ProgressBar.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ProgressBar.java
+index 742567c..3f2022d 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ProgressBar.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ProgressBar.java
+@@ -179,8 +179,8 @@ public class ProgressBar extends Widget implements Disableable {
+ 		return this.position;
+ 	}
+ 
+-	/** Sets the progress bar position, rounded to the nearest step size and clamped to the minumum and maximim values.
+-	 * {@link #clamp(float)} can be overidden to allow values outside of the progress bar's min/max range.
++	/** Sets the progress bar position, rounded to the nearest step size and clamped to the minimum and maximum values.
++	 * {@link #clamp(float)} can be overridden to allow values outside of the progress bar's min/max range.
+ 	 * @return false if the value was not changed because the progress bar already had the value or it was canceled by a listener. */
+ 	public boolean setValue (float value) {
+ 		value = clamp(Math.round(value / stepSize) * stepSize);
+@@ -202,7 +202,7 @@ public class ProgressBar extends Widget implements Disableable {
+ 		return !cancelled;
+ 	}
+ 
+-	/** Clamps the value to the progress bar's min/max range. This can be overidden to allow a range different from the progress bar
++	/** Clamps the value to the progress bar's min/max range. This can be overridden to allow a range different from the progress bar
+ 	 * knob's range. */
+ 	protected float clamp (float value) {
+ 		return MathUtils.clamp(value, min, max);
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Skin.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Skin.java
+index 9098876..3e30576 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Skin.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Skin.java
+@@ -97,7 +97,7 @@ public class Skin implements Disposable {
+ 		}
+ 	}
+ 
+-	/** Adds all named txeture regions from the atlas. The atlas will not be automatically disposed when the skin is disposed. */
++	/** Adds all named texture regions from the atlas. The atlas will not be automatically disposed when the skin is disposed. */
+ 	public void addRegions (TextureAtlas atlas) {
+ 		Array<AtlasRegion> regions = atlas.getRegions();
+ 		for (int i = 0, n = regions.size; i < n; i++) {
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Table.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Table.java
+index da4aca2..5c4c3e9 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Table.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Table.java
+@@ -133,14 +133,14 @@ public class Table extends WidgetGroup {
+ 		return layout.getMinHeight();
+ 	}
+ 
+-	/** Sets the background drawable from the skin and adjusts the table's padding to match the backgruond. This may only be called
++	/** Sets the background drawable from the skin and adjusts the table's padding to match the background. This may only be called
+ 	 * if {@link Table#Table(Skin)} or {@link #setSkin(Skin)} was used.
+ 	 * @see #setBackground(Drawable, boolean) */
+ 	public void setBackground (String drawableName) {
+ 		setBackground(skin.getDrawable(drawableName), true);
+ 	}
+ 
+-	/** Sets the background drawable and adjusts the table's padding to match the backgruond.
++	/** Sets the background drawable and adjusts the table's padding to match the background.
+ 	 * @see #setBackground(Drawable, boolean) */
+ 	public void setBackground (Drawable background) {
+ 		setBackground(background, true);
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/SpriteDrawable.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/SpriteDrawable.java
+index 638d6c6..15c24f7 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/SpriteDrawable.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/SpriteDrawable.java
+@@ -25,7 +25,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
+ public class SpriteDrawable extends BaseDrawable implements TransformDrawable {
+ 	private Sprite sprite;
+ 
+-	/** Creates an unitialized SpriteDrawable. The sprite must be set before use. */
++	/** Creates an uninitialized SpriteDrawable. The sprite must be set before use. */
+ 	public SpriteDrawable () {
+ 	}
+ 
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/TextureRegionDrawable.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/TextureRegionDrawable.java
+index 0ec2e1b..3a462e5 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/TextureRegionDrawable.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/TextureRegionDrawable.java
+@@ -24,7 +24,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
+ public class TextureRegionDrawable extends BaseDrawable implements TransformDrawable {
+ 	private TextureRegion region;
+ 
+-	/** Creates an unitialized TextureRegionDrawable. The texture region must be set before use. */
++	/** Creates an uninitialized TextureRegionDrawable. The texture region must be set before use. */
+ 	public TextureRegionDrawable () {
+ 	}
+ 
+diff --git a/gdx/src/com/badlogic/gdx/utils/Array.java b/gdx/src/com/badlogic/gdx/utils/Array.java
+index 8b94091..b9bcf88 100644
+--- a/gdx/src/com/badlogic/gdx/utils/Array.java
++++ b/gdx/src/com/badlogic/gdx/utils/Array.java
+@@ -306,7 +306,7 @@ public class Array<T> implements Iterable<T> {
+ 		resize(size);
+ 	}
+ 
+-	/** Increases the size of the backing array to acommodate the specified number of additional items. Useful before adding many
++	/** Increases the size of the backing array to accommodate the specified number of additional items. Useful before adding many
+ 	 * items to avoid multiple backing array resizes.
+ 	 * @return {@link #items} */
+ 	public T[] ensureCapacity (int additionalCapacity) {
+diff --git a/gdx/src/com/badlogic/gdx/utils/ArrayMap.java b/gdx/src/com/badlogic/gdx/utils/ArrayMap.java
+index d38b440..9bb6fe9 100644
+--- a/gdx/src/com/badlogic/gdx/utils/ArrayMap.java
++++ b/gdx/src/com/badlogic/gdx/utils/ArrayMap.java
+@@ -133,7 +133,7 @@ public class ArrayMap<K, V> {
+ 
+ 	/** Returns the key for the specified value. Note this does a comparison of each value in reverse order until the specified
+ 	 * value is found.
+-	 * @param identity If true, == comparison will be used. If false, .equals() comaparison will be used. */
++	 * @param identity If true, == comparison will be used. If false, .equals() comparison will be used. */
+ 	public K getKey (V value, boolean identity) {
+ 		Object[] values = this.values;
+ 		int i = size - 1;
+@@ -205,7 +205,7 @@ public class ArrayMap<K, V> {
+ 		return false;
+ 	}
+ 
+-	/** @param identity If true, == comparison will be used. If false, .equals() comaparison will be used. */
++	/** @param identity If true, == comparison will be used. If false, .equals() comparison will be used. */
+ 	public boolean containsValue (V value, boolean identity) {
+ 		V[] values = this.values;
+ 		int i = size - 1;
+@@ -338,7 +338,7 @@ public class ArrayMap<K, V> {
+ 		resize(size);
+ 	}
+ 
+-	/** Increases the size of the backing arrays to acommodate the specified number of additional entries. Useful before adding many
++	/** Increases the size of the backing arrays to accommodate the specified number of additional entries. Useful before adding many
+ 	 * entries to avoid multiple backing array resizes. */
+ 	public void ensureCapacity (int additionalCapacity) {
+ 		int sizeNeeded = size + additionalCapacity;
+diff --git a/gdx/src/com/badlogic/gdx/utils/BooleanArray.java b/gdx/src/com/badlogic/gdx/utils/BooleanArray.java
+index 0856c9f..d0d0138 100644
+--- a/gdx/src/com/badlogic/gdx/utils/BooleanArray.java
++++ b/gdx/src/com/badlogic/gdx/utils/BooleanArray.java
+@@ -192,7 +192,7 @@ public class BooleanArray {
+ 		resize(size);
+ 	}
+ 
+-	/** Increases the size of the backing array to acommodate the specified number of additional items. Useful before adding many
++	/** Increases the size of the backing array to accommodate the specified number of additional items. Useful before adding many
+ 	 * items to avoid multiple backing array resizes.
+ 	 * @return {@link #items} */
+ 	public boolean[] ensureCapacity (int additionalCapacity) {
+diff --git a/gdx/src/com/badlogic/gdx/utils/ByteArray.java b/gdx/src/com/badlogic/gdx/utils/ByteArray.java
+index 2c60e6a..c4011ac 100644
+--- a/gdx/src/com/badlogic/gdx/utils/ByteArray.java
++++ b/gdx/src/com/badlogic/gdx/utils/ByteArray.java
+@@ -233,7 +233,7 @@ public class ByteArray {
+ 		resize(size);
+ 	}
+ 
+-	/** Increases the size of the backing array to acommodate the specified number of additional items. Useful before adding many
++	/** Increases the size of the backing array to accommodate the specified number of additional items. Useful before adding many
+ 	 * items to avoid multiple backing array resizes.
+ 	 * @return {@link #items} */
+ 	public byte[] ensureCapacity (int additionalCapacity) {
+diff --git a/gdx/src/com/badlogic/gdx/utils/CharArray.java b/gdx/src/com/badlogic/gdx/utils/CharArray.java
+index bc1a9df..6c6d622 100644
+--- a/gdx/src/com/badlogic/gdx/utils/CharArray.java
++++ b/gdx/src/com/badlogic/gdx/utils/CharArray.java
+@@ -233,7 +233,7 @@ public class CharArray {
+ 		resize(size);
+ 	}
+ 
+-	/** Increases the size of the backing array to acommodate the specified number of additional items. Useful before adding many
++	/** Increases the size of the backing array to accommodate the specified number of additional items. Useful before adding many
+ 	 * items to avoid multiple backing array resizes.
+ 	 * @return {@link #items} */
+ 	public char[] ensureCapacity (int additionalCapacity) {
+diff --git a/gdx/src/com/badlogic/gdx/utils/FloatArray.java b/gdx/src/com/badlogic/gdx/utils/FloatArray.java
+index 9edcf0f..5a17ca3 100644
+--- a/gdx/src/com/badlogic/gdx/utils/FloatArray.java
++++ b/gdx/src/com/badlogic/gdx/utils/FloatArray.java
+@@ -233,7 +233,7 @@ public class FloatArray {
+ 		resize(size);
+ 	}
+ 
+-	/** Increases the size of the backing array to acommodate the specified number of additional items. Useful before adding many
++	/** Increases the size of the backing array to accommodate the specified number of additional items. Useful before adding many
+ 	 * items to avoid multiple backing array resizes.
+ 	 * @return {@link #items} */
+ 	public float[] ensureCapacity (int additionalCapacity) {
+diff --git a/gdx/src/com/badlogic/gdx/utils/IdentityMap.java b/gdx/src/com/badlogic/gdx/utils/IdentityMap.java
+index f82db0f..e72e9af 100644
+--- a/gdx/src/com/badlogic/gdx/utils/IdentityMap.java
++++ b/gdx/src/com/badlogic/gdx/utils/IdentityMap.java
+@@ -457,7 +457,7 @@ public class IdentityMap<K, V> {
+ 		return null;
+ 	}
+ 
+-	/** Increases the size of the backing array to acommodate the specified number of additional items. Useful before adding many
++	/** Increases the size of the backing array to accommodate the specified number of additional items. Useful before adding many
+ 	 * items to avoid multiple backing array resizes. */
+ 	public void ensureCapacity (int additionalCapacity) {
+ 		int sizeNeeded = size + additionalCapacity;
+diff --git a/gdx/src/com/badlogic/gdx/utils/IntArray.java b/gdx/src/com/badlogic/gdx/utils/IntArray.java
+index 5424b1c..bfc9ce5 100644
+--- a/gdx/src/com/badlogic/gdx/utils/IntArray.java
++++ b/gdx/src/com/badlogic/gdx/utils/IntArray.java
+@@ -233,7 +233,7 @@ public class IntArray {
+ 		resize(size);
+ 	}
+ 
+-	/** Increases the size of the backing array to acommodate the specified number of additional items. Useful before adding many
++	/** Increases the size of the backing array to accommodate the specified number of additional items. Useful before adding many
+ 	 * items to avoid multiple backing array resizes.
+ 	 * @return {@link #items} */
+ 	public int[] ensureCapacity (int additionalCapacity) {
+diff --git a/gdx/src/com/badlogic/gdx/utils/IntFloatMap.java b/gdx/src/com/badlogic/gdx/utils/IntFloatMap.java
+index 89df6ac..a546d31 100644
+--- a/gdx/src/com/badlogic/gdx/utils/IntFloatMap.java
++++ b/gdx/src/com/badlogic/gdx/utils/IntFloatMap.java
+@@ -493,7 +493,7 @@ public class IntFloatMap {
+ 		return notFound;
+ 	}
+ 
+-	/** Increases the size of the backing array to acommodate the specified number of additional items. Useful before adding many
++	/** Increases the size of the backing array to accommodate the specified number of additional items. Useful before adding many
+ 	 * items to avoid multiple backing array resizes. */
+ 	public void ensureCapacity (int additionalCapacity) {
+ 		int sizeNeeded = size + additionalCapacity;
+diff --git a/gdx/src/com/badlogic/gdx/utils/IntIntMap.java b/gdx/src/com/badlogic/gdx/utils/IntIntMap.java
+index 812e625..dfdec82 100644
+--- a/gdx/src/com/badlogic/gdx/utils/IntIntMap.java
++++ b/gdx/src/com/badlogic/gdx/utils/IntIntMap.java
+@@ -478,7 +478,7 @@ public class IntIntMap {
+ 		return notFound;
+ 	}
+ 
+-	/** Increases the size of the backing array to acommodate the specified number of additional items. Useful before adding many
++	/** Increases the size of the backing array to accommodate the specified number of additional items. Useful before adding many
+ 	 * items to avoid multiple backing array resizes. */
+ 	public void ensureCapacity (int additionalCapacity) {
+ 		int sizeNeeded = size + additionalCapacity;
+diff --git a/gdx/src/com/badlogic/gdx/utils/IntMap.java b/gdx/src/com/badlogic/gdx/utils/IntMap.java
+index 9fabe0e..0eb29c5 100644
+--- a/gdx/src/com/badlogic/gdx/utils/IntMap.java
++++ b/gdx/src/com/badlogic/gdx/utils/IntMap.java
+@@ -501,7 +501,7 @@ public class IntMap<V> {
+ 		return notFound;
+ 	}
+ 
+-	/** Increases the size of the backing array to acommodate the specified number of additional items. Useful before adding many
++	/** Increases the size of the backing array to accommodate the specified number of additional items. Useful before adding many
+ 	 * items to avoid multiple backing array resizes. */
+ 	public void ensureCapacity (int additionalCapacity) {
+ 		int sizeNeeded = size + additionalCapacity;
+diff --git a/gdx/src/com/badlogic/gdx/utils/IntSet.java b/gdx/src/com/badlogic/gdx/utils/IntSet.java
+index dca8d8c..b7f2ec9 100644
+--- a/gdx/src/com/badlogic/gdx/utils/IntSet.java
++++ b/gdx/src/com/badlogic/gdx/utils/IntSet.java
+@@ -381,7 +381,7 @@ public class IntSet {
+ 		throw new IllegalStateException("IntSet is empty.");
+ 	}
+ 
+-	/** Increases the size of the backing array to acommodate the specified number of additional items. Useful before adding many
++	/** Increases the size of the backing array to accommodate the specified number of additional items. Useful before adding many
+ 	 * items to avoid multiple backing array resizes. */
+ 	public void ensureCapacity (int additionalCapacity) {
+ 		int sizeNeeded = size + additionalCapacity;
+diff --git a/gdx/src/com/badlogic/gdx/utils/LongArray.java b/gdx/src/com/badlogic/gdx/utils/LongArray.java
+index c9b9e2e..2dfff80 100644
+--- a/gdx/src/com/badlogic/gdx/utils/LongArray.java
++++ b/gdx/src/com/badlogic/gdx/utils/LongArray.java
+@@ -233,7 +233,7 @@ public class LongArray {
+ 		resize(size);
+ 	}
+ 
+-	/** Increases the size of the backing array to acommodate the specified number of additional items. Useful before adding many
++	/** Increases the size of the backing array to accommodate the specified number of additional items. Useful before adding many
+ 	 * items to avoid multiple backing array resizes.
+ 	 * @return {@link #items} */
+ 	public long[] ensureCapacity (int additionalCapacity) {
+diff --git a/gdx/src/com/badlogic/gdx/utils/LongMap.java b/gdx/src/com/badlogic/gdx/utils/LongMap.java
+index 3881934..8bf595a 100644
+--- a/gdx/src/com/badlogic/gdx/utils/LongMap.java
++++ b/gdx/src/com/badlogic/gdx/utils/LongMap.java
+@@ -498,7 +498,7 @@ public class LongMap<V> {
+ 		return notFound;
+ 	}
+ 
+-	/** Increases the size of the backing array to acommodate the specified number of additional items. Useful before adding many
++	/** Increases the size of the backing array to accommodate the specified number of additional items. Useful before adding many
+ 	 * items to avoid multiple backing array resizes. */
+ 	public void ensureCapacity (int additionalCapacity) {
+ 		int sizeNeeded = size + additionalCapacity;
+diff --git a/gdx/src/com/badlogic/gdx/utils/ObjectFloatMap.java b/gdx/src/com/badlogic/gdx/utils/ObjectFloatMap.java
+index 4130d9b..d1d13bf 100644
+--- a/gdx/src/com/badlogic/gdx/utils/ObjectFloatMap.java
++++ b/gdx/src/com/badlogic/gdx/utils/ObjectFloatMap.java
+@@ -441,7 +441,7 @@ public class ObjectFloatMap<K> {
+ 		return null;
+ 	}
+ 
+-	/** Increases the size of the backing array to acommodate the specified number of additional items. Useful before adding many
++	/** Increases the size of the backing array to accommodate the specified number of additional items. Useful before adding many
+ 	 * items to avoid multiple backing array resizes. */
+ 	public void ensureCapacity (int additionalCapacity) {
+ 		int sizeNeeded = size + additionalCapacity;
+diff --git a/gdx/src/com/badlogic/gdx/utils/ObjectIntMap.java b/gdx/src/com/badlogic/gdx/utils/ObjectIntMap.java
+index 886ab6d..da086ad 100644
+--- a/gdx/src/com/badlogic/gdx/utils/ObjectIntMap.java
++++ b/gdx/src/com/badlogic/gdx/utils/ObjectIntMap.java
+@@ -441,7 +441,7 @@ public class ObjectIntMap<K> {
+ 		return null;
+ 	}
+ 
+-	/** Increases the size of the backing array to acommodate the specified number of additional items. Useful before adding many
++	/** Increases the size of the backing array to accommodate the specified number of additional items. Useful before adding many
+ 	 * items to avoid multiple backing array resizes. */
+ 	public void ensureCapacity (int additionalCapacity) {
+ 		int sizeNeeded = size + additionalCapacity;
+diff --git a/gdx/src/com/badlogic/gdx/utils/ObjectMap.java b/gdx/src/com/badlogic/gdx/utils/ObjectMap.java
+index da0b6e0..7823f1e 100644
+--- a/gdx/src/com/badlogic/gdx/utils/ObjectMap.java
++++ b/gdx/src/com/badlogic/gdx/utils/ObjectMap.java
+@@ -473,7 +473,7 @@ public class ObjectMap<K, V> {
+ 		return null;
+ 	}
+ 
+-	/** Increases the size of the backing array to acommodate the specified number of additional items. Useful before adding many
++	/** Increases the size of the backing array to accommodate the specified number of additional items. Useful before adding many
+ 	 * items to avoid multiple backing array resizes. */
+ 	public void ensureCapacity (int additionalCapacity) {
+ 		int sizeNeeded = size + additionalCapacity;
+diff --git a/gdx/src/com/badlogic/gdx/utils/ObjectSet.java b/gdx/src/com/badlogic/gdx/utils/ObjectSet.java
+index fff4c7b..9cc7028 100644
+--- a/gdx/src/com/badlogic/gdx/utils/ObjectSet.java
++++ b/gdx/src/com/badlogic/gdx/utils/ObjectSet.java
+@@ -360,7 +360,7 @@ public class ObjectSet<T> implements Iterable<T> {
+ 		throw new IllegalStateException("IntSet is empty.");
+ 	}
+ 
+-	/** Increases the size of the backing array to acommodate the specified number of additional items. Useful before adding many
++	/** Increases the size of the backing array to accommodate the specified number of additional items. Useful before adding many
+ 	 * items to avoid multiple backing array resizes. */
+ 	public void ensureCapacity (int additionalCapacity) {
+ 		int sizeNeeded = size + additionalCapacity;
+diff --git a/gdx/src/com/badlogic/gdx/utils/PauseableThread.java b/gdx/src/com/badlogic/gdx/utils/PauseableThread.java
+index cf6377a..1d02f52 100644
+--- a/gdx/src/com/badlogic/gdx/utils/PauseableThread.java
++++ b/gdx/src/com/badlogic/gdx/utils/PauseableThread.java
+@@ -25,7 +25,7 @@ public class PauseableThread extends Thread {
+ 	boolean paused = false;
+ 	boolean exit = false;
+ 
+-	/** Constructs a new thread setting the runnable which will be called repeatadly in a loop.
++	/** Constructs a new thread setting the runnable which will be called repeatedly in a loop.
+ 	 * 
+ 	 * @param runnable the runnable. */
+ 	public PauseableThread (Runnable runnable) {
+diff --git a/gdx/src/com/badlogic/gdx/utils/PooledLinkedList.java b/gdx/src/com/badlogic/gdx/utils/PooledLinkedList.java
+index 9da2a99..0dad3ec 100644
+--- a/gdx/src/com/badlogic/gdx/utils/PooledLinkedList.java
++++ b/gdx/src/com/badlogic/gdx/utils/PooledLinkedList.java
+@@ -77,7 +77,7 @@ public class PooledLinkedList<T> {
+ 		return payload;
+ 	}
+ 
+-	/** Removs the current list item based on the iterator position. */
++	/** Removes the current list item based on the iterator position. */
+ 	public void remove () {
+ 		if (curr == null) return;
+ 
+diff --git a/gdx/src/com/badlogic/gdx/utils/ShortArray.java b/gdx/src/com/badlogic/gdx/utils/ShortArray.java
+index 604e3e8..b144ecb 100644
+--- a/gdx/src/com/badlogic/gdx/utils/ShortArray.java
++++ b/gdx/src/com/badlogic/gdx/utils/ShortArray.java
+@@ -240,7 +240,7 @@ public class ShortArray {
+ 		resize(size);
+ 	}
+ 
+-	/** Increases the size of the backing array to acommodate the specified number of additional items. Useful before adding many
++	/** Increases the size of the backing array to accommodate the specified number of additional items. Useful before adding many
+ 	 * items to avoid multiple backing array resizes.
+ 	 * @return {@link #items} */
+ 	public short[] ensureCapacity (int additionalCapacity) {
+diff --git a/gdx/src/com/badlogic/gdx/utils/viewport/MinMaxViewport.java b/gdx/src/com/badlogic/gdx/utils/viewport/MinMaxViewport.java
+index 231f998..6f8be89 100644
+--- a/gdx/src/com/badlogic/gdx/utils/viewport/MinMaxViewport.java
++++ b/gdx/src/com/badlogic/gdx/utils/viewport/MinMaxViewport.java
+@@ -5,23 +5,18 @@ import com.badlogic.gdx.graphics.Camera;
+ import com.badlogic.gdx.utils.Scaling;
+ 
+ /** A viewport that defines minimum and maximum dimensions.
+- * 
+- * When the snap flag is enabled, it will pick the closest dimensions to the screen aspect ratio and use {@link Scaling#fit}. This
+- * will result in black bars (letterboxing) if the screen doesn't exactly match any of the two supported ratios.
+- * 
+- * When the snap flag is disabled and the screen aspect ratio falls within the supported range, it will keep it and scale the
+- * image. Otherwise, it will pick the closest supported aspect ratio and use {@link Scaling#fit}, which will result in black bars
++ * <p>
++ * When snap is enabled, it will pick the closest dimensions to the screen aspect ratio and use {@link Scaling#fit}. This will
++ * result in black bars (letterboxing) if the screen doesn't exactly match any of the two supported ratios.
++ * <p>
++ * When snap is disabled and the screen aspect ratio falls within the supported range, it will keep it and scale the image.
++ * Otherwise, it will pick the closest supported aspect ratio and use {@link Scaling#fit}, which will result in black bars
+  * (letterboxing).
+- * 
+  * @author David Saltares */
+ public class MinMaxViewport extends ScalingViewport {
+-
+-	private final float minWorldWidth;
+-	private final float minWorldHeight;
+-	private final float maxWorldWidth;
+-	private final float maxWorldHeight;
+-	private final float minAspectRatio;
+-	private final float maxAspectRatio;
++	private final float minWorldWidth, minWorldHeight;
++	private final float maxWorldWidth, maxWorldHeight;
++	private final float minAspectRatio, maxAspectRatio;
+ 	private final boolean snap;
+ 
+ 	public MinMaxViewport (float minWorldWidth, float minWorldHeight, float maxWorldWidth, float maxWorldHeight, boolean snap,
+@@ -32,12 +27,13 @@ public class MinMaxViewport extends ScalingViewport {
+ 		this.minWorldHeight = minWorldHeight;
+ 		this.maxWorldWidth = maxWorldWidth;
+ 		this.maxWorldHeight = maxWorldHeight;
+-		this.minAspectRatio = minWorldWidth / minWorldHeight;
+-		this.maxAspectRatio = maxWorldWidth / maxWorldHeight;
+ 		this.snap = snap;
++		minAspectRatio = minWorldWidth / minWorldHeight;
++		maxAspectRatio = maxWorldWidth / maxWorldHeight;
+ 
+-		if (this.minAspectRatio > this.maxAspectRatio) {
+-			throw new IllegalArgumentException("Minimum aspect ratio has to be smaller than Maximum aspect ratio");
++		if (minAspectRatio > maxAspectRatio) {
++			throw new IllegalArgumentException("Minimum aspect ratio has to be smaller than maximum aspect ratio: " + minAspectRatio
++				+ " < " + maxAspectRatio);
+ 		}
+ 	}
+ 
+@@ -47,37 +43,22 @@ public class MinMaxViewport extends ScalingViewport {
+ 
+ 		if (snap) {
+ 			if (Math.abs(screenAspectRatio - minAspectRatio) < Math.abs(screenAspectRatio - maxAspectRatio)) {
+-				setScaling(Scaling.fit);
+-				this.setWorldSize(minWorldWidth, minWorldHeight);
++				setWorldSize(minWorldWidth, minWorldHeight);
+ 			} else {
+-				this.setWorldSize(maxWorldWidth, maxWorldHeight);
++				setWorldSize(maxWorldWidth, maxWorldHeight);
+ 			}
+ 		} else {
+ 			if (screenAspectRatio < minAspectRatio) {
+-				setScaling(Scaling.fit);
+ 				setWorldSize(minWorldWidth, minWorldHeight);
+ 			} else if (screenAspectRatio > maxAspectRatio) {
+-				setScaling(Scaling.fit);
+ 				setWorldSize(maxWorldWidth, maxWorldHeight);
++			} else if (Math.abs(screenAspectRatio - minAspectRatio) < Math.abs(screenAspectRatio - maxAspectRatio)) {
++				setWorldSize(minWorldWidth, minWorldWidth / screenAspectRatio);
+ 			} else {
+-				if (screenWidth > maxWorldWidth || screenHeight > maxWorldHeight) {
+-					setScaling(Scaling.fit);
+-					setWorldSize(maxWorldWidth, maxWorldWidth / screenAspectRatio);
+-				} else if (screenWidth < minWorldWidth || screenHeight < minWorldHeight) {
+-					setScaling(Scaling.fit);
+-					setWorldSize(minWorldWidth, minWorldWidth / screenAspectRatio);
+-				} else {
+-					setScaling(Scaling.fill);
+-					setWorldSize(screenWidth, screenHeight);
+-				}
++				setWorldSize(maxWorldWidth, maxWorldWidth / screenAspectRatio);
+ 			}
+ 		}
+ 
+ 		super.update(screenWidth, screenHeight, centerCamera);
+ 	}
+-
+-	@Override
+-	public String toString () {
+-		return getClass().getSimpleName() + (snap ? " (snapped)" : " (non snapped)");
+-	}
+ }
+diff --git a/gdx/src/com/badlogic/gdx/utils/viewport/ScalingViewport.java b/gdx/src/com/badlogic/gdx/utils/viewport/ScalingViewport.java
+index 86b25ac..2dbfd3c 100644
+--- a/gdx/src/com/badlogic/gdx/utils/viewport/ScalingViewport.java
++++ b/gdx/src/com/badlogic/gdx/utils/viewport/ScalingViewport.java
+@@ -99,9 +99,4 @@ public class ScalingViewport extends Viewport {
+ 	public int getTopGutterHeight () {
+ 		return Gdx.graphics.getHeight() - (viewportY + viewportHeight);
+ 	}
+-
+-	@Override
+-	public String toString () {
+-		return getClass().getSimpleName() + ": " + scaling;
+-	}
+ }
+diff --git a/gdx/src/com/badlogic/gdx/utils/viewport/Viewport.java b/gdx/src/com/badlogic/gdx/utils/viewport/Viewport.java
+index 9926aaf..ac90179 100644
+--- a/gdx/src/com/badlogic/gdx/utils/viewport/Viewport.java
++++ b/gdx/src/com/badlogic/gdx/utils/viewport/Viewport.java
+@@ -165,8 +165,4 @@ public abstract class Viewport {
+ 	public int getViewportHeight () {
+ 		return viewportHeight;
+ 	}
+-
+-	public String toString () {
+-		return getClass().getSimpleName();
+-	}
+ }
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/ViewportTest1.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/ViewportTest1.java
+index 40418d2..a18d27c 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/ViewportTest1.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/ViewportTest1.java
+@@ -31,16 +31,20 @@ import com.badlogic.gdx.tests.utils.GdxTest;
+ import com.badlogic.gdx.utils.Array;
+ import com.badlogic.gdx.utils.Scaling;
+ import com.badlogic.gdx.utils.viewport.ExtendViewport;
++import com.badlogic.gdx.utils.viewport.FillViewport;
++import com.badlogic.gdx.utils.viewport.FitViewport;
+ import com.badlogic.gdx.utils.viewport.MinMaxViewport;
+ import com.badlogic.gdx.utils.viewport.ScalingViewport;
+ import com.badlogic.gdx.utils.viewport.ScreenViewport;
++import com.badlogic.gdx.utils.viewport.StretchViewport;
+ import com.badlogic.gdx.utils.viewport.Viewport;
+ 
+ /** Cycles viewports while rendering a stage with a root Table for the layout. */
+ public class ViewportTest1 extends GdxTest {
+-	Array<Viewport> viewports = new Array();
++	Array<Viewport> viewports;
++	Array<String> names;
+ 	Stage stage;
+-	private Label label;
++	Label label;
+ 
+ 	public void create () {
+ 		stage = new Stage();
+@@ -58,26 +62,18 @@ public class ViewportTest1 extends GdxTest {
+ 		root.add(label).colspan(2);
+ 		stage.addActor(root);
+ 
+-		int minWorldWidth = 300;
+-		int minWorldHeight = 225;
+-		int maxWorldWidth = 300;
+-		int maxWorldHeight = 168;
++		viewports = getViewports(stage.getCamera());
++		names = getViewportNames();
+ 
+-		Camera camera = stage.getCamera();
+-		viewports.add(new ScalingViewport(Scaling.stretch, minWorldWidth, minWorldHeight, camera));
+-		viewports.add(new ScalingViewport(Scaling.fill, minWorldWidth, minWorldHeight, camera));
+-		viewports.add(new ScalingViewport(Scaling.fit, minWorldWidth, minWorldHeight, camera));
+-		viewports.add(new ExtendViewport(minWorldWidth, minWorldHeight, camera));
+-		viewports.add(new ScreenViewport(camera));
+-		viewports.add(new ScalingViewport(Scaling.none, minWorldWidth, minWorldHeight, camera));
+-		viewports.add(new MinMaxViewport(minWorldWidth, minWorldHeight, maxWorldWidth, maxWorldHeight, true, camera));
+-		viewports.add(new MinMaxViewport(minWorldWidth, minWorldHeight, maxWorldWidth, maxWorldHeight, false, camera));
+ 		stage.setViewport(viewports.first());
++		label.setText(names.first());
+ 
+ 		Gdx.input.setInputProcessor(new InputMultiplexer(new InputAdapter() {
+ 			public boolean keyDown (int keycode) {
+ 				if (keycode == Input.Keys.SPACE) {
+-					Viewport viewport = viewports.get((viewports.indexOf(stage.getViewport(), true) + 1) % viewports.size);
++					int index = (viewports.indexOf(stage.getViewport(), true) + 1) % viewports.size;
++					label.setText(names.get(index));
++					Viewport viewport = viewports.get(index);
+ 					stage.setViewport(viewport);
+ 					resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+ 				}
+@@ -87,7 +83,6 @@ public class ViewportTest1 extends GdxTest {
+ 	}
+ 
+ 	public void render () {
+-		label.setText(stage.getViewport().toString());
+ 		stage.act();
+ 
+ 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+@@ -102,4 +97,35 @@ public class ViewportTest1 extends GdxTest {
+ 	public void dispose () {
+ 		stage.dispose();
+ 	}
++
++	static public Array<String> getViewportNames () {
++		Array<String> names = new Array();
++		names.add("StretchViewport");
++		names.add("FillViewport");
++		names.add("FitViewport");
++		names.add("ExtendViewport");
++		names.add("MinMaxViewport: snap=false");
++		names.add("MinMaxViewport: snap=true");
++		names.add("ScreenViewport");
++		names.add("ScalingViewport: none");
++		return names;
++	}
++
++	static public Array<Viewport> getViewports (Camera camera) {
++		int minWorldWidth = 300;
++		int minWorldHeight = 225;
++		int maxWorldWidth = 300;
++		int maxWorldHeight = 168;
++
++		Array<Viewport> viewports = new Array();
++		viewports.add(new StretchViewport(minWorldWidth, minWorldHeight, camera));
++		viewports.add(new FillViewport(minWorldWidth, minWorldHeight, camera));
++		viewports.add(new FitViewport(minWorldWidth, minWorldHeight, camera));
++		viewports.add(new ExtendViewport(minWorldWidth, minWorldHeight, camera));
++		viewports.add(new MinMaxViewport(minWorldWidth, minWorldHeight, maxWorldWidth, maxWorldHeight, false, camera));
++		viewports.add(new MinMaxViewport(minWorldWidth, minWorldHeight, maxWorldWidth, maxWorldHeight, true, camera));
++		viewports.add(new ScreenViewport(camera));
++		viewports.add(new ScalingViewport(Scaling.none, minWorldWidth, minWorldHeight, camera));
++		return viewports;
++	}
+ }
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/ViewportTest2.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/ViewportTest2.java
+index 1bd22a1..02c17ec 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/ViewportTest2.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/ViewportTest2.java
+@@ -37,8 +37,11 @@ import com.badlogic.gdx.utils.viewport.Viewport;
+ 
+ /** Cycles viewports while rendering with SpriteBatch, also shows how to draw in the black bars. */
+ public class ViewportTest2 extends GdxTest {
+-	Array<Viewport> viewports = new Array();
++	Array<Viewport> viewports;
+ 	Viewport viewport;
++	Array<String> names;
++	String name;
++
+ 	private SpriteBatch batch;
+ 	private Texture texture;
+ 	private BitmapFont font;
+@@ -59,25 +62,18 @@ public class ViewportTest2 extends GdxTest {
+ 		camera.position.set(100, 100, 0);
+ 		camera.update();
+ 
+-		int minWorldWidth = 300;
+-		int minWorldHeight = 225;
+-		int maxWorldWidth = 300;
+-		int maxWorldHeight = 168;
+-
+-		viewports.add(new ScalingViewport(Scaling.stretch, minWorldWidth, minWorldHeight, camera));
+-		viewports.add(new ScalingViewport(Scaling.fill, minWorldWidth, minWorldHeight, camera));
+-		viewports.add(new ScalingViewport(Scaling.fit, minWorldWidth, minWorldHeight, camera));
+-		viewports.add(new ExtendViewport(minWorldWidth, minWorldHeight, camera));
+-		viewports.add(new ScreenViewport(camera));
+-		viewports.add(new ScalingViewport(Scaling.none, minWorldWidth, minWorldHeight, camera));
+-		viewports.add(new MinMaxViewport(minWorldWidth, minWorldHeight, maxWorldWidth, maxWorldHeight, true, camera));
+-		viewports.add(new MinMaxViewport(minWorldWidth, minWorldHeight, maxWorldWidth, maxWorldHeight, false, camera));
++		viewports = ViewportTest1.getViewports(camera);
+ 		viewport = viewports.first();
+ 
++		names = ViewportTest1.getViewportNames();
++		name = names.first();
++
+ 		Gdx.input.setInputProcessor(new InputAdapter() {
+ 			public boolean keyDown (int keycode) {
+ 				if (keycode == Input.Keys.SPACE) {
+-					viewport = viewports.get((viewports.indexOf(viewport, true) + 1) % viewports.size);
++					int index = (viewports.indexOf(viewport, true) + 1) % viewports.size;
++					name = names.get(index);
++					viewport = viewports.get(index);
+ 					resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+ 				}
+ 				return false;
+@@ -98,7 +94,7 @@ public class ViewportTest2 extends GdxTest {
+ 		batch.setColor(1, 0, 0, 1);
+ 		batch.draw(texture, 150, 100, 16, 16, 32, 32, 1, 1, 45, 0, 0, 16, 16, false, false);
+ 
+-		font.draw(batch, viewport.toString(), 150, 100);
++		font.draw(batch, viewport.getClass().getSimpleName(), 150, 100);
+ 		batch.end();
+ 
+ 		if (viewport instanceof ScalingViewport) {
+@@ -126,7 +122,7 @@ public class ViewportTest2 extends GdxTest {
+ 	}
+ 
+ 	public void resize (int width, int height) {
+-		System.out.println(viewport);
++		System.out.println(name);
+ 		viewport.update(width, height);
+ 	}
+ 
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/ViewportTest3.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/ViewportTest3.java
+index e2ef698..1d81b71 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/ViewportTest3.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/ViewportTest3.java
+@@ -42,8 +42,10 @@ import com.badlogic.gdx.utils.viewport.Viewport;
+ 
+ /** Cycles viewports while rendering with SpriteBatch. */
+ public class ViewportTest3 extends GdxTest {
+-	Array<Viewport> viewports = new Array();
++	Array<Viewport> viewports;
+ 	Viewport viewport;
++	Array<String> names;
++	String name;
+ 
+ 	private PerspectiveCamera camera;
+ 	public Environment environment;
+@@ -71,35 +73,25 @@ public class ViewportTest3 extends GdxTest {
+ 		camera.position.set(0, 0, 100);
+ 		camera.lookAt(0, 0, 0);
+ 
+-		ModelBuilder modelBuilder = new ModelBuilder();
++		viewports = ViewportTest1.getViewports(camera);
++		viewport = viewports.first();
+ 
+-		// we need a white background so we are able to see the black bars appearing
++		names = ViewportTest1.getViewportNames();
++		name = names.first();
+ 
++		ModelBuilder modelBuilder = new ModelBuilder();
+ 		Model boxModel = modelBuilder.createBox(50f, 50f, 50f, new Material(ColorAttribute.createDiffuse(Color.GREEN)),
+ 			Usage.Position | Usage.Normal);
+ 		boxInstance = new ModelInstance(boxModel);
+ 		boxInstance.transform.rotate(1, 0, 0, 30);
+ 		boxInstance.transform.rotate(0, 1, 0, 30);
+ 
+-		int minWorldWidth = 300;
+-		int minWorldHeight = 225;
+-		int maxWorldWidth = 300;
+-		int maxWorldHeight = 168;
+-
+-		viewports.add(new ScalingViewport(Scaling.stretch, minWorldWidth, minWorldHeight, camera));
+-		viewports.add(new ScalingViewport(Scaling.fill, minWorldWidth, minWorldHeight, camera));
+-		viewports.add(new ScalingViewport(Scaling.fit, minWorldWidth, minWorldHeight, camera));
+-		viewports.add(new ExtendViewport(minWorldWidth, minWorldHeight, camera));
+-		viewports.add(new ScreenViewport(camera));
+-		viewports.add(new ScalingViewport(Scaling.none, minWorldWidth, minWorldHeight, camera));
+-		viewports.add(new MinMaxViewport(minWorldWidth, minWorldHeight, maxWorldWidth, maxWorldHeight, true, camera));
+-		viewports.add(new MinMaxViewport(minWorldWidth, minWorldHeight, maxWorldWidth, maxWorldHeight, false, camera));
+-		viewport = viewports.first();
+-
+ 		Gdx.input.setInputProcessor(new InputAdapter() {
+ 			public boolean keyDown (int keycode) {
+ 				if (keycode == Input.Keys.SPACE) {
+-					viewport = viewports.get((viewports.indexOf(viewport, true) + 1) % viewports.size);
++					int index = (viewports.indexOf(viewport, true) + 1) % viewports.size;
++					name = names.get(index);
++					viewport = viewports.get(index);
+ 					resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+ 				}
+ 				return false;
+@@ -117,7 +109,7 @@ public class ViewportTest3 extends GdxTest {
+ 	}
+ 
+ 	public void resize (int width, int height) {
+-		System.out.println(viewport);
++		System.out.println(name);
+ 		viewport.update(width, height);
+ 	}
+ }

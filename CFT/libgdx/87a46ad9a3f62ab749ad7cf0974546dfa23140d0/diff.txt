@@ -1,0 +1,3942 @@
+diff --git a/gdx/src/com/badlogic/gdx/maps/ImageResolver.java b/gdx/src/com/badlogic/gdx/maps/ImageResolver.java
+deleted file mode 100755
+index 95e2ca9..0000000
+--- a/gdx/src/com/badlogic/gdx/maps/ImageResolver.java
++++ /dev/null
+@@ -1,45 +0,0 @@
+-package com.badlogic.gdx.maps;
+-
+-import com.badlogic.gdx.assets.AssetManager;
+-import com.badlogic.gdx.graphics.Texture;
+-import com.badlogic.gdx.utils.ObjectMap;
+-
+-/**
+- * Resolves an image by a string, wrapper around a Map or AssetManager
+- * to load maps either directly or via AssetManager.
+- * @author mzechner
+- *
+- */
+-public interface ImageResolver {
+-	/**
+-	 * @param name
+-	 * @return the Texture for the given image name or null.
+-	 */
+-	public Texture getImage(String name);
+-	
+-	public static class DirectImageResolver implements ImageResolver {
+-		private final ObjectMap<String, Texture> images;
+-		
+-		public DirectImageResolver(ObjectMap<String, Texture> images) {
+-			this.images = images;
+-		}
+-
+-		@Override
+-		public Texture getImage (String name) {
+-			return images.get(name);
+-		}
+-	}
+-	
+-	public static class AssetManagerImageResolver implements ImageResolver {
+-		private final AssetManager assetManager;
+-		
+-		public AssetManagerImageResolver(AssetManager assetManager) {
+-			this.assetManager = assetManager;
+-		}
+-		
+-		@Override
+-		public Texture getImage (String name) {
+-			return assetManager.get(name, Texture.class);
+-		}
+-	}
+-}
+diff --git a/gdx/src/com/badlogic/gdx/maps/Map.java b/gdx/src/com/badlogic/gdx/maps/Map.java
+index 0e764ce..8cb34e1 100644
+--- a/gdx/src/com/badlogic/gdx/maps/Map.java
++++ b/gdx/src/com/badlogic/gdx/maps/Map.java
+@@ -1,25 +1,49 @@
+ package com.badlogic.gdx.maps;
+ 
+-import com.badlogic.gdx.utils.Disposable;
+-
+-public class Map implements Disposable {
++/**
++ * @brief Generic map
++ * 
++ * A Map instance contains the following data
++ * 
++ * <ul>
++ * <li> MapLayers<ul>
++ * 	<li>MapLayer<ul>
++ * 		<li>MapObjects<ul>
++ * 			<li>MapObject<ul>
++ * 				<li>Can be: TextureMapObject, CircleMapObject, RectangleMapObject, PolygonMapObject or PolylineMapObject</li>
++ * 				<li>MapProperties</li>
++ * 			</ul></li>
++ * 		</ul></li>
++ * 		<li>MapProperties</li>	
++ * 	</ul></li>
++ * </ul></li>
++ * <li> MapProperties
++ * </ul>
++ */
++public class Map {
+ 	
+ 	private MapLayers layers = new MapLayers();
+ 	private MapProperties properties = new MapProperties();
+ 	
++	/**
++	 * @return map's layers
++	 */
+ 	public MapLayers getLayers() {
+ 		return layers;
+ 	}
+ 
++	/**
++	 * @return map's properties set
++	 */
+ 	public MapProperties getProperties() {
+ 		return properties;
+ 	}
+ 	
++	/**
++	 * Creates empty map
++	 */
+ 	public Map() {
+ 		
+ 	}
+-
+-	@Override
+-	public void dispose () {
+-	}
++	
+ }
+diff --git a/gdx/src/com/badlogic/gdx/maps/MapLayer.java b/gdx/src/com/badlogic/gdx/maps/MapLayer.java
+index b3a586f..fac4aa6 100644
+--- a/gdx/src/com/badlogic/gdx/maps/MapLayer.java
++++ b/gdx/src/com/badlogic/gdx/maps/MapLayer.java
+@@ -1,5 +1,8 @@
+ package com.badlogic.gdx.maps;
+ 
++/**
++ * @brief Map layer containing a set of objects and properties
++ */
+ public class MapLayer {
+ 
+ 	private String name = "";
+@@ -8,38 +11,65 @@ public class MapLayer {
+ 	private MapObjects objects = new MapObjects();
+ 	private MapProperties properties = new MapProperties();
+ 
++	/**
++	 * @return layer's name
++	 */
+ 	public String getName() {
+ 		return name;
+ 	}
+ 	
++	/**
++	 * @param name new name for the layer
++	 */
+ 	public void setName(String name) {
+ 		this.name = name;
+ 	}
+ 	
++	/**
++	 * @return layer's opacity
++	 */
+ 	public float getOpacity() {
+ 		return opacity;
+ 	}
+ 
++	/**
++	 * @param opacity new opacity for the layer
++	 */
+ 	public void setOpacity(float opacity) {
+ 		this.opacity = opacity;
+ 	}
+ 	
++	/**
++	 * @return collection of objects contained in the layer
++	 */
+ 	public MapObjects getObjects() {
+ 		return objects;
+ 	}
+ 	
++	/**
++	 * @return whether the layer is visible or not
++	 */
+ 	public boolean getVisible() {
+ 		return visible;
+ 	}
+ 
++	/**
++	 * @param visible toggles layer's visibility
++	 */
+ 	public void setVisible(boolean visible) {
+ 		this.visible = visible;
+ 	}
+ 
++	/**
++	 * @return layer's set of properties
++	 */
+ 	public MapProperties getProperties() {
+ 		return properties;
+ 	}
+ 	
++	/**
++	 * Creates empty layer
++	 */
+ 	public MapLayer() {
+ 		
+ 	}
+diff --git a/gdx/src/com/badlogic/gdx/maps/MapLayers.java b/gdx/src/com/badlogic/gdx/maps/MapLayers.java
+index b77aa95..98bc077 100644
+--- a/gdx/src/com/badlogic/gdx/maps/MapLayers.java
++++ b/gdx/src/com/badlogic/gdx/maps/MapLayers.java
+@@ -4,18 +4,32 @@ import java.util.Iterator;
+ 
+ import com.badlogic.gdx.utils.Array;
+ 
++/**
++ * @brief set of MapLayer instances
++ */
+ public class MapLayers implements Iterable<MapLayer> {
+ 	
+ 	private Array<MapLayer> layers = new Array<MapLayer>();
+ 
++	/**
++	 * Creates empty set of layers
++	 */
+ 	public MapLayers() {
+ 	
+ 	}
+ 	
++	/**
++	 * @param index
++	 * @return layer at index
++	 */
+ 	public MapLayer getLayer(int index) {
+ 		return layers.get(index);
+ 	}
+ 	
++	/**
++	 * @param name
++	 * @return matching layer if exists, otherwise, null
++	 */
+ 	public MapLayer getLayer(String name) {
+ 		for (MapLayer layer : layers) {
+ 			if (name.equals(layer.getName())) {
+@@ -25,22 +39,41 @@ public class MapLayers implements Iterable<MapLayer> {
+ 		return null;
+ 	}
+ 	
++	/**
++	 * @param layer layer to be added to the set
++	 */
+ 	public void addLayer(MapLayer layer) {
+ 		this.layers.add(layer);
+ 	}
+ 	
++	/**
++	 * @param index removes layer at index
++	 */
+ 	public void removeLayer(int index) {
+ 		layers.removeIndex(index);
+ 	}
+ 	
++	/**
++	 * @param layer layer to be removed
++	 */
+ 	public void removeLayer(MapLayer layer) {
+ 		layers.removeValue(layer, true);
+ 	}
+ 
++	/**
++	 * @param type
++	 * @return array with all the layers matching type
++	 */
+ 	public <T extends MapLayer> Array<T> getLayersByType(Class<T> type) {
+ 		return getLayersByType(type, new Array<T>());	
+ 	}
+ 	
++	/**
++	 * 
++	 * @param type
++	 * @param fill array to be filled with the matching layers
++	 * @return array with all the layers matching type
++	 */
+ 	public <T extends MapLayer> Array<T> getLayersByType(Class<T> type, Array<T> fill) {
+ 		fill.clear();
+ 		for (MapLayer layer : layers) {
+@@ -51,6 +84,9 @@ public class MapLayers implements Iterable<MapLayer> {
+ 		return fill;
+ 	}
+ 
++	/**
++	 * @return iterator to set of layers
++	 */
+ 	@Override
+ 	public Iterator<MapLayer> iterator() {
+ 		return layers.iterator();
+diff --git a/gdx/src/com/badlogic/gdx/maps/MapObject.java b/gdx/src/com/badlogic/gdx/maps/MapObject.java
+index da4bb2f..e0141d2 100644
+--- a/gdx/src/com/badlogic/gdx/maps/MapObject.java
++++ b/gdx/src/com/badlogic/gdx/maps/MapObject.java
+@@ -2,6 +2,9 @@ package com.badlogic.gdx.maps;
+ 
+ import com.badlogic.gdx.graphics.Color;
+ 
++/**
++ * @brief Generic Map entity
++ */
+ public class MapObject {
+ 
+ 	private String name = "";
+@@ -10,44 +13,73 @@ public class MapObject {
+ 	private MapProperties properties = new MapProperties();
+ 	private Color color = Color.WHITE.cpy();
+ 	
++	/**
++	 * @return object's name
++	 */
+ 	public String getName() {
+ 		return name;
+ 	}
+ 	
++	/**
++	 * @param name new name for the object
++	 */
+ 	public void setName(String name) {
+ 		this.name = name;
+ 	}
+ 	
++	/**
++	 * @return object's color
++	 */
+ 	public Color getColor() {
+ 		return color;
+ 	}
+ 	
++	/**
++	 * @param color new color for the object
++	 */
+ 	public void setColor(Color color) {
+ 		this.color = color;
+ 	}
+ 
++	/**
++	 * @return object's opacity
++	 */
+ 	public float getOpacity() {
+ 		return opacity;
+ 	}
+ 
++	/**
++	 * @param opacity new opacity value for the object
++	 */
+ 	public void setOpacity(float opacity) {
+ 		this.opacity = opacity;
+ 	}
+ 	
++	/**
++	 * @return whether the object is visible or not
++	 */
+ 	public boolean getVisible() {
+ 		return visible;
+ 	}
+ 
++	/**
++	 * @param visible toggles object's visibility
++	 */
+ 	public void setVisible(boolean visible) {
+ 		this.visible = visible;
+ 	}
+ 	
++	/**
++	 * @return object's properties set
++	 */
+ 	public MapProperties getProperties() {
+ 		return properties;
+ 	}
+ 	
++	/**
++	 * Creates empty object 
++	 */
+ 	public MapObject() {
+ 		
+ 	}
+-	
+ }
+diff --git a/gdx/src/com/badlogic/gdx/maps/MapObjects.java b/gdx/src/com/badlogic/gdx/maps/MapObjects.java
+index 564f2fe..80ecce5 100644
+--- a/gdx/src/com/badlogic/gdx/maps/MapObjects.java
++++ b/gdx/src/com/badlogic/gdx/maps/MapObjects.java
+@@ -4,17 +4,32 @@ import java.util.Iterator;
+ 
+ import com.badlogic.gdx.utils.Array;
+ 
++/**
++ * @brief Collection of MapObject instances
++ */
+ public class MapObjects implements Iterable<MapObject> {
+ 
+ 	private Array<MapObject> objects;
+ 
++	/**
++	 * Creates and empty set of MapObject instances
++	 */
+ 	public MapObjects() {
+ 		objects = new Array<MapObject>();		
+ 	}
++	
++	/**
++	 * @param index
++	 * @return MapObject at index
++	 */
+ 	public MapObject getObject(int index) {
+ 		return objects.get(index);
+ 	}
+ 	
++	/**
++	 * @param name
++	 * @return name matching object, null if it´s not in the set
++	 */
+ 	public MapObject getObject(String name) {
+ 		for (MapObject object : objects) {
+ 			if (name.equals(object.getName())) {
+@@ -24,26 +39,47 @@ public class MapObjects implements Iterable<MapObject> {
+ 		return null;
+ 	}
+ 	
++	/**
++	 * @param object instance to be added to the collection
++	 */
+ 	public void addObject(MapObject object) {
+ 		this.objects.add(object);
+ 	}
+ 	
++	/**
++	 * @param index removes MapObject instance at index
++	 */
+ 	public void removeObject(int index) {
+ 		objects.removeIndex(index);
+ 	}
+ 	
++	/**
++	 * @param object instance to be removed
++	 */
+ 	public void removeObject(MapObject object) {
+ 		objects.removeValue(object, true);
+ 	}
+ 	
++	/**
++	 * @return number of objects in the collection
++	 */
+ 	public int getNumObjects() {
+ 		return objects.size;
+ 	}
+ 
++	/**
++	 * @param type class of the objects we want to retrieve
++	 * @return array filled with all the objects in the collection matching type
++	 */
+ 	public <T extends MapObject> Array<T> getObjectsByType(Class<T> type) {
+ 		return getObjectsByType(type, new Array<T>());	
+ 	}
+ 	
++	/**
++	 * @param type class of the objects we want to retrieve
++	 * @param fill collection to put the returned objects in
++	 * @return array filled with all the objects in the collection matching type
++	 */
+ 	public <T extends MapObject> Array<T> getObjectsByType(Class<T> type, Array<T> fill) {
+ 		fill.clear();
+ 		for (MapObject object : objects) {
+@@ -54,6 +90,9 @@ public class MapObjects implements Iterable<MapObject> {
+ 		return fill;
+ 	}
+ 
++	/**
++	 * @return iterator for the objects within the collection
++	 */
+ 	@Override
+ 	public Iterator<MapObject> iterator() {
+ 		return objects.iterator();
+diff --git a/gdx/src/com/badlogic/gdx/maps/MapProperties.java b/gdx/src/com/badlogic/gdx/maps/MapProperties.java
+index 2811662..d3c7cf7 100644
+--- a/gdx/src/com/badlogic/gdx/maps/MapProperties.java
++++ b/gdx/src/com/badlogic/gdx/maps/MapProperties.java
+@@ -6,22 +6,41 @@ import com.badlogic.gdx.graphics.Color;
+ import com.badlogic.gdx.math.Vector2;
+ import com.badlogic.gdx.utils.ObjectMap;
+ 
++/**
++ * @brief Set of string indexed values representing map elements' properties, allowing
++ * to retrieve, modify and add properties to the set.
++ */
+ public class MapProperties {
+ 
+ 	private ObjectMap<String, Object> properties;
+ 	
++	/**
++	 * Creates an empty properties set
++	 */
+ 	public MapProperties() {
+ 		properties = new ObjectMap<String, Object>();
+ 	}
+ 
++	/**
++	 * @param key property name 
++	 * @return true if and only if the property exists
++	 */
+ 	public boolean has(String key) {
+ 		return properties.containsKey(key);
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @return the value for that property if it exists, otherwise, null
++	 */
+ 	public Object get(String key) {
+ 		return properties.get(key);
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @return the value for that property if it exists and can be interpreted as a boolean, otherwise, null
++	 */
+ 	public Boolean getAsBoolean(String key) {
+ 		Object value = properties.get(key);
+ 		try {
+@@ -35,6 +54,10 @@ public class MapProperties {
+ 		}
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @return the value for that property if it exists and can be interpreted as a byte, otherwise, null
++	 */
+ 	public Byte getAsByte(String key) {
+ 		Object value = properties.get(key);
+ 		if (value != null) {
+@@ -56,6 +79,10 @@ public class MapProperties {
+ 		}
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @return the value for that property if it exists and can be interpreted as a double, otherwise, null
++	 */
+ 	public Double getAsDouble(String key) {
+ 		Object value = properties.get(key);
+ 		if (value != null) {
+@@ -77,6 +104,10 @@ public class MapProperties {
+ 		}
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @return the value for that property if it exists and can be interpreted as a float, otherwise, null
++	 */
+ 	public Float getAsFloat(String key) {
+ 		Object value = properties.get(key);
+ 		if (value != null) {
+@@ -98,6 +129,10 @@ public class MapProperties {
+ 		}
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @return the value for that property if it exists and can be interpreted as an integer, otherwise, null
++	 */
+ 	public Integer getAsInteger(String key) {
+ 		Object value = properties.get(key);
+ 		if (value != null) {
+@@ -119,6 +154,10 @@ public class MapProperties {
+ 		}
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @return the value for that property if it exists and can be interpreted as a long, otherwise, null
++	 */
+ 	public Long getAsLong(String key) {
+ 		Object value = properties.get(key);
+ 		if (value != null) {
+@@ -140,6 +179,10 @@ public class MapProperties {
+ 		}
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @return the value for that property if it exists and can be interpreted as a short, otherwise, null
++	 */
+ 	public Short getAsShort(String key) {
+ 		Object value = properties.get(key);
+ 		if (value != null) {
+@@ -161,6 +204,10 @@ public class MapProperties {
+ 		}
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @return the value for that property as a string if it exists, otherwise, null
++	 */
+ 	public String getAsString(String key) {
+ 		Object value = properties.get(key);
+ 		if (value != null) {
+@@ -170,6 +217,10 @@ public class MapProperties {
+ 		}
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @return the value for that property if it exists and it's a Vector2, otherwise, null
++	 */
+ 	public Vector2 getAsVector2(String key) {
+ 		Object value = properties.get(key);
+ 		
+@@ -180,6 +231,10 @@ public class MapProperties {
+ 		return null;
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @return the value for that property if it exists and it's a Color, otherwise, null
++	 */
+ 	public Color getAsColor(String key) {
+ 		Object value = properties.get(key);
+ 		
+@@ -190,112 +245,217 @@ public class MapProperties {
+ 		return null;
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @param defaultValue value to be returned in case of failure
++	 * @return the value for that property if it exists and it's a boolean, otherwise, defaultValue
++	 */
+ 	public Boolean getAsBoolean(String key, Boolean defaultValue) {
+ 		Boolean value = getAsBoolean(key);
+ 		return value == null? defaultValue : value;
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @param defaultValue value to be returned in case of failure
++	 * @return the value for that property if it exists and it's a byte, otherwise, defaultValue
++	 */
+ 	public Byte getAsByte(String key, Byte defaultValue) {
+ 		Byte value = getAsByte(key);
+ 		return value == null? defaultValue : value;
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @param defaultValue value to be returned in case of failure
++	 * @return the value for that property if it exists and it's a double, otherwise, defaultValue
++	 */
+ 	public Double getAsDouble(String key, Double defaultValue) {
+ 		Double value = getAsDouble(key);
+ 		return value == null? defaultValue : value;
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @param defaultValue value to be returned in case of failure
++	 * @return the value for that property if it exists and it's a float, otherwise, defaultValue
++	 */
+ 	public Float getAsFloat(String key, Float defaultValue) {
+ 		Float value = getAsFloat(key);
+ 		return value == null? defaultValue : value;
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @param defaultValue value to be returned in case of failure
++	 * @return the value for that property if it exists and it's an integer, otherwise, defaultValue
++	 */
+ 	public Integer getAsInteger(String key, Integer defaultValue) {
+ 		Integer value = getAsInteger(key);
+ 		return value == null? defaultValue : value;
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @param defaultValue value to be returned in case of failure
++	 * @return the value for that property if it exists and it's a long, otherwise, defaultValue
++	 */
+ 	public Long getAsLong(String key, Long defaultValue) {
+ 		Long value = getAsLong(key);
+ 		return value == null? defaultValue : value;
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @param defaultValue value to be returned in case of failure
++	 * @return the value for that property if it exists and it's a short, otherwise, defaultValue
++	 */
+ 	public Short getAsShort(String key, Short defaultValue) {
+ 		Short value = getAsShort(key);
+ 		return value == null? defaultValue : value;
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @param defaultValue value to be returned in case of failure
++	 * @return the value for that property as a string if it exists, otherwise, defaultValue
++	 */
+ 	public String getAsString(String key, String defaultValue) {
+ 		String value = getAsString(key);
+ 		return value == null? defaultValue : value;
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @param defaultValue value to be returned in case of failure
++	 * @return the value for that property if it exists and it's a Vector2, otherwise, defaultValue
++	 */
+ 	public Vector2 getAsVector2(String key, Vector2 defaultValue) {
+ 		Vector2 value = getAsVector2(key);
+ 		return value == null? defaultValue : value;
+ 	}
+ 	
++	/**
++	 * @param key property name 
++	 * @param defaultValue value to be returned in case of failure
++	 * @return the value for that property if it exists and it's a Color, otherwise, defaultValue
++	 */
+ 	public Color getAsColor(String key, Color defaultValue) {
+ 		Color value = getAsColor(key);
+ 		return value == null? defaultValue : value;
+ 	}
+ 	
++	/**
++	 * @param key property name
++	 * @param value value to be inserted or modified (if it already existed)
++	 */
+ 	public void put(String key, Boolean value) {
+ 		properties.put(key, value);
+ 	}
+ 	
++	/**
++	 * @param key property name
++	 * @param value value to be inserted or modified (if it already existed)
++	 */
+ 	public void put(String key, Byte value) {
+ 		properties.put(key, value);
+ 	}
+ 	
++	/**
++	 * @param key property name
++	 * @param value value to be inserted or modified (if it already existed)
++	 */
+ 	public void put(String key, Double value) {
+ 		properties.put(key, value);
+ 	}
+ 	
++	/**
++	 * @param key property name
++	 * @param value value to be inserted or modified (if it already existed)
++	 */
+ 	public void put(String key, Float value) {
+ 		properties.put(key, value);
+ 	}
+ 	
++	/**
++	 * @param key property name
++	 * @param value value to be inserted or modified (if it already existed)
++	 */
+ 	public void put(String key, Integer value) {
+ 		properties.put(key, value);
+ 	}
+ 	
++	/**
++	 * @param key property name
++	 * @param value value to be inserted or modified (if it already existed)
++	 */
+ 	public void put(String key, Long value) {
+ 		properties.put(key, value);
+ 	}
+ 	
++	/**
++	 * @param key property name
++	 * @param value value to be inserted or modified (if it already existed)
++	 */
+ 	public void put(String key, Short value) {
+ 		properties.put(key, value);
+ 	}
+ 	
++	/**
++	 * @param key property name
++	 * @param value value to be inserted or modified (if it already existed)
++	 */
+ 	public void put(String key, String value) {
+ 		properties.put(key, value);
+ 	}
+ 	
++	/**
++	 * @param key property name
++	 * @param value value to be inserted or modified (if it already existed)
++	 */
+ 	public void put(String key, Vector2 value) {
+ 		properties.put(key, value);
+ 	}
+ 	
++	/**
++	 * @param key property name
++	 * @param value value to be inserted or modified (if it already existed)
++	 */
+ 	public void put(String key, Color value) {
+ 		properties.put(key, value);
+ 	}
+ 	
++	/**
++	 * @param properties set of properties to be added
++	 */
+ 	public void putAll(MapProperties properties) {
+ 		this.properties.putAll(properties.properties);
+ 	}
+ 	
++	/**
++	 * @param key property name to be removed
++	 */
+ 	public void remove(String key) {
+ 		properties.remove(key);
+ 	}
+ 	
++	/**
++	 * Removes all properties
++	 */
+ 	public void clear() {
+ 		properties.clear();
+ 	}
+ 	
++	/**
++	 * @return iterator for the property names
++	 */
+ 	public Iterator<String> getKeys() {
+ 		return properties.keys();
+ 	}
+ 	
++	/**
++	 * @return iterator to properties' values
++	 */
+ 	public Iterator<Object> getValues() {
+ 		return properties.values();
+ 	}
+diff --git a/gdx/src/com/badlogic/gdx/maps/MapRenderer.java b/gdx/src/com/badlogic/gdx/maps/MapRenderer.java
+index 2f58114..c0a550a 100644
+--- a/gdx/src/com/badlogic/gdx/maps/MapRenderer.java
++++ b/gdx/src/com/badlogic/gdx/maps/MapRenderer.java
+@@ -2,7 +2,9 @@ package com.badlogic.gdx.maps;
+ 
+ import com.badlogic.gdx.math.Matrix4;
+ 
+-
++/**
++ * @brief models a common way of rendering Map objects
++ */
+ public interface MapRenderer {
+ 
+ 	public void setProjectionMatrix(Matrix4 projectionMatrix);
+diff --git a/gdx/src/com/badlogic/gdx/maps/gleed/GleedMapLoader.java b/gdx/src/com/badlogic/gdx/maps/gleed/GleedMapLoader.java
+deleted file mode 100644
+index ae24e4d..0000000
+--- a/gdx/src/com/badlogic/gdx/maps/gleed/GleedMapLoader.java
++++ /dev/null
+@@ -1,400 +0,0 @@
+-/*******************************************************************************
+- * Copyright 2011 See AUTHORS file.
+- * 
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- * 
+- *   http://www.apache.org/licenses/LICENSE-2.0
+- * 
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- ******************************************************************************/
+-
+-package com.badlogic.gdx.maps.gleed;
+-
+-import com.badlogic.gdx.Gdx;
+-import com.badlogic.gdx.assets.AssetDescriptor;
+-import com.badlogic.gdx.assets.AssetLoaderParameters;
+-import com.badlogic.gdx.assets.AssetManager;
+-import com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader;
+-import com.badlogic.gdx.assets.loaders.FileHandleResolver;
+-import com.badlogic.gdx.graphics.Color;
+-import com.badlogic.gdx.graphics.Texture;
+-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+-import com.badlogic.gdx.graphics.g2d.TextureRegion;
+-import com.badlogic.gdx.maps.Map;
+-import com.badlogic.gdx.maps.MapLayer;
+-import com.badlogic.gdx.maps.MapObject;
+-import com.badlogic.gdx.maps.MapProperties;
+-import com.badlogic.gdx.maps.objects.CircleMapObject;
+-import com.badlogic.gdx.maps.objects.PolygonMapObject;
+-import com.badlogic.gdx.maps.objects.PolylineMapObject;
+-import com.badlogic.gdx.maps.objects.RectangleMapObject;
+-import com.badlogic.gdx.maps.objects.TextureMapObject;
+-import com.badlogic.gdx.math.Polygon;
+-import com.badlogic.gdx.math.Vector2;
+-import com.badlogic.gdx.utils.Array;
+-import com.badlogic.gdx.utils.Logger;
+-import com.badlogic.gdx.utils.XmlReader;
+-import com.badlogic.gdx.utils.XmlReader.Element;
+-
+-/**
+- * @author David Saltares
+- * 
+- * @brief asynchronously Loads GLEED formatted maps 
+- *
+- */
+-public class GleedMapLoader  extends AsynchronousAssetLoader<Map, GleedMapLoader.Parameters > {
+-
+-	static public class Parameters extends AssetLoaderParameters<Map> {
+-	}
+-	
+-	static private Logger s_logger = new Logger("GleedMapLoader");
+-	
+-	private String m_atlasFile = "";
+-	private TextureAtlas m_atlas = null;
+-	private String m_pathRoot = "data";
+-	private Map m_map = null;
+-	private AssetManager m_assetManager = null;
+-	
+-	/**
+-	 * @param loggingLevel logger level, output more or less information
+-	 */
+-	public static void setLoggingLevel(int loggingLevel) {
+-		s_logger.setLevel(loggingLevel);
+-	}
+-	
+-	/**
+-	 * @param resolver
+-	 */
+-	public GleedMapLoader (FileHandleResolver resolver) {
+-		super(resolver);
+-	}
+-	
+-	/**
+-	 * Asynchronously loads a GleedMap
+-	 * 
+-	 * @params manager asset manager to load the map
+-	 * @params fileName gleed map file
+-	 * @params parameters additional parameters, not used for now
+-	 */
+-	@Override
+-	public void loadAsync (AssetManager manager, String fileName, Parameters parameter) {
+-		m_assetManager = manager;
+-		
+-		s_logger.info("loading file " + fileName);
+-		
+-		try {
+-			XmlReader reader = new XmlReader();
+-			Element root = reader.parse(Gdx.files.internal(fileName));
+-			
+-			s_logger.info("loading level properties");
+-			
+-			if (m_map == null) {
+-				m_map = new Map();
+-				loadProperties(root, m_map.getProperties());
+-			}
+-			
+-			if (!m_atlasFile.isEmpty()) {
+-				s_logger.info("fetching texture atlas " + m_atlasFile);
+-				m_atlas = manager.get(m_atlasFile, TextureAtlas.class);
+-			}
+-			
+-			s_logger.info("loading layers");
+-			Array<Element> layerElements = root.getChildByName("Layers").getChildrenByName("Layer");
+-			
+-			for (int i = 0; i < layerElements.size; ++i) {
+-				Element layerElement = layerElements.get(i);
+-				loadLayer(layerElement);
+-			}
+-			
+-		} catch (Exception e) {
+-			s_logger.error("error loading file " + fileName + " " + e.getMessage());
+-		}
+-	}
+-	
+-	/**
+-	 * Synchronously loads a GleedMap
+-	 * 
+-	 * @params manager asset manager to load the map
+-	 * @params fileName gleed map file
+-	 * @params parameters additional parameters, not used for now
+-	 * 
+-	 * @return gleed map
+-	 */
+-	@Override
+-	public Map loadSync (AssetManager manager, String fileName, Parameters parameter) {
+-		return m_map;
+-	}
+-	
+-	/**
+-	 * @params fileName gleed map file
+-	 * @params parameters additional parameters, not used for now
+-	 * 
+-	 * @return map dependencies (either texture atlas or several textures)
+-	 */
+-	@Override
+-	public Array<AssetDescriptor> getDependencies (String fileName, Parameters parameter) {
+-		s_logger.info("getting asset dependencies for " + fileName);
+-		Array<AssetDescriptor> dependencies = new Array<AssetDescriptor>();
+-		
+-		try {
+-			XmlReader reader = new XmlReader();
+-			Element root = reader.parse(Gdx.files.internal(fileName));
+-			
+-			if (m_map == null) {
+-				m_map = new Map();
+-				
+-				loadProperties(root, m_map.getProperties());
+-			}
+-			
+-			MapProperties properties = m_map.getProperties();
+-			
+-			m_atlasFile = properties.getAsString("atlas", "");
+-			m_pathRoot = properties.getAsString("assetRoot", "data");
+-			
+-			if (!m_atlasFile.isEmpty()) {
+-				s_logger.info("texture atlas dependency " + m_atlasFile);
+-				dependencies.add(new AssetDescriptor(m_atlasFile, TextureAtlas.class));
+-			}
+-			else {
+-				s_logger.info("textures asset folder " + m_pathRoot);
+-				Array<Element> elements = root.getChildrenByNameRecursively("Item");
+-				
+-				for (int i = 0; i < elements.size; ++i) {
+-					Element element = elements.get(i);
+-					
+-					if (element.getAttribute("xsi:type", "").equals("TextureItem")) {
+-						String[] pathParts = element.getChildByName("texture_filename").getText().split("\\\\");
+-						s_logger.info("texture dependency " + m_pathRoot + "/" + pathParts[pathParts.length - 1]);
+-						dependencies.add(new AssetDescriptor(m_pathRoot + "/" + pathParts[pathParts.length - 1], Texture.class));
+-					}
+-				}
+-			}
+-			
+-		} catch (Exception e) {
+-			s_logger.error("error loading asset dependencies " + fileName + " " + e.getMessage());
+-		}
+-		
+-		return dependencies;
+-	}
+-	
+-	private Color loadColor(Element colorElement) {
+-		return new Color(Float.parseFloat(colorElement.getChildByName("R").getText()) / 255.0f,
+-							  Float.parseFloat(colorElement.getChildByName("G").getText()) / 255.0f,
+-							  Float.parseFloat(colorElement.getChildByName("B").getText()) / 255.0f,
+-							  Float.parseFloat(colorElement.getChildByName("A").getText()) / 255.0f);
+-	}
+-	
+-	private void loadProperties(Element element, MapProperties properties) {
+-		Element customProperty = element.getChildByName("CustomProperties");
+-		 
+-		if (customProperty != null) {
+-			Array<Element> propertiesElements = customProperty.getChildrenByName("Property");
+-			
+-			for (int i = 0; i < propertiesElements.size; ++i) {
+-				Element property = propertiesElements.get(i);
+-				String type = property.getAttribute("Type");
+-				
+-				if (type == null) {
+-					continue;
+-				}
+-				
+-				if (type.equals("string")) {
+-					properties.put(property.getAttribute("Name"), property.getChildByName("string").getText());
+-				}
+-				else if (type.equals("bool")) {
+-					properties.put(property.getAttribute("Name"), Boolean.parseBoolean(property.getChildByName("boolean").getText()));
+-				}
+-				else if (type.equals("Vector2")) {
+-					Element vectorElement = property.getChildByName("Vector2");
+-					Vector2 v = new Vector2(Float.parseFloat(vectorElement.getChildByName("X").getText()),
+-													Float.parseFloat(vectorElement.getChildByName("Y").getText()));
+-					
+-					properties.put(property.getAttribute("Name"), v);
+-				}
+-				else if (type.equals("Color")) {
+-					Element colorElement = property.getChildByName("Color");
+-					Color c = new Color(Float.parseFloat(colorElement.getChildByName("R").getText()) / 255.0f,
+-										Float.parseFloat(colorElement.getChildByName("G").getText()) / 255.0f,
+-										Float.parseFloat(colorElement.getChildByName("B").getText()) / 255.0f,
+-										Float.parseFloat(colorElement.getChildByName("A").getText()) / 255.0f);
+-					
+-					properties.put(property.getAttribute("Name"), c);
+-				}
+-			}
+-		}
+-	}
+-	
+-	private void loadLayer(Element element) {
+-		MapLayer layer = new MapLayer();
+-		
+-		loadProperties(element, layer.getProperties());
+-		
+-		layer.setName(element.getAttribute("Name", ""));
+-		layer.setVisible(Boolean.parseBoolean(element.getAttribute("Visible", "true")));
+-		
+-		s_logger.info("loading layer " + layer.getName());
+-		Array<Element> items = element.getChildByName("Items").getChildrenByName("Item");
+-		
+-		for (int i = 0; i < items.size; ++i) {
+-			Element item = items.get(i);
+-			String type = item.getAttribute("xsi:type");
+-			MapObject mapObject;;
+-			
+-			if (type.equals("TextureItem")) {
+-				mapObject = loadTexture(item);
+-			}
+-			else if (type.equals("PathItem")) {
+-				if (isPolygon(item)) {
+-					mapObject = loadPolygon(item);
+-				}
+-				else {
+-					mapObject = loadPolyline(item);
+-				}
+-			}
+-			else if (type.equals("RectangleItem")) {
+-				mapObject = loadRectangle(item);
+-				
+-			}
+-			else if (type.equals("CircleItem")) {
+-				mapObject = loadCircle(item);
+-			}
+-			else {
+-				continue;
+-			}
+-			
+-			layer.getObjects().addObject(mapObject);
+-		}
+-		
+-		m_map.getLayers().addLayer(layer);
+-	}
+-	
+-	private void loadObject(Element element, MapObject mapObject) {
+-		mapObject.setName(element.getAttribute("Name", ""));
+-		mapObject.setVisible(Boolean.parseBoolean(element.getAttribute("Visible", "true")));
+-		loadProperties(element, mapObject.getProperties());
+-		
+-		s_logger.info("loading element " + mapObject.getName());
+-	}
+-	
+-	private TextureMapObject loadTexture(Element item) {
+-		
+-		TextureMapObject texture = new TextureMapObject();
+-		
+-		loadObject(item, texture);
+-		
+-		texture.setColor(loadColor(item.getChildByName("TintColor")));
+-		
+-		TextureRegion region;
+-		
+-		if (m_atlasFile.isEmpty()) {
+-			String[] pathParts = item.getChildByName("texture_filename").getText().split("\\\\");
+-			region = new TextureRegion(m_assetManager.get(m_pathRoot + "/" + pathParts[pathParts.length - 1], Texture.class));
+-		}
+-		else {
+-			String[] assetParts = item.getChildByName("asset_name").getText().split("\\\\");
+-			region = new TextureRegion(m_atlas.findRegion(assetParts[assetParts.length - 1]));
+-		}
+-		
+-		region.flip(Boolean.parseBoolean(item.getChildByName("FlipHorizontally").getText()),
+-						Boolean.parseBoolean(item.getChildByName("FlipVertically").getText()));
+-		
+-		texture.setTextureRegion(region);
+-		
+-		Element positionElement = item.getChildByName("Position");
+-		texture.setX(Float.parseFloat(positionElement.getChildByName("X").getText()));
+-		texture.setY(-Float.parseFloat(positionElement.getChildByName("Y").getText()));
+-		
+-		Element origin = item.getChildByName("Origin");
+-		texture.setOriginX(Float.parseFloat(origin.getChildByName("X").getText()));
+-		texture.setOriginY(Float.parseFloat(origin.getChildByName("Y").getText()));
+-		
+-		Element scale = item.getChildByName("Scale");
+-		texture.setScaleX(Float.parseFloat(scale.getChildByName("X").getText()));
+-		texture.setScaleY(Float.parseFloat(scale.getChildByName("Y").getText()));
+-		
+-		texture.setRotation(Float.parseFloat(item.getChildByName("Rotation").getText()));
+-		
+-		return texture;
+-	}
+-	
+-	private CircleMapObject loadCircle(Element item) {
+-		CircleMapObject circle = new CircleMapObject();
+-		
+-		loadObject(item, circle);
+-		
+-		circle.setColor(loadColor(item.getChildByName("FillColor")));
+-		
+-		Element position = item.getChildByName("Position");
+-		circle.getCircle().set(Float.parseFloat(position.getChildByName("X").getText()),
+-									  -Float.parseFloat(position.getChildByName("Y").getText()),
+-									  Float.parseFloat(item.getChildByName("Radius").getText()));
+-		
+-		return circle;
+-	}
+-	
+-	private RectangleMapObject loadRectangle(Element item) {
+-		RectangleMapObject rectangle = new RectangleMapObject();
+-		
+-		loadObject(item, rectangle);
+-		
+-		rectangle.setColor(loadColor(item.getChildByName("FillColor")));
+-		
+-		Element position = item.getChildByName("Position");
+-		rectangle.getRectangle().set(Float.parseFloat(position.getChildByName("X").getText()),
+-											  -Float.parseFloat(position.getChildByName("Y").getText()),
+-											  Float.parseFloat(item.getChildByName("Width").getText()),
+-											  Float.parseFloat(item.getChildByName("Height").getText()));
+-		
+-		return rectangle;
+-	}
+-	
+-	private PolygonMapObject loadPolygon(Element item) {
+-		PolygonMapObject polygon = new PolygonMapObject();
+-		
+-		loadObject(item, polygon);
+-		
+-		Array<Element> pointElements = item.getChildByName("WorldPoints").getChildrenByName("Vector2");
+-		float[] vertices = new float[pointElements.size * 2];
+-		
+-		for (int j = 0; j < pointElements.size; ++j) {
+-			Element pointElement = pointElements.get(j);
+-			vertices[j * 2] = Float.parseFloat(pointElement.getChildByName("X").getText());
+-			vertices[j * 2 + 1] = -Float.parseFloat(pointElement.getChildByName("Y").getText());
+-		}
+-		
+-		polygon.setPolygon(new Polygon(vertices));
+-		polygon.setColor(loadColor(item.getChildByName("LineColor")));
+-		
+-		return polygon;
+-	}
+-	
+-	private PolylineMapObject loadPolyline(Element item) {
+-		PolylineMapObject polyline = new PolylineMapObject();
+-		
+-		loadObject(item, polyline);
+-		
+-		Array<Element> pointElements = item.getChildByName("WorldPoints").getChildrenByName("Vector2");
+-		float[] vertices = new float[pointElements.size * 2];
+-		
+-		for (int j = 0; j < pointElements.size; ++j) {
+-			Element pointElement = pointElements.get(j);
+-			vertices[j * 2] = Float.parseFloat(pointElement.getChildByName("X").getText());
+-			vertices[j * 2 + 1] = -Float.parseFloat(pointElement.getChildByName("Y").getText());
+-		}
+-		
+-		polyline.setPolygon(new Polygon(vertices));
+-		polyline.setColor(loadColor(item.getChildByName("LineColor")));
+-		
+-		return polyline;
+-	}
+-	
+-	private boolean isPolygon(Element item) {
+-		return Boolean.parseBoolean(item.getChildByName("IsPolygon").getText());
+-	}
+-}
+diff --git a/gdx/src/com/badlogic/gdx/maps/gleed/GleedMapRenderer.java b/gdx/src/com/badlogic/gdx/maps/gleed/GleedMapRenderer.java
+index e66961f..6adf8ed 100644
+--- a/gdx/src/com/badlogic/gdx/maps/gleed/GleedMapRenderer.java
++++ b/gdx/src/com/badlogic/gdx/maps/gleed/GleedMapRenderer.java
+@@ -57,6 +57,8 @@ public class GleedMapRenderer implements MapRenderer, Disposable {
+ 	
+ 	/**
+ 	 * @param map map data that will be used to render
++	 * 
++	 * Uses its own SpriteBatch
+ 	 */
+ 	public GleedMapRenderer(Map map) {
+ 		this(map, new SpriteBatch(), 1.0f);
+diff --git a/gdx/src/com/badlogic/gdx/maps/loaders/GleedMapLoader.java b/gdx/src/com/badlogic/gdx/maps/loaders/GleedMapLoader.java
+new file mode 100644
+index 0000000..3dfe274
+--- /dev/null
++++ b/gdx/src/com/badlogic/gdx/maps/loaders/GleedMapLoader.java
+@@ -0,0 +1,400 @@
++/*******************************************************************************
++ * Copyright 2011 See AUTHORS file.
++ * 
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ * 
++ *   http://www.apache.org/licenses/LICENSE-2.0
++ * 
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ ******************************************************************************/
++
++package com.badlogic.gdx.maps.loaders;
++
++import com.badlogic.gdx.Gdx;
++import com.badlogic.gdx.assets.AssetDescriptor;
++import com.badlogic.gdx.assets.AssetLoaderParameters;
++import com.badlogic.gdx.assets.AssetManager;
++import com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader;
++import com.badlogic.gdx.assets.loaders.FileHandleResolver;
++import com.badlogic.gdx.graphics.Color;
++import com.badlogic.gdx.graphics.Texture;
++import com.badlogic.gdx.graphics.g2d.TextureAtlas;
++import com.badlogic.gdx.graphics.g2d.TextureRegion;
++import com.badlogic.gdx.maps.Map;
++import com.badlogic.gdx.maps.MapLayer;
++import com.badlogic.gdx.maps.MapObject;
++import com.badlogic.gdx.maps.MapProperties;
++import com.badlogic.gdx.maps.objects.CircleMapObject;
++import com.badlogic.gdx.maps.objects.PolygonMapObject;
++import com.badlogic.gdx.maps.objects.PolylineMapObject;
++import com.badlogic.gdx.maps.objects.RectangleMapObject;
++import com.badlogic.gdx.maps.objects.TextureMapObject;
++import com.badlogic.gdx.math.Polygon;
++import com.badlogic.gdx.math.Vector2;
++import com.badlogic.gdx.utils.Array;
++import com.badlogic.gdx.utils.Logger;
++import com.badlogic.gdx.utils.XmlReader;
++import com.badlogic.gdx.utils.XmlReader.Element;
++
++/**
++ * @author David Saltares
++ * 
++ * @brief asynchronously Loads GLEED formatted maps 
++ *
++ */
++public class GleedMapLoader  extends AsynchronousAssetLoader<Map, GleedMapLoader.Parameters > {
++
++	static public class Parameters extends AssetLoaderParameters<Map> {
++	}
++	
++	static private Logger s_logger = new Logger("GleedMapLoader");
++	
++	private String m_atlasFile = "";
++	private TextureAtlas m_atlas = null;
++	private String m_pathRoot = "data";
++	private Map m_map = null;
++	private AssetManager m_assetManager = null;
++	
++	/**
++	 * @param loggingLevel logger level, output more or less information
++	 */
++	public static void setLoggingLevel(int loggingLevel) {
++		s_logger.setLevel(loggingLevel);
++	}
++	
++	/**
++	 * @param resolver
++	 */
++	public GleedMapLoader (FileHandleResolver resolver) {
++		super(resolver);
++	}
++	
++	/**
++	 * Asynchronously loads a GleedMap
++	 * 
++	 * @params manager asset manager to load the map
++	 * @params fileName gleed map file
++	 * @params parameters additional parameters, not used for now
++	 */
++	@Override
++	public void loadAsync (AssetManager manager, String fileName, Parameters parameter) {
++		m_assetManager = manager;
++		
++		s_logger.info("loading file " + fileName);
++		
++		try {
++			XmlReader reader = new XmlReader();
++			Element root = reader.parse(Gdx.files.internal(fileName));
++			
++			s_logger.info("loading level properties");
++			
++			if (m_map == null) {
++				m_map = new Map();
++				loadProperties(root, m_map.getProperties());
++			}
++			
++			if (!m_atlasFile.isEmpty()) {
++				s_logger.info("fetching texture atlas " + m_atlasFile);
++				m_atlas = manager.get(m_atlasFile, TextureAtlas.class);
++			}
++			
++			s_logger.info("loading layers");
++			Array<Element> layerElements = root.getChildByName("Layers").getChildrenByName("Layer");
++			
++			for (int i = 0; i < layerElements.size; ++i) {
++				Element layerElement = layerElements.get(i);
++				loadLayer(layerElement);
++			}
++			
++		} catch (Exception e) {
++			s_logger.error("error loading file " + fileName + " " + e.getMessage());
++		}
++	}
++	
++	/**
++	 * Synchronously loads a GleedMap
++	 * 
++	 * @params manager asset manager to load the map
++	 * @params fileName gleed map file
++	 * @params parameters additional parameters, not used for now
++	 * 
++	 * @return gleed map
++	 */
++	@Override
++	public Map loadSync (AssetManager manager, String fileName, Parameters parameter) {
++		return m_map;
++	}
++	
++	/**
++	 * @params fileName gleed map file
++	 * @params parameters additional parameters, not used for now
++	 * 
++	 * @return map dependencies (either texture atlas or several textures)
++	 */
++	@Override
++	public Array<AssetDescriptor> getDependencies (String fileName, Parameters parameter) {
++		s_logger.info("getting asset dependencies for " + fileName);
++		Array<AssetDescriptor> dependencies = new Array<AssetDescriptor>();
++		
++		try {
++			XmlReader reader = new XmlReader();
++			Element root = reader.parse(Gdx.files.internal(fileName));
++			
++			if (m_map == null) {
++				m_map = new Map();
++				
++				loadProperties(root, m_map.getProperties());
++			}
++			
++			MapProperties properties = m_map.getProperties();
++			
++			m_atlasFile = properties.getAsString("atlas", "");
++			m_pathRoot = properties.getAsString("assetRoot", "data");
++			
++			if (!m_atlasFile.isEmpty()) {
++				s_logger.info("texture atlas dependency " + m_atlasFile);
++				dependencies.add(new AssetDescriptor(m_atlasFile, TextureAtlas.class));
++			}
++			else {
++				s_logger.info("textures asset folder " + m_pathRoot);
++				Array<Element> elements = root.getChildrenByNameRecursively("Item");
++				
++				for (int i = 0; i < elements.size; ++i) {
++					Element element = elements.get(i);
++					
++					if (element.getAttribute("xsi:type", "").equals("TextureItem")) {
++						String[] pathParts = element.getChildByName("texture_filename").getText().split("\\\\");
++						s_logger.info("texture dependency " + m_pathRoot + "/" + pathParts[pathParts.length - 1]);
++						dependencies.add(new AssetDescriptor(m_pathRoot + "/" + pathParts[pathParts.length - 1], Texture.class));
++					}
++				}
++			}
++			
++		} catch (Exception e) {
++			s_logger.error("error loading asset dependencies " + fileName + " " + e.getMessage());
++		}
++		
++		return dependencies;
++	}
++	
++	private Color loadColor(Element colorElement) {
++		return new Color(Float.parseFloat(colorElement.getChildByName("R").getText()) / 255.0f,
++							  Float.parseFloat(colorElement.getChildByName("G").getText()) / 255.0f,
++							  Float.parseFloat(colorElement.getChildByName("B").getText()) / 255.0f,
++							  Float.parseFloat(colorElement.getChildByName("A").getText()) / 255.0f);
++	}
++	
++	private void loadProperties(Element element, MapProperties properties) {
++		Element customProperty = element.getChildByName("CustomProperties");
++		 
++		if (customProperty != null) {
++			Array<Element> propertiesElements = customProperty.getChildrenByName("Property");
++			
++			for (int i = 0; i < propertiesElements.size; ++i) {
++				Element property = propertiesElements.get(i);
++				String type = property.getAttribute("Type");
++				
++				if (type == null) {
++					continue;
++				}
++				
++				if (type.equals("string")) {
++					properties.put(property.getAttribute("Name"), property.getChildByName("string").getText());
++				}
++				else if (type.equals("bool")) {
++					properties.put(property.getAttribute("Name"), Boolean.parseBoolean(property.getChildByName("boolean").getText()));
++				}
++				else if (type.equals("Vector2")) {
++					Element vectorElement = property.getChildByName("Vector2");
++					Vector2 v = new Vector2(Float.parseFloat(vectorElement.getChildByName("X").getText()),
++													Float.parseFloat(vectorElement.getChildByName("Y").getText()));
++					
++					properties.put(property.getAttribute("Name"), v);
++				}
++				else if (type.equals("Color")) {
++					Element colorElement = property.getChildByName("Color");
++					Color c = new Color(Float.parseFloat(colorElement.getChildByName("R").getText()) / 255.0f,
++										Float.parseFloat(colorElement.getChildByName("G").getText()) / 255.0f,
++										Float.parseFloat(colorElement.getChildByName("B").getText()) / 255.0f,
++										Float.parseFloat(colorElement.getChildByName("A").getText()) / 255.0f);
++					
++					properties.put(property.getAttribute("Name"), c);
++				}
++			}
++		}
++	}
++	
++	private void loadLayer(Element element) {
++		MapLayer layer = new MapLayer();
++		
++		loadProperties(element, layer.getProperties());
++		
++		layer.setName(element.getAttribute("Name", ""));
++		layer.setVisible(Boolean.parseBoolean(element.getAttribute("Visible", "true")));
++		
++		s_logger.info("loading layer " + layer.getName());
++		Array<Element> items = element.getChildByName("Items").getChildrenByName("Item");
++		
++		for (int i = 0; i < items.size; ++i) {
++			Element item = items.get(i);
++			String type = item.getAttribute("xsi:type");
++			MapObject mapObject;;
++			
++			if (type.equals("TextureItem")) {
++				mapObject = loadTexture(item);
++			}
++			else if (type.equals("PathItem")) {
++				if (isPolygon(item)) {
++					mapObject = loadPolygon(item);
++				}
++				else {
++					mapObject = loadPolyline(item);
++				}
++			}
++			else if (type.equals("RectangleItem")) {
++				mapObject = loadRectangle(item);
++				
++			}
++			else if (type.equals("CircleItem")) {
++				mapObject = loadCircle(item);
++			}
++			else {
++				continue;
++			}
++			
++			layer.getObjects().addObject(mapObject);
++		}
++		
++		m_map.getLayers().addLayer(layer);
++	}
++	
++	private void loadObject(Element element, MapObject mapObject) {
++		mapObject.setName(element.getAttribute("Name", ""));
++		mapObject.setVisible(Boolean.parseBoolean(element.getAttribute("Visible", "true")));
++		loadProperties(element, mapObject.getProperties());
++		
++		s_logger.info("loading element " + mapObject.getName());
++	}
++	
++	private TextureMapObject loadTexture(Element item) {
++		
++		TextureMapObject texture = new TextureMapObject();
++		
++		loadObject(item, texture);
++		
++		texture.setColor(loadColor(item.getChildByName("TintColor")));
++		
++		TextureRegion region;
++		
++		if (m_atlasFile.isEmpty()) {
++			String[] pathParts = item.getChildByName("texture_filename").getText().split("\\\\");
++			region = new TextureRegion(m_assetManager.get(m_pathRoot + "/" + pathParts[pathParts.length - 1], Texture.class));
++		}
++		else {
++			String[] assetParts = item.getChildByName("asset_name").getText().split("\\\\");
++			region = new TextureRegion(m_atlas.findRegion(assetParts[assetParts.length - 1]));
++		}
++		
++		region.flip(Boolean.parseBoolean(item.getChildByName("FlipHorizontally").getText()),
++						Boolean.parseBoolean(item.getChildByName("FlipVertically").getText()));
++		
++		texture.setTextureRegion(region);
++		
++		Element positionElement = item.getChildByName("Position");
++		texture.setX(Float.parseFloat(positionElement.getChildByName("X").getText()));
++		texture.setY(-Float.parseFloat(positionElement.getChildByName("Y").getText()));
++		
++		Element origin = item.getChildByName("Origin");
++		texture.setOriginX(Float.parseFloat(origin.getChildByName("X").getText()));
++		texture.setOriginY(Float.parseFloat(origin.getChildByName("Y").getText()));
++		
++		Element scale = item.getChildByName("Scale");
++		texture.setScaleX(Float.parseFloat(scale.getChildByName("X").getText()));
++		texture.setScaleY(Float.parseFloat(scale.getChildByName("Y").getText()));
++		
++		texture.setRotation(Float.parseFloat(item.getChildByName("Rotation").getText()));
++		
++		return texture;
++	}
++	
++	private CircleMapObject loadCircle(Element item) {
++		CircleMapObject circle = new CircleMapObject();
++		
++		loadObject(item, circle);
++		
++		circle.setColor(loadColor(item.getChildByName("FillColor")));
++		
++		Element position = item.getChildByName("Position");
++		circle.getCircle().set(Float.parseFloat(position.getChildByName("X").getText()),
++									  -Float.parseFloat(position.getChildByName("Y").getText()),
++									  Float.parseFloat(item.getChildByName("Radius").getText()));
++		
++		return circle;
++	}
++	
++	private RectangleMapObject loadRectangle(Element item) {
++		RectangleMapObject rectangle = new RectangleMapObject();
++		
++		loadObject(item, rectangle);
++		
++		rectangle.setColor(loadColor(item.getChildByName("FillColor")));
++		
++		Element position = item.getChildByName("Position");
++		rectangle.getRectangle().set(Float.parseFloat(position.getChildByName("X").getText()),
++											  -Float.parseFloat(position.getChildByName("Y").getText()),
++											  Float.parseFloat(item.getChildByName("Width").getText()),
++											  Float.parseFloat(item.getChildByName("Height").getText()));
++		
++		return rectangle;
++	}
++	
++	private PolygonMapObject loadPolygon(Element item) {
++		PolygonMapObject polygon = new PolygonMapObject();
++		
++		loadObject(item, polygon);
++		
++		Array<Element> pointElements = item.getChildByName("WorldPoints").getChildrenByName("Vector2");
++		float[] vertices = new float[pointElements.size * 2];
++		
++		for (int j = 0; j < pointElements.size; ++j) {
++			Element pointElement = pointElements.get(j);
++			vertices[j * 2] = Float.parseFloat(pointElement.getChildByName("X").getText());
++			vertices[j * 2 + 1] = -Float.parseFloat(pointElement.getChildByName("Y").getText());
++		}
++		
++		polygon.setPolygon(new Polygon(vertices));
++		polygon.setColor(loadColor(item.getChildByName("LineColor")));
++		
++		return polygon;
++	}
++	
++	private PolylineMapObject loadPolyline(Element item) {
++		PolylineMapObject polyline = new PolylineMapObject();
++		
++		loadObject(item, polyline);
++		
++		Array<Element> pointElements = item.getChildByName("WorldPoints").getChildrenByName("Vector2");
++		float[] vertices = new float[pointElements.size * 2];
++		
++		for (int j = 0; j < pointElements.size; ++j) {
++			Element pointElement = pointElements.get(j);
++			vertices[j * 2] = Float.parseFloat(pointElement.getChildByName("X").getText());
++			vertices[j * 2 + 1] = -Float.parseFloat(pointElement.getChildByName("Y").getText());
++		}
++		
++		polyline.setPolygon(new Polygon(vertices));
++		polyline.setColor(loadColor(item.getChildByName("LineColor")));
++		
++		return polyline;
++	}
++	
++	private boolean isPolygon(Element item) {
++		return Boolean.parseBoolean(item.getChildByName("IsPolygon").getText());
++	}
++}
+diff --git a/gdx/src/com/badlogic/gdx/maps/loaders/TmxMapLoader.java b/gdx/src/com/badlogic/gdx/maps/loaders/TmxMapLoader.java
+new file mode 100644
+index 0000000..bae9f78
+--- /dev/null
++++ b/gdx/src/com/badlogic/gdx/maps/loaders/TmxMapLoader.java
+@@ -0,0 +1,516 @@
++package com.badlogic.gdx.maps.loaders;
++
++import java.io.ByteArrayInputStream;
++import java.io.IOException;
++import java.util.StringTokenizer;
++import java.util.zip.DataFormatException;
++import java.util.zip.GZIPInputStream;
++import java.util.zip.Inflater;
++
++import com.badlogic.gdx.assets.AssetDescriptor;
++import com.badlogic.gdx.assets.AssetLoaderParameters;
++import com.badlogic.gdx.assets.AssetManager;
++import com.badlogic.gdx.assets.loaders.FileHandleResolver;
++import com.badlogic.gdx.assets.loaders.SynchronousAssetLoader;
++import com.badlogic.gdx.files.FileHandle;
++import com.badlogic.gdx.graphics.Texture;
++import com.badlogic.gdx.graphics.g2d.TextureRegion;
++import com.badlogic.gdx.maps.MapLayer;
++import com.badlogic.gdx.maps.MapObject;
++import com.badlogic.gdx.maps.MapProperties;
++import com.badlogic.gdx.maps.objects.PolygonMapObject;
++import com.badlogic.gdx.maps.objects.PolylineMapObject;
++import com.badlogic.gdx.maps.objects.RectangleMapObject;
++import com.badlogic.gdx.maps.tiled.TiledMap;
++import com.badlogic.gdx.maps.tiled.TiledMapTile;
++import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
++import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
++import com.badlogic.gdx.maps.tiled.TiledMapTileSet;
++import com.badlogic.gdx.maps.tiled.TiledMapTileSets;
++import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile;
++import com.badlogic.gdx.utils.Array;
++import com.badlogic.gdx.utils.Base64Coder;
++import com.badlogic.gdx.utils.GdxRuntimeException;
++import com.badlogic.gdx.utils.XmlReader;
++import com.badlogic.gdx.utils.XmlReader.Element;
++
++/**
++ * @brief synchronous loader for TMX maps created with the Tiled tool
++ */
++public class TmxMapLoader extends SynchronousAssetLoader<TiledMap, TmxMapLoader.Parameters> {
++
++	public static class Parameters extends AssetLoaderParameters<TiledMap> {
++		
++	}
++	
++	private static final int FLAG_FLIP_HORIZONTALLY = 0x80000000;
++	private static final int FLAG_FLIP_VERTICALLY = 0x40000000;
++	private static final int FLAG_FLIP_DIAGONALLY = 0x20000000;		
++	private static final int MASK_CLEAR  = 0xE0000000;
++	
++	private AssetManager assetManager;
++	private FileHandle tmx;
++	private XmlReader xml;
++	
++	/**
++	 * Creates loader 
++	 *  
++	 * @param resolver
++	 */
++	public TmxMapLoader(FileHandleResolver resolver) {
++		super(resolver);
++	}
++
++	/**
++	 * Loads a .tmx file
++	 * 
++	 * @param assetManager
++	 * @param fileName
++	 * @param parameter not used for now
++	 * @return loaded TiledMap instance
++	 */
++	@Override
++	public TiledMap load(AssetManager assetManager, String fileName, Parameters parameter) {
++		this.assetManager = assetManager;
++		this.tmx = resolve(fileName);
++		this.xml = new XmlReader();
++		try {
++			XmlReader.Element root = xml.parse(tmx);
++			TiledMap map = new TiledMap();
++			Element properties = root.getChildByName("properties");
++			if (properties != null) {
++				loadProperties(map.getProperties(), properties);
++			}
++			Array<Element> tilesets = root.getChildrenByName("tileset");
++			for (Element element : tilesets) {
++				loadTileSet(map, element);
++				root.removeChild(element);
++			}
++			for (int i = 0, j = root.getChildCount(); i < j; i++) {
++				Element element = root.getChild(i);
++				String name = element.getName();
++				if (name.equals("layer")) {
++					loadTileLayer(map, element);
++				} else if (name.equals("objectgroup")) {
++					loadObjectGroup(map, element);
++				}
++			}
++			return map;
++		} catch (Exception e) {
++			e.printStackTrace();
++		}
++		return null;
++	}
++
++	/**
++	 * Retrieves TiledMap resource dependencies
++	 * 
++	 * @param fileName
++	 * @param parameter not used for now
++	 * @return dependencies for the given .tmx file
++	 */
++	@Override
++	public Array<AssetDescriptor> getDependencies(String fileName, Parameters parameter) {
++		Array<AssetDescriptor> dependencies = new Array<AssetDescriptor>();
++		XmlReader xml = new XmlReader();
++		try {
++			FileHandle tmx = resolve(fileName);
++			Element root = xml.parse(tmx);
++			Array<Element> tilesets = root.getChildrenByName("tileset");
++			for (Element tileset : tilesets) {
++				String source = tileset.getAttribute("source", null);
++				FileHandle image = null;
++				if (source != null) {
++					FileHandle tsx = getRelativeFileHandle(tmx, source);
++					tileset = xml.parse(tsx);
++					String imageSource = tileset.getChildByName("image").getAttribute("source");
++					image = getRelativeFileHandle(tsx, imageSource);
++				} else {
++					String imageSource = tileset.getChildByName("image").getAttribute("source");
++					image = getRelativeFileHandle(tmx, imageSource);
++				}
++				dependencies.add(new AssetDescriptor(image.path(), Texture.class));
++			}
++		} catch (IOException e) {
++			e.printStackTrace();
++		}
++		return dependencies;
++	}
++
++	public void loadTileSet(TiledMap map, Element element) {
++		if (element.getName().equals("tileset")) {
++			String name = element.get("name", null);
++			int firstgid = element.getIntAttribute("firstgid", 1);
++			int tilewidth = element.getIntAttribute("tilewidth", 0);
++			int tileheight = element.getIntAttribute("tileheight", 0);
++			int spacing = element.getIntAttribute("spacing", 0);
++			int margin = element.getIntAttribute("margin", 0);			
++			String source = element.getAttribute("source", null);
++			FileHandle image = null;
++			if (source != null) {
++				FileHandle tsx = getRelativeFileHandle(tmx, source);
++				try {
++					element = xml.parse(tsx);
++					name = element.get("name", null);
++					tilewidth = element.getIntAttribute("tilewidth", 0);
++					tileheight = element.getIntAttribute("tileheight", 0);
++					spacing = element.getIntAttribute("spacing", 0);
++					margin = element.getIntAttribute("margin", 0);
++					String imageSource = element.getChildByName("image").getAttribute("source");
++					image = getRelativeFileHandle(tsx, imageSource);
++				} catch (IOException e) {
++					throw new GdxRuntimeException("Error parsing external tileset.");
++				}
++			} else {
++				String imageSource = element.getChildByName("image").getAttribute("source");
++				image = getRelativeFileHandle(tmx, imageSource);
++			}
++
++			Texture texture = assetManager.get(image.path());
++
++			TiledMapTileSet tileset = new TiledMapTileSet();
++			tileset.setName(name);
++			
++			int stopWidth = texture.getWidth() - tilewidth;
++			int stopHeight = texture.getHeight() - tileheight;
++
++			int id = firstgid;
++			
++			for (int y = margin; y <= stopHeight; y += tileheight + spacing) {
++				for (int x = margin; x <= stopWidth; x += tilewidth + spacing) {
++					TiledMapTile tile = new StaticTiledMapTile(new TextureRegion(texture, x, y, tilewidth, tileheight));
++					tileset.putTile(id++, tile);
++				}
++			}
++			
++			Array<Element> tileElements = element.getChildrenByName("tile");
++			
++			for (Element tileElement : tileElements) {
++				int localtid = tileElement.getIntAttribute("id", 0);
++				TiledMapTile tile = tileset.getTile(firstgid + localtid);
++				if (tile!= null) {
++					Element properties = element.getChildByName("properties");
++					if (properties != null) {
++						loadProperties(tile.getProperties(), properties);
++					}
++				}
++			}
++			
++			Element properties = element.getChildByName("properties");
++			if (properties != null) {
++				loadProperties(tileset.getProperties(), properties);
++			}
++			map.getTileSets().addTileSet(tileset);
++		}		
++	}
++	
++	public void loadTileLayer(TiledMap map, Element element) {
++		if (element.getName().equals("layer")) {
++			String name = element.getAttribute("name", null);
++			int width = element.getIntAttribute("width", 0);
++			int height = element.getIntAttribute("height", 0);
++			int tileWidth = element.getParent().getIntAttribute("tilewidth", 0);
++			int tileHeight = element.getParent().getIntAttribute("tileheight", 0);
++			TiledMapTileLayer layer = new TiledMapTileLayer(width, height, tileWidth, tileHeight);
++			layer.setName(name);
++			
++			TiledMapTileSets tilesets = map.getTileSets();
++			
++			Element data = element.getChildByName("data");
++			String encoding = data.getAttribute("encoding", null);
++			String compression = data.getAttribute("compression", null);
++			if (encoding.equals("csv")) {
++				String[] array = data.getText().split(",");
++				for (int y = 0; y < height; y++) {
++					for (int x = 0; x < width; x++) {
++						int id = (int) Long.parseLong(array[y * width + x].trim());
++						
++						final boolean flipHorizontally = ((id & FLAG_FLIP_HORIZONTALLY) != 0);
++						final boolean flipVertically = ((id & FLAG_FLIP_VERTICALLY) != 0);
++						final boolean flipDiagonally = ((id & FLAG_FLIP_DIAGONALLY) != 0);
++
++						id = id & ~MASK_CLEAR;
++						
++						tilesets.getTile(id);
++						TiledMapTile tile = tilesets.getTile(id);
++						if (tile != null) {
++							Cell cell = layer.getCell(x, height - 1 - y);
++							if (flipDiagonally) {
++								if (flipHorizontally && flipVertically) {
++									cell.setFlipHorizontally(true);
++									cell.setRotation(Cell.ROTATE_90);
++								} else if (flipHorizontally) {
++									cell.setRotation(Cell.ROTATE_90);
++								} else if (flipVertically) {
++									cell.setRotation(Cell.ROTATE_270);
++								} else {
++									cell.setFlipVertically(true);
++									cell.setRotation(Cell.ROTATE_90);
++								}
++							} else {
++								cell.setFlipHorizontally(flipHorizontally);
++								cell.setFlipVertically(flipVertically);
++							}
++							cell.setTile(tile);
++						}
++					}
++				}
++			} else {
++				if(encoding.equals("base64")) {
++					byte[] bytes = Base64Coder.decode(data.getText());
++					if (compression == null) {
++						int read = 0;
++						for (int y = 0; y < height; y++) {
++							for (int x = 0; x < width; x++) {
++								
++								int id =
++								unsignedByteToInt(bytes[read++]) |
++								unsignedByteToInt(bytes[read++]) << 8 |
++								unsignedByteToInt(bytes[read++]) << 16 |
++								unsignedByteToInt(bytes[read++]) << 24;
++								
++								final boolean flipHorizontally = ((id & FLAG_FLIP_HORIZONTALLY) != 0);
++								final boolean flipVertically = ((id & FLAG_FLIP_VERTICALLY) != 0);
++								final boolean flipDiagonally = ((id & FLAG_FLIP_DIAGONALLY) != 0);
++
++								id = id & ~MASK_CLEAR;
++								
++								tilesets.getTile(id);
++								TiledMapTile tile = tilesets.getTile(id);
++								if (tile != null) {
++									Cell cell = layer.getCell(x, height - 1 - y);
++									if (flipDiagonally) {
++										if (flipHorizontally && flipVertically) {
++											cell.setFlipHorizontally(true);
++											cell.setRotation(Cell.ROTATE_90);
++										} else if (flipHorizontally) {
++											cell.setRotation(Cell.ROTATE_90);
++										} else if (flipVertically) {
++											cell.setRotation(Cell.ROTATE_270);
++										} else {
++											cell.setFlipVertically(true);
++											cell.setRotation(Cell.ROTATE_90);
++										}
++									} else {
++										cell.setFlipHorizontally(flipHorizontally);
++										cell.setFlipVertically(flipVertically);
++									}
++									cell.setTile(tile);
++								}
++							}
++						}
++					} else if (compression.equals("gzip")) {
++						GZIPInputStream GZIS = null;
++						try {
++							GZIS = new GZIPInputStream(new ByteArrayInputStream(bytes), bytes.length);
++						} catch (IOException e) {
++							throw new GdxRuntimeException("Error Reading TMX Layer Data - IOException: " + e.getMessage());
++						}
++
++						byte[] temp = new byte[4];
++						for (int y = 0; y < height; y++) {
++							for (int x = 0; x < width; x++) {
++								try {
++									GZIS.read(temp, 0, 4);
++									int id =
++									unsignedByteToInt(temp[0]) |
++									unsignedByteToInt(temp[1]) << 8 |
++									unsignedByteToInt(temp[2]) << 16 |
++									unsignedByteToInt(temp[3]) << 24;
++
++									final boolean flipHorizontally = ((id & FLAG_FLIP_HORIZONTALLY) != 0);
++									final boolean flipVertically = ((id & FLAG_FLIP_VERTICALLY) != 0);
++									final boolean flipDiagonally = ((id & FLAG_FLIP_DIAGONALLY) != 0);
++
++									id = id & ~MASK_CLEAR;
++									
++									tilesets.getTile(id);
++									TiledMapTile tile = tilesets.getTile(id);
++									if (tile != null) {
++										Cell cell = layer.getCell(x, height - 1 - y);
++										if (flipDiagonally) {
++											if (flipHorizontally && flipVertically) {
++												cell.setFlipHorizontally(true);
++												cell.setRotation(Cell.ROTATE_90);
++											} else if (flipHorizontally) {
++												cell.setRotation(Cell.ROTATE_90);
++											} else if (flipVertically) {
++												cell.setRotation(Cell.ROTATE_270);
++											} else {
++												cell.setFlipVertically(true);
++												cell.setRotation(Cell.ROTATE_90);
++											}
++										} else {
++											cell.setFlipHorizontally(flipHorizontally);
++											cell.setFlipVertically(flipVertically);
++										}
++										cell.setTile(tile);
++									}
++								} catch (IOException e) {
++									throw new GdxRuntimeException("Error Reading TMX Layer Data.", e);
++								}
++							}
++						}
++					} else if (compression.equals("zlib")) {
++						Inflater zlib = new Inflater();
++						
++						byte[] temp = new byte[4];
++
++						zlib.setInput(bytes, 0, bytes.length);
++
++						for (int y = 0; y < height; y++) {
++							for (int x = 0; x < width; x++) {
++								try {
++									zlib.inflate(temp, 0, 4);
++									int id =
++									unsignedByteToInt(temp[0]) |
++									unsignedByteToInt(temp[1]) << 8 |
++									unsignedByteToInt(temp[2]) << 16 |
++									unsignedByteToInt(temp[3]) << 24;
++									
++									final boolean flipHorizontally = ((id & FLAG_FLIP_HORIZONTALLY) != 0);
++									final boolean flipVertically = ((id & FLAG_FLIP_VERTICALLY) != 0);
++									final boolean flipDiagonally = ((id & FLAG_FLIP_DIAGONALLY) != 0);
++
++									id = id & ~MASK_CLEAR;
++									
++									tilesets.getTile(id);
++									TiledMapTile tile = tilesets.getTile(id);
++									if (tile != null) {
++										Cell cell = layer.getCell(x, height - 1 - y);
++										if (flipDiagonally) {
++											if (flipHorizontally && flipVertically) {
++												cell.setFlipHorizontally(true);
++												cell.setRotation(-90);
++											} else if (flipHorizontally) {
++												cell.setRotation(-90);
++											} else if (flipVertically) {
++												cell.setRotation(+90);
++											} else {
++												cell.setFlipVertically(true);
++												cell.setRotation(-90);
++											}
++										} else {
++											cell.setFlipHorizontally(flipHorizontally);
++											cell.setFlipVertically(flipVertically);
++										}
++										cell.setTile(tile);
++									}
++			
++								} catch (DataFormatException e) {
++									throw new GdxRuntimeException("Error Reading TMX Layer Data.", e);
++								}
++							}
++						}
++					}
++				}
++			}
++			Element properties = element.getChildByName("properties");
++			if (properties != null) {
++				loadProperties(layer.getProperties(), properties);
++			}
++			map.getLayers().addLayer(layer);
++		}		
++	}
++	
++	public void loadObjectGroup(TiledMap map, Element element) {
++		if (element.getName().equals("objectgroup")) {
++			String name = element.getAttribute("name", null);
++			MapLayer layer = new MapLayer();
++			layer.setName(name);
++			Element properties = element.getChildByName("properties");
++			if (properties != null) {
++				loadProperties(layer.getProperties(), properties);
++			}
++			
++			for (Element objectElement : element.getChildrenByName("object")) {
++				loadObject(layer, objectElement);
++			}
++
++			map.getLayers().addLayer(layer);
++		}
++	}
++	
++	public void loadObject(MapLayer layer, Element element) {
++		if (element.getName().equals("object")) {
++			MapObject object = null;
++			
++			int x = element.getIntAttribute("x", 0);
++			int y = element.getIntAttribute("y", 0);
++			
++			int width = element.getIntAttribute("width", 0);
++			int height = element.getIntAttribute("height", 0);
++			
++			if (element.getChildCount() > 0) {
++				Element child = element.getChildByName("polygon");
++				if (child != null) {
++					String[] points = child.getAttribute("points").split(" ");
++					float[] vertices = new float[points.length * 2];
++					for (int i = 0; i < points.length; i++) {
++						String[] point = points[i].split(",");
++						vertices[i * 2] = x + Integer.parseInt(point[0]);
++						vertices[i * 2 + 1] = y + Integer.parseInt(point[1]);
++					}
++					object = new PolygonMapObject(vertices);
++				} else {
++					child = element.getChildByName("polyline");
++					if (child != null) {
++						String[] points = child.getAttribute("points").split(" ");
++						float[] vertices = new float[points.length * 2];
++						for (int i = 0; i < points.length; i++) {
++							String[] point = points[i].split(",");
++							vertices[i * 2] = x + Integer.parseInt(point[0]);
++							vertices[i * 2 + 1] = y + Integer.parseInt(point[1]);
++						}
++						object = new PolylineMapObject(vertices);
++					}
++				}
++			}
++			if (object == null) {
++				object = new RectangleMapObject(x, y, width, height);
++			}
++			object.setName(element.getAttribute("name", null));
++			String type = element.getAttribute("type", null);
++			if (type != null) {
++				object.getProperties().put("type", type);
++			}
++			Element properties = element.getChildByName("properties");
++			if (properties != null) {
++				loadProperties(object.getProperties(), properties);
++			}
++			layer.getObjects().addObject(object);
++		}
++	}
++	
++	public void loadProperties(MapProperties properties, Element element) {
++		if (element.getName().equals("properties")) {
++			for (Element property : element.getChildrenByName("property")) {
++				String name = property.getAttribute("name", null);
++				String value = property.getAttribute(name, null);
++				if (value == null) {
++					value = property.getText();
++				}
++				properties.put(name, value);
++			}
++		}
++	}
++	
++	public static FileHandle getRelativeFileHandle(FileHandle file, String path) {
++		StringTokenizer tokenizer = new StringTokenizer(path, "\\/");
++		FileHandle result = file.parent();
++		while (tokenizer.hasMoreElements()) {
++			String token = tokenizer.nextToken();
++			if (token.equals(".."))
++				result = result.parent();
++			else {
++				result = result.child(token);
++			}
++		}
++		return result;		
++	}
++	
++	public static int unsignedByteToInt (byte b) {
++		return (int) b & 0xFF;
++	}
++
++}
+diff --git a/gdx/src/com/badlogic/gdx/maps/objects/CircleMapObject.java b/gdx/src/com/badlogic/gdx/maps/objects/CircleMapObject.java
+index 86ae2b5..cdc4b71 100644
+--- a/gdx/src/com/badlogic/gdx/maps/objects/CircleMapObject.java
++++ b/gdx/src/com/badlogic/gdx/maps/objects/CircleMapObject.java
+@@ -3,18 +3,34 @@ package com.badlogic.gdx.maps.objects;
+ import com.badlogic.gdx.maps.MapObject;
+ import com.badlogic.gdx.math.Circle;
+ 
++/**
++ * @brief represents circle shaped map objects
++ */
+ public class CircleMapObject extends MapObject {
+ 	
+ 	private Circle circle;
+ 	
++	/**
++	 * @return circle shape
++	 */
+ 	public Circle getCircle() {
+ 		return circle;
+ 	}
+ 	
++	/**
++	 * Creates a circle map object at (0,0) with r=1.0
++	 */
+ 	public CircleMapObject() {
+ 		this(0.0f, 0.0f, 1.0f);
+ 	}
+ 	
++	/**
++	 * Creates circle map object
++	 * 
++	 * @param x
++	 * @param y
++	 * @param radius
++	 */
+ 	public CircleMapObject(float x, float y, float radius) {
+ 		super();
+ 		circle = new Circle(x, y, radius);
+diff --git a/gdx/src/com/badlogic/gdx/maps/objects/PolygonMapObject.java b/gdx/src/com/badlogic/gdx/maps/objects/PolygonMapObject.java
+index 976d57a..e7ec6fb 100644
+--- a/gdx/src/com/badlogic/gdx/maps/objects/PolygonMapObject.java
++++ b/gdx/src/com/badlogic/gdx/maps/objects/PolygonMapObject.java
+@@ -6,22 +6,37 @@ package com.badlogic.gdx.maps.objects;
+ import com.badlogic.gdx.maps.MapObject;
+ import com.badlogic.gdx.math.Polygon;
+ 
++/**
++ * @brief represents polygon map objects
++ */
+ public class PolygonMapObject extends MapObject {
+ 
+ 	private Polygon polygon;
+ 	
++	/**
++	 * @return polygon shape
++	 */
+ 	public Polygon getPolygon() {
+ 		return polygon;
+ 	}
+ 	
++	/**
++	 * @param polygon new object's polygon shape
++	 */
+ 	public void setPolygon(Polygon polygon) {
+ 		this.polygon = polygon;
+ 	}
+ 	
++	/**
++	 * Creates empty polygon map object
++	 */
+ 	public PolygonMapObject() {
+ 		this(new float[0]);
+ 	}
+ 	
++	/**
++	 * @param vertices polygon defining vertices (at least 3)
++	 */
+ 	public PolygonMapObject(float[] vertices) {
+ 		super();
+ 		polygon = new Polygon(vertices);
+diff --git a/gdx/src/com/badlogic/gdx/maps/objects/PolylineMapObject.java b/gdx/src/com/badlogic/gdx/maps/objects/PolylineMapObject.java
+index 09f2843..816c753 100644
+--- a/gdx/src/com/badlogic/gdx/maps/objects/PolylineMapObject.java
++++ b/gdx/src/com/badlogic/gdx/maps/objects/PolylineMapObject.java
+@@ -3,22 +3,37 @@ package com.badlogic.gdx.maps.objects;
+ import com.badlogic.gdx.maps.MapObject;
+ import com.badlogic.gdx.math.Polygon;
+ 
++/**
++ * @brief Represents polyline map objects
++ */
+ public class PolylineMapObject extends MapObject {
+ 
+ 	private Polygon polygon;
+ 	
++	/**
++	 * @return polygon shape
++	 */
+ 	public Polygon getPolygon() {
+ 		return polygon;
+ 	}
+ 	
++	/**
++	 * @param polygon new object's polygon shape
++	 */
+ 	public void setPolygon(Polygon polygon) {
+ 		this.polygon = polygon;
+ 	}
+ 	
++	/**
++	 * Creates empty polyline 
++	 */
+ 	public PolylineMapObject() {
+ 		this(new float[0]);
+ 	}
+ 	
++	/**
++	 * @param vertices polyline defining vertices (at least 3 because a polygon is used to represent it)
++	 */
+ 	public PolylineMapObject(float[] vertices) {
+ 		super();
+ 		polygon = new Polygon(vertices);
+diff --git a/gdx/src/com/badlogic/gdx/maps/objects/RectangleMapObject.java b/gdx/src/com/badlogic/gdx/maps/objects/RectangleMapObject.java
+index f7e47d0..6f73e38 100644
+--- a/gdx/src/com/badlogic/gdx/maps/objects/RectangleMapObject.java
++++ b/gdx/src/com/badlogic/gdx/maps/objects/RectangleMapObject.java
+@@ -3,18 +3,33 @@ package com.badlogic.gdx.maps.objects;
+ import com.badlogic.gdx.maps.MapObject;
+ import com.badlogic.gdx.math.Rectangle;
+ 
++/**
++ * @brief Represents rectangle shaped map object
++ */
+ public class RectangleMapObject extends MapObject {
+ 	
+ 	private Rectangle rectangle;
+ 	
++	/**
++	 * @return rectangle shape
++	 */
+ 	public Rectangle getRectangle() {
+ 		return rectangle;
+ 	}
+ 	
++	/**
++	 * Creates a rectangle object which lower left corner is at (0, 0) with width=1 and height=1
++	 */
+ 	public RectangleMapObject() {
+ 		this(0.0f, 0.0f, 1.0f, 1.0f);
+ 	}
+ 	
++	/**
++	 * @param x
++	 * @param y
++	 * @param width
++	 * @param height
++	 */
+ 	public RectangleMapObject(float x, float y, float width, float height) {
+ 		super();
+ 		rectangle = new Rectangle(x, y, width, height);
+diff --git a/gdx/src/com/badlogic/gdx/maps/objects/TextureMapObject.java b/gdx/src/com/badlogic/gdx/maps/objects/TextureMapObject.java
+index 82b24f9..5f74e90 100644
+--- a/gdx/src/com/badlogic/gdx/maps/objects/TextureMapObject.java
++++ b/gdx/src/com/badlogic/gdx/maps/objects/TextureMapObject.java
+@@ -3,6 +3,9 @@ package com.badlogic.gdx.maps.objects;
+ import com.badlogic.gdx.graphics.g2d.TextureRegion;
+ import com.badlogic.gdx.maps.MapObject;
+ 
++/**
++ * @brief Represents a map object containing a texture (region)
++ */
+ public class TextureMapObject extends MapObject {
+ 	
+ 	private float x = 0.0f;
+@@ -14,74 +17,130 @@ public class TextureMapObject extends MapObject {
+ 	private float rotation = 0.0f;
+ 	private TextureRegion textureRegion = null;
+ 
++	/**
++	 * @return x axis coordinate
++	 */
+ 	public float getX() {
+ 		return x;
+ 	}
+ 
++	/**
++	 * @param x new x axis coordinate
++	 */
+ 	public void setX(float x) {
+ 		this.x = x;
+ 	}
+ 
++	/**
++	 * @return y axis coordinate
++	 */
+ 	public float getY() {
+ 		return y;
+ 	}
+ 
++	/**
++	 * @param y new y axis coordinate
++	 */
+ 	public void setY(float y) {
+ 		this.y = y;
+ 	}
+ 	
++	/**
++	 * @return x axis origin
++	 */
+ 	public float getOriginX() {
+ 		return originX;
+ 	}
+ 
++	/**
++	 * @param x new x axis origin
++	 */
+ 	public void setOriginX(float x) {
+ 		this.originX = x;
+ 	}
+ 
++	/**
++	 * @return y axis origin
++	 */
+ 	public float getOriginY() {
+ 		return originY;
+ 	}
+ 
++	/**
++	 * @param y new axis origin
++	 */
+ 	public void setOriginY(float y) {
+ 		this.originY = y;
+ 	}
+ 	
++	/**
++	 * @return x axis scale
++	 */
+ 	public float getScaleX() {
+ 		return scaleX;
+ 	}
+ 
++	/**
++	 * @param x new x axis scale 
++	 */
+ 	public void setScaleX(float x) {
+ 		this.scaleX = x;
+ 	}
+ 
++	/**
++	 * @return y axis scale
++	 */
+ 	public float getScaleY() {
+ 		return scaleY;
+ 	}
+ 
++	/**
++	 * @param y new y axis scale
++	 */
+ 	public void setScaleY(float y) {
+ 		this.scaleY = y;
+ 	}
+ 	
++	/**
++	 * @return texture's rotation in radians
++	 */
+ 	public float getRotation() {
+ 		return rotation;
+ 	}
+ 	
++	/**
++	 * @param rotation new texture's rotation in radians
++	 */
+ 	public void setRotation(float rotation) {
+ 		this.rotation = rotation;
+ 	}
+ 
++	/**
++	 * @return region
++	 */
+ 	public TextureRegion getTextureRegion() {
+ 		return textureRegion;
+ 	}
+ 	
++	/**
++	 * @param region new texture region
++	 */
+ 	public void setTextureRegion(TextureRegion region) {
+ 		textureRegion = region;
+ 	}
+ 	
++	/**
++	 * Creates empty texture map object
++	 */
+ 	public TextureMapObject() {
+ 		this(null);
+ 	}
+ 	
++	/**
++	 * Creates texture map object with the given region
++	 * 
++	 * @param textureRegion
++	 */
+ 	public TextureMapObject(TextureRegion textureRegion) {
+ 		super();
+ 		this.textureRegion = textureRegion;
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMap.java b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMap.java
+index 2b5d508..103ef0d 100644
+--- a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMap.java
++++ b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMap.java
+@@ -1,38 +1,27 @@
+ package com.badlogic.gdx.maps.tiled;
+ 
+-import com.badlogic.gdx.assets.AssetManager;
+-import com.badlogic.gdx.graphics.Texture;
+ import com.badlogic.gdx.maps.Map;
+-import com.badlogic.gdx.utils.Array;
+ 
++/**
++ * @brief Represents a Tiled created map, adds the concept of tiles and tilesets
++ * 
++ * @see Map
++ */
+ public class TiledMap extends Map {
++	
+ 	private TiledMapTileSets tilesets;
+-	private Array<Texture> ownedTextures;
+ 	
++	/**
++	 * @return collection of tilesets for this map
++	 */
+ 	public TiledMapTileSets getTileSets() {
+ 		return tilesets;
+ 	}
+ 	
+-	public TiledMap() {
+-		tilesets = new TiledMapTileSets();
+-	}
+-	
+ 	/**
+-	 * Used by TmxMapLoader to set textures when loading the map
+-	 * directly, without {@link AssetManager}. To be disposed in
+-	 * {@link #dispose()}.
+-	 * @param textures
++	 * Creates empty TiledMap
+ 	 */
+-	void setOwnedTextures(Array<Texture> textures) {
+-		this.ownedTextures = textures;
+-	}
+-	
+-	@Override
+-	public void dispose() {
+-		if(ownedTextures != null) {
+-			for(Texture texture: ownedTextures) {
+-				texture.dispose();
+-			}
+-		}
++	public TiledMap() {
++		tilesets = new TiledMapTileSets();
+ 	}
+ }
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapRenderer.java b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapRenderer.java
+index 3dafc6c..9793c88 100644
+--- a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapRenderer.java
++++ b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapRenderer.java
+@@ -14,6 +14,11 @@ import com.badlogic.gdx.utils.Disposable;
+ 
+ import static com.badlogic.gdx.graphics.g2d.SpriteBatch.*;
+ 
++/**
++ * @brief Logic for rendering TiledMap objects
++ * 
++ * Includes several optimisations such as SpriteCache usage, fustrum culling etc.
++ */
+ public class TiledMapRenderer implements MapRenderer, Disposable {
+ 
+ 	private Map map;
+@@ -24,34 +29,63 @@ public class TiledMapRenderer implements MapRenderer, Disposable {
+ 	
+ 	private boolean ownsSpriteBatch = false;
+ 	
++	/**
++	 * @return map currently being used for rendering
++	 */
+ 	public Map getMap() {
+ 		return map;
+ 	}
+ 	
++	/**
++	 * @return batch used for rendering
++	 */
+ 	public SpriteBatch getSpriteBatch() {
+ 		return spriteBatch;
+ 	}
+ 	
++	/**
++	 * @return world units per pixel used for rendering
++	 */
+ 	public float getUnitScale() {
+ 		return unitScale;
+ 	}
+ 	
++	/**
++	 * Creates a renderer from a map. Will use own spritebatch and world units of 1.0 pixels
++	 * 
++	 * @param map will use this map for rendering 
++	 */
+ 	public TiledMapRenderer(TiledMap map) {
+ 		this(map, new SpriteBatch());
+ 		ownsSpriteBatch = true;
+ 	}
+ 	
++	/**
++	 * Creates a renderer from a map using the given world units. Will use a batch from its own.
++	 * 
++	 * @param map will use this map for rendering
++	 * @param unitScale world units per pixel
++	 */
+ 	public TiledMapRenderer(TiledMap map, float unitScale) {
+ 		this(map, new SpriteBatch(), unitScale);
+ 		ownsSpriteBatch = true;
+ 	}
+ 	
++	/**
++	 * @param map will use this map for rendering
++	 * @param spriteBatch batch that will be used for rendering
++	 */
+ 	public TiledMapRenderer(TiledMap map, SpriteBatch spriteBatch) {
+ 		this.map = map;
+ 		this.spriteBatch = spriteBatch;
+ 		this.ownsSpriteBatch = false;
+ 	}
+ 	
++	/**
++	 * @param map will use this map for rendering
++	 * @param spriteBatch batch that will be used for rendering
++	 * @param unitScale world units per pixel
++	 */
+ 	public TiledMapRenderer(TiledMap map, SpriteBatch spriteBatch, float unitScale) {
+ 		this.map = map;
+ 		this.spriteBatch = spriteBatch;
+@@ -59,6 +93,9 @@ public class TiledMapRenderer implements MapRenderer, Disposable {
+ 		this.ownsSpriteBatch = false;
+ 	}
+ 
++	/**
++	 * @param projection projection matrix that will be used for rendering the map
++	 */
+ 	@Override
+ 	public void setProjectionMatrix (Matrix4 projection) {
+ 		spriteBatch.setProjectionMatrix(projection);
+@@ -109,8 +146,13 @@ public class TiledMapRenderer implements MapRenderer, Disposable {
+ 		}
+ 	}
+ 	
+-	/* (non-Javadoc)
+-	 * @see com.badlogic.gdx.maps.MapRenderer2#render(float, float, float, float, int[])
++	/**
++	 * Renders all the layers using the projection matrix and the given bounds for fustrum culling
++	 * 
++	 * @param viewboundsX
++	 * @param viewboundsY
++	 * @param viewboundsWidth
++	 * @param viewboundsHeight
+ 	 */
+ 	@Override
+ 	public void render (float viewboundsX, float viewboundsY, float viewboundsWidth, float viewboundsHeight) {
+@@ -120,8 +162,14 @@ public class TiledMapRenderer implements MapRenderer, Disposable {
+ 		}
+ 	}
+ 	
+-	/* (non-Javadoc)
+-	 * @see com.badlogic.gdx.maps.MapRenderer2#render(float, float, float, float, int[])
++	/**
++	 * Renders the given layers using the projection matrix and the given bounds for fustrum culling
++	 * 
++	 * @param viewboundsX
++	 * @param viewboundsY
++	 * @param viewboundsWidth
++	 * @param viewboundsHeight
++	 * @param layers
+ 	 */
+ 	@Override
+ 	public void render (float viewboundsX, float viewboundsY, float viewboundsWidth, float viewboundsHeight, int[] layers) {
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTile.java b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTile.java
+index c0e06b4..ff1e50c 100644
+--- a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTile.java
++++ b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTile.java
+@@ -3,10 +3,20 @@ package com.badlogic.gdx.maps.tiled;
+ import com.badlogic.gdx.graphics.g2d.TextureRegion;
+ import com.badlogic.gdx.maps.MapProperties;
+ 
++/**
++ * @brief Generalises the concept of tile in a TiledMap
++ *
++ */
+ public interface TiledMapTile {
+ 
++	/**
++	 * @return texture region used to render the tile
++	 */
+ 	public TextureRegion getTextureRegion();
+ 
++	/**
++	 * @return tile's properties set
++	 */
+ 	public MapProperties getProperties();
+ 	
+ }
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileLayer.java b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileLayer.java
+index 364646c..376f8da 100644
+--- a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileLayer.java
++++ b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileLayer.java
+@@ -2,6 +2,9 @@ package com.badlogic.gdx.maps.tiled;
+ 
+ import com.badlogic.gdx.maps.MapLayer;
+ 
++/**
++ * @brief Layer for a TiledMap 
++ */
+ public class TiledMapTileLayer extends MapLayer {
+ 
+ 	private int width;
+@@ -12,22 +15,42 @@ public class TiledMapTileLayer extends MapLayer {
+ 	
+ 	private Cell[][] cells;
+ 	
++	/**
++	 * @return layer's witdth in tiles
++	 */
+ 	public int getWidth() {
+ 		return width;
+ 	}
+ 	
++	/**
++	 * @return layer's height in tiles
++	 */
+ 	public int getHeight() {
+ 		return height;
+ 	}
+ 	
++	/**
++	 * @return tiles' width in pixels
++	 */
+ 	public float getTileWidth() {
+ 		return tileWidth;
+ 	}
+ 	
++	/**
++	 * @return tiles' height in pixels
++	 */
+ 	public float getTileHeight() {
+ 		return tileHeight;
+ 	}
+ 	
++	/**
++	 * Creates TiledMap layer
++	 * 
++	 * @param width layer width in tiles
++	 * @param height layer height in tiles
++	 * @param tileWidth tile width in pixels
++	 * @param tileHeight tile height in pixels 
++	 */
+ 	public TiledMapTileLayer(int width, int height, int tileWidth, int tileHeight) {
+ 		super();
+ 		this.width = width;
+@@ -42,6 +65,11 @@ public class TiledMapTileLayer extends MapLayer {
+ 		}
+ 	}
+ 	
++	/**
++	 * @param x
++	 * @param y 
++	 * @return cell at (x, y)
++	 */
+ 	public Cell getCell(int x, int y) {
+ 		return cells[x][y];
+ 	}
+@@ -57,6 +85,9 @@ public class TiledMapTileLayer extends MapLayer {
+ 		cells[x][y].setTile(tile);
+ 	}
+ 	
++	/**
++	 * @brief represents a slot in a TiledLayer: TiledMapTile, flip and rotation properties.
++	 */
+ 	public class Cell {
+ 		
+ 		private TiledMapTile tile;
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileSet.java b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileSet.java
+index e1902ab..3affe23 100644
+--- a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileSet.java
++++ b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileSet.java
+@@ -3,6 +3,9 @@ package com.badlogic.gdx.maps.tiled;
+ import com.badlogic.gdx.maps.MapProperties;
+ import com.badlogic.gdx.utils.IntMap;
+ 
++/**
++ * @brief Set of TiledMapTile instances used to compose a TiledMapLayer
++ */
+ public class TiledMapTileSet {
+ 	
+ 	private String name;
+@@ -11,31 +14,56 @@ public class TiledMapTileSet {
+ 
+ 	private MapProperties properties;
+ 
++	/**
++	 * @return tileset's name
++	 */
+ 	public String getName() {
+ 		return name;
+ 	}
+ 	
++	/**
++	 * @param name new name for the tileset
++	 */
+ 	public void setName(String name) {
+ 		this.name = name;
+ 	}
+ 	
++	/**
++	 * @return tileset's properties set
++	 */
+ 	public MapProperties getProperties() {
+ 		return properties;
+ 	}
+ 	
++	/**
++	 * Creates empty tileset
++	 */
+ 	public TiledMapTileSet() {
+ 		tiles = new IntMap<TiledMapTile>();
+ 		properties = new MapProperties();
+ 	}
+ 	
++	/**
++	 * @param id
++	 * @return tile matching id, null if it doesn't exist
++	 */
+ 	public TiledMapTile getTile(int id) {
+ 		return tiles.get(id);
+ 	}
+ 	
++	/**
++	 * Adds or replaces tile with that id
++	 * 
++	 * @param id
++	 * @param tile
++	 */
+ 	public void putTile(int id, TiledMapTile tile) {
+ 		tiles.put(id, tile);
+ 	}
+ 	
++	/**
++	 * @param id tile's id to be removed
++	 */
+ 	public void removeTile(int id) {
+ 		tiles.remove(id);
+ 	}
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileSets.java b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileSets.java
+index d3ebd12..82b8fa5 100644
+--- a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileSets.java
++++ b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileSets.java
+@@ -4,18 +4,32 @@ import java.util.Iterator;
+ 
+ import com.badlogic.gdx.utils.Array;
+ 
++/**
++ * @brief Collection of TiledMapTileSet
++ */
+ public class TiledMapTileSets implements Iterable<TiledMapTileSet> {
+ 	
+ 	private Array<TiledMapTileSet> tilesets;
+ 	
++	/**
++	 * Creates empty collection of tilesets
++	 */
+ 	public TiledMapTileSets() {
+ 		tilesets = new Array<TiledMapTileSet>();
+ 	}
+ 	
++	/**
++	 * @param index
++	 * @return tileset at index
++	 */
+ 	public TiledMapTileSet getTileSet(int index) {
+ 		return tilesets.get(index);
+ 	}
+ 	
++	/**
++	 * @param name
++	 * @return tileset with matching name, null if it doesn't exist
++	 */
+ 	public TiledMapTileSet getTileSet(String name) {
+ 		for (TiledMapTileSet tileset : tilesets) {
+ 			if (name.equals(tileset.getName())) {
+@@ -25,18 +39,33 @@ public class TiledMapTileSets implements Iterable<TiledMapTileSet> {
+ 		return null;
+ 	}
+ 	
++	/**
++	 * @param tileset set to be added to the collection
++	 */
+ 	public void addTileSet(TiledMapTileSet tileset) {
+ 		tilesets.add(tileset);
+ 	}
+ 	
++	/**
++	 * Removes tileset at index
++	 * 
++	 * @param index
++	 */
+ 	public void removeTileSet(int index) {
+ 		tilesets.removeIndex(index);
+ 	}
+ 	
++	/**
++	 * @param tileset set to be removed
++	 */
+ 	public void removeTileSet(TiledMapTileSet tileset) {
+ 		tilesets.removeValue(tileset, true);
+ 	}
+ 	
++	/**
++	 * @param id
++	 * @return tile with matching id, null if it doesn't exist
++	 */
+ 	public TiledMapTile getTile(int id) {
+ 		for (TiledMapTileSet tileset : tilesets) {
+ 			TiledMapTile tile = tileset.getTile(id);
+@@ -47,6 +76,9 @@ public class TiledMapTileSets implements Iterable<TiledMapTileSet> {
+ 		return null;
+ 	}
+ 	
++	/**
++	 * @return iterator to tilesets
++	 */
+ 	@Override
+ 	public Iterator<TiledMapTileSet> iterator() {
+ 		return tilesets.iterator();
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/TmxMapLoader.java b/gdx/src/com/badlogic/gdx/maps/tiled/TmxMapLoader.java
+deleted file mode 100644
+index a72a419..0000000
+--- a/gdx/src/com/badlogic/gdx/maps/tiled/TmxMapLoader.java
++++ /dev/null
+@@ -1,541 +0,0 @@
+-package com.badlogic.gdx.maps.tiled;
+-
+-import java.io.ByteArrayInputStream;
+-import java.io.IOException;
+-import java.util.StringTokenizer;
+-import java.util.zip.DataFormatException;
+-import java.util.zip.GZIPInputStream;
+-import java.util.zip.Inflater;
+-
+-import com.badlogic.gdx.assets.AssetDescriptor;
+-import com.badlogic.gdx.assets.AssetLoaderParameters;
+-import com.badlogic.gdx.assets.AssetManager;
+-import com.badlogic.gdx.assets.loaders.FileHandleResolver;
+-import com.badlogic.gdx.assets.loaders.SynchronousAssetLoader;
+-import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
+-import com.badlogic.gdx.files.FileHandle;
+-import com.badlogic.gdx.graphics.Texture;
+-import com.badlogic.gdx.graphics.g2d.TextureRegion;
+-import com.badlogic.gdx.maps.ImageResolver;
+-import com.badlogic.gdx.maps.MapLayer;
+-import com.badlogic.gdx.maps.MapObject;
+-import com.badlogic.gdx.maps.MapProperties;
+-import com.badlogic.gdx.maps.ImageResolver.AssetManagerImageResolver;
+-import com.badlogic.gdx.maps.ImageResolver.DirectImageResolver;
+-import com.badlogic.gdx.maps.objects.PolygonMapObject;
+-import com.badlogic.gdx.maps.objects.PolylineMapObject;
+-import com.badlogic.gdx.maps.objects.RectangleMapObject;
+-import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
+-import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile;
+-import com.badlogic.gdx.utils.Array;
+-import com.badlogic.gdx.utils.Base64Coder;
+-import com.badlogic.gdx.utils.GdxRuntimeException;
+-import com.badlogic.gdx.utils.ObjectMap;
+-import com.badlogic.gdx.utils.XmlReader;
+-import com.badlogic.gdx.utils.XmlReader.Element;
+-
+-public class TmxMapLoader extends SynchronousAssetLoader<TiledMap, TmxMapLoader.Parameters> {
+-
+-	public static class Parameters extends AssetLoaderParameters<TiledMap> {
+-		
+-	}
+-	
+-	private static final int FLAG_FLIP_HORIZONTALLY = 0x80000000;
+-	private static final int FLAG_FLIP_VERTICALLY = 0x40000000;
+-	private static final int FLAG_FLIP_DIAGONALLY = 0x20000000;		
+-	private static final int MASK_CLEAR  = 0xE0000000;
+-	
+-	private XmlReader xml = new XmlReader();
+-	private Element root;
+-	
+-	public TmxMapLoader() {
+-		super(new InternalFileHandleResolver());
+-	}
+-	
+-	public TmxMapLoader(FileHandleResolver resolver) {
+-		super(resolver);
+-	}
+-
+-	/**
+-	 * Loads the {@link TiledMap} from the given file. The file is
+-	 * resolved via the {@link FileHandleResolver} set in the constructor
+-	 * of this class. By default it will resolve to an internal file.
+-	 * @param fileName the filename
+-	 * @return the TiledMap
+-	 */
+-	public TiledMap load(String fileName) {
+-		try {
+-			FileHandle tmxFile = resolve(fileName);
+-			root = xml.parse(tmxFile);
+-			ObjectMap<String, Texture> textures = new ObjectMap<String, Texture>();
+-			for(FileHandle textureFile: loadTilesets(root, tmxFile)) {
+-				textures.put(textureFile.path(), new Texture(textureFile));
+-			}
+-			DirectImageResolver imageResolver = new DirectImageResolver(textures);
+-			TiledMap map = loadTilemap(root, tmxFile, imageResolver);
+-			map.setOwnedTextures(textures.values().toArray());
+-			return map;
+-		} catch(IOException e) {
+-			throw new GdxRuntimeException("Couldn't load tilemap '" + fileName + "'", e);
+-		}
+-	}
+-	
+-	@Override
+-	public TiledMap load(AssetManager assetManager, String fileName, Parameters parameter) {
+-		FileHandle tmxFile = resolve(fileName);
+-		try {
+-			return loadTilemap(root, tmxFile, new AssetManagerImageResolver(assetManager));
+-		} catch (Exception e) {
+-			e.printStackTrace();
+-		}
+-		return null;
+-	}
+-
+-	@Override
+-	public Array<AssetDescriptor> getDependencies(String fileName, Parameters parameter) {
+-		Array<AssetDescriptor> dependencies = new Array<AssetDescriptor>();
+-		try {
+-			FileHandle tmxFile = resolve(fileName);
+-			root = xml.parse(tmxFile);
+-			for(FileHandle image: loadTilesets(root, tmxFile)) {
+-				dependencies.add(new AssetDescriptor(image.path(), Texture.class));
+-			}
+-		} catch (IOException e) {
+-			e.printStackTrace();
+-		}
+-		return dependencies;
+-	}
+-	
+-	/**
+-	 * Loads the map data, given the XML root element and an {@link ImageResolver} used
+-	 * to return the tileset Textures
+-	 * @param root the XML root element 
+-	 * @param tmxFile the Filehandle of the tmx file
+-	 * @param imageResolver the {@link ImageResolver}
+-	 * @return the {@link TiledMap}
+-	 */
+-	private TiledMap loadTilemap(Element root, FileHandle tmxFile, ImageResolver imageResolver) {
+-		TiledMap map = new TiledMap();
+-		Element properties = root.getChildByName("properties");
+-		if (properties != null) {
+-			loadProperties(map.getProperties(), properties);
+-		}
+-		Array<Element> tilesets = root.getChildrenByName("tileset");
+-		for (Element element : tilesets) {
+-			loadTileSet(map, element, tmxFile, imageResolver);
+-			root.removeChild(element);
+-		}
+-		for (int i = 0, j = root.getChildCount(); i < j; i++) {
+-			Element element = root.getChild(i);
+-			String name = element.getName();
+-			if (name.equals("layer")) {
+-				loadTileLayer(map, element);
+-			} else if (name.equals("objectgroup")) {
+-				loadObjectGroup(map, element);
+-			}
+-		}
+-		return map;
+-	}
+-	
+-	/**
+-	 * Loads the tilesets
+-	 * @param root the root XML element
+-	 * @return a list of filenames for images containing tiles
+-	 * @throws IOException 
+-	 */
+-	private Array<FileHandle> loadTilesets(Element root, FileHandle tmxFile) throws IOException {
+-		Array<FileHandle> images = new Array<FileHandle>();
+-		for (Element tileset : root.getChildrenByName("tileset")) {
+-			String source = tileset.getAttribute("source", null);
+-			FileHandle image = null;
+-			if (source != null) {
+-				FileHandle tsx = getRelativeFileHandle(tmxFile, source);
+-				tileset = xml.parse(tsx);
+-				String imageSource = tileset.getChildByName("image").getAttribute("source");
+-				image = getRelativeFileHandle(tsx, imageSource);
+-			} else {
+-				String imageSource = tileset.getChildByName("image").getAttribute("source");
+-				image = getRelativeFileHandle(tmxFile, imageSource);
+-			}
+-			images.add(image);
+-		}
+-		return images;
+-	}
+-
+-	private void loadTileSet(TiledMap map, Element element, FileHandle tmxFile, ImageResolver imageResolver) {
+-		if (element.getName().equals("tileset")) {
+-			String name = element.get("name", null);
+-			int firstgid = element.getIntAttribute("firstgid", 1);
+-			int tilewidth = element.getIntAttribute("tilewidth", 0);
+-			int tileheight = element.getIntAttribute("tileheight", 0);
+-			int spacing = element.getIntAttribute("spacing", 0);
+-			int margin = element.getIntAttribute("margin", 0);			
+-			String source = element.getAttribute("source", null);
+-			FileHandle image = null;
+-			if (source != null) {
+-				FileHandle tsx = getRelativeFileHandle(tmxFile, source);
+-				try {
+-					element = xml.parse(tsx);
+-					name = element.get("name", null);
+-					tilewidth = element.getIntAttribute("tilewidth", 0);
+-					tileheight = element.getIntAttribute("tileheight", 0);
+-					spacing = element.getIntAttribute("spacing", 0);
+-					margin = element.getIntAttribute("margin", 0);
+-					String imageSource = element.getChildByName("image").getAttribute("source");
+-					image = getRelativeFileHandle(tsx, imageSource);
+-				} catch (IOException e) {
+-					throw new GdxRuntimeException("Error parsing external tileset.");
+-				}
+-			} else {
+-				String imageSource = element.getChildByName("image").getAttribute("source");
+-				image = getRelativeFileHandle(tmxFile, imageSource);
+-			}
+-
+-			Texture texture = imageResolver.getImage(image.path());
+-
+-			TiledMapTileSet tileset = new TiledMapTileSet();
+-			tileset.setName(name);
+-			
+-			int stopWidth = texture.getWidth() - tilewidth;
+-			int stopHeight = texture.getHeight() - tileheight;
+-
+-			int id = firstgid;
+-			
+-			for (int y = margin; y <= stopHeight; y += tileheight + spacing) {
+-				for (int x = margin; x <= stopWidth; x += tilewidth + spacing) {
+-					TiledMapTile tile = new StaticTiledMapTile(new TextureRegion(texture, x, y, tilewidth, tileheight));
+-					tileset.putTile(id++, tile);
+-				}
+-			}
+-			
+-			Array<Element> tileElements = element.getChildrenByName("tile");
+-			
+-			for (Element tileElement : tileElements) {
+-				int localtid = tileElement.getIntAttribute("id", 0);
+-				TiledMapTile tile = tileset.getTile(firstgid + localtid);
+-				if (tile!= null) {
+-					Element properties = element.getChildByName("properties");
+-					if (properties != null) {
+-						loadProperties(tile.getProperties(), properties);
+-					}
+-				}
+-			}
+-			
+-			Element properties = element.getChildByName("properties");
+-			if (properties != null) {
+-				loadProperties(tileset.getProperties(), properties);
+-			}
+-			map.getTileSets().addTileSet(tileset);
+-		}		
+-	}
+-	
+-	private void loadTileLayer(TiledMap map, Element element) {
+-		if (element.getName().equals("layer")) {
+-			String name = element.getAttribute("name", null);
+-			int width = element.getIntAttribute("width", 0);
+-			int height = element.getIntAttribute("height", 0);
+-			int tileWidth = element.getParent().getIntAttribute("tilewidth", 0);
+-			int tileHeight = element.getParent().getIntAttribute("tileheight", 0);
+-			TiledMapTileLayer layer = new TiledMapTileLayer(width, height, tileWidth, tileHeight);
+-			layer.setName(name);
+-			
+-			TiledMapTileSets tilesets = map.getTileSets();
+-			
+-			Element data = element.getChildByName("data");
+-			String encoding = data.getAttribute("encoding", null);
+-			String compression = data.getAttribute("compression", null);
+-			if (encoding.equals("csv")) {
+-				String[] array = data.getText().split(",");
+-				for (int y = 0; y < height; y++) {
+-					for (int x = 0; x < width; x++) {
+-						int id = (int) Long.parseLong(array[y * width + x].trim());
+-						
+-						final boolean flipHorizontally = ((id & FLAG_FLIP_HORIZONTALLY) != 0);
+-						final boolean flipVertically = ((id & FLAG_FLIP_VERTICALLY) != 0);
+-						final boolean flipDiagonally = ((id & FLAG_FLIP_DIAGONALLY) != 0);
+-
+-						id = id & ~MASK_CLEAR;
+-						
+-						tilesets.getTile(id);
+-						TiledMapTile tile = tilesets.getTile(id);
+-						if (tile != null) {
+-							Cell cell = layer.getCell(x, height - 1 - y);
+-							if (flipDiagonally) {
+-								if (flipHorizontally && flipVertically) {
+-									cell.setFlipHorizontally(true);
+-									cell.setRotation(Cell.ROTATE_90);
+-								} else if (flipHorizontally) {
+-									cell.setRotation(Cell.ROTATE_90);
+-								} else if (flipVertically) {
+-									cell.setRotation(Cell.ROTATE_270);
+-								} else {
+-									cell.setFlipVertically(true);
+-									cell.setRotation(Cell.ROTATE_90);
+-								}
+-							} else {
+-								cell.setFlipHorizontally(flipHorizontally);
+-								cell.setFlipVertically(flipVertically);
+-							}
+-							cell.setTile(tile);
+-						}
+-					}
+-				}
+-			} else {
+-				if(encoding.equals("base64")) {
+-					byte[] bytes = Base64Coder.decode(data.getText());
+-					if (compression == null) {
+-						int read = 0;
+-						for (int y = 0; y < height; y++) {
+-							for (int x = 0; x < width; x++) {
+-								
+-								int id =
+-								unsignedByteToInt(bytes[read++]) |
+-								unsignedByteToInt(bytes[read++]) << 8 |
+-								unsignedByteToInt(bytes[read++]) << 16 |
+-								unsignedByteToInt(bytes[read++]) << 24;
+-								
+-								final boolean flipHorizontally = ((id & FLAG_FLIP_HORIZONTALLY) != 0);
+-								final boolean flipVertically = ((id & FLAG_FLIP_VERTICALLY) != 0);
+-								final boolean flipDiagonally = ((id & FLAG_FLIP_DIAGONALLY) != 0);
+-
+-								id = id & ~MASK_CLEAR;
+-								
+-								tilesets.getTile(id);
+-								TiledMapTile tile = tilesets.getTile(id);
+-								if (tile != null) {
+-									Cell cell = layer.getCell(x, height - 1 - y);
+-									if (flipDiagonally) {
+-										if (flipHorizontally && flipVertically) {
+-											cell.setFlipHorizontally(true);
+-											cell.setRotation(Cell.ROTATE_90);
+-										} else if (flipHorizontally) {
+-											cell.setRotation(Cell.ROTATE_90);
+-										} else if (flipVertically) {
+-											cell.setRotation(Cell.ROTATE_270);
+-										} else {
+-											cell.setFlipVertically(true);
+-											cell.setRotation(Cell.ROTATE_90);
+-										}
+-									} else {
+-										cell.setFlipHorizontally(flipHorizontally);
+-										cell.setFlipVertically(flipVertically);
+-									}
+-									cell.setTile(tile);
+-								}
+-							}
+-						}
+-					} else if (compression.equals("gzip")) {
+-						GZIPInputStream GZIS = null;
+-						try {
+-							GZIS = new GZIPInputStream(new ByteArrayInputStream(bytes), bytes.length);
+-						} catch (IOException e) {
+-							throw new GdxRuntimeException("Error Reading TMX Layer Data - IOException: " + e.getMessage());
+-						}
+-
+-						byte[] temp = new byte[4];
+-						for (int y = 0; y < height; y++) {
+-							for (int x = 0; x < width; x++) {
+-								try {
+-									GZIS.read(temp, 0, 4);
+-									int id =
+-									unsignedByteToInt(temp[0]) |
+-									unsignedByteToInt(temp[1]) << 8 |
+-									unsignedByteToInt(temp[2]) << 16 |
+-									unsignedByteToInt(temp[3]) << 24;
+-
+-									final boolean flipHorizontally = ((id & FLAG_FLIP_HORIZONTALLY) != 0);
+-									final boolean flipVertically = ((id & FLAG_FLIP_VERTICALLY) != 0);
+-									final boolean flipDiagonally = ((id & FLAG_FLIP_DIAGONALLY) != 0);
+-
+-									id = id & ~MASK_CLEAR;
+-									
+-									tilesets.getTile(id);
+-									TiledMapTile tile = tilesets.getTile(id);
+-									if (tile != null) {
+-										Cell cell = layer.getCell(x, height - 1 - y);
+-										if (flipDiagonally) {
+-											if (flipHorizontally && flipVertically) {
+-												cell.setFlipHorizontally(true);
+-												cell.setRotation(Cell.ROTATE_90);
+-											} else if (flipHorizontally) {
+-												cell.setRotation(Cell.ROTATE_90);
+-											} else if (flipVertically) {
+-												cell.setRotation(Cell.ROTATE_270);
+-											} else {
+-												cell.setFlipVertically(true);
+-												cell.setRotation(Cell.ROTATE_90);
+-											}
+-										} else {
+-											cell.setFlipHorizontally(flipHorizontally);
+-											cell.setFlipVertically(flipVertically);
+-										}
+-										cell.setTile(tile);
+-									}
+-								} catch (IOException e) {
+-									throw new GdxRuntimeException("Error Reading TMX Layer Data.", e);
+-								}
+-							}
+-						}
+-					} else if (compression.equals("zlib")) {
+-						Inflater zlib = new Inflater();
+-						
+-						byte[] temp = new byte[4];
+-
+-						zlib.setInput(bytes, 0, bytes.length);
+-
+-						for (int y = 0; y < height; y++) {
+-							for (int x = 0; x < width; x++) {
+-								try {
+-									zlib.inflate(temp, 0, 4);
+-									int id =
+-									unsignedByteToInt(temp[0]) |
+-									unsignedByteToInt(temp[1]) << 8 |
+-									unsignedByteToInt(temp[2]) << 16 |
+-									unsignedByteToInt(temp[3]) << 24;
+-									
+-									final boolean flipHorizontally = ((id & FLAG_FLIP_HORIZONTALLY) != 0);
+-									final boolean flipVertically = ((id & FLAG_FLIP_VERTICALLY) != 0);
+-									final boolean flipDiagonally = ((id & FLAG_FLIP_DIAGONALLY) != 0);
+-
+-									id = id & ~MASK_CLEAR;
+-									
+-									tilesets.getTile(id);
+-									TiledMapTile tile = tilesets.getTile(id);
+-									if (tile != null) {
+-										Cell cell = layer.getCell(x, height - 1 - y);
+-										if (flipDiagonally) {
+-											if (flipHorizontally && flipVertically) {
+-												cell.setFlipHorizontally(true);
+-												cell.setRotation(-90);
+-											} else if (flipHorizontally) {
+-												cell.setRotation(-90);
+-											} else if (flipVertically) {
+-												cell.setRotation(+90);
+-											} else {
+-												cell.setFlipVertically(true);
+-												cell.setRotation(-90);
+-											}
+-										} else {
+-											cell.setFlipHorizontally(flipHorizontally);
+-											cell.setFlipVertically(flipVertically);
+-										}
+-										cell.setTile(tile);
+-									}
+-			
+-								} catch (DataFormatException e) {
+-									throw new GdxRuntimeException("Error Reading TMX Layer Data.", e);
+-								}
+-							}
+-						}
+-					}
+-				}
+-			}
+-			Element properties = element.getChildByName("properties");
+-			if (properties != null) {
+-				loadProperties(layer.getProperties(), properties);
+-			}
+-			map.getLayers().addLayer(layer);
+-		}		
+-	}
+-	
+-	public void loadObjectGroup(TiledMap map, Element element) {
+-		if (element.getName().equals("objectgroup")) {
+-			String name = element.getAttribute("name", null);
+-			MapLayer layer = new MapLayer();
+-			layer.setName(name);
+-			Element properties = element.getChildByName("properties");
+-			if (properties != null) {
+-				loadProperties(layer.getProperties(), properties);
+-			}
+-			
+-			for (Element objectElement : element.getChildrenByName("object")) {
+-				loadObject(layer, objectElement);
+-			}
+-
+-			map.getLayers().addLayer(layer);
+-		}
+-	}
+-	
+-	private void loadObject(MapLayer layer, Element element) {
+-		if (element.getName().equals("object")) {
+-			MapObject object = null;
+-			
+-			int x = element.getIntAttribute("x", 0);
+-			int y = element.getIntAttribute("y", 0);
+-			
+-			int width = element.getIntAttribute("width", 0);
+-			int height = element.getIntAttribute("height", 0);
+-			
+-			if (element.getChildCount() > 0) {
+-				Element child = element.getChildByName("polygon");
+-				if (child != null) {
+-					String[] points = child.getAttribute("points").split(" ");
+-					float[] vertices = new float[points.length * 2];
+-					for (int i = 0; i < points.length; i++) {
+-						String[] point = points[i].split(",");
+-						vertices[i * 2] = x + Integer.parseInt(point[0]);
+-						vertices[i * 2 + 1] = y + Integer.parseInt(point[1]);
+-					}
+-					object = new PolygonMapObject(vertices);
+-				} else {
+-					child = element.getChildByName("polyline");
+-					if (child != null) {
+-						String[] points = child.getAttribute("points").split(" ");
+-						float[] vertices = new float[points.length * 2];
+-						for (int i = 0; i < points.length; i++) {
+-							String[] point = points[i].split(",");
+-							vertices[i * 2] = x + Integer.parseInt(point[0]);
+-							vertices[i * 2 + 1] = y + Integer.parseInt(point[1]);
+-						}
+-						object = new PolylineMapObject(vertices);
+-					}
+-				}
+-			}
+-			if (object == null) {
+-				object = new RectangleMapObject(x, y, width, height);
+-			}
+-			object.setName(element.getAttribute("name", null));
+-			String type = element.getAttribute("type", null);
+-			if (type != null) {
+-				object.getProperties().put("type", type);
+-			}
+-			Element properties = element.getChildByName("properties");
+-			if (properties != null) {
+-				loadProperties(object.getProperties(), properties);
+-			}
+-			layer.getObjects().addObject(object);
+-		}
+-	}
+-	
+-	private void loadProperties(MapProperties properties, Element element) {
+-		if (element.getName().equals("properties")) {
+-			for (Element property : element.getChildrenByName("property")) {
+-				String name = property.getAttribute("name", null);
+-				String value = property.getAttribute(name, null);
+-				if (value == null) {
+-					value = property.getText();
+-				}
+-				properties.put(name, value);
+-			}
+-		}
+-	}
+-	
+-	private static FileHandle getRelativeFileHandle(FileHandle file, String path) {
+-		StringTokenizer tokenizer = new StringTokenizer(path, "\\/");
+-		FileHandle result = file.parent();
+-		while (tokenizer.hasMoreElements()) {
+-			String token = tokenizer.nextToken();
+-			if (token.equals(".."))
+-				result = result.parent();
+-			else {
+-				result = result.child(token);
+-			}
+-		}
+-		return result;		
+-	}
+-	
+-	private static int unsignedByteToInt (byte b) {
+-		return (int) b & 0xFF;
+-	}
+-
+-}
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java b/gdx/src/com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java
+index c3fb28e..9486296 100644
+--- a/gdx/src/com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java
++++ b/gdx/src/com/badlogic/gdx/maps/tiled/tiles/StaticTiledMapTile.java
+@@ -4,26 +4,45 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
+ import com.badlogic.gdx.maps.MapProperties;
+ import com.badlogic.gdx.maps.tiled.TiledMapTile;
+ 
++/**
++ * @brief Represents a non changing TiledMapTile (can be cached)
++ */
+ public class StaticTiledMapTile implements TiledMapTile {
+ 
+ 	private MapProperties properties;
+ 	
+ 	private TextureRegion textureRegion;	
+ 
++	/**
++	 * @return tile's properties set
++	 */
+ 	@Override
+ 	public MapProperties getProperties() {
+ 		return properties;
+ 	}
+-	
++
++	/**
++	 * @return texture region used to render the tile
++	 */
+ 	@Override
+ 	public TextureRegion getTextureRegion() {
+ 		return textureRegion;
+ 	}
+ 	
++	/**
++	 * Creates a static tile with the given region
++	 * 
++	 * @param textureRegion
++	 */
+ 	public StaticTiledMapTile(TextureRegion textureRegion) {
+ 		this.textureRegion = textureRegion;
+ 	}
+ 	
++	/**
++	 * Copy constructor
++	 * 
++	 * @param copy
++	 */
+ 	public StaticTiledMapTile(StaticTiledMapTile copy) {
+ 		this.properties.putAll(copy.properties);
+ 		this.textureRegion = copy.textureRegion;
+diff --git a/tests/gdx-tests-lwjgl/src/com/badlogic/gdx/tests/lwjgl/LwjglDebugStarter.java b/tests/gdx-tests-lwjgl/src/com/badlogic/gdx/tests/lwjgl/LwjglDebugStarter.java
+index c81c47d..3d0debe 100644
+--- a/tests/gdx-tests-lwjgl/src/com/badlogic/gdx/tests/lwjgl/LwjglDebugStarter.java
++++ b/tests/gdx-tests-lwjgl/src/com/badlogic/gdx/tests/lwjgl/LwjglDebugStarter.java
+@@ -21,10 +21,7 @@ import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
+ import com.badlogic.gdx.tests.AssetManagerTest;
+ import com.badlogic.gdx.tests.GamepadTest;
+ import com.badlogic.gdx.tests.InverseKinematicsTest;
+-import com.badlogic.gdx.tests.TiledMapDirectLoaderTest;
+-import com.badlogic.gdx.tests.TiledMapAssetManagerTest;
+ import com.badlogic.gdx.tests.YDownTest;
+-import com.badlogic.gdx.tests.bench.TiledMapBench;
+ import com.badlogic.gdx.tests.extensions.FreeTypeTest;
+ import com.badlogic.gdx.tests.utils.GdxTest;
+ import com.badlogic.gdx.utils.SharedLibraryLoader;
+@@ -38,9 +35,11 @@ public class LwjglDebugStarter {
+ 		new SharedLibraryLoader("../../extensions/gdx-controllers/gdx-controllers-desktop/libs/gdx-controllers-desktop-natives.jar").load("gdx-controllers-desktop");
+ 		new SharedLibraryLoader("../../gdx/libs/gdx-natives.jar").load("gdx");
+ 
+-		GdxTest test = new TiledMapDirectLoaderTest();
++		GdxTest test = new GamepadTest();
+ 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
+ 		config.useGL20 = test.needsGL20();
+ 		new LwjglApplication(test, config);
+ 	}
++	
++	
+ }
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/GLEEDTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/GLEEDTest.java
+index 678e115..99313b7 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/GLEEDTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/GLEEDTest.java
+@@ -26,8 +26,8 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
+ import com.badlogic.gdx.graphics.g2d.BitmapFont;
+ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+ import com.badlogic.gdx.maps.Map;
+-import com.badlogic.gdx.maps.gleed.GleedMapLoader;
+ import com.badlogic.gdx.maps.gleed.GleedMapRenderer;
++import com.badlogic.gdx.maps.loaders.GleedMapLoader;
+ import com.badlogic.gdx.math.Rectangle;
+ import com.badlogic.gdx.math.Vector2;
+ import com.badlogic.gdx.tests.utils.GdxTest;
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/TiledMapAssetManagerTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/TiledMapAssetManagerTest.java
+deleted file mode 100644
+index eddd482..0000000
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/TiledMapAssetManagerTest.java
++++ /dev/null
+@@ -1,117 +0,0 @@
+-package com.badlogic.gdx.tests;
+-
+-import com.badlogic.gdx.Gdx;
+-import com.badlogic.gdx.InputAdapter;
+-import com.badlogic.gdx.assets.AssetManager;
+-import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
+-import com.badlogic.gdx.graphics.GL10;
+-import com.badlogic.gdx.graphics.OrthographicCamera;
+-import com.badlogic.gdx.graphics.Texture;
+-import com.badlogic.gdx.graphics.g2d.BitmapFont;
+-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+-import com.badlogic.gdx.maps.MapLayer;
+-import com.badlogic.gdx.maps.tiled.TiledMap;
+-import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
+-import com.badlogic.gdx.maps.tiled.TiledMapRenderer2;
+-import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+-import com.badlogic.gdx.maps.tiled.TiledMapRenderer2.IsometricTiledMapRenderer;
+-import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+-import com.badlogic.gdx.math.Vector3;
+-import com.badlogic.gdx.tests.utils.GdxTest;
+-
+-public class TiledMapAssetManagerTest extends GdxTest {
+-	
+-	private TiledMap map;
+-	private TiledMapRenderer2 renderer;
+-	private OrthographicCamera camera;
+-	private OrthoCamController cameraController;
+-	
+-	AssetManager assetManager;
+-	
+-	Texture tiles;
+-	
+-	Texture texture;
+-	
+-	BitmapFont font;
+-	SpriteBatch batch;
+-	
+-	@Override
+-	public void create() {		
+-		float w = Gdx.graphics.getWidth();
+-		float h = Gdx.graphics.getHeight();
+-		
+-		camera = new OrthographicCamera();
+-		camera.setToOrtho(false, (w / h) * 10, 10);
+-		camera.update();
+-		
+-		cameraController = new OrthoCamController(camera);
+-		Gdx.input.setInputProcessor(cameraController);
+-	
+-		font = new BitmapFont();
+-		batch = new SpriteBatch();
+-		
+-		assetManager = new AssetManager();
+-		assetManager.setLoader(TiledMap.class, new TmxMapLoader(new InternalFileHandleResolver()));
+-		assetManager.load("data/maps/isometric_grass_and_water.tmx", TiledMap.class);
+-		assetManager.finishLoading();
+-		map = assetManager.get("data/maps/isometric_grass_and_water.tmx");
+-		//renderer = new OrthogonalTiledMapRenderer(map, 1f / 32f);
+-		renderer = new IsometricTiledMapRenderer(map, 1f / 64f);
+-	}
+-
+-	@Override
+-	public void render() {
+-		Gdx.gl.glClearColor(100f / 255f, 100f / 255f, 250f / 255f, 1f);
+-		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+-		camera.update();
+-		if (cameraController.dirty) {
+-			renderer.setProjectionMatrix(camera.combined);
+-			cameraController.dirty = false;
+-		}
+-		renderer.setViewBounds(camera.position.x - camera.viewportWidth * 0.5f, camera.position.y - camera.viewportHeight * 0.5f, camera.viewportWidth, camera.viewportHeight);
+-		renderer.begin();
+-		renderer.render();
+-		renderer.end();
+-		batch.begin();
+-		font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 10, 20); 
+-		batch.end();
+-	}
+-	
+-	@Override
+-	public boolean needsGL20 () {
+-		return true;
+-	}
+-
+-	public class OrthoCamController extends InputAdapter {
+-		final OrthographicCamera camera;
+-		final Vector3 curr = new Vector3();
+-		final Vector3 last = new Vector3(-1, -1, -1);
+-		final Vector3 delta = new Vector3();
+-
+-		boolean dirty = true;
+-		
+-		public OrthoCamController (OrthographicCamera camera) {
+-			this.camera = camera;
+-		}
+-
+-		@Override
+-		public boolean touchDragged (int x, int y, int pointer) {
+-			camera.unproject(curr.set(x, y, 0));
+-			if (!(last.x == -1 && last.y == -1 && last.z == -1)) {
+-				camera.unproject(delta.set(last.x, last.y, 0));
+-				delta.sub(curr);
+-				camera.position.add(delta.x, delta.y, 0);
+-				dirty = true;
+-			}
+-			last.set(x, y, 0);
+-			return false;
+-		}
+-
+-		@Override
+-		public boolean touchUp (int x, int y, int pointer, int button) {
+-			last.set(-1, -1, -1);
+-			return false;
+-		}
+-	}
+-	
+-}
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/TiledMapDirectLoaderTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/TiledMapDirectLoaderTest.java
+deleted file mode 100755
+index 4a7069e..0000000
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/TiledMapDirectLoaderTest.java
++++ /dev/null
+@@ -1,108 +0,0 @@
+-package com.badlogic.gdx.tests;
+-
+-import com.badlogic.gdx.Gdx;
+-import com.badlogic.gdx.InputAdapter;
+-import com.badlogic.gdx.assets.AssetManager;
+-import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
+-import com.badlogic.gdx.graphics.GL10;
+-import com.badlogic.gdx.graphics.OrthographicCamera;
+-import com.badlogic.gdx.graphics.Texture;
+-import com.badlogic.gdx.graphics.g2d.BitmapFont;
+-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+-import com.badlogic.gdx.maps.MapLayer;
+-import com.badlogic.gdx.maps.tiled.TiledMap;
+-import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
+-import com.badlogic.gdx.maps.tiled.TiledMapRenderer2;
+-import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+-import com.badlogic.gdx.maps.tiled.TiledMapRenderer2.IsometricTiledMapRenderer;
+-import com.badlogic.gdx.maps.tiled.TiledMapRenderer2.OrthogonalTiledMapRenderer2;
+-import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+-import com.badlogic.gdx.math.Vector3;
+-import com.badlogic.gdx.tests.utils.GdxTest;
+-
+-public class TiledMapDirectLoaderTest extends GdxTest {
+-	
+-	private TiledMap map;
+-	private TiledMapRenderer2 renderer;
+-	private OrthographicCamera camera;
+-	private OrthoCamController cameraController;
+-	
+-	BitmapFont font;
+-	SpriteBatch batch;
+-	
+-	@Override
+-	public void create() {		
+-		float w = Gdx.graphics.getWidth();
+-		float h = Gdx.graphics.getHeight();
+-		
+-		camera = new OrthographicCamera();
+-		camera.setToOrtho(false, (w / h) * 10, 10);
+-		camera.update();
+-		
+-		cameraController = new OrthoCamController(camera);
+-		Gdx.input.setInputProcessor(cameraController);
+-	
+-		font = new BitmapFont();
+-		batch = new SpriteBatch();
+-		
+-		map = new TmxMapLoader().load("data/maps/tiles.tmx");
+-		renderer = new OrthogonalTiledMapRenderer2(map, 1f / 32f);
+-//		renderer = new IsometricTiledMapRenderer(map, 1f / 64f);
+-	}
+-
+-	@Override
+-	public void render() {
+-		Gdx.gl.glClearColor(100f / 255f, 100f / 255f, 250f / 255f, 1f);
+-		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+-		camera.update();
+-		if (cameraController.dirty) {
+-			renderer.setProjectionMatrix(camera.combined);
+-			cameraController.dirty = false;
+-		}
+-		renderer.setViewBounds(camera.position.x - camera.viewportWidth * 0.5f, camera.position.y - camera.viewportHeight * 0.5f, camera.viewportWidth, camera.viewportHeight);
+-		renderer.begin();
+-		renderer.render();
+-		renderer.end();
+-		batch.begin();
+-		font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 10, 20); 
+-		batch.end();
+-	}
+-	
+-	@Override
+-	public boolean needsGL20 () {
+-		return true;
+-	}
+-
+-	public class OrthoCamController extends InputAdapter {
+-		final OrthographicCamera camera;
+-		final Vector3 curr = new Vector3();
+-		final Vector3 last = new Vector3(-1, -1, -1);
+-		final Vector3 delta = new Vector3();
+-
+-		boolean dirty = true;
+-		
+-		public OrthoCamController (OrthographicCamera camera) {
+-			this.camera = camera;
+-		}
+-
+-		@Override
+-		public boolean touchDragged (int x, int y, int pointer) {
+-			camera.unproject(curr.set(x, y, 0));
+-			if (!(last.x == -1 && last.y == -1 && last.z == -1)) {
+-				camera.unproject(delta.set(last.x, last.y, 0));
+-				delta.sub(curr);
+-				camera.position.add(delta.x, delta.y, 0);
+-				dirty = true;
+-			}
+-			last.set(x, y, 0);
+-			return false;
+-		}
+-
+-		@Override
+-		public boolean touchUp (int x, int y, int pointer, int button) {
+-			last.set(-1, -1, -1);
+-			return false;
+-		}
+-	}
+-	
+-}
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/TiledMapTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/TiledMapTest.java
+new file mode 100644
+index 0000000..2379d30
+--- /dev/null
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/TiledMapTest.java
+@@ -0,0 +1,117 @@
++package com.badlogic.gdx.tests;
++
++import com.badlogic.gdx.Gdx;
++import com.badlogic.gdx.InputAdapter;
++import com.badlogic.gdx.assets.AssetManager;
++import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
++import com.badlogic.gdx.graphics.GL10;
++import com.badlogic.gdx.graphics.OrthographicCamera;
++import com.badlogic.gdx.graphics.Texture;
++import com.badlogic.gdx.graphics.g2d.BitmapFont;
++import com.badlogic.gdx.graphics.g2d.SpriteBatch;
++import com.badlogic.gdx.maps.MapLayer;
++import com.badlogic.gdx.maps.loaders.TmxMapLoader;
++import com.badlogic.gdx.maps.tiled.TiledMap;
++import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
++import com.badlogic.gdx.maps.tiled.TiledMapRenderer2;
++import com.badlogic.gdx.maps.tiled.TiledMapRenderer2.IsometricTiledMapRenderer;
++import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
++import com.badlogic.gdx.math.Vector3;
++import com.badlogic.gdx.tests.utils.GdxTest;
++
++public class TiledMapTest extends GdxTest {
++	
++	private TiledMap map;
++	private TiledMapRenderer2 renderer;
++	private OrthographicCamera camera;
++	private OrthoCamController cameraController;
++	
++	AssetManager assetManager;
++	
++	Texture tiles;
++	
++	Texture texture;
++	
++	BitmapFont font;
++	SpriteBatch batch;
++	
++	@Override
++	public void create() {		
++		float w = Gdx.graphics.getWidth();
++		float h = Gdx.graphics.getHeight();
++		
++		camera = new OrthographicCamera();
++		camera.setToOrtho(false, (w / h) * 10, 10);
++		camera.update();
++		
++		cameraController = new OrthoCamController(camera);
++		Gdx.input.setInputProcessor(cameraController);
++	
++		font = new BitmapFont();
++		batch = new SpriteBatch();
++		
++		assetManager = new AssetManager();
++		assetManager.setLoader(TiledMap.class, new TmxMapLoader(new InternalFileHandleResolver()));
++		assetManager.load("data/maps/isometric_grass_and_water.tmx", TiledMap.class);
++		assetManager.finishLoading();
++		map = assetManager.get("data/maps/isometric_grass_and_water.tmx");
++		//renderer = new OrthogonalTiledMapRenderer(map, 1f / 32f);
++		renderer = new IsometricTiledMapRenderer(map, 1f / 64f);
++	}
++
++	@Override
++	public void render() {
++		Gdx.gl.glClearColor(100f / 255f, 100f / 255f, 250f / 255f, 1f);
++		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
++		camera.update();
++		if (cameraController.dirty) {
++			renderer.setProjectionMatrix(camera.combined);
++			cameraController.dirty = false;
++		}
++		renderer.setViewBounds(camera.position.x - camera.viewportWidth * 0.5f, camera.position.y - camera.viewportHeight * 0.5f, camera.viewportWidth, camera.viewportHeight);
++		renderer.begin();
++		renderer.render();
++		renderer.end();
++		batch.begin();
++		font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 10, 20); 
++		batch.end();
++	}
++	
++	@Override
++	public boolean needsGL20 () {
++		return true;
++	}
++
++	public class OrthoCamController extends InputAdapter {
++		final OrthographicCamera camera;
++		final Vector3 curr = new Vector3();
++		final Vector3 last = new Vector3(-1, -1, -1);
++		final Vector3 delta = new Vector3();
++
++		boolean dirty = true;
++		
++		public OrthoCamController (OrthographicCamera camera) {
++			this.camera = camera;
++		}
++
++		@Override
++		public boolean touchDragged (int x, int y, int pointer) {
++			camera.unproject(curr.set(x, y, 0));
++			if (!(last.x == -1 && last.y == -1 && last.z == -1)) {
++				camera.unproject(delta.set(last.x, last.y, 0));
++				delta.sub(curr);
++				camera.position.add(delta.x, delta.y, 0);
++				dirty = true;
++			}
++			last.set(x, y, 0);
++			return false;
++		}
++
++		@Override
++		public boolean touchUp (int x, int y, int pointer, int button) {
++			last.set(-1, -1, -1);
++			return false;
++		}
++	}
++	
++}
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/utils/GdxTests.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/utils/GdxTests.java
+index eedfd3b..a3f0f4c 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/utils/GdxTests.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/utils/GdxTests.java
+@@ -75,7 +75,7 @@ public class GdxTests {
+ 		// InternationalFontsTest.class, VorbisTest.class
+ 		TextButtonTest.class, TextButtonTestGL2.class, TextureBindTest.class, SortedSpriteTest.class,
+ 		ExternalMusicTest.class, SoftKeyboardTest.class, DirtyRenderingTest.class, YDownTest.class,
+-		ScreenCaptureTest.class, BitmapFontTest.class, LabelScaleTest.class, GLEEDTest.class, GamepadTest.class, NetAPITest.class, TiledMapAssetManagerTest.class, TiledMapBench.class,
++		ScreenCaptureTest.class, BitmapFontTest.class, LabelScaleTest.class, GLEEDTest.class, GamepadTest.class, NetAPITest.class, TiledMapTest.class, TiledMapBench.class,
+ 		RunnablePostTest.class, Vector2dTest.class));
+ 	
+ 	public static List<String> getNames () {

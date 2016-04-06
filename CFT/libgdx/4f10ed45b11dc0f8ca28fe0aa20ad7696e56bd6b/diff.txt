@@ -1,0 +1,1340 @@
+diff --git a/CHANGES b/CHANGES
+index 6baae64..256b951 100644
+--- a/CHANGES
++++ b/CHANGES
+@@ -3,8 +3,7 @@
+ - Possibility to override density on desktop to simulate mobile devices, see https://github.com/libgdx/libgdx/pull/1825
+ - Progressive JPEG support through JPGD (https://code.google.com/p/jpeg-compressor/).
+ - Mavenized JGLFW backend
+-- Api Change: createArrow function of ModelBuilder class
+-- Updated native Box2D to latest version 2.3.1, no API changes
++- Matrix4.set(x,y,z, translation) changed, z axis is no more flipped
+ 
+ [1.0.1]
+ - updated to RoboVM 0.12 (and so should you!)
+diff --git a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidInput.java b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidInput.java
+index 978aa64..a26ac65 100644
+--- a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidInput.java
++++ b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidInput.java
+@@ -193,7 +193,7 @@ public class AndroidInput implements Input, OnKeyListener, OnTouchListener {
+ 				input.setText(text);
+ 				input.setSingleLine();
+ 				alert.setView(input);
+-				alert.setPositiveButton(context.getString(android.R.string.ok), new DialogInterface.OnClickListener() {
++				alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+ 					public void onClick (DialogInterface dialog, int whichButton) {
+ 						Gdx.app.postRunnable(new Runnable() {
+ 							@Override
+@@ -203,7 +203,7 @@ public class AndroidInput implements Input, OnKeyListener, OnTouchListener {
+ 						});
+ 					}
+ 				});
+-				alert.setNegativeButton(context.getString(android.R.string.cancel), new DialogInterface.OnClickListener() {
++				alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+ 					public void onClick (DialogInterface dialog, int whichButton) {
+ 						Gdx.app.postRunnable(new Runnable() {
+ 							@Override
+@@ -238,7 +238,7 @@ public class AndroidInput implements Input, OnKeyListener, OnTouchListener {
+ 				input.setHint(placeholder);
+ 				input.setSingleLine();
+ 				alert.setView(input);
+-				alert.setPositiveButton(context.getString(android.R.string.ok), new DialogInterface.OnClickListener() {
++				alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+ 					public void onClick (DialogInterface dialog, int whichButton) {
+ 						Gdx.app.postRunnable(new Runnable() {
+ 							@Override
+@@ -698,17 +698,17 @@ public class AndroidInput implements Input, OnKeyListener, OnTouchListener {
+ 		deltaX = resize(deltaX);
+ 		deltaY = resize(deltaY);
+ 		touched = resize(touched);
+-
++		
+ 		return len;
+ 	}
+-
+-	private int[] resize (int[] orig) {
++	
++	private int[] resize(int[] orig) {
+ 		int[] tmp = new int[orig.length + 2];
+ 		System.arraycopy(orig, 0, tmp, 0, orig.length);
+ 		return tmp;
+ 	}
+-
+-	private boolean[] resize (boolean[] orig) {
++	
++	private boolean[] resize(boolean[] orig) {
+ 		boolean[] tmp = new boolean[orig.length + 2];
+ 		System.arraycopy(orig, 0, tmp, 0, orig.length);
+ 		return tmp;
+diff --git a/backends/gdx-backend-robovm/src/com/badlogic/gdx/backends/iosrobovm/IOSGraphics.java b/backends/gdx-backend-robovm/src/com/badlogic/gdx/backends/iosrobovm/IOSGraphics.java
+index 26f2742..cf0158b 100644
+--- a/backends/gdx-backend-robovm/src/com/badlogic/gdx/backends/iosrobovm/IOSGraphics.java
++++ b/backends/gdx-backend-robovm/src/com/badlogic/gdx/backends/iosrobovm/IOSGraphics.java
+@@ -33,7 +33,6 @@ import org.robovm.apple.opengles.EAGLRenderingAPI;
+ import org.robovm.apple.uikit.UIDevice;
+ import org.robovm.apple.uikit.UIEvent;
+ import org.robovm.apple.uikit.UIInterfaceOrientation;
+-import org.robovm.apple.uikit.UIInterfaceOrientationMask;
+ import org.robovm.apple.uikit.UIScreen;
+ import org.robovm.apple.uikit.UIUserInterfaceIdiom;
+ import org.robovm.objc.Selector;
+@@ -78,23 +77,6 @@ public class IOSGraphics extends NSObject implements Graphics, GLKViewDelegate,
+ 			app.listener.resize(graphics.width, graphics.height);
+ 		}
+ 
+-		@Override
+-		public UIInterfaceOrientationMask getSupportedInterfaceOrientations() {
+-			long mask = 0;
+-			if (app.config.orientationLandscape) {
+-				mask |= ((1 << UIInterfaceOrientation.LandscapeLeft.value()) | (1 << UIInterfaceOrientation.LandscapeRight.value()));
+-			}
+-			if (app.config.orientationPortrait) {
+-				mask |= ((1 << UIInterfaceOrientation.Portrait.value()) | (1 << UIInterfaceOrientation.PortraitUpsideDown.value()));
+-			}
+-			return new UIInterfaceOrientationMask(mask);
+-		}
+-
+-		@Override
+-		public boolean shouldAutorotate() {
+-			return true;
+-		}
+-
+ 		public boolean shouldAutorotateToInterfaceOrientation (UIInterfaceOrientation orientation) {
+ 			// we return "true" if we support the orientation
+ 			switch (orientation) {
+diff --git a/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/math/Matrix4.java b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/math/Matrix4.java
+index 968913b..e7c2ea5 100644
+--- a/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/math/Matrix4.java
++++ b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/math/Matrix4.java
+@@ -886,7 +886,7 @@ public class Matrix4 implements Serializable {
+ 		right.set(tmpForward).crs(up).nor();
+ 		tmpUp.set(right).crs(tmpForward).nor();
+ 
+-		this.set(right, tmpUp, tmpForward, position);
++		this.set(right, tmpUp, tmpForward.scl(-1), position);
+ 		return this;
+ 	}
+ 
+diff --git a/extensions/gdx-box2d/gdx-box2d-gwt/src/com/badlogic/gdx/physics/box2d/gwt/emu/com/badlogic/gdx/physics/box2d/Box2DDebugRenderer.java b/extensions/gdx-box2d/gdx-box2d-gwt/src/com/badlogic/gdx/physics/box2d/gwt/emu/com/badlogic/gdx/physics/box2d/Box2DDebugRenderer.java
+index 447b2a0..c3f4886 100644
+--- a/extensions/gdx-box2d/gdx-box2d-gwt/src/com/badlogic/gdx/physics/box2d/gwt/emu/com/badlogic/gdx/physics/box2d/Box2DDebugRenderer.java
++++ b/extensions/gdx-box2d/gdx-box2d-gwt/src/com/badlogic/gdx/physics/box2d/gwt/emu/com/badlogic/gdx/physics/box2d/Box2DDebugRenderer.java
+@@ -157,7 +157,7 @@ public class Box2DDebugRenderer {
+ 			CircleShape shape = (CircleShape)fixture.getShape();
+ 			float radius = shape.getRadius();
+ 			vertices[0].set(shape.getPosition());
+-			transform.mul(vertices[0]);
++			vertices[0].rotate(transform.getRotation()).add(transform.getPosition());
+ 			lower.set(vertices[0].x - radius, vertices[0].y - radius);
+ 			upper.set(vertices[0].x + radius, vertices[0].y + radius);
+ 
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/CHANGES b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/CHANGES
+index d849125..d45a2a1 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/CHANGES
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/CHANGES
+@@ -1,9 +1,3 @@
+-13.5.2014
+-- Merged latest Box2D trunk, version 2.3.1
+-- TODO: b2WorldManifold has new field separations
+-- KEPT: b2ChainShape methods GetVertexCount, GetVertex, GetVertices
+-- TODO: b2MotorJoint, methods SetCorrectionFactor, GetCorrectionFactor 
+-
+ 22.3.2013
+ - Merged latest Box2D trunk, revision https://code.google.com/p/box2d/source/detail?r=254
+ - Body#setTransform with update flag for contacts was removed, removed from jni wrapper
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/Shapes/b2ChainShape.cpp b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/Shapes/b2ChainShape.cpp
+index 1d249af..3e27eb8 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/Shapes/b2ChainShape.cpp
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/Shapes/b2ChainShape.cpp
+@@ -23,11 +23,6 @@
+ using namespace std;
+ 
+ b2ChainShape::~b2ChainShape()
+-{
+-	Clear();
+-}
+-
+-void b2ChainShape::Clear()
+ {
+ 	b2Free(m_vertices);
+ 	m_vertices = NULL;
+@@ -62,8 +57,10 @@ void b2ChainShape::CreateChain(const b2Vec2* vertices, int32 count)
+ 	b2Assert(count >= 2);
+ 	for (int32 i = 1; i < count; ++i)
+ 	{
++		b2Vec2 v1 = vertices[i-1];
++		b2Vec2 v2 = vertices[i];
+ 		// If the code crashes here, it means your vertices are too close together.
+-		b2Assert(b2DistanceSquared(vertices[i-1], vertices[i]) > b2_linearSlop * b2_linearSlop);
++		b2Assert(b2DistanceSquared(v1, v2) > b2_linearSlop * b2_linearSlop);
+ 	}
+ 
+ 	m_count = count;
+@@ -72,9 +69,6 @@ void b2ChainShape::CreateChain(const b2Vec2* vertices, int32 count)
+ 
+ 	m_hasPrevVertex = false;
+ 	m_hasNextVertex = false;
+-
+-	m_prevVertex.SetZero();
+-	m_nextVertex.SetZero();
+ }
+ 
+ void b2ChainShape::SetPrevVertex(const b2Vec2& prevVertex)
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/Shapes/b2ChainShape.h b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/Shapes/b2ChainShape.h
+index 0d67447..67a350e 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/Shapes/b2ChainShape.h
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/Shapes/b2ChainShape.h
+@@ -37,9 +37,6 @@ public:
+ 	/// The destructor frees the vertices using b2Free.
+ 	~b2ChainShape();
+ 
+-	/// Clear all data.
+-	void Clear();
+-
+ 	/// Create a loop. This automatically adjusts connectivity.
+ 	/// @param vertices an array of vertices, these are copied
+ 	/// @param count the vertex count
+@@ -111,8 +108,8 @@ inline b2ChainShape::b2ChainShape()
+ 	m_radius = b2_polygonRadius;
+ 	m_vertices = NULL;
+ 	m_count = 0;
+-	m_hasPrevVertex = false;
+-	m_hasNextVertex = false;
++	m_hasPrevVertex = NULL;
++	m_hasNextVertex = NULL;
+ }
+ 
+ #endif
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/Shapes/b2PolygonShape.cpp b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/Shapes/b2PolygonShape.cpp
+index 9cd72b6..9587506 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/Shapes/b2PolygonShape.cpp
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/Shapes/b2PolygonShape.cpp
+@@ -128,45 +128,20 @@ void b2PolygonShape::Set(const b2Vec2* vertices, int32 count)
+ 	
+ 	int32 n = b2Min(count, b2_maxPolygonVertices);
+ 
+-	// Perform welding and copy vertices into local buffer.
++	// Copy vertices into local buffer
+ 	b2Vec2 ps[b2_maxPolygonVertices];
+-	int32 tempCount = 0;
+ 	for (int32 i = 0; i < n; ++i)
+ 	{
+-		b2Vec2 v = vertices[i];
+-
+-		bool unique = true;
+-		for (int32 j = 0; j < tempCount; ++j)
+-		{
+-			if (b2DistanceSquared(v, ps[j]) < 0.5f * b2_linearSlop)
+-			{
+-				unique = false;
+-				break;
+-			}
+-		}
+-
+-		if (unique)
+-		{
+-			ps[tempCount++] = v;
+-		}
++		ps[i] = vertices[i];
+ 	}
+ 
+-	n = tempCount;
+-	if (n < 3)
+-	{
+-		// Polygon is degenerate.
+-		b2Assert(false);
+-		SetAsBox(1.0f, 1.0f);
+-		return;
+-	}
+-
+ 	// Create the convex hull using the Gift wrapping algorithm
+ 	// http://en.wikipedia.org/wiki/Gift_wrapping_algorithm
+ 
+ 	// Find the right most point on the hull
+ 	int32 i0 = 0;
+ 	float32 x0 = ps[0].x;
+-	for (int32 i = 1; i < n; ++i)
++	for (int32 i = 1; i < count; ++i)
+ 	{
+ 		float32 x = ps[i].x;
+ 		if (x > x0 || (x == x0 && ps[i].y < ps[i0].y))
+@@ -215,14 +190,6 @@ void b2PolygonShape::Set(const b2Vec2* vertices, int32 count)
+ 		{
+ 			break;
+ 		}
+-	}
+-	
+-	if (m < 3)
+-	{
+-		// Polygon is degenerate.
+-		b2Assert(false);
+-		SetAsBox(1.0f, 1.0f);
+-		return;
+ 	}
+ 	
+ 	m_count = m;
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2CollideEdge.cpp b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2CollideEdge.cpp
+index ea8f497..e404572 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2CollideEdge.cpp
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2CollideEdge.cpp
+@@ -497,13 +497,13 @@ void b2EPCollider::Collide(b2Manifold* manifold, const b2EdgeShape* edgeA, const
+ 		
+ 		ie[0].v = m_polygonB.vertices[i1];
+ 		ie[0].id.cf.indexA = 0;
+-		ie[0].id.cf.indexB = static_cast<uint8>(i1);
++		ie[0].id.cf.indexB = i1;
+ 		ie[0].id.cf.typeA = b2ContactFeature::e_face;
+ 		ie[0].id.cf.typeB = b2ContactFeature::e_vertex;
+ 		
+ 		ie[1].v = m_polygonB.vertices[i2];
+ 		ie[1].id.cf.indexA = 0;
+-		ie[1].id.cf.indexB = static_cast<uint8>(i2);
++		ie[1].id.cf.indexB = i2;
+ 		ie[1].id.cf.typeA = b2ContactFeature::e_face;
+ 		ie[1].id.cf.typeB = b2ContactFeature::e_vertex;
+ 		
+@@ -530,13 +530,13 @@ void b2EPCollider::Collide(b2Manifold* manifold, const b2EdgeShape* edgeA, const
+ 		
+ 		ie[0].v = m_v1;
+ 		ie[0].id.cf.indexA = 0;
+-		ie[0].id.cf.indexB = static_cast<uint8>(primaryAxis.index);
++		ie[0].id.cf.indexB = primaryAxis.index;
+ 		ie[0].id.cf.typeA = b2ContactFeature::e_vertex;
+ 		ie[0].id.cf.typeB = b2ContactFeature::e_face;
+ 		
+ 		ie[1].v = m_v2;
+ 		ie[1].id.cf.indexA = 0;
+-		ie[1].id.cf.indexB = static_cast<uint8>(primaryAxis.index);		
++		ie[1].id.cf.indexB = primaryAxis.index;		
+ 		ie[1].id.cf.typeA = b2ContactFeature::e_vertex;
+ 		ie[1].id.cf.typeB = b2ContactFeature::e_face;
+ 		
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2CollidePolygon.cpp b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2CollidePolygon.cpp
+index f49a874..e17fdbc 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2CollidePolygon.cpp
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2CollidePolygon.cpp
+@@ -19,46 +19,123 @@
+ #include <Box2D/Collision/b2Collision.h>
+ #include <Box2D/Collision/Shapes/b2PolygonShape.h>
+ 
++// Find the separation between poly1 and poly2 for a give edge normal on poly1.
++static float32 b2EdgeSeparation(const b2PolygonShape* poly1, const b2Transform& xf1, int32 edge1,
++							  const b2PolygonShape* poly2, const b2Transform& xf2)
++{
++	const b2Vec2* vertices1 = poly1->m_vertices;
++	const b2Vec2* normals1 = poly1->m_normals;
++
++	int32 count2 = poly2->m_count;
++	const b2Vec2* vertices2 = poly2->m_vertices;
++
++	b2Assert(0 <= edge1 && edge1 < poly1->m_count);
++
++	// Convert normal from poly1's frame into poly2's frame.
++	b2Vec2 normal1World = b2Mul(xf1.q, normals1[edge1]);
++	b2Vec2 normal1 = b2MulT(xf2.q, normal1World);
++
++	// Find support vertex on poly2 for -normal.
++	int32 index = 0;
++	float32 minDot = b2_maxFloat;
++
++	for (int32 i = 0; i < count2; ++i)
++	{
++		float32 dot = b2Dot(vertices2[i], normal1);
++		if (dot < minDot)
++		{
++			minDot = dot;
++			index = i;
++		}
++	}
++
++	b2Vec2 v1 = b2Mul(xf1, vertices1[edge1]);
++	b2Vec2 v2 = b2Mul(xf2, vertices2[index]);
++	float32 separation = b2Dot(v2 - v1, normal1World);
++	return separation;
++}
++
+ // Find the max separation between poly1 and poly2 using edge normals from poly1.
+ static float32 b2FindMaxSeparation(int32* edgeIndex,
+ 								 const b2PolygonShape* poly1, const b2Transform& xf1,
+ 								 const b2PolygonShape* poly2, const b2Transform& xf2)
+ {
+ 	int32 count1 = poly1->m_count;
+-	int32 count2 = poly2->m_count;
+-	const b2Vec2* n1s = poly1->m_normals;
+-	const b2Vec2* v1s = poly1->m_vertices;
+-	const b2Vec2* v2s = poly2->m_vertices;
+-	b2Transform xf = b2MulT(xf2, xf1);
+-
+-	int32 bestIndex = 0;
+-	float32 maxSeparation = -b2_maxFloat;
++	const b2Vec2* normals1 = poly1->m_normals;
++
++	// Vector pointing from the centroid of poly1 to the centroid of poly2.
++	b2Vec2 d = b2Mul(xf2, poly2->m_centroid) - b2Mul(xf1, poly1->m_centroid);
++	b2Vec2 dLocal1 = b2MulT(xf1.q, d);
++
++	// Find edge normal on poly1 that has the largest projection onto d.
++	int32 edge = 0;
++	float32 maxDot = -b2_maxFloat;
+ 	for (int32 i = 0; i < count1; ++i)
++	{
++		float32 dot = b2Dot(normals1[i], dLocal1);
++		if (dot > maxDot)
+ 		{
+-		// Get poly1 normal in frame2.
+-		b2Vec2 n = b2Mul(xf.q, n1s[i]);
+-		b2Vec2 v1 = b2Mul(xf, v1s[i]);
++			maxDot = dot;
++			edge = i;
++		}
++	}
++
++	// Get the separation for the edge normal.
++	float32 s = b2EdgeSeparation(poly1, xf1, edge, poly2, xf2);
+ 
+-		// Find deepest point for normal i.
+-		float32 si = b2_maxFloat;
+-		for (int32 j = 0; j < count2; ++j)
++	// Check the separation for the previous edge normal.
++	int32 prevEdge = edge - 1 >= 0 ? edge - 1 : count1 - 1;
++	float32 sPrev = b2EdgeSeparation(poly1, xf1, prevEdge, poly2, xf2);
++
++	// Check the separation for the next edge normal.
++	int32 nextEdge = edge + 1 < count1 ? edge + 1 : 0;
++	float32 sNext = b2EdgeSeparation(poly1, xf1, nextEdge, poly2, xf2);
++
++	// Find the best edge and the search direction.
++	int32 bestEdge;
++	float32 bestSeparation;
++	int32 increment;
++	if (sPrev > s && sPrev > sNext)
+ 	{
+-			float32 sij = b2Dot(n, v2s[j] - v1);
+-			if (sij < si)
++		increment = -1;
++		bestEdge = prevEdge;
++		bestSeparation = sPrev;
++	}
++	else if (sNext > s)
+ 	{
+-				si = sij;
++		increment = 1;
++		bestEdge = nextEdge;
++		bestSeparation = sNext;
+ 	}
++	else
++	{
++		*edgeIndex = edge;
++		return s;
+ 	}
+ 
+-		if (si > maxSeparation)
++	// Perform a local search for the best edge normal.
++	for ( ; ; )
++	{
++		if (increment == -1)
++			edge = bestEdge - 1 >= 0 ? bestEdge - 1 : count1 - 1;
++		else
++			edge = bestEdge + 1 < count1 ? bestEdge + 1 : 0;
++
++		s = b2EdgeSeparation(poly1, xf1, edge, poly2, xf2);
++
++		if (s > bestSeparation)
++		{
++			bestEdge = edge;
++			bestSeparation = s;
++		}
++		else
+ 		{
+-			maxSeparation = si;
+-			bestIndex = i;
++			break;
+ 		}
+ 	}
+ 
+-	*edgeIndex = bestIndex;
+-	return maxSeparation;
++	*edgeIndex = bestEdge;
++	return bestSeparation;
+ }
+ 
+ static void b2FindIncidentEdge(b2ClipVertex c[2],
+@@ -133,11 +210,12 @@ void b2CollidePolygons(b2Manifold* manifold,
+ 	const b2PolygonShape* poly1;	// reference polygon
+ 	const b2PolygonShape* poly2;	// incident polygon
+ 	b2Transform xf1, xf2;
+-	int32 edge1;					// reference edge
++	int32 edge1;		// reference edge
+ 	uint8 flip;
+-	const float32 k_tol = 0.1f * b2_linearSlop;
++	const float32 k_relativeTol = 0.98f;
++	const float32 k_absoluteTol = 0.001f;
+ 
+-	if (separationB > separationA + k_tol)
++	if (separationB > k_relativeTol * separationA + k_absoluteTol)
+ 	{
+ 		poly1 = polyB;
+ 		poly2 = polyA;
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2Collision.cpp b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2Collision.cpp
+index 3052990..8ecb337 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2Collision.cpp
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2Collision.cpp
+@@ -44,7 +44,6 @@ void b2WorldManifold::Initialize(const b2Manifold* manifold,
+ 			b2Vec2 cA = pointA + radiusA * normal;
+ 			b2Vec2 cB = pointB - radiusB * normal;
+ 			points[0] = 0.5f * (cA + cB);
+-			separations[0] = b2Dot(cB - cA, normal);
+ 		}
+ 		break;
+ 
+@@ -59,7 +58,6 @@ void b2WorldManifold::Initialize(const b2Manifold* manifold,
+ 				b2Vec2 cA = clipPoint + (radiusA - b2Dot(clipPoint - planePoint, normal)) * normal;
+ 				b2Vec2 cB = clipPoint - radiusB * normal;
+ 				points[i] = 0.5f * (cA + cB);
+-				separations[i] = b2Dot(cB - cA, normal);
+ 			}
+ 		}
+ 		break;
+@@ -75,7 +73,6 @@ void b2WorldManifold::Initialize(const b2Manifold* manifold,
+ 				b2Vec2 cB = clipPoint + (radiusB - b2Dot(clipPoint - planePoint, normal)) * normal;
+ 				b2Vec2 cA = clipPoint - radiusA * normal;
+ 				points[i] = 0.5f * (cA + cB);
+-				separations[i] = b2Dot(cA - cB, normal);
+ 			}
+ 
+ 			// Ensure normal points from A to B.
+@@ -220,7 +217,7 @@ int32 b2ClipSegmentToLine(b2ClipVertex vOut[2], const b2ClipVertex vIn[2],
+ 		vOut[numOut].v = vIn[0].v + interp * (vIn[1].v - vIn[0].v);
+ 
+ 		// VertexA is hitting edgeB.
+-		vOut[numOut].id.cf.indexA = static_cast<uint8>(vertexIndexA);
++		vOut[numOut].id.cf.indexA = vertexIndexA;
+ 		vOut[numOut].id.cf.indexB = vIn[0].id.cf.indexB;
+ 		vOut[numOut].id.cf.typeA = b2ContactFeature::e_vertex;
+ 		vOut[numOut].id.cf.typeB = b2ContactFeature::e_face;
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2Collision.h b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2Collision.h
+index 2cfc26f..8bb316c 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2Collision.h
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2Collision.h
+@@ -117,9 +117,8 @@ struct b2WorldManifold
+ 					const b2Transform& xfA, float32 radiusA,
+ 					const b2Transform& xfB, float32 radiusB);
+ 
+-	b2Vec2 normal;								///< world vector pointing from A to B
+-	b2Vec2 points[b2_maxManifoldPoints];		///< world contact point (point of intersection)
+-	float32 separations[b2_maxManifoldPoints];	///< a negative value indicates overlap, in meters
++	b2Vec2 normal;							///< world vector pointing from A to B
++	b2Vec2 points[b2_maxManifoldPoints];	///< world contact point (point of intersection)
+ };
+ 
+ /// This is used for determining the state of contact points.
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2Distance.cpp b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2Distance.cpp
+index 4207c48..540e2f0 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2Distance.cpp
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Collision/b2Distance.cpp
+@@ -31,7 +31,7 @@ void b2DistanceProxy::Set(const b2Shape* shape, int32 index)
+ 	{
+ 	case b2Shape::e_circle:
+ 		{
+-			const b2CircleShape* circle = static_cast<const b2CircleShape*>(shape);
++			const b2CircleShape* circle = (b2CircleShape*)shape;
+ 			m_vertices = &circle->m_p;
+ 			m_count = 1;
+ 			m_radius = circle->m_radius;
+@@ -40,7 +40,7 @@ void b2DistanceProxy::Set(const b2Shape* shape, int32 index)
+ 
+ 	case b2Shape::e_polygon:
+ 		{
+-			const b2PolygonShape* polygon = static_cast<const b2PolygonShape*>(shape);
++			const b2PolygonShape* polygon = (b2PolygonShape*)shape;
+ 			m_vertices = polygon->m_vertices;
+ 			m_count = polygon->m_count;
+ 			m_radius = polygon->m_radius;
+@@ -49,7 +49,7 @@ void b2DistanceProxy::Set(const b2Shape* shape, int32 index)
+ 
+ 	case b2Shape::e_chain:
+ 		{
+-			const b2ChainShape* chain = static_cast<const b2ChainShape*>(shape);
++			const b2ChainShape* chain = (b2ChainShape*)shape;
+ 			b2Assert(0 <= index && index < chain->m_count);
+ 
+ 			m_buffer[0] = chain->m_vertices[index];
+@@ -70,7 +70,7 @@ void b2DistanceProxy::Set(const b2Shape* shape, int32 index)
+ 
+ 	case b2Shape::e_edge:
+ 		{
+-			const b2EdgeShape* edge = static_cast<const b2EdgeShape*>(shape);
++			const b2EdgeShape* edge = (b2EdgeShape*)shape;
+ 			m_vertices = &edge->m_vertex1;
+ 			m_count = 2;
+ 			m_radius = edge->m_radius;
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Common/b2Draw.h b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Common/b2Draw.h
+index 2ab6444..20359c9 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Common/b2Draw.h
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Common/b2Draw.h
+@@ -25,9 +25,9 @@
+ struct b2Color
+ {
+ 	b2Color() {}
+-	b2Color(float32 r, float32 g, float32 b, float32 a = 1.0f) : r(r), g(g), b(b), a(a) {}
+-	void Set(float32 ri, float32 gi, float32 bi, float32 ai = 1.0f) { r = ri; g = gi; b = bi; a = ai; }
+-	float32 r, g, b, a;
++	b2Color(float32 r, float32 g, float32 b) : r(r), g(g), b(b) {}
++	void Set(float32 ri, float32 gi, float32 bi) { r = ri; g = gi; b = bi; }
++	float32 r, g, b;
+ };
+ 
+ /// Implement and register this class with a b2World to provide debug drawing of physics
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Common/b2Math.h b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Common/b2Math.h
+index 8050bce..1340ab1 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Common/b2Math.h
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Common/b2Math.h
+@@ -27,10 +27,17 @@
+ #include <float.h>
+ 
+ /// This function is used to ensure that a floating point number is
++/// not a NaN or infinity.
+ inline bool b2IsValid(float32 x)
++{
++	if (x != x)
+ 	{
+-	int32 ix = *reinterpret_cast<int32*>(&x);
+-	return (ix & 0x7f800000) != 0x7f800000;
++		// NaN.
++		return false;
++	}
++
++	float32 infinity = INFINITY;
++	return -infinity < x && x < infinity;
+ }
+ 
+ /// This is a approximate yet fast inverse square-root.
+@@ -707,8 +714,8 @@ inline void b2Sweep::Advance(float32 alpha)
+ {
+ 	b2Assert(alpha0 < 1.0f);
+ 	float32 beta = (alpha - alpha0) / (1.0f - alpha0);
+-	c0 += beta * (c - c0);
+-	a0 += beta * (a - a0);
++	c0 = (1.0f - beta) * c0 + beta * c;
++	a0 = (1.0f - beta) * a0 + beta * a;
+ 	alpha0 = alpha;
+ }
+ 
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Common/b2Settings.cpp b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Common/b2Settings.cpp
+index f0167a8..d70b86a 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Common/b2Settings.cpp
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Common/b2Settings.cpp
+@@ -17,11 +17,11 @@
+ */
+ 
+ #include <Box2D/Common/b2Settings.h>
++#include <stdlib.h>
+ #include <stdio.h>
+ #include <stdarg.h>
+-#include <stdlib.h>
+ 
+-b2Version b2_version = {2, 3, 1};
++b2Version b2_version = {2, 3, 0};
+ 
+ // Memory allocators. Modify these to use your own allocator.
+ void* b2Alloc(int32 size)
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Common/b2Timer.cpp b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Common/b2Timer.cpp
+index bd0c437..75a8ce6 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Common/b2Timer.cpp
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Common/b2Timer.cpp
+@@ -22,7 +22,6 @@
+ 
+ float64 b2Timer::s_invFrequency = 0.0f;
+ 
+-#define WIN32_LEAN_AND_MEAN
+ #include <windows.h>
+ 
+ b2Timer::b2Timer()
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Contacts/b2Contact.h b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Contacts/b2Contact.h
+index e7d8905..9b20333 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Contacts/b2Contact.h
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Contacts/b2Contact.h
+@@ -36,7 +36,7 @@ class b2ContactListener;
+ /// For example, anything slides on ice.
+ inline float32 b2MixFriction(float32 friction1, float32 friction2)
+ {
+-	return b2Sqrt(friction1 * friction2);
++	return std::sqrt(friction1 * friction2);
+ }
+ 
+ /// Restitution mixing law. The idea is allow for anything to bounce off an inelastic surface.
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Contacts/b2ContactSolver.cpp b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Contacts/b2ContactSolver.cpp
+index 968c1ab..4d0e80f 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Contacts/b2ContactSolver.cpp
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Contacts/b2ContactSolver.cpp
+@@ -26,7 +26,6 @@
+ 
+ #define B2_DEBUG_SOLVER 0
+ 
+-bool g_blockSolve = true;
+ float b2_velocityThreshold = 1.0f;
+ struct b2ContactPositionConstraint
+ {
+@@ -215,7 +214,7 @@ void b2ContactSolver::InitializeVelocityConstraints()
+ 		}
+ 
+ 		// If we have two points, then prepare the block solver.
+-		if (vc->pointCount == 2 && g_blockSolve)
++		if (vc->pointCount == 2)
+ 		{
+ 			b2VelocityConstraintPoint* vcp1 = vc->points + 0;
+ 			b2VelocityConstraintPoint* vcp2 = vc->points + 1;
+@@ -343,11 +342,9 @@ void b2ContactSolver::SolveVelocityConstraints()
+ 		}
+ 
+ 		// Solve normal constraints
+-		if (pointCount == 1 || g_blockSolve == false)
++		if (vc->pointCount == 1)
+ 		{
+-			for (int32 i = 0; i < pointCount; ++i)
+-			{
+-				b2VelocityConstraintPoint* vcp = vc->points + i;
++			b2VelocityConstraintPoint* vcp = vc->points + 0;
+ 
+ 			// Relative velocity at contact
+ 			b2Vec2 dv = vB + b2Cross(wB, vcp->rB) - vA - b2Cross(wA, vcp->rA);
+@@ -368,7 +365,6 @@ void b2ContactSolver::SolveVelocityConstraints()
+ 
+ 			vB += mB * P;
+ 			wB += iB * b2Cross(vcp->rB, P);
+-			}
+ 		}
+ 		else
+ 		{
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2Joint.cpp b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2Joint.cpp
+index dc311bf..1ef4990 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2Joint.cpp
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2Joint.cpp
+@@ -43,77 +43,77 @@ b2Joint* b2Joint::Create(const b2JointDef* def, b2BlockAllocator* allocator)
+ 	case e_distanceJoint:
+ 		{
+ 			void* mem = allocator->Allocate(sizeof(b2DistanceJoint));
+-			joint = new (mem) b2DistanceJoint(static_cast<const b2DistanceJointDef*>(def));
++			joint = new (mem) b2DistanceJoint((b2DistanceJointDef*)def);
+ 		}
+ 		break;
+ 
+ 	case e_mouseJoint:
+ 		{
+ 			void* mem = allocator->Allocate(sizeof(b2MouseJoint));
+-			joint = new (mem) b2MouseJoint(static_cast<const b2MouseJointDef*>(def));
++			joint = new (mem) b2MouseJoint((b2MouseJointDef*)def);
+ 		}
+ 		break;
+ 
+ 	case e_prismaticJoint:
+ 		{
+ 			void* mem = allocator->Allocate(sizeof(b2PrismaticJoint));
+-			joint = new (mem) b2PrismaticJoint(static_cast<const b2PrismaticJointDef*>(def));
++			joint = new (mem) b2PrismaticJoint((b2PrismaticJointDef*)def);
+ 		}
+ 		break;
+ 
+ 	case e_revoluteJoint:
+ 		{
+ 			void* mem = allocator->Allocate(sizeof(b2RevoluteJoint));
+-			joint = new (mem) b2RevoluteJoint(static_cast<const b2RevoluteJointDef*>(def));
++			joint = new (mem) b2RevoluteJoint((b2RevoluteJointDef*)def);
+ 		}
+ 		break;
+ 
+ 	case e_pulleyJoint:
+ 		{
+ 			void* mem = allocator->Allocate(sizeof(b2PulleyJoint));
+-			joint = new (mem) b2PulleyJoint(static_cast<const b2PulleyJointDef*>(def));
++			joint = new (mem) b2PulleyJoint((b2PulleyJointDef*)def);
+ 		}
+ 		break;
+ 
+ 	case e_gearJoint:
+ 		{
+ 			void* mem = allocator->Allocate(sizeof(b2GearJoint));
+-			joint = new (mem) b2GearJoint(static_cast<const b2GearJointDef*>(def));
++			joint = new (mem) b2GearJoint((b2GearJointDef*)def);
+ 		}
+ 		break;
+ 
+ 	case e_wheelJoint:
+ 		{
+ 			void* mem = allocator->Allocate(sizeof(b2WheelJoint));
+-			joint = new (mem) b2WheelJoint(static_cast<const b2WheelJointDef*>(def));
++			joint = new (mem) b2WheelJoint((b2WheelJointDef*)def);
+ 		}
+ 		break;
+ 
+ 	case e_weldJoint:
+ 		{
+ 			void* mem = allocator->Allocate(sizeof(b2WeldJoint));
+-			joint = new (mem) b2WeldJoint(static_cast<const b2WeldJointDef*>(def));
++			joint = new (mem) b2WeldJoint((b2WeldJointDef*)def);
+ 		}
+ 		break;
+         
+ 	case e_frictionJoint:
+ 		{
+ 			void* mem = allocator->Allocate(sizeof(b2FrictionJoint));
+-			joint = new (mem) b2FrictionJoint(static_cast<const b2FrictionJointDef*>(def));
++			joint = new (mem) b2FrictionJoint((b2FrictionJointDef*)def);
+ 		}
+ 		break;
+ 
+ 	case e_ropeJoint:
+ 		{
+ 			void* mem = allocator->Allocate(sizeof(b2RopeJoint));
+-			joint = new (mem) b2RopeJoint(static_cast<const b2RopeJointDef*>(def));
++			joint = new (mem) b2RopeJoint((b2RopeJointDef*)def);
+ 		}
+ 		break;
+ 
+ 	case e_motorJoint:
+ 		{
+ 			void* mem = allocator->Allocate(sizeof(b2MotorJoint));
+-			joint = new (mem) b2MotorJoint(static_cast<const b2MotorJointDef*>(def));
++			joint = new (mem) b2MotorJoint((b2MotorJointDef*)def);
+ 		}
+ 		break;
+ 
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2MotorJoint.cpp b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2MotorJoint.cpp
+index e9fada1..613336b 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2MotorJoint.cpp
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2MotorJoint.cpp
+@@ -245,17 +245,6 @@ float32 b2MotorJoint::GetMaxTorque() const
+ 	return m_maxTorque;
+ }
+ 
+-void b2MotorJoint::SetCorrectionFactor(float32 factor)
+-{
+-	b2Assert(b2IsValid(factor) && 0.0f <= factor && factor <= 1.0f);
+-	m_correctionFactor = factor;
+-}
+-
+-float32 b2MotorJoint::GetCorrectionFactor() const
+-{
+-	return m_correctionFactor;
+-}
+-
+ void b2MotorJoint::SetLinearOffset(const b2Vec2& linearOffset)
+ {
+ 	if (linearOffset.x != m_linearOffset.x || linearOffset.y != m_linearOffset.y)
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2MotorJoint.h b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2MotorJoint.h
+index d4b09e8..a94557a 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2MotorJoint.h
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2MotorJoint.h
+@@ -85,12 +85,6 @@ public:
+ 	/// Get the maximum friction torque in N*m.
+ 	float32 GetMaxTorque() const;
+ 
+-	/// Set the position correction factor in the range [0,1].
+-	void SetCorrectionFactor(float32 factor);
+-
+-	/// Get the position correction factor in the range [0,1].
+-	float32 GetCorrectionFactor() const;
+-
+ 	/// Dump to b2Log
+ 	void Dump();
+ 
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2PrismaticJoint.cpp b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2PrismaticJoint.cpp
+index 541bcda..26f5396 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2PrismaticJoint.cpp
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2PrismaticJoint.cpp
+@@ -174,9 +174,6 @@ void b2PrismaticJoint::InitVelocityConstraints(const b2SolverData& data)
+ 		m_s1 = b2Cross(d + rA, m_perp);
+ 		m_s2 = b2Cross(rB, m_perp);
+ 
+-        float32 s1test;
+-        s1test = b2Cross(rA, m_perp);
+-
+ 		float32 k11 = mA + mB + iA * m_s1 * m_s1 + iB * m_s2 * m_s2;
+ 		float32 k12 = iA * m_s1 + iB * m_s2;
+ 		float32 k13 = iA * m_s1 * m_a1 + iB * m_s2 * m_a2;
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2WeldJoint.cpp b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2WeldJoint.cpp
+index 233c054..253f721 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2WeldJoint.cpp
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/Joints/b2WeldJoint.cpp
+@@ -129,12 +129,6 @@ void b2WeldJoint::InitVelocityConstraints(const b2SolverData& data)
+ 		invM += m_gamma;
+ 		m_mass.ez.z = invM != 0.0f ? 1.0f / invM : 0.0f;
+ 	}
+-	else if (K.ez.z == 0.0f)
+-	{
+-		K.GetInverse22(&m_mass);
+-		m_gamma = 0.0f;
+-		m_bias = 0.0f;
+-	}
+ 	else
+ 	{
+ 		K.GetSymInverse33(&m_mass);
+@@ -277,17 +271,7 @@ bool b2WeldJoint::SolvePositionConstraints(const b2SolverData& data)
+ 
+ 		b2Vec3 C(C1.x, C1.y, C2);
+ 	
+-		b2Vec3 impulse;
+-		if (K.ez.z > 0.0f)
+-		{
+-			impulse = -K.Solve33(C);
+-		}
+-		else
+-		{
+-			b2Vec2 impulse2 = -K.Solve22(C1);
+-			impulse.Set(impulse2.x, impulse2.y, 0.0f);
+-		}
+-
++		b2Vec3 impulse = -K.Solve33(C);
+ 		b2Vec2 P(impulse.x, impulse.y);
+ 
+ 		cA -= mA * P;
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2Body.cpp b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2Body.cpp
+index b655053..5bbfbc1 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2Body.cpp
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2Body.cpp
+@@ -436,6 +436,8 @@ void b2Body::SetTransform(const b2Vec2& position, float32 angle)
+ 	{
+ 		f->Synchronize(broadPhase, m_xf, m_xf);
+ 	}
++
++	m_world->m_contactManager.FindNewContacts();
+ }
+ 
+ void b2Body::SynchronizeFixtures()
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2Body.h b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2Body.h
+index 17e92e4..7e1e169 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2Body.h
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2Body.h
+@@ -154,8 +154,8 @@ public:
+ 	void DestroyFixture(b2Fixture* fixture);
+ 
+ 	/// Set the position of the body's origin and rotation.
++	/// This breaks any contacts and wakes the other bodies.
+ 	/// Manipulating a body's transform may cause non-physical behavior.
+-	/// Note: contacts are updated on the next call to b2World::Step.
+ 	/// @param position the world position of the body's local origin.
+ 	/// @param angle the world rotation in radians.
+ 	void SetTransform(const b2Vec2& position, float32 angle);
+@@ -324,7 +324,7 @@ public:
+ 	void SetAwake(bool flag);
+ 
+ 	/// Get the sleeping state of this body.
+-	/// @return true if the body is awake.
++	/// @return true if the body is sleeping.
+ 	bool IsAwake() const;
+ 
+ 	/// Set the active state of the body. An inactive body is not
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2Island.cpp b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2Island.cpp
+index 3bc14ec..0ecb273 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2Island.cpp
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2Island.cpp
+@@ -211,10 +211,10 @@ void b2Island::Solve(b2Profile* profile, const b2TimeStep& step, const b2Vec2& g
+ 			// Solution: v(t) = v0 * exp(-c * t)
+ 			// Time step: v(t + dt) = v0 * exp(-c * (t + dt)) = v0 * exp(-c * t) * exp(-c * dt) = v * exp(-c * dt)
+ 			// v2 = exp(-c * dt) * v1
+-			// Pade approximation:
+-			// v2 = v1 * 1 / (1 + c * dt)
+-			v *= 1.0f / (1.0f + h * b->m_linearDamping);
+-			w *= 1.0f / (1.0f + h * b->m_angularDamping);
++			// Taylor expansion:
++			// v2 = (1.0f - c * dt) * v1
++			v *= b2Clamp(1.0f - h * b->m_linearDamping, 0.0f, 1.0f);
++			w *= b2Clamp(1.0f - h * b->m_angularDamping, 0.0f, 1.0f);
+ 		}
+ 
+ 		m_positions[i].c = c;
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2World.cpp b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2World.cpp
+index f67e06f..a3a6a1e 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2World.cpp
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2World.cpp
+@@ -37,7 +37,7 @@
+ b2World::b2World(const b2Vec2& gravity)
+ {
+ 	m_destructionListener = NULL;
+-	g_debugDraw = NULL;
++	m_debugDraw = NULL;
+ 
+ 	m_bodyList = NULL;
+ 	m_jointList = NULL;
+@@ -101,7 +101,7 @@ void b2World::SetContactListener(b2ContactListener* listener)
+ 
+ void b2World::SetDebugDraw(b2Draw* debugDraw)
+ {
+-	g_debugDraw = debugDraw;
++	m_debugDraw = debugDraw;
+ }
+ 
+ b2Body* b2World::CreateBody(const b2BodyDef* def)
+@@ -1040,7 +1040,7 @@ void b2World::DrawShape(b2Fixture* fixture, const b2Transform& xf, const b2Color
+ 			float32 radius = circle->m_radius;
+ 			b2Vec2 axis = b2Mul(xf.q, b2Vec2(1.0f, 0.0f));
+ 
+-			g_debugDraw->DrawSolidCircle(center, radius, axis, color);
++			m_debugDraw->DrawSolidCircle(center, radius, axis, color);
+ 		}
+ 		break;
+ 
+@@ -1049,7 +1049,7 @@ void b2World::DrawShape(b2Fixture* fixture, const b2Transform& xf, const b2Color
+ 			b2EdgeShape* edge = (b2EdgeShape*)fixture->GetShape();
+ 			b2Vec2 v1 = b2Mul(xf, edge->m_vertex1);
+ 			b2Vec2 v2 = b2Mul(xf, edge->m_vertex2);
+-			g_debugDraw->DrawSegment(v1, v2, color);
++			m_debugDraw->DrawSegment(v1, v2, color);
+ 		}
+ 		break;
+ 
+@@ -1063,8 +1063,8 @@ void b2World::DrawShape(b2Fixture* fixture, const b2Transform& xf, const b2Color
+ 			for (int32 i = 1; i < count; ++i)
+ 			{
+ 				b2Vec2 v2 = b2Mul(xf, vertices[i]);
+-				g_debugDraw->DrawSegment(v1, v2, color);
+-				g_debugDraw->DrawCircle(v1, 0.05f, color);
++				m_debugDraw->DrawSegment(v1, v2, color);
++				m_debugDraw->DrawCircle(v1, 0.05f, color);
+ 				v1 = v2;
+ 			}
+ 		}
+@@ -1082,7 +1082,7 @@ void b2World::DrawShape(b2Fixture* fixture, const b2Transform& xf, const b2Color
+ 				vertices[i] = b2Mul(xf, poly->m_vertices[i]);
+ 			}
+ 
+-			g_debugDraw->DrawSolidPolygon(vertices, vertexCount, color);
++			m_debugDraw->DrawSolidPolygon(vertices, vertexCount, color);
+ 		}
+ 		break;
+             
+@@ -1107,7 +1107,7 @@ void b2World::DrawJoint(b2Joint* joint)
+ 	switch (joint->GetType())
+ 	{
+ 	case e_distanceJoint:
+-		g_debugDraw->DrawSegment(p1, p2, color);
++		m_debugDraw->DrawSegment(p1, p2, color);
+ 		break;
+ 
+ 	case e_pulleyJoint:
+@@ -1115,9 +1115,9 @@ void b2World::DrawJoint(b2Joint* joint)
+ 			b2PulleyJoint* pulley = (b2PulleyJoint*)joint;
+ 			b2Vec2 s1 = pulley->GetGroundAnchorA();
+ 			b2Vec2 s2 = pulley->GetGroundAnchorB();
+-			g_debugDraw->DrawSegment(s1, p1, color);
+-			g_debugDraw->DrawSegment(s2, p2, color);
+-			g_debugDraw->DrawSegment(s1, s2, color);
++			m_debugDraw->DrawSegment(s1, p1, color);
++			m_debugDraw->DrawSegment(s2, p2, color);
++			m_debugDraw->DrawSegment(s1, s2, color);
+ 		}
+ 		break;
+ 
+@@ -1126,20 +1126,20 @@ void b2World::DrawJoint(b2Joint* joint)
+ 		break;
+ 
+ 	default:
+-		g_debugDraw->DrawSegment(x1, p1, color);
+-		g_debugDraw->DrawSegment(p1, p2, color);
+-		g_debugDraw->DrawSegment(x2, p2, color);
++		m_debugDraw->DrawSegment(x1, p1, color);
++		m_debugDraw->DrawSegment(p1, p2, color);
++		m_debugDraw->DrawSegment(x2, p2, color);
+ 	}
+ }
+ 
+ void b2World::DrawDebugData()
+ {
+-	if (g_debugDraw == NULL)
++	if (m_debugDraw == NULL)
+ 	{
+ 		return;
+ 	}
+ 
+-	uint32 flags = g_debugDraw->GetFlags();
++	uint32 flags = m_debugDraw->GetFlags();
+ 
+ 	if (flags & b2Draw::e_shapeBit)
+ 	{
+@@ -1191,7 +1191,7 @@ void b2World::DrawDebugData()
+ 			//b2Vec2 cA = fixtureA->GetAABB().GetCenter();
+ 			//b2Vec2 cB = fixtureB->GetAABB().GetCenter();
+ 
+-			//g_debugDraw->DrawSegment(cA, cB, color);
++			//m_debugDraw->DrawSegment(cA, cB, color);
+ 		}
+ 	}
+ 
+@@ -1219,7 +1219,7 @@ void b2World::DrawDebugData()
+ 					vs[2].Set(aabb.upperBound.x, aabb.upperBound.y);
+ 					vs[3].Set(aabb.lowerBound.x, aabb.upperBound.y);
+ 
+-					g_debugDraw->DrawPolygon(vs, 4, color);
++					m_debugDraw->DrawPolygon(vs, 4, color);
+ 				}
+ 			}
+ 		}
+@@ -1231,7 +1231,7 @@ void b2World::DrawDebugData()
+ 		{
+ 			b2Transform xf = b->GetTransform();
+ 			xf.p = b->GetWorldCenter();
+-			g_debugDraw->DrawTransform(xf);
++			m_debugDraw->DrawTransform(xf);
+ 		}
+ 	}
+ }
+diff --git a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2World.h b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2World.h
+index 3968cc7..2ab26eb 100644
+--- a/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2World.h
++++ b/extensions/gdx-box2d/gdx-box2d/jni/Box2D/Dynamics/b2World.h
+@@ -104,7 +104,7 @@ public:
+ 	/// @see SetAutoClearForces
+ 	void ClearForces();
+ 
+-	/// Call this to draw shapes and other debug draw data. This is intentionally non-const.
++	/// Call this to draw shapes and other debug draw data.
+ 	void DrawDebugData();
+ 
+ 	/// Query the world for all fixtures that potentially overlap the
+@@ -247,7 +247,7 @@ private:
+ 	bool m_allowSleep;
+ 
+ 	b2DestructionListener* m_destructionListener;
+-	b2Draw* g_debugDraw;
++	b2Draw* m_debugDraw;
+ 
+ 	// This is used to compute the time step ratio to
+ 	// support a variable time step.
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/MeshBuilder.java b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/MeshBuilder.java
+index 15ebcce..0281e6d 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/MeshBuilder.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/MeshBuilder.java
+@@ -1054,24 +1054,38 @@ public class MeshBuilder implements MeshPartBuilder {
+ 	}
+ 
+ 	@Override
+-	public void arrow (float length, float capLength, float stemThickness, int divisions) {
++	public void arrow (float x1, float y1, float z1, float x2, float y2, float z2, float capLength, float stemThickness, int divisions) {
++		Vector3 begin = tmp(x1, y1, z1), end = tmp(x2, y2, z2);
++		float length = begin.dst(end);
+ 		float coneHeight = length * capLength;
+ 		float coneDiameter = 2 * (float)(coneHeight * Math.sqrt(1f / 3));
+ 		float stemLength = length - coneHeight;
+ 		float stemDiameter = coneDiameter * stemThickness;
+-		
++
++		Vector3 up = tmp(end).sub(begin).nor();
++		Vector3 forward = tmp(up).crs(Vector3.Z);
++		if (forward.isZero()) forward.set(Vector3.X);
++		forward.crs(up).nor();
++		Vector3 left = tmp(up).crs(forward).nor();
++		Vector3 direction = tmp(end).sub(begin).nor();
++
+ 		// Matrices
+ 		Matrix4 userTransform = getVertexTransform(tmp());
+-		Matrix4 transform = tmp(userTransform);
+-		
++		Matrix4 transform = tmp();
++		float[]val = transform.val;
++		val[Matrix4.M00] = left.x; val[Matrix4.M01] = up.x; val[Matrix4.M02] = forward.x;
++		val[Matrix4.M10] = left.y; val[Matrix4.M11] = up.y; val[Matrix4.M12] = forward.y;
++		val[Matrix4.M20] = left.z; val[Matrix4.M21] = up.z; val[Matrix4.M22] = forward.z;
++		Matrix4 temp = tmp();
++
+ 		// Stem
+-		transform.translate(0, stemLength/2, 0);
+-		setVertexTransform(transform);
++		transform.setTranslation(tmp(direction).scl(stemLength / 2));
++		setVertexTransform(temp.set(transform).mul(userTransform));
+ 		cylinder(stemDiameter, stemLength, stemDiameter, divisions);
+ 
+ 		// Cap
+-		transform.translate(0, stemLength/2, 0);
+-		setVertexTransform(transform);
++		transform.setTranslation(tmp(direction).scl(stemLength));
++		setVertexTransform(temp.set(transform).mul(userTransform));
+ 		cone(coneDiameter, coneHeight, coneDiameter, divisions);
+ 
+ 		setVertexTransform(userTransform);
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/MeshPartBuilder.java b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/MeshPartBuilder.java
+index c82ca23..c4de672 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/MeshPartBuilder.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/MeshPartBuilder.java
+@@ -257,12 +257,17 @@ public interface MeshPartBuilder {
+ 	/** Add a capsule */
+ 	public void capsule (float radius, float height, int divisions);
+ 
+-	/** Add an arrow pointing in the Y direction
+-	 * @param length the arrow length
++	/** Add an arrow
++	 * @param x1 source x
++	 * @param y1 source y
++	 * @param z1 source z
++	 * @param x2 destination x
++	 * @param y2 destination y
++	 * @param z2 destination z
+ 	 * @param capLength is the height of the cap in percentage, must be in (0,1)
+ 	 * @param stemThickness is the percentage of stem diameter compared to cap diameter, must be in (0,1]
+ 	 * @param divisions the amount of vertices used to generate the cap and stem ellipsoidal bases */
+-	public void arrow (float length, float capLength, float stemThickness,
++	public void arrow (float x1, float y1, float z1, float x2, float y2, float z2, float capLength, float stemThickness,
+ 		int divisions);
+ 
+ 	/** Get the current vertex transformation matrix. */
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/ModelBuilder.java b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/ModelBuilder.java
+index 3a40808..9db1332 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/ModelBuilder.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/ModelBuilder.java
+@@ -27,7 +27,6 @@ import com.badlogic.gdx.graphics.g3d.Model;
+ import com.badlogic.gdx.graphics.g3d.model.MeshPart;
+ import com.badlogic.gdx.graphics.g3d.model.Node;
+ import com.badlogic.gdx.graphics.g3d.model.NodePart;
+-import com.badlogic.gdx.math.Matrix4;
+ import com.badlogic.gdx.math.Vector3;
+ import com.badlogic.gdx.utils.Array;
+ import com.badlogic.gdx.utils.Disposable;
+@@ -48,8 +47,6 @@ public class ModelBuilder {
+ 	/** The mesh builders created between begin and end */
+ 	private Array<MeshBuilder> builders = new Array<MeshBuilder>();
+ 
+-	private 	Matrix4 tmpTransform = new Matrix4();
+-	
+ 	private MeshBuilder getBuilder (final VertexAttributes attributes) {
+ 		for (final MeshBuilder mb : builders)
+ 			if (mb.getAttributes().equals(attributes) && mb.lastIndex() < Short.MAX_VALUE / 2) return mb;
+@@ -436,16 +433,11 @@ public class ModelBuilder {
+ 
+ 		partBuilder = part("xyz", primitiveType, attributes, material);
+ 		partBuilder.setColor(Color.RED);
+-		partBuilder.setVertexTransform(tmpTransform.setToRotation(Vector3.Z, -90));
+-		partBuilder.arrow(axisLength, capLength, stemThickness, divisions);
+-		
++		partBuilder.arrow(0, 0, 0,  axisLength, 0, 0, capLength, stemThickness, divisions);
+ 		partBuilder.setColor(Color.GREEN);
+-		partBuilder.setVertexTransform(tmpTransform.idt());
+-		partBuilder.arrow(axisLength, capLength, stemThickness, divisions);
+-		
++		partBuilder.arrow(0, 0, 0,  0, axisLength, 0, capLength, stemThickness, divisions);
+ 		partBuilder.setColor(Color.BLUE);
+-		partBuilder.setVertexTransform(tmpTransform.setToRotation(Vector3.X, 90));
+-		partBuilder.arrow(axisLength, capLength, stemThickness, divisions);
++		partBuilder.arrow(0, 0, 0,  0, 0, axisLength, capLength, stemThickness, divisions);
+ 
+ 		return end();
+ 	}
+@@ -461,22 +453,17 @@ public class ModelBuilder {
+ 	 * @param capLength is the height of the cap in percentage, must be in (0,1) 
+ 	 * @param stemThickness is the percentage of stem diameter compared to cap diameter, must be in (0,1]
+ 	 * @param divisions the amount of vertices used to generate the cap and stem ellipsoidal bases */
+-	public Model createArrow( float length, float capLength, float stemThickness, int divisions, int primitiveType, Material material, long attributes){
++	public Model createArrow(float x1, float y1, float z1, float x2, float y2, float z2, float capLength, float stemThickness, int divisions, int primitiveType, Material material, long attributes){
+ 		begin();
+ 		part("arrow", primitiveType, attributes, material)
+-			.arrow(length, capLength, stemThickness, divisions);
++			.arrow(x1, y1, z1, x2, y2, z2, capLength, stemThickness, divisions);
+ 		return end();
+ 	}
+ 	
+-	/** Convenience method to create a model with an arrow.
+-	 * The resources the Material might contain are not managed, 
+-	 * use {@link Model#manageDisposable(Disposable)} to add those to the model.
+-	 * @param length
+-	 * @param material
+-	 * @param attributes
+-	 */
+-	public Model createArrow( float length, Material material, long attributes){
+-		return createArrow(length, 0.1f, 0.1f, 5, GL20.GL_TRIANGLES, material, attributes);
++	/** @param from where the arrow begins
++	 * @param to where the arrow ends */
++	public Model createArrow( Vector3 from, Vector3 to, Material material, long attributes){
++		return createArrow(from.x, from.y, from.z, to.x, to.y, to.z, 0.1f, 0.1f, 5, GL20.GL_TRIANGLES, material, attributes);
+ 	}
+ 	
+ 	/** Convenience method to create a model which represents a grid of lines on the XZ plane.
+diff --git a/gdx/src/com/badlogic/gdx/math/Matrix4.java b/gdx/src/com/badlogic/gdx/math/Matrix4.java
+index f2d3335..0e77f37 100644
+--- a/gdx/src/com/badlogic/gdx/math/Matrix4.java
++++ b/gdx/src/com/badlogic/gdx/math/Matrix4.java
+@@ -261,9 +261,9 @@ public class Matrix4 implements Serializable {
+ 		val[M10] = yAxis.x;
+ 		val[M11] = yAxis.y;
+ 		val[M12] = yAxis.z;
+-		val[M20] = -zAxis.x;
+-		val[M21] = -zAxis.y;
+-		val[M22] = -zAxis.z;
++		val[M20] = zAxis.x;
++		val[M21] = zAxis.y;
++		val[M22] = zAxis.z;
+ 		val[M03] = pos.x;
+ 		val[M13] = pos.y;
+ 		val[M23] = pos.z;
+@@ -828,7 +828,7 @@ public class Matrix4 implements Serializable {
+ 		right.set(tmpForward).crs(up).nor();
+ 		tmpUp.set(right).crs(tmpForward).nor();
+ 
+-		this.set(right, tmpUp, tmpForward, position);
++		this.set(right, tmpUp, tmpForward.scl(-1), position);
+ 		return this;
+ 	}
+ 
+diff --git a/gdx/src/com/badlogic/gdx/math/Rectangle.java b/gdx/src/com/badlogic/gdx/math/Rectangle.java
+index 81cac97..ea4d810 100644
+--- a/gdx/src/com/badlogic/gdx/math/Rectangle.java
++++ b/gdx/src/com/badlogic/gdx/math/Rectangle.java
+@@ -223,7 +223,6 @@ public class Rectangle implements Serializable {
+ 	}
+ 
+ 	/** Merges this rectangle with the other rectangle.
+-	 * The rectangle should not have negative width or negative height.
+ 	 * @param rect the other rectangle
+ 	 * @return this rectangle for chaining */
+ 	public Rectangle merge (Rectangle rect) {
+@@ -239,53 +238,7 @@ public class Rectangle implements Serializable {
+ 
+ 		return this;
+ 	}
+-	/** Merges this rectangle with a point
+-	 * The rectangle should not have negative width or negative height.
+-	 * @param x the x coordinate of the point
+-	 * @param y the y coordinate of the point
+-	 * @return this rectangle for chaining */
+-	public Rectangle merge (float x, float y) {
+-		float minX = Math.min(this.x, x);
+-		float maxX = Math.max(this.x + width, x);
+-		this.x = minX;
+-		this.width = maxX - minX;
+-
+-		float minY = Math.min(this.y, y);
+-		float maxY = Math.max(this.y + height, y);
+-		this.y = minY;
+-		this.height = maxY - minY;
+ 
+-		return this;
+-	}
+-	/** Merges this rectangle with a point
+-	 * The rectangle should not have negative width or negative height.
+-	 * @param vec the vector describing the point
+-	 * @return this rectangle for chaining */
+-	public Rectangle merge (Vector2 vec) {
+-		return merge(vec.x, vec.y);
+-	}
+-	/** Merges this rectangle with a list of points
+-	 * The rectangle should not have negative width or negative height.
+-	 * @param vecs the vectors describing the points
+-	 * @return this rectangle for chaining */
+-	public Rectangle merge (Vector2[] vecs) {
+-		float minX = x;
+-		float maxX = x+width;
+-		float minY = y;
+-		float maxY = y+height;
+-		for(int i = 0; i < vecs.length; ++i) {
+-			Vector2 v = vecs[i];
+-			minX = Math.min(minX, v.x);
+-			maxX = Math.max(maxX, v.x);
+-			minY = Math.min(minY, v.y);
+-			maxY = Math.max(maxY, v.y);
+-		}
+-		x = minX;
+-		width = maxX - minX;
+-		y = minY;
+-		height = maxY - minY;
+-		return this;
+-	}
+ 	/** Calculates the aspect ratio ( width / height ) of this rectangle
+ 	 * @return the aspect ratio of this rectangle. Returns Float.NaN if height is 0 to avoid ArithmeticException */
+ 	public float getAspectRatio () {

@@ -1,0 +1,985 @@
+diff --git a/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwGL10.java b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwGL10.java
+index 4d5140e..c76f91a 100644
+--- a/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwGL10.java
++++ b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwGL10.java
+@@ -1,23 +1,58 @@
+ 
+ package com.badlogic.gdx.backends.jglfw;
+ 
+-import static com.badlogic.gdx.backends.jglfw.JglfwUtil.*;
+-import static com.badlogic.jglfw.utils.Memory.*;
+-
+ import com.badlogic.gdx.graphics.GL10;
+ import com.badlogic.jglfw.gl.GL;
++import com.badlogic.jglfw.utils.Memory;
+ 
+ import java.nio.Buffer;
++import java.nio.ByteBuffer;
++import java.nio.ByteOrder;
+ import java.nio.FloatBuffer;
+ import java.nio.IntBuffer;
+ 
+ public class JglfwGL10 implements GL10 {
++	private IntBuffer tempInt = ByteBuffer.allocateDirect(8 * 4).order(ByteOrder.nativeOrder()).asIntBuffer();
++	private FloatBuffer tempFloat = ByteBuffer.allocateDirect(8 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
++
++	private IntBuffer toBuffer (int n, int[] src, int offset) {
++		if (tempInt.capacity() < n)
++			tempInt = ByteBuffer.allocateDirect(n * 4).order(ByteOrder.nativeOrder()).asIntBuffer();
++		else
++			tempInt.clear();
++		tempInt.put(src, offset, n);
++		tempInt.flip();
++		return tempInt;
++	}
++
++	private IntBuffer toBuffer (int[] src, int offset) {
++		int n = src.length - offset;
++		if (tempInt.capacity() < n)
++			tempInt = ByteBuffer.allocateDirect(n * 4).order(ByteOrder.nativeOrder()).asIntBuffer();
++		else
++			tempInt.clear();
++		tempInt.put(src, offset, n);
++		tempInt.flip();
++		return tempInt;
++	}
++
++	private FloatBuffer toBuffer (float[] src, int offset) {
++		int n = src.length - offset;
++		if (tempFloat.capacity() < n)
++			tempFloat = ByteBuffer.allocateDirect(n * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
++		else
++			tempFloat.clear();
++		tempFloat.put(src, offset, src.length - offset);
++		tempFloat.flip();
++		return tempFloat;
++	}
++
+ 	public void glActiveTexture (int texture) {
+ 		GL.glActiveTexture(texture);
+ 	}
+ 
+ 	public void glBindTexture (int target, int texture) {
+-		GL.glBindTextureEXT(target, texture);
++		GL.glBindTexture(target, texture);
+ 	}
+ 
+ 	public void glBlendFunc (int sfactor, int dfactor) {
+@@ -46,20 +81,21 @@ public class JglfwGL10 implements GL10 {
+ 
+ 	public void glCompressedTexImage2D (int target, int level, int internalformat, int width, int height, int border,
+ 		int imageSize, Buffer data) {
+-		GL.glCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, data, getPosition(data));
++		GL.glCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, data, Memory.getPosition(data));
+ 	}
+ 
+ 	public void glCompressedTexSubImage2D (int target, int level, int xoffset, int yoffset, int width, int height, int format,
+ 		int imageSize, Buffer data) {
+-		GL.glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, data, getPosition(data));
++		GL.glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, data,
++			Memory.getPosition(data));
+ 	}
+ 
+ 	public void glCopyTexImage2D (int target, int level, int internalformat, int x, int y, int width, int height, int border) {
+-		GL.glCopyTexImage2DEXT(target, level, internalformat, x, y, width, height, border);
++		GL.glCopyTexImage2D(target, level, internalformat, x, y, width, height, border);
+ 	}
+ 
+ 	public void glCopyTexSubImage2D (int target, int level, int xoffset, int yoffset, int x, int y, int width, int height) {
+-		GL.glCopyTexSubImage2DEXT(target, level, xoffset, yoffset, x, y, width, height);
++		GL.glCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
+ 	}
+ 
+ 	public void glCullFace (int mode) {
+@@ -67,7 +103,7 @@ public class JglfwGL10 implements GL10 {
+ 	}
+ 
+ 	public void glDeleteTextures (int n, IntBuffer textures) {
+-		GL.glDeleteTexturesEXT(n, textures, getPosition(textures));
++		GL.glDeleteTextures(n, textures, Memory.getPosition(textures));
+ 	}
+ 
+ 	public void glDepthFunc (int func) {
+@@ -87,11 +123,11 @@ public class JglfwGL10 implements GL10 {
+ 	}
+ 
+ 	public void glDrawArrays (int mode, int first, int count) {
+-		GL.glDrawArraysEXT(mode, first, count);
++		GL.glDrawArrays(mode, first, count);
+ 	}
+ 
+ 	public void glDrawElements (int mode, int count, int type, Buffer indices) {
+-		GL.glDrawElements(mode, count, type, indices, getPosition(indices));
++		GL.glDrawElements(mode, count, type, indices, Memory.getPosition(indices));
+ 	}
+ 
+ 	public void glEnable (int cap) {
+@@ -111,7 +147,7 @@ public class JglfwGL10 implements GL10 {
+ 	}
+ 
+ 	public void glGenTextures (int n, IntBuffer textures) {
+-		GL.glGenTexturesEXT(n, textures, getPosition(textures));
++		GL.glGenTextures(n, textures, Memory.getPosition(textures));
+ 	}
+ 
+ 	public int glGetError () {
+@@ -119,7 +155,7 @@ public class JglfwGL10 implements GL10 {
+ 	}
+ 
+ 	public void glGetIntegerv (int pname, IntBuffer params) {
+-		GL.glGetIntegerv(pname, params, getPosition(params));
++		GL.glGetIntegerv(pname, params, Memory.getPosition(params));
+ 	}
+ 
+ 	public String glGetString (int name) {
+@@ -139,11 +175,11 @@ public class JglfwGL10 implements GL10 {
+ 	}
+ 
+ 	public void glPolygonOffset (float factor, float units) {
+-		GL.glPolygonOffsetEXT(factor, units);
++		GL.glPolygonOffset(factor, units);
+ 	}
+ 
+ 	public void glReadPixels (int x, int y, int width, int height, int format, int type, Buffer pixels) {
+-		GL.glReadPixels(x, y, width, height, format, type, pixels, getPosition(pixels));
++		GL.glReadPixels(x, y, width, height, format, type, pixels, Memory.getPosition(pixels));
+ 	}
+ 
+ 	public void glScissor (int x, int y, int width, int height) {
+@@ -164,7 +200,7 @@ public class JglfwGL10 implements GL10 {
+ 
+ 	public void glTexImage2D (int target, int level, int internalFormat, int width, int height, int border, int format, int type,
+ 		Buffer pixels) {
+-		GL.glTexImage2D(target, level, internalFormat, width, height, border, format, type, pixels, getPosition(pixels));
++		GL.glTexImage2D(target, level, internalFormat, width, height, border, format, type, pixels, Memory.getPosition(pixels));
+ 	}
+ 
+ 	public void glTexParameterf (int target, int pname, float param) {
+@@ -173,7 +209,7 @@ public class JglfwGL10 implements GL10 {
+ 
+ 	public void glTexSubImage2D (int target, int level, int xoffset, int yoffset, int width, int height, int format, int type,
+ 		Buffer pixels) {
+-		GL.glTexSubImage2DEXT(target, level, xoffset, yoffset, width, height, format, type, pixels, getPosition(pixels));
++		GL.glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels, Memory.getPosition(pixels));
+ 	}
+ 
+ 	public void glViewport (int x, int y, int width, int height) {
+@@ -193,7 +229,7 @@ public class JglfwGL10 implements GL10 {
+ 	}
+ 
+ 	public void glColorPointer (int size, int type, int stride, Buffer pointer) {
+-		GL.glColorPointer(size, type, stride, pointer, getPosition(pointer));
++		GL.glColorPointer(size, type, stride, pointer, Memory.getPosition(pointer));
+ 	}
+ 
+ 	public void glDeleteTextures (int n, int[] textures, int offset) {
+@@ -217,7 +253,7 @@ public class JglfwGL10 implements GL10 {
+ 	}
+ 
+ 	public void glFogfv (int pname, FloatBuffer params) {
+-		GL.glFogfv(pname, params, getPosition(params));
++		GL.glFogfv(pname, params, Memory.getPosition(params));
+ 	}
+ 
+ 	public void glFrustumf (float left, float right, float bottom, float top, float zNear, float zFar) {
+@@ -225,7 +261,7 @@ public class JglfwGL10 implements GL10 {
+ 	}
+ 
+ 	public void glGenTextures (int n, int[] textures, int offset) {
+-		GL.glGenTexturesEXT(n, toBuffer(textures, offset), 0);
++		GL.glGenTextures(n, toBuffer(textures, offset), 0);
+ 	}
+ 
+ 	public void glGetIntegerv (int pname, int[] params, int offset) {
+@@ -241,7 +277,7 @@ public class JglfwGL10 implements GL10 {
+ 	}
+ 
+ 	public void glLightModelfv (int pname, FloatBuffer params) {
+-		GL.glLightModelfv(pname, params, getPosition(params));
++		GL.glLightModelfv(pname, params, Memory.getPosition(params));
+ 	}
+ 
+ 	public void glLightf (int light, int pname, float param) {
+@@ -253,7 +289,7 @@ public class JglfwGL10 implements GL10 {
+ 	}
+ 
+ 	public void glLightfv (int light, int pname, FloatBuffer params) {
+-		GL.glLightfv(light, pname, params, getPosition(params));
++		GL.glLightfv(light, pname, params, Memory.getPosition(params));
+ 	}
+ 
+ 	public void glLoadIdentity () {
+@@ -265,7 +301,7 @@ public class JglfwGL10 implements GL10 {
+ 	}
+ 
+ 	public void glLoadMatrixf (FloatBuffer m) {
+-		GL.glLoadMatrixf(m, getPosition(m));
++		GL.glLoadMatrixf(m, Memory.getPosition(m));
+ 	}
+ 
+ 	public void glLogicOp (int opcode) {
+@@ -281,7 +317,7 @@ public class JglfwGL10 implements GL10 {
+ 	}
+ 
+ 	public void glMaterialfv (int face, int pname, FloatBuffer params) {
+-		GL.glMaterialfv(face, pname, params, getPosition(params));
++		GL.glMaterialfv(face, pname, params, Memory.getPosition(params));
+ 	}
+ 
+ 	public void glMatrixMode (int mode) {
+@@ -293,7 +329,7 @@ public class JglfwGL10 implements GL10 {
+ 	}
+ 
+ 	public void glMultMatrixf (FloatBuffer m) {
+-		GL.glMultMatrixf(m, getPosition(m));
++		GL.glMultMatrixf(m, Memory.getPosition(m));
+ 	}
+ 
+ 	public void glMultiTexCoord4f (int target, float s, float t, float r, float q) {
+@@ -305,7 +341,7 @@ public class JglfwGL10 implements GL10 {
+ 	}
+ 
+ 	public void glNormalPointer (int type, int stride, Buffer pointer) {
+-		GL.glNormalPointer(type, stride, pointer, getPosition(pointer));
++		GL.glNormalPointer(type, stride, pointer, Memory.getPosition(pointer));
+ 	}
+ 
+ 	public void glOrthof (float left, float right, float bottom, float top, float zNear, float zFar) {
+@@ -341,7 +377,7 @@ public class JglfwGL10 implements GL10 {
+ 	}
+ 
+ 	public void glTexCoordPointer (int size, int type, int stride, Buffer pointer) {
+-		GL.glTexCoordPointer(size, type, stride, pointer, getPosition(pointer));
++		GL.glTexCoordPointer(size, type, stride, pointer, Memory.getPosition(pointer));
+ 	}
+ 
+ 	public void glTexEnvf (int target, int pname, float param) {
+@@ -353,7 +389,7 @@ public class JglfwGL10 implements GL10 {
+ 	}
+ 
+ 	public void glTexEnvfv (int target, int pname, FloatBuffer params) {
+-		GL.glTexEnvfv(target, pname, params, getPosition(params));
++		GL.glTexEnvfv(target, pname, params, Memory.getPosition(params));
+ 	}
+ 
+ 	public void glTranslatef (float x, float y, float z) {
+@@ -361,7 +397,7 @@ public class JglfwGL10 implements GL10 {
+ 	}
+ 
+ 	public void glVertexPointer (int size, int type, int stride, Buffer buffer) {
+-		GL.glVertexPointer(size, type, stride, buffer, getPosition(buffer));
++		GL.glVertexPointer(size, type, stride, buffer, Memory.getPosition(buffer));
+ 	}
+ 
+ 	public void glPolygonMode (int face, int mode) {
+diff --git a/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwGL11.java b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwGL11.java
+index 31094d8..01854d6 100644
+--- a/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwGL11.java
++++ b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwGL11.java
+@@ -1,11 +1,7 @@
+ 
+ package com.badlogic.gdx.backends.jglfw;
+ 
+-import static com.badlogic.gdx.backends.jglfw.JglfwUtil.*;
+-import static com.badlogic.jglfw.utils.Memory.*;
+-
+ import com.badlogic.gdx.graphics.GL11;
+-import com.badlogic.jglfw.gl.GL;
+ 
+ import java.nio.Buffer;
+ import java.nio.FloatBuffer;
+@@ -13,556 +9,554 @@ import java.nio.IntBuffer;
+ 
+ public class JglfwGL11 implements GL11 {
+ 	public void glActiveTexture (int texture) {
+-		GL.glActiveTexture(texture);
++		glActiveTexture(texture);
+ 	}
+ 
+ 	public void glBindTexture (int target, int texture) {
+-		GL.glBindTextureEXT(target, texture);
++		glBindTexture(target, texture);
+ 	}
+ 
+ 	public void glBlendFunc (int sfactor, int dfactor) {
+-		GL.glBlendFunc(sfactor, dfactor);
++		glBlendFunc(sfactor, dfactor);
+ 	}
+ 
+ 	public void glClear (int mask) {
+-		GL.glClear(mask);
++		glClear(mask);
+ 	}
+ 
+ 	public void glClearColor (float red, float green, float blue, float alpha) {
+-		GL.glClearColor(red, green, blue, alpha);
++		glClearColor(red, green, blue, alpha);
+ 	}
+ 
+ 	public void glClearDepthf (float depth) {
+-		GL.glClearDepthf(depth);
++		glClearDepthf(depth);
+ 	}
+ 
+ 	public void glClearStencil (int s) {
+-		GL.glClearStencil(s);
++		glClearStencil(s);
+ 	}
+ 
+ 	public void glColorMask (boolean red, boolean green, boolean blue, boolean alpha) {
+-		GL.glColorMask(red, green, blue, alpha);
++		glColorMask(red, green, blue, alpha);
+ 	}
+ 
+ 	public void glCompressedTexImage2D (int target, int level, int internalformat, int width, int height, int border,
+ 		int imageSize, Buffer data) {
+-		GL.glCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, data, getPosition(data));
++		glCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, data);
+ 	}
+ 
+ 	public void glCompressedTexSubImage2D (int target, int level, int xoffset, int yoffset, int width, int height, int format,
+ 		int imageSize, Buffer data) {
+-		GL.glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, data, getPosition(data));
++		glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, data);
+ 	}
+ 
+ 	public void glCopyTexImage2D (int target, int level, int internalformat, int x, int y, int width, int height, int border) {
+-		GL.glCopyTexImage2DEXT(target, level, internalformat, x, y, width, height, border);
++		glCopyTexImage2D(target, level, internalformat, x, y, width, height, border);
+ 	}
+ 
+ 	public void glCopyTexSubImage2D (int target, int level, int xoffset, int yoffset, int x, int y, int width, int height) {
+-		GL.glCopyTexSubImage2DEXT(target, level, xoffset, yoffset, x, y, width, height);
++		glCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
+ 	}
+ 
+ 	public void glCullFace (int mode) {
+-		GL.glCullFace(mode);
++		glCullFace(mode);
+ 	}
+ 
+ 	public void glDeleteTextures (int n, IntBuffer textures) {
+-		GL.glDeleteTexturesEXT(n, textures, getPosition(textures));
++		glDeleteTextures(n, textures);
+ 	}
+ 
+ 	public void glDepthFunc (int func) {
+-		GL.glDepthFunc(func);
++		glDepthFunc(func);
+ 	}
+ 
+ 	public void glDepthMask (boolean flag) {
+-		GL.glDepthMask(flag);
++		glDepthMask(flag);
+ 	}
+ 
+ 	public void glDepthRangef (float zNear, float zFar) {
+-		GL.glDepthRangef(zNear, zFar);
++		glDepthRangef(zNear, zFar);
+ 	}
+ 
+ 	public void glDisable (int cap) {
+-		GL.glDisable(cap);
++		glDisable(cap);
+ 	}
+ 
+ 	public void glDrawArrays (int mode, int first, int count) {
+-		GL.glDrawArraysEXT(mode, first, count);
++		glDrawArrays(mode, first, count);
+ 	}
+ 
+ 	public void glDrawElements (int mode, int count, int type, Buffer indices) {
+-		GL.glDrawElements(mode, count, type, indices, getPosition(indices));
++		glDrawElements(mode, count, type, indices);
+ 	}
+ 
+ 	public void glEnable (int cap) {
+-		GL.glEnable(cap);
++		glEnable(cap);
+ 	}
+ 
+ 	public void glFinish () {
+-		GL.glFinish();
++		glFinish();
+ 	}
+ 
+ 	public void glFlush () {
+-		GL.glFlush();
++		glFlush();
+ 	}
+ 
+ 	public void glFrontFace (int mode) {
+-		GL.glFrontFace(mode);
++		glFrontFace(mode);
+ 	}
+ 
+ 	public void glGenTextures (int n, IntBuffer textures) {
+-		GL.glGenTexturesEXT(n, textures, getPosition(textures));
++		glGenTextures(n, textures);
+ 	}
+ 
+ 	public int glGetError () {
+-		return GL.glGetError();
++		return glGetError();
+ 	}
+ 
+ 	public void glGetIntegerv (int pname, IntBuffer params) {
+-		GL.glGetIntegerv(pname, params, getPosition(params));
++		glGetIntegerv(pname, params);
+ 	}
+ 
+ 	public String glGetString (int name) {
+-		return GL.glGetString(name);
++		return glGetString(name);
+ 	}
+ 
+ 	public void glHint (int target, int mode) {
+-		GL.glHint(target, mode);
++		glHint(target, mode);
+ 	}
+ 
+ 	public void glLineWidth (float width) {
+-		GL.glLineWidth(width);
++		glLineWidth(width);
+ 	}
+ 
+ 	public void glPixelStorei (int pname, int param) {
+-		GL.glPixelStorei(pname, param);
++		glPixelStorei(pname, param);
+ 	}
+ 
+ 	public void glPolygonOffset (float factor, float units) {
+-		GL.glPolygonOffsetEXT(factor, units);
++		glPolygonOffset(factor, units);
+ 	}
+ 
+ 	public void glReadPixels (int x, int y, int width, int height, int format, int type, Buffer pixels) {
+-		GL.glReadPixels(x, y, width, height, format, type, pixels, getPosition(pixels));
++		glReadPixels(x, y, width, height, format, type, pixels);
+ 	}
+ 
+ 	public void glScissor (int x, int y, int width, int height) {
+-		GL.glScissor(x, y, width, height);
++		glScissor(x, y, width, height);
+ 	}
+ 
+ 	public void glStencilFunc (int func, int ref, int mask) {
+-		GL.glStencilFunc(func, ref, mask);
++		glStencilFunc(func, ref, mask);
+ 	}
+ 
+ 	public void glStencilMask (int mask) {
+-		GL.glStencilMask(mask);
++		glStencilMask(mask);
+ 	}
+ 
+ 	public void glStencilOp (int fail, int zfail, int zpass) {
+-		GL.glStencilOp(fail, zfail, zpass);
++		glStencilOp(fail, zfail, zpass);
+ 	}
+ 
+ 	public void glTexImage2D (int target, int level, int internalFormat, int width, int height, int border, int format, int type,
+ 		Buffer pixels) {
+-		GL.glTexImage2D(target, level, internalFormat, width, height, border, format, type, pixels, getPosition(pixels));
++		glTexImage2D(target, level, internalFormat, width, height, border, format, type, pixels);
+ 	}
+ 
+ 	public void glTexParameterf (int target, int pname, float param) {
+-		GL.glTexParameterf(target, pname, param);
++		glTexParameterf(target, pname, param);
+ 	}
+ 
+ 	public void glTexSubImage2D (int target, int level, int xoffset, int yoffset, int width, int height, int format, int type,
+ 		Buffer pixels) {
+-		GL.glTexSubImage2DEXT(target, level, xoffset, yoffset, width, height, format, type, pixels, getPosition(pixels));
++		glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
+ 	}
+ 
+ 	public void glViewport (int x, int y, int width, int height) {
+-		GL.glViewport(x, y, width, height);
++		glViewport(x, y, width, height);
+ 	}
+ 
+ 	public void glAlphaFunc (int func, float ref) {
+-		GL.glAlphaFunc(func, ref);
++		glAlphaFunc(func, ref);
+ 	}
+ 
+ 	public void glClientActiveTexture (int texture) {
+-		GL.glClientActiveTexture(texture);
++		glClientActiveTexture(texture);
+ 	}
+ 
+ 	public void glColor4f (float red, float green, float blue, float alpha) {
+-		GL.glColor4f(red, green, blue, alpha);
++		glColor4f(red, green, blue, alpha);
+ 	}
+ 
+ 	public void glColorPointer (int size, int type, int stride, Buffer pointer) {
+-		GL.glColorPointer(size, type, stride, pointer, getPosition(pointer));
++		glColorPointer(size, type, stride, pointer);
+ 	}
+ 
+ 	public void glDeleteTextures (int n, int[] textures, int offset) {
+-		GL.glDeleteTextures(n, toBuffer(textures, offset), 0);
++		glDeleteTextures(n, textures, offset);
+ 	}
+ 
+ 	public void glDisableClientState (int array) {
+-		GL.glDisableClientState(array);
++		glDisableClientState(array);
+ 	}
+ 
+ 	public void glEnableClientState (int array) {
+-		GL.glEnableClientState(array);
++		glEnableClientState(array);
+ 	}
+ 
+ 	public void glFogf (int pname, float param) {
+-		GL.glFogf(pname, param);
++		glFogf(pname, param);
+ 	}
+ 
+ 	public void glFogfv (int pname, float[] params, int offset) {
+-		GL.glFogfv(pname, toBuffer(params, offset), 0);
++		glFogfv(pname, params, offset);
+ 	}
+ 
+ 	public void glFogfv (int pname, FloatBuffer params) {
+-		GL.glFogfv(pname, params, getPosition(params));
++		glFogfv(pname, params);
+ 	}
+ 
+ 	public void glFrustumf (float left, float right, float bottom, float top, float zNear, float zFar) {
+-		GL.glFrustum(left, right, bottom, top, zNear, zFar);
++		glFrustumf(left, right, bottom, top, zNear, zFar);
+ 	}
+ 
+ 	public void glGenTextures (int n, int[] textures, int offset) {
+-		GL.glGenTexturesEXT(n, toBuffer(textures, offset), 0);
++		glGenTextures(n, textures, offset);
+ 	}
+ 
+ 	public void glGetIntegerv (int pname, int[] params, int offset) {
+-		GL.glGetIntegerv(pname, toBuffer(params, offset), 0);
++		glGetIntegerv(pname, params, offset);
+ 	}
+ 
+ 	public void glLightModelf (int pname, float param) {
+-		GL.glLightModelf(pname, param);
++		glLightModelf(pname, param);
+ 	}
+ 
+ 	public void glLightModelfv (int pname, float[] params, int offset) {
+-		GL.glLightModelfv(pname, toBuffer(params, offset), 0);
++		glLightModelfv(pname, params, offset);
+ 	}
+ 
+ 	public void glLightModelfv (int pname, FloatBuffer params) {
+-		GL.glLightModelfv(pname, params, getPosition(params));
++		glLightModelfv(pname, params);
+ 	}
+ 
+ 	public void glLightf (int light, int pname, float param) {
+-		GL.glLightf(light, pname, param);
++		glLightf(light, pname, param);
+ 	}
+ 
+ 	public void glLightfv (int light, int pname, float[] params, int offset) {
+-		GL.glLightfv(light, pname, toBuffer(params, offset), 0);
++		glLightfv(light, pname, params, offset);
+ 	}
+ 
+ 	public void glLightfv (int light, int pname, FloatBuffer params) {
+-		GL.glLightfv(light, pname, params, getPosition(params));
++		glLightfv(light, pname, params);
+ 	}
+ 
+ 	public void glLoadIdentity () {
+-		GL.glLoadIdentity();
++		glLoadIdentity();
+ 	}
+ 
+ 	public void glLoadMatrixf (float[] m, int offset) {
+-		GL.glLoadMatrixf(toBuffer(m, offset), 0);
++		glLoadMatrixf(m, offset);
+ 	}
+ 
+ 	public void glLoadMatrixf (FloatBuffer m) {
+-		GL.glLoadMatrixf(m, getPosition(m));
++		glLoadMatrixf(m);
+ 	}
+ 
+ 	public void glLogicOp (int opcode) {
+-		GL.glLogicOp(opcode);
++		glLogicOp(opcode);
+ 	}
+ 
+ 	public void glMaterialf (int face, int pname, float param) {
+-		GL.glMaterialf(face, pname, param);
++		glMaterialf(face, pname, param);
+ 	}
+ 
+ 	public void glMaterialfv (int face, int pname, float[] params, int offset) {
+-		GL.glMaterialfv(face, pname, toBuffer(params, offset), 0);
++		glMaterialfv(face, pname, params, offset);
+ 	}
+ 
+ 	public void glMaterialfv (int face, int pname, FloatBuffer params) {
+-		GL.glMaterialfv(face, pname, params, getPosition(params));
++		glMaterialfv(face, pname, params);
+ 	}
+ 
+ 	public void glMatrixMode (int mode) {
+-		GL.glMatrixMode(mode);
++		glMatrixMode(mode);
+ 	}
+ 
+ 	public void glMultMatrixf (float[] m, int offset) {
+-		GL.glMultMatrixf(toBuffer(m, offset), 0);
++		glMultMatrixf(m, offset);
+ 	}
+ 
+ 	public void glMultMatrixf (FloatBuffer m) {
+-		GL.glMultMatrixf(m, getPosition(m));
++		glMultMatrixf(m);
+ 	}
+ 
+ 	public void glMultiTexCoord4f (int target, float s, float t, float r, float q) {
+-		GL.glMultiTexCoord4f(target, s, t, r, q);
++		glMultiTexCoord4f(target, s, t, r, q);
+ 	}
+ 
+ 	public void glNormal3f (float nx, float ny, float nz) {
+-		GL.glNormal3f(nx, ny, nz);
++		glNormal3f(nx, ny, nz);
+ 	}
+ 
+ 	public void glNormalPointer (int type, int stride, Buffer pointer) {
+-		GL.glNormalPointer(type, stride, pointer, getPosition(pointer));
++		glNormalPointer(type, stride, pointer);
+ 	}
+ 
+ 	public void glOrthof (float left, float right, float bottom, float top, float zNear, float zFar) {
+-		GL.glOrtho(left, right, bottom, top, zNear, zFar);
++		glOrthof(left, right, bottom, top, zNear, zFar);
+ 	}
+ 
+ 	public void glPointSize (float size) {
+-		GL.glPointSize(size);
++		glPointSize(size);
+ 	}
+ 
+ 	public void glPopMatrix () {
+-		GL.glPopMatrix();
++		glPopMatrix();
+ 	}
+ 
+ 	public void glPushMatrix () {
+-		GL.glPushMatrix();
++		glPushMatrix();
+ 	}
+ 
+ 	public void glRotatef (float angle, float x, float y, float z) {
+-		GL.glRotatef(angle, x, y, z);
++		glRotatef(angle, x, y, z);
+ 	}
+ 
+ 	public void glSampleCoverage (float value, boolean invert) {
+-		GL.glSampleCoverage(value, invert);
++		glSampleCoverage(value, invert);
+ 	}
+ 
+ 	public void glScalef (float x, float y, float z) {
+-		GL.glScalef(x, y, z);
++		glScalef(x, y, z);
+ 	}
+ 
+ 	public void glShadeModel (int mode) {
+-		GL.glShadeModel(mode);
++		glShadeModel(mode);
+ 	}
+ 
+ 	public void glTexCoordPointer (int size, int type, int stride, Buffer pointer) {
+-		GL.glTexCoordPointer(size, type, stride, pointer, getPosition(pointer));
++		glTexCoordPointer(size, type, stride, pointer);
+ 	}
+ 
+ 	public void glTexEnvf (int target, int pname, float param) {
+-		GL.glTexEnvf(target, pname, param);
++		glTexEnvf(target, pname, param);
+ 	}
+ 
+ 	public void glTexEnvfv (int target, int pname, float[] params, int offset) {
+-		GL.glTexEnvfv(target, pname, toBuffer(params, offset), 0);
++		glTexEnvfv(target, pname, params, offset);
+ 	}
+ 
+ 	public void glTexEnvfv (int target, int pname, FloatBuffer params) {
+-		GL.glTexEnvfv(target, pname, params, getPosition(params));
++		glTexEnvfv(target, pname, params);
+ 	}
+ 
+ 	public void glTranslatef (float x, float y, float z) {
+-		GL.glTranslatef(x, y, z);
++		glTranslatef(x, y, z);
+ 	}
+ 
+-	public void glVertexPointer (int size, int type, int stride, Buffer buffer) {
+-		GL.glVertexPointer(size, type, stride, buffer, getPosition(buffer));
++	public void glVertexPointer (int size, int type, int stride, Buffer pointer) {
++		glVertexPointer(size, type, stride, pointer);
+ 	}
+ 
+ 	public void glPolygonMode (int face, int mode) {
+-		GL.glPolygonMode(face, mode);
++		glPolygonMode(face, mode);
+ 	}
+ 
+ 	public void glClipPlanef (int plane, float[] equation, int offset) {
+-		GL.glClipPlane(plane, toBuffer(equation, offset), 0);
++		glClipPlanef(plane, equation, offset);
+ 	}
+ 
+ 	public void glClipPlanef (int plane, FloatBuffer equation) {
+-		GL.glClipPlane(plane, equation, getPosition(equation));
++		glClipPlanef(plane, equation);
+ 	}
+ 
+ 	public void glGetClipPlanef (int pname, float[] eqn, int offset) {
+-		GL.glGetClipPlane(pname, toBuffer(eqn, offset), 0);
++		glGetClipPlanef(pname, eqn, offset);
+ 	}
+ 
+ 	public void glGetClipPlanef (int pname, FloatBuffer eqn) {
+-		GL.glGetClipPlane(pname, eqn, getPosition(eqn));
++		glGetClipPlanef(pname, eqn);
+ 	}
+ 
+ 	public void glGetFloatv (int pname, float[] params, int offset) {
+-		GL.glGetFloatv(pname, toBuffer(params, offset), 0);
++		glGetFloatv(pname, params);
+ 	}
+ 
+ 	public void glGetFloatv (int pname, FloatBuffer params) {
+-		GL.glGetFloatv(pname, params, getPosition(params));
++		glGetFloatv(pname, params);
+ 	}
+ 
+ 	public void glGetLightfv (int light, int pname, float[] params, int offset) {
+-		GL.glGetLightfv(light, pname, toBuffer(params, offset), 0);
++		glGetLightfv(light, pname, params, offset);
+ 	}
+ 
+ 	public void glGetLightfv (int light, int pname, FloatBuffer params) {
+-		GL.glGetLightfv(light, pname, params, getPosition(params));
++		glGetLightfv(light, pname, params);
+ 	}
+ 
+ 	public void glGetMaterialfv (int face, int pname, float[] params, int offset) {
+-		GL.glGetMaterialfv(face, pname, toBuffer(params, offset), 0);
++		glGetMaterialfv(face, pname, params, offset);
+ 	}
+ 
+ 	public void glGetMaterialfv (int face, int pname, FloatBuffer params) {
+-		GL.glGetMaterialfv(face, pname, params, getPosition(params));
++		glGetMaterialfv(face, pname, params);
+ 	}
+ 
+ 	public void glGetTexParameterfv (int target, int pname, float[] params, int offset) {
+-		GL.glGetTexParameterfv(target, pname, toBuffer(params, offset), 0);
++		glGetTexParameterfv(target, pname, params, offset);
+ 	}
+ 
+ 	public void glGetTexParameterfv (int target, int pname, FloatBuffer params) {
+-		GL.glGetTexParameterfv(target, pname, params, getPosition(params));
++		glGetTexParameterfv(target, pname, params);
+ 	}
+ 
+ 	public void glPointParameterf (int pname, float param) {
+-		GL.glPointParameterf(pname, param);
++		glPointParameterf(pname, param);
+ 	}
+ 
+ 	public void glPointParameterfv (int pname, float[] params, int offset) {
+-		GL.glPointParameterfv(pname, toBuffer(params, offset), 0);
++		glPointParameterfv(pname, params, offset);
+ 	}
+ 
+ 	public void glPointParameterfv (int pname, FloatBuffer params) {
+-		GL.glPointParameterfv(pname, params, getPosition(params));
++		glPointParameterfv(pname, params);
+ 	}
+ 
+ 	public void glTexParameterfv (int target, int pname, float[] params, int offset) {
+-		GL.glTexParameterfv(target, pname, toBuffer(params, offset), 0);
++		glTexParameterfv(target, pname, params, offset);
+ 	}
+ 
+ 	public void glTexParameterfv (int target, int pname, FloatBuffer params) {
+-		GL.glTexParameterfv(target, pname, params, getPosition(params));
++		glTexParameterfv(target, pname, params);
+ 	}
+ 
+ 	public void glBindBuffer (int target, int buffer) {
+-		GL.glBindBuffer(target, buffer);
++		glBindBuffer(target, buffer);
+ 	}
+ 
+ 	public void glBufferData (int target, int size, Buffer data, int usage) {
+-		GL.glBufferData(target, size, data, getPosition(data), usage);
++		glBufferData(target, size, data, usage);
+ 	}
+ 
+ 	public void glBufferSubData (int target, int offset, int size, Buffer data) {
+-		GL.glBufferSubData(target, offset, size, data, getPosition(data));
++		glBufferSubData(target, offset, size, data);
+ 	}
+ 
+ 	public void glColor4ub (byte red, byte green, byte blue, byte alpha) {
+-		GL.glColor4ub(red, green, blue, alpha);
++		glColor4ub(red, green, blue, alpha);
+ 	}
+ 
+ 	public void glDeleteBuffers (int n, int[] buffers, int offset) {
+-		GL.glDeleteBuffers(n, toBuffer(buffers, offset), 0);
++		glDeleteBuffers(n, buffers, offset);
+ 	}
+ 
+ 	public void glDeleteBuffers (int n, IntBuffer buffers) {
+-		GL.glDeleteBuffers(n, buffers, getPosition(buffers));
++		glDeleteBuffers(n, buffers);
+ 	}
+ 
+ 	public void glGetBooleanv (int pname, boolean[] params, int offset) {
+-		GL.glGetBooleanv(pname, toBuffer(params, offset), 0);
++		glGetBooleanv(pname, params, offset);
+ 	}
+ 
+ 	public void glGetBooleanv (int pname, IntBuffer params) {
+-		GL.glGetBooleanv(pname, params, getPosition(params));
++		glGetBooleanv(pname, params);
+ 	}
+ 
+ 	public void glGetBufferParameteriv (int target, int pname, int[] params, int offset) {
+-		GL.glGetBufferParameteriv(target, pname, toBuffer(params, offset), 0);
++		glGetBufferParameteriv(target, pname, params, offset);
+ 	}
+ 
+ 	public void glGetBufferParameteriv (int target, int pname, IntBuffer params) {
+-		GL.glGetBufferParameteriv(target, pname, params, getPosition(params));
++		glGetBufferParameteriv(target, pname, params);
+ 	}
+ 
+ 	public void glGenBuffers (int n, int[] buffers, int offset) {
+-		GL.glGenBuffers(n, toBuffer(buffers, offset), 0);
++		glGenBuffers(n, buffers, offset);
+ 	}
+ 
+ 	public void glGenBuffers (int n, IntBuffer buffers) {
+-		GL.glGenBuffers(n, buffers, getPosition(buffers));
++		glGenBuffers(n, buffers);
+ 	}
+ 
+ 	public void glGetPointerv (int pname, Buffer[] params) {
+-		// FIXME
+-		throw new UnsupportedOperationException();
++		glGetPointerv(pname, params);
+ 	}
+ 
+ 	public void glGetTexEnviv (int env, int pname, int[] params, int offset) {
+-		GL.glGetTexEnviv(env, pname, toBuffer(params, offset), 0);
++		glGetTexEnviv(env, pname, params, offset);
+ 	}
+ 
+ 	public void glGetTexEnviv (int env, int pname, IntBuffer params) {
+-		GL.glGetTexEnviv(env, pname, params, getPosition(params));
++		glGetTexEnviv(env, pname, params);
+ 	}
+ 
+ 	public void glGetTexParameteriv (int target, int pname, int[] params, int offset) {
+-		GL.glGetTexParameteriv(target, pname, toBuffer(params, offset), 0);
++		glGetTexParameteriv(target, pname, params, offset);
+ 	}
+ 
+ 	public void glGetTexParameteriv (int target, int pname, IntBuffer params) {
+-		GL.glGetTexParameteriv(target, pname, params, getPosition(params));
++		glGetTexParameteriv(target, pname, params);
+ 	}
+ 
+ 	public boolean glIsBuffer (int buffer) {
+-		return GL.glIsBuffer(buffer);
++		return glIsBuffer(buffer);
+ 	}
+ 
+ 	public boolean glIsEnabled (int cap) {
+-		return GL.glIsEnabled(cap);
++		return glIsEnabled(cap);
+ 	}
+ 
+ 	public boolean glIsTexture (int texture) {
+-		return GL.glIsTexture(texture);
++		return glIsTexture(texture);
+ 	}
+ 
+ 	public void glTexEnvi (int target, int pname, int param) {
+-		GL.glTexEnvi(target, pname, param);
++		glTexEnvi(target, pname, param);
+ 	}
+ 
+ 	public void glTexEnviv (int target, int pname, int[] params, int offset) {
+-		GL.glTexEnviv(target, pname, toBuffer(params, offset), 0);
++		glTexEnviv(target, pname, params, offset);
+ 	}
+ 
+ 	public void glTexEnviv (int target, int pname, IntBuffer params) {
+-		GL.glTexEnviv(target, pname, params, getPosition(params));
++		glTexEnviv(target, pname, params);
+ 	}
+ 
+ 	public void glTexParameteri (int target, int pname, int param) {
+-		GL.glTexParameteri(target, pname, param);
++		glTexParameteri(target, pname, param);
+ 	}
+ 
+ 	public void glTexParameteriv (int target, int pname, int[] params, int offset) {
+-		GL.glTexParameteriv(target, pname, toBuffer(params, offset), 0);
++		glTexParameteriv(target, pname, params, offset);
+ 	}
+ 
+ 	public void glTexParameteriv (int target, int pname, IntBuffer params) {
+-		GL.glTexParameteriv(target, pname, params, getPosition(params));
++		glTexParameteriv(target, pname, params);
+ 	}
+ 
+ 	public void glPointSizePointerOES (int type, int stride, Buffer pointer) {
+-		// FIXME
+-		throw new UnsupportedOperationException();
++		glPointSizePointerOES(type, stride, pointer);
+ 	}
+ 
+ 	public void glVertexPointer (int size, int type, int stride, int pointer) {
+-		GL.glVertexPointer(size, type, stride, pointer);
++		glVertexPointer(size, type, stride, pointer);
+ 	}
+ 
+ 	public void glColorPointer (int size, int type, int stride, int pointer) {
+-		GL.glColorPointer(size, type, stride, pointer);
++		glColorPointer(size, type, stride, pointer);
+ 	}
+ 
+ 	public void glNormalPointer (int type, int stride, int pointer) {
+-		GL.glNormalPointer(type, stride, pointer);
++		glNormalPointer(type, stride, pointer);
+ 	}
+ 
+ 	public void glTexCoordPointer (int size, int type, int stride, int pointer) {
+-		GL.glTexCoordPointer(size, type, stride, pointer);
++		glTexCoordPointer(size, type, stride, pointer);
+ 	}
+ 
+ 	public void glDrawElements (int mode, int count, int type, int indices) {
+-		GL.glDrawElements(mode, count, type, indices);
++		glDrawElements(mode, count, type, indices);
+ 	}
+ }

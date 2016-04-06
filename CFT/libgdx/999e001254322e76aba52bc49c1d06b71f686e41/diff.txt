@@ -1,0 +1,1742 @@
+diff --git a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/APKExpansionSupport.java b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/APKExpansionSupport.java
+new file mode 100644
+index 0000000..63e78cb
+--- /dev/null
++++ b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/APKExpansionSupport.java
+@@ -0,0 +1,83 @@
++/*
++ * Copyright (C) 2012 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package com.badlogic.gdx.backends.android;
++
++import java.io.File;
++import java.io.IOException;
++import java.util.Vector;
++
++import android.content.Context;
++import android.os.Environment;
++
++public class APKExpansionSupport {
++	// The shared path to all app expansion files
++	private final static String EXP_PATH = "/Android/obb/";
++
++	static String[] getAPKExpansionFiles(Context ctx, int mainVersion,
++			int patchVersion) {
++		String packageName = ctx.getPackageName();
++		Vector<String> ret = new Vector<String>();
++		if (Environment.getExternalStorageState().equals(
++				Environment.MEDIA_MOUNTED)) {
++			// Build the full path to the app's expansion files
++			File root = Environment.getExternalStorageDirectory();
++			File expPath = new File(root.toString() + EXP_PATH + packageName);
++
++			// Check that expansion file path exists
++			if (expPath.exists()) {
++				if (mainVersion > 0) {
++					String strMainPath = expPath + File.separator + "main."
++							+ mainVersion + "." + packageName + ".obb";
++					File main = new File(strMainPath);
++					if (main.isFile()) {
++						ret.add(strMainPath);
++					}
++				}
++				if (patchVersion > 0) {
++					String strPatchPath = expPath + File.separator + "patch."
++							+ mainVersion + "." + packageName + ".obb";
++					File main = new File(strPatchPath);
++					if (main.isFile()) {
++						ret.add(strPatchPath);
++					}
++				}
++			}
++		}
++		String[] retArray = new String[ret.size()];
++		ret.toArray(retArray);
++		return retArray;
++	}
++
++	static public ZipResourceFile getResourceZipFile(String[] expansionFiles)
++			throws IOException {
++		ZipResourceFile apkExpansionFile = null;
++		for (String expansionFilePath : expansionFiles) {
++			if (null == apkExpansionFile) {
++				apkExpansionFile = new ZipResourceFile(expansionFilePath);
++			} else {
++				apkExpansionFile.addPatchFile(expansionFilePath);
++			}
++		}
++		return apkExpansionFile;
++	}
++
++	static public ZipResourceFile getAPKExpansionZipFile(Context ctx,
++			int mainVersion, int patchVersion) throws IOException {
++		String[] expansionFiles = getAPKExpansionFiles(ctx, mainVersion,
++				patchVersion);
++		return getResourceZipFile(expansionFiles);
++	}
++}
+diff --git a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidAudio.java b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidAudio.java
+index 36fe361..8f58472 100644
+--- a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidAudio.java
++++ b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidAudio.java
+@@ -106,7 +106,7 @@ public final class AndroidAudio implements Audio {
+ 
+ 		if (aHandle.type() == FileType.Internal) {
+ 			try {
+-				AssetFileDescriptor descriptor = aHandle.assets.openFd(aHandle.path());
++				AssetFileDescriptor descriptor = aHandle.getAssetFileDescriptor();
+ 				mediaPlayer.setDataSource(descriptor.getFileDescriptor(), descriptor.getStartOffset(), descriptor.getLength());
+ 				descriptor.close();
+ 				mediaPlayer.prepare();
+@@ -144,7 +144,7 @@ public final class AndroidAudio implements Audio {
+ 		AndroidFileHandle aHandle = (AndroidFileHandle)file;
+ 		if (aHandle.type() == FileType.Internal) {
+ 			try {
+-				AssetFileDescriptor descriptor = aHandle.assets.openFd(aHandle.path());
++				AssetFileDescriptor descriptor = aHandle.getAssetFileDescriptor();
+ 				AndroidSound sound = new AndroidSound(soundPool, manager, soundPool.load(descriptor, 1));
+ 				descriptor.close();
+ 				return sound;
+diff --git a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidFileHandle.java b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidFileHandle.java
+index 33eb4ab..96edc69 100644
+--- a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidFileHandle.java
++++ b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidFileHandle.java
+@@ -34,7 +34,7 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
+  * @author Nathan Sweet */
+ public class AndroidFileHandle extends FileHandle {
+ 	// The asset manager, or null if this is not an internal file.
+-	final AssetManager assets;
++	final private AssetManager assets;
+ 
+ 	AndroidFileHandle (AssetManager assets, String fileName, FileType type) {
+ 		super(fileName.replace('\\', '/'), type);
+@@ -229,4 +229,11 @@ public class AndroidFileHandle extends FileHandle {
+ 		return super.file();
+ 	}
+ 
++	/**
++	 * @return an AssetFileDescriptor for this file or null if the file is not of type Internal
++	 * @throws IOException - thrown by AssetManager.openFd()
++	 */
++	public AssetFileDescriptor getAssetFileDescriptor() throws IOException {
++		return assets != null ? assets.openFd(path()) : null;
++	}
+ }
+diff --git a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidFiles.java b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidFiles.java
+index 039ddfb..c2fe6f0 100644
+--- a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidFiles.java
++++ b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidFiles.java
+@@ -16,11 +16,15 @@
+ 
+ package com.badlogic.gdx.backends.android;
+ 
++import java.io.IOException;
++
+ import android.content.res.AssetManager;
+ import android.os.Environment;
+ 
+ import com.badlogic.gdx.Files;
++import com.badlogic.gdx.Gdx;
+ import com.badlogic.gdx.files.FileHandle;
++import com.badlogic.gdx.utils.GdxRuntimeException;
+ 
+ /** @author mzechner
+  * @author Nathan Sweet */
+@@ -29,6 +33,7 @@ public class AndroidFiles implements Files {
+ 	protected final String localpath;
+ 
+ 	protected final AssetManager assets;
++	private ZipResourceFile expansionFile = null;
+ 
+ 	public AndroidFiles (AssetManager assets) {
+ 		this.assets = assets;
+@@ -42,7 +47,12 @@ public class AndroidFiles implements Files {
+ 
+ 	@Override
+ 	public FileHandle getFileHandle (String path, FileType type) {
+-		return new AndroidFileHandle(type == FileType.Internal ? assets : null, path, type);
++		FileHandle handle = new AndroidFileHandle(type == FileType.Internal ? assets : null, path, type);
++		if (type == FileType.Internal && !handle.exists() && expansionFile != null) {
++			// try APK expansion instead
++			handle = new AndroidZipFileHandle(path);
++		}
++		return handle;
+ 	}
+ 
+ 	@Override
+@@ -52,7 +62,12 @@ public class AndroidFiles implements Files {
+ 
+ 	@Override
+ 	public FileHandle internal (String path) {
+-		return new AndroidFileHandle(assets, path, FileType.Internal);
++		FileHandle handle = new AndroidFileHandle(assets, path, FileType.Internal);
++		if (!handle.exists() && expansionFile != null) {
++			// try APK expansion instead
++			handle = new AndroidZipFileHandle(path);
++		}
++		return handle;
+ 	}
+ 
+ 	@Override
+@@ -89,4 +104,31 @@ public class AndroidFiles implements Files {
+ 	public boolean isLocalStorageAvailable () {
+ 		return true;
+ 	}
++
++	/**
++	 * This method can be called to set the version code of the APK expansion
++	 * file(s) used by the application
++	 * 
++	 * @param mainVersion
++	 *            - version code of the main expansion file
++	 * @param patchVersion
++	 *            - version code of the patch expansion file
++	 * 
++	 * @return true if the APK expansion file could be opened, false otherwise
++	 */
++	public boolean setAPKExpansion(int mainVersion, int patchVersion) {
++		try {
++			expansionFile = APKExpansionSupport.getAPKExpansionZipFile(
++					((AndroidApplication) Gdx.app).getBaseContext(),
++					mainVersion, patchVersion);
++		} catch (IOException ex) {
++			throw new GdxRuntimeException("APK expansion main version " + mainVersion + " or patch version " + patchVersion + " couldn't be opened!");
++		}
++		return expansionFile != null;
++	}
++
++	/** @return The application's APK extension file */
++	public ZipResourceFile getExpansionFile() {
++		return expansionFile;
++	}
+ }
+diff --git a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidInput.java b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidInput.java
+index 868b24d..317aa2e 100644
+--- a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidInput.java
++++ b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidInput.java
+@@ -28,6 +28,7 @@ import android.hardware.Sensor;
+ import android.hardware.SensorEvent;
+ import android.hardware.SensorEventListener;
+ import android.hardware.SensorManager;
++import android.os.Build;
+ import android.os.Handler;
+ import android.os.Vibrator;
+ import android.service.wallpaper.WallpaperService.Engine;
+@@ -717,7 +718,8 @@ public class AndroidInput implements Input, OnKeyListener, OnTouchListener {
+ 		if (peripheral == Peripheral.Compass) return compassAvailable;
+ 		if (peripheral == Peripheral.HardwareKeyboard) return keyboardAvailable;
+ 		if (peripheral == Peripheral.OnscreenKeyboard) return true;
+-		if (peripheral == Peripheral.Vibrator) return vibrator != null;
++		if (peripheral == Peripheral.Vibrator)
++			return (Build.VERSION.SDK_INT >= 11 && vibrator != null) ? vibrator.hasVibrator() : vibrator != null;
+ 		if (peripheral == Peripheral.MultitouchScreen) return hasMultitouch;
+ 		return false;
+ 	}
+diff --git a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidZipFileHandle.java b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidZipFileHandle.java
+new file mode 100644
+index 0000000..f5b2e9a
+--- /dev/null
++++ b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidZipFileHandle.java
+@@ -0,0 +1,181 @@
++/*******************************************************************************
++ * Copyright 2011 See AUTHORS file.
++ * 
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ * 
++ *   http://www.apache.org/licenses/LICENSE-2.0
++ * 
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ ******************************************************************************/
++
++package com.badlogic.gdx.backends.android;
++
++import java.io.*;
++
++import android.content.res.AssetFileDescriptor;
++
++import com.badlogic.gdx.Gdx;
++import com.badlogic.gdx.Files.FileType;
++import com.badlogic.gdx.backends.android.ZipResourceFile.ZipEntryRO;
++import com.badlogic.gdx.files.FileHandle;
++import com.badlogic.gdx.utils.GdxRuntimeException;
++
++/** @author sarkanyi */
++public class AndroidZipFileHandle extends AndroidFileHandle {
++	private AssetFileDescriptor assetFd;
++	private ZipResourceFile expansionFile;
++	private String path;
++
++	public AndroidZipFileHandle(String fileName) {
++		super(null, fileName, FileType.Internal);
++		initialize();
++	}
++
++	public AndroidZipFileHandle(File file, FileType type) {
++		super(null, file, type);
++		initialize();
++	}
++
++	private void initialize() {
++		path = file.getPath().replace('\\', '/');
++		expansionFile = ((AndroidFiles) Gdx.files).getExpansionFile();
++		assetFd = expansionFile.getAssetFileDescriptor(getPath());
++
++		// needed for listing entries and exists() of directories
++		if (isDirectory())
++			path += "/";
++	}
++
++	@Override
++	public AssetFileDescriptor getAssetFileDescriptor() throws IOException {
++		return assetFd;
++	}
++
++	private String getPath() {
++		return path;
++	}
++
++	@Override
++	public InputStream read() {
++		InputStream input = null;
++
++		try {
++			input = expansionFile.getInputStream(getPath());
++		} catch (IOException ex) {
++			throw new GdxRuntimeException("Error reading file: " + file + " (ZipResourceFile)", ex);
++		}
++		return input;
++	}
++
++	@Override
++	public FileHandle child(String name) {
++		if (file.getPath().length() == 0)
++			return new AndroidZipFileHandle(new File(name), type);
++		return new AndroidZipFileHandle(new File(file, name), type);
++	}
++
++	@Override
++	public FileHandle sibling(String name) {
++		if (file.getPath().length() == 0)
++			throw new GdxRuntimeException("Cannot get the sibling of the root.");
++		return Gdx.files.getFileHandle(new File(file.getParent(), name).getPath(), type); //this way we can find the sibling even if it's not inside the obb
++	}
++
++	@Override
++	public FileHandle parent() {
++		File parent = file.getParentFile();
++		if (parent == null)
++			parent = new File("");
++		return new AndroidZipFileHandle(parent.getPath());
++	}
++
++	@Override
++	public FileHandle[] list() {
++		ZipEntryRO[] zipEntries = expansionFile.getEntriesAt(getPath());
++		FileHandle[] handles = new FileHandle[zipEntries.length];
++		for (int i = 0, n = handles.length; i < n; i++)
++			handles[i] = new AndroidZipFileHandle(zipEntries[i].mFileName);
++		return handles;
++	}
++
++	@Override
++	public FileHandle[] list(FileFilter filter) {
++		ZipEntryRO[] zipEntries = expansionFile.getEntriesAt(getPath());
++		FileHandle[] handles = new FileHandle[zipEntries.length];
++		int count = 0;
++		for (int i = 0, n = handles.length; i < n; i++) {
++			FileHandle child = new AndroidZipFileHandle(zipEntries[i].mFileName);
++			if (!filter.accept(child.file()))
++				continue;
++			handles[count] = child;
++			count++;
++		}
++		if (count < zipEntries.length) {
++			FileHandle[] newHandles = new FileHandle[count];
++			System.arraycopy(handles, 0, newHandles, 0, count);
++			handles = newHandles;
++		}
++		return handles;
++	}
++
++	@Override
++	public FileHandle[] list(FilenameFilter filter) {
++		ZipEntryRO[] zipEntries = expansionFile.getEntriesAt(getPath());
++		FileHandle[] handles = new FileHandle[zipEntries.length];
++		int count = 0;
++		for (int i = 0, n = handles.length; i < n; i++) {
++			String path = zipEntries[i].mFileName;
++			if (!filter.accept(file, path))
++				continue;
++			handles[count] = new AndroidZipFileHandle(path);
++			count++;
++		}
++		if (count < zipEntries.length) {
++			FileHandle[] newHandles = new FileHandle[count];
++			System.arraycopy(handles, 0, newHandles, 0, count);
++			handles = newHandles;
++		}
++		return handles;
++	}
++
++	@Override
++	public FileHandle[] list(String suffix) {
++		ZipEntryRO[] zipEntries = expansionFile.getEntriesAt(getPath());
++		FileHandle[] handles = new FileHandle[zipEntries.length];
++		int count = 0;
++		for (int i = 0, n = handles.length; i < n; i++) {
++			String path = zipEntries[i].mFileName;
++			if (!path.endsWith(suffix))
++				continue;
++			handles[count] = new AndroidZipFileHandle(path);
++			count++;
++		}
++		if (count < zipEntries.length) {
++			FileHandle[] newHandles = new FileHandle[count];
++			System.arraycopy(handles, 0, newHandles, 0, count);
++			handles = newHandles;
++		}
++		return handles;
++	}
++
++	@Override
++	public boolean isDirectory() {
++		return assetFd == null;
++	}
++
++	@Override
++	public long length() {
++		return assetFd != null ? assetFd.getLength() : 0;
++	}
++
++	@Override
++	public boolean exists() {
++		return assetFd != null || expansionFile.getEntriesAt(getPath()).length != 0;
++	}
++}
+diff --git a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/ZipResourceFile.java b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/ZipResourceFile.java
+new file mode 100644
+index 0000000..51e74fe
+--- /dev/null
++++ b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/ZipResourceFile.java
+@@ -0,0 +1,437 @@
++/*
++ * Copyright (C) 2012 The Android Open Source Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *      http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++package com.badlogic.gdx.backends.android;
++
++import android.content.res.AssetFileDescriptor;
++import android.os.ParcelFileDescriptor;
++import android.util.Log;
++
++import java.io.EOFException;
++import java.io.File;
++import java.io.FileNotFoundException;
++import java.io.IOException;
++import java.io.InputStream;
++import java.io.RandomAccessFile;
++import java.nio.ByteBuffer;
++import java.nio.ByteOrder;
++import java.nio.MappedByteBuffer;
++import java.nio.channels.FileChannel;
++import java.util.Collection;
++import java.util.HashMap;
++import java.util.Vector;
++import java.util.zip.ZipEntry;
++import java.util.zip.ZipFile;
++
++public class ZipResourceFile {
++
++	//
++	// Read-only access to Zip archives, with minimal heap allocation.
++	//
++	static final String LOG_TAG = "zipro";
++	static final boolean LOGV = false;
++
++	// 4-byte number
++	static private int swapEndian(int i) {
++		return ((i & 0xff) << 24) + ((i & 0xff00) << 8)
++				+ ((i & 0xff0000) >>> 8) + ((i >>> 24) & 0xff);
++	}
++
++	// 2-byte number
++	static private int swapEndian(short i) {
++		return ((i & 0x00FF) << 8 | (i & 0xFF00) >>> 8);
++	}
++
++	/*
++	 * Zip file constants.
++	 */
++	static final int kEOCDSignature = 0x06054b50;
++	static final int kEOCDLen = 22;
++	static final int kEOCDNumEntries = 8; // offset to #of entries in file
++	static final int kEOCDSize = 12; // size of the central directory
++	static final int kEOCDFileOffset = 16; // offset to central directory
++
++	static final int kMaxCommentLen = 65535; // longest possible in ushort
++	static final int kMaxEOCDSearch = (kMaxCommentLen + kEOCDLen);
++
++	static final int kLFHSignature = 0x04034b50;
++	static final int kLFHLen = 30; // excluding variable-len fields
++	static final int kLFHNameLen = 26; // offset to filename length
++	static final int kLFHExtraLen = 28; // offset to extra length
++
++	static final int kCDESignature = 0x02014b50;
++	static final int kCDELen = 46; // excluding variable-len fields
++	static final int kCDEMethod = 10; // offset to compression method
++	static final int kCDEModWhen = 12; // offset to modification timestamp
++	static final int kCDECRC = 16; // offset to entry CRC
++	static final int kCDECompLen = 20; // offset to compressed length
++	static final int kCDEUncompLen = 24; // offset to uncompressed length
++	static final int kCDENameLen = 28; // offset to filename length
++	static final int kCDEExtraLen = 30; // offset to extra length
++	static final int kCDECommentLen = 32; // offset to comment length
++	static final int kCDELocalOffset = 42; // offset to local hdr
++
++	static final int kCompressStored = 0; // no compression
++	static final int kCompressDeflated = 8; // standard deflate
++
++	/*
++	 * The values we return for ZipEntryRO use 0 as an invalid value, so we want
++	 * to adjust the hash table index by a fixed amount. Using a large value
++	 * helps insure that people don't mix & match arguments, e.g. to
++	 * findEntryByIndex().
++	 */
++	static final int kZipEntryAdj = 10000;
++
++	static public final class ZipEntryRO {
++		public ZipEntryRO(final String zipFileName, final File file,
++				final String fileName) {
++			mFileName = fileName;
++			mZipFileName = zipFileName;
++			mFile = file;
++		}
++
++		public final File mFile;
++		public final String mFileName;
++		public final String mZipFileName;
++		public long mLocalHdrOffset; // offset of local file header
++
++		/* useful stuff from the directory entry */
++		public int mMethod;
++		public long mWhenModified;
++		public long mCRC32;
++		public long mCompressedLength;
++		public long mUncompressedLength;
++
++		public long mOffset = -1;
++
++		public void setOffsetFromFile(RandomAccessFile f, ByteBuffer buf)
++				throws IOException {
++			long localHdrOffset = mLocalHdrOffset;
++			try {
++				f.seek(localHdrOffset);
++				f.readFully(buf.array());
++				if (buf.getInt(0) != kLFHSignature) {
++					Log.w(LOG_TAG, "didn't find signature at start of lfh");
++					throw new IOException();
++				}
++				int nameLen = buf.getShort(kLFHNameLen) & 0xFFFF;
++				int extraLen = buf.getShort(kLFHExtraLen) & 0xFFFF;
++				mOffset = localHdrOffset + kLFHLen + nameLen + extraLen;
++			} catch (FileNotFoundException e) {
++				e.printStackTrace();
++			} catch (IOException ioe) {
++				ioe.printStackTrace();
++			}
++		}
++
++		/**
++		 * Calculates the offset of the start of the Zip file entry within the
++		 * Zip file.
++		 * 
++		 * @return the offset, in bytes from the start of the file of the entry
++		 */
++		public long getOffset() {
++			return mOffset;
++		}
++
++		/**
++		 * isUncompressed
++		 * 
++		 * @return true if the file is stored in uncompressed form
++		 */
++		public boolean isUncompressed() {
++			return mMethod == kCompressStored;
++		}
++
++		public AssetFileDescriptor getAssetFileDescriptor() {
++			if (mMethod == kCompressStored) {
++				ParcelFileDescriptor pfd;
++				try {
++					pfd = ParcelFileDescriptor.open(mFile,
++							ParcelFileDescriptor.MODE_READ_ONLY);
++					return new AssetFileDescriptor(pfd, getOffset(),
++							mUncompressedLength);
++				} catch (FileNotFoundException e) {
++					// TODO Auto-generated catch block
++					e.printStackTrace();
++				}
++			}
++			return null;
++		}
++
++		public String getZipFileName() {
++			return mZipFileName;
++		}
++
++		public File getZipFile() {
++			return mFile;
++		}
++
++	}
++
++	private HashMap<String, ZipEntryRO> mHashMap = new HashMap<String, ZipEntryRO>();
++
++	/* for reading compressed files */
++	public HashMap<File, ZipFile> mZipFiles = new HashMap<File, ZipFile>();
++
++	public ZipResourceFile(String zipFileName) throws IOException {
++		addPatchFile(zipFileName);
++	}
++
++	ZipEntryRO[] getEntriesAt(String path) {
++		Vector<ZipEntryRO> zev = new Vector<ZipEntryRO>();
++		Collection<ZipEntryRO> values = mHashMap.values();
++		if (null == path)
++			path = "";
++		int length = path.length();
++		for (ZipEntryRO ze : values) {
++			if (ze.mFileName.startsWith(path)) {
++				if (-1 == ze.mFileName.indexOf('/', length)) {
++					zev.add(ze);
++				}
++			}
++		}
++		ZipEntryRO[] entries = new ZipEntryRO[zev.size()];
++		return zev.toArray(entries);
++	}
++
++	public ZipEntryRO[] getAllEntries() {
++		Collection<ZipEntryRO> values = mHashMap.values();
++		return values.toArray(new ZipEntryRO[values.size()]);
++	}
++
++	/**
++	 * getAssetFileDescriptor allows for ZipResourceFile to directly feed
++	 * Android API's that want an fd, offset, and length such as the
++	 * MediaPlayer. It also allows for the class to be used in a content
++	 * provider that can feed video players. The file must be stored
++	 * (non-compressed) in the Zip file for this to work.
++	 * 
++	 * @param assetPath
++	 * @return the asset file descriptor for the file, or null if the file isn't
++	 *         present or is stored compressed
++	 */
++	public AssetFileDescriptor getAssetFileDescriptor(String assetPath) {
++		ZipEntryRO entry = mHashMap.get(assetPath);
++		if (null != entry) {
++			return entry.getAssetFileDescriptor();
++		}
++		return null;
++	}
++
++	/**
++	 * getInputStream returns an AssetFileDescriptor.AutoCloseInputStream
++	 * associated with the asset that is contained in the Zip file, or a
++	 * standard ZipInputStream if necessary to uncompress the file
++	 * 
++	 * @param assetPath
++	 * @return an input stream for the named asset path, or null if not found
++	 * @throws IOException
++	 */
++	public InputStream getInputStream(String assetPath) throws IOException {
++		ZipEntryRO entry = mHashMap.get(assetPath);
++		if (null != entry) {
++			if (entry.isUncompressed()) {
++				return entry.getAssetFileDescriptor().createInputStream();
++			} else {
++				ZipFile zf = mZipFiles.get(entry.getZipFile());
++				/** read compressed files **/
++				if (null == zf) {
++					zf = new ZipFile(entry.getZipFile(), ZipFile.OPEN_READ);
++					mZipFiles.put(entry.getZipFile(), zf);
++				}
++				ZipEntry zi = zf.getEntry(assetPath);
++				if (null != zi)
++					return zf.getInputStream(zi);
++			}
++		}
++		return null;
++	}
++
++	ByteBuffer mLEByteBuffer = ByteBuffer.allocate(4);
++
++	static private int read4LE(RandomAccessFile f) throws EOFException,
++			IOException {
++		return swapEndian(f.readInt());
++	}
++
++	/*
++	 * Opens the specified file read-only. We memory-map the entire thing and
++	 * close the file before returning.
++	 */
++	void addPatchFile(String zipFileName) throws IOException {
++		File file = new File(zipFileName);
++		RandomAccessFile f = new RandomAccessFile(file, "r");
++		long fileLength = f.length();
++
++		if (fileLength < kEOCDLen) {
++			f.close();
++			throw new java.io.IOException();
++		}
++
++		long readAmount = kMaxEOCDSearch;
++		if (readAmount > fileLength)
++			readAmount = fileLength;
++
++		/*
++		 * Make sure this is a Zip archive.
++		 */
++		f.seek(0);
++
++		int header = read4LE(f);
++		if (header == kEOCDSignature) {
++			Log.i(LOG_TAG, "Found Zip archive, but it looks empty");
++			throw new IOException();
++		} else if (header != kLFHSignature) {
++			Log.v(LOG_TAG, "Not a Zip archive");
++			throw new IOException();
++		}
++
++		/*
++		 * Perform the traditional EOCD snipe hunt. We're searching for the End
++		 * of Central Directory magic number, which appears at the start of the
++		 * EOCD block. It's followed by 18 bytes of EOCD stuff and up to 64KB of
++		 * archive comment. We need to read the last part of the file into a
++		 * buffer, dig through it to find the magic number, parse some values
++		 * out, and use those to determine the extent of the CD. We start by
++		 * pulling in the last part of the file.
++		 */
++		long searchStart = fileLength - readAmount;
++
++		f.seek(searchStart);
++		ByteBuffer bbuf = ByteBuffer.allocate((int) readAmount);
++		byte[] buffer = bbuf.array();
++		f.readFully(buffer);
++		bbuf.order(ByteOrder.LITTLE_ENDIAN);
++
++		/*
++		 * Scan backward for the EOCD magic. In an archive without a trailing
++		 * comment, we'll find it on the first try. (We may want to consider
++		 * doing an initial minimal read; if we don't find it, retry with a
++		 * second read as above.)
++		 */
++
++		// EOCD == 0x50, 0x4b, 0x05, 0x06
++		int eocdIdx;
++		for (eocdIdx = buffer.length - kEOCDLen; eocdIdx >= 0; eocdIdx--) {
++			if (buffer[eocdIdx] == 0x50
++					&& bbuf.getInt(eocdIdx) == kEOCDSignature) {
++				if (LOGV) {
++					Log.v(LOG_TAG, "+++ Found EOCD at index: " + eocdIdx);
++				}
++				break;
++			}
++		}
++
++		if (eocdIdx < 0) {
++			Log.d(LOG_TAG, "Zip: EOCD not found, " + zipFileName
++					+ " is not zip");
++		}
++
++		/*
++		 * Grab the CD offset and size, and the number of entries in the
++		 * archive. After that, we can release our EOCD hunt buffer.
++		 */
++
++		int numEntries = bbuf.getShort(eocdIdx + kEOCDNumEntries);
++		long dirSize = bbuf.getInt(eocdIdx + kEOCDSize) & 0xffffffffL;
++		long dirOffset = bbuf.getInt(eocdIdx + kEOCDFileOffset) & 0xffffffffL;
++
++		// Verify that they look reasonable.
++		if (dirOffset + dirSize > fileLength) {
++			Log.w(LOG_TAG, "bad offsets (dir " + dirOffset + ", size "
++					+ dirSize + ", eocd " + eocdIdx + ")");
++			throw new IOException();
++		}
++		if (numEntries == 0) {
++			Log.w(LOG_TAG, "empty archive?");
++			throw new IOException();
++		}
++
++		if (LOGV) {
++			Log.v(LOG_TAG, "+++ numEntries=" + numEntries + " dirSize="
++					+ dirSize + " dirOffset=" + dirOffset);
++		}
++
++		MappedByteBuffer directoryMap = f.getChannel().map(
++				FileChannel.MapMode.READ_ONLY, dirOffset, dirSize);
++		directoryMap.order(ByteOrder.LITTLE_ENDIAN);
++
++		byte[] tempBuf = new byte[0xffff];
++
++		/*
++		 * Walk through the central directory, adding entries to the hash table.
++		 */
++
++		int currentOffset = 0;
++
++		/*
++		 * Allocate the local directory information
++		 */
++		ByteBuffer buf = ByteBuffer.allocate(kLFHLen);
++		buf.order(ByteOrder.LITTLE_ENDIAN);
++
++		for (int i = 0; i < numEntries; i++) {
++			if (directoryMap.getInt(currentOffset) != kCDESignature) {
++				Log.w(LOG_TAG, "Missed a central dir sig (at " + currentOffset
++						+ ")");
++				throw new IOException();
++			}
++
++			/* useful stuff from the directory entry */
++			int fileNameLen = directoryMap
++					.getShort(currentOffset + kCDENameLen) & 0xffff;
++			int extraLen = directoryMap.getShort(currentOffset + kCDEExtraLen) & 0xffff;
++			int commentLen = directoryMap.getShort(currentOffset
++					+ kCDECommentLen) & 0xffff;
++
++			/* get the CDE filename */
++
++			directoryMap.position(currentOffset + kCDELen);
++			directoryMap.get(tempBuf, 0, fileNameLen);
++			directoryMap.position(0);
++
++			/* UTF-8 on Android */
++			String str = new String(tempBuf, 0, fileNameLen);
++			if (LOGV) {
++				Log.v(LOG_TAG, "Filename: " + str);
++			}
++
++			ZipEntryRO ze = new ZipEntryRO(zipFileName, file, str);
++			ze.mMethod = directoryMap.getShort(currentOffset + kCDEMethod) & 0xffff;
++			ze.mWhenModified = directoryMap.getInt(currentOffset + kCDEModWhen) & 0xffffffffL;
++			ze.mCRC32 = directoryMap.getLong(currentOffset + kCDECRC) & 0xffffffffL;
++			ze.mCompressedLength = directoryMap.getLong(currentOffset
++					+ kCDECompLen) & 0xffffffffL;
++			ze.mUncompressedLength = directoryMap.getLong(currentOffset
++					+ kCDEUncompLen) & 0xffffffffL;
++			ze.mLocalHdrOffset = directoryMap.getInt(currentOffset
++					+ kCDELocalOffset) & 0xffffffffL;
++
++			// set the offsets
++			buf.clear();
++			ze.setOffsetFromFile(f, buf);
++
++			// put file into hash
++			mHashMap.put(str, ze);
++
++			// go to next directory entry
++			currentOffset += kCDELen + fileNameLen + extraLen + commentLen;
++		}
++		if (LOGV) {
++			Log.v(LOG_TAG, "+++ zip good scan " + numEntries + " entries");
++		}
++	}
++}
+\ No newline at end of file
+diff --git a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglAWTCanvas.java b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglAWTCanvas.java
+index 8c0578d..9026a2e 100644
+--- a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglAWTCanvas.java
++++ b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglAWTCanvas.java
+@@ -211,8 +211,7 @@ public class LwjglAWTCanvas implements Application {
+ 	void create () {
+ 		try {
+ 			setGlobals();
+-			graphics.setupDisplay();
+-			graphics.initiateGLInstances();
++			graphics.initiateGL();
+ 			listener.create();
+ 			lastWidth = Math.max(1, graphics.getWidth());
+ 			lastHeight = Math.max(1, graphics.getHeight());
+diff --git a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglGraphics.java b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglGraphics.java
+index d2cb3ab..23daf22 100644
+--- a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglGraphics.java
++++ b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglGraphics.java
+@@ -177,6 +177,13 @@ public class LwjglGraphics implements Graphics {
+ 
+ 		Display.setLocation(config.x, config.y);
+ 		createDisplayPixelFormat(config.useGL30, config.gles30ContextMajorVersion, config.gles30ContextMinorVersion);
++		initiateGL();
++	}
++	
++	/**
++	 * Only needed when setupDisplay() is not called.
++	 */
++	void initiateGL() {
+ 		extractVersion();
+ 		extractExtensions();
+ 		initiateGLInstances();
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/loader/ObjLoader.java b/gdx/src/com/badlogic/gdx/graphics/g3d/loader/ObjLoader.java
+index cb19210..f429d87 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/loader/ObjLoader.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/loader/ObjLoader.java
+@@ -177,7 +177,7 @@ public class ObjLoader extends ModelLoader<ObjLoader.ObjLoaderParameters> {
+ 					if (tokens.length == 1)
+ 						activeGroup.materialName = "default";
+ 					else
+-						activeGroup.materialName = tokens[1];
++						activeGroup.materialName = tokens[1].replace('.', '_');
+ 				}
+ 			}
+ 			reader.close();
+@@ -243,9 +243,10 @@ public class ObjLoader extends ModelLoader<ObjLoader.ObjLoaderParameters> {
+ 			if (hasNorms) attributes.add(new VertexAttribute(Usage.Normal, 3, ShaderProgram.NORMAL_ATTRIBUTE));
+ 			if (hasUVs) attributes.add(new VertexAttribute(Usage.TextureCoordinates, 2, ShaderProgram.TEXCOORD_ATTRIBUTE + "0"));
+ 
+-			String nodeId = "node" + (++id);
+-			String meshId = "mesh" + id;
+-			String partId = "part" + id;
++			String stringId = Integer.toString(++id);
++			String nodeId = "default".equals(group.name) ? "node" + stringId : group.name;
++			String meshId = "default".equals(group.name) ? "mesh" + stringId : group.name;
++			String partId = "default".equals(group.name) ? "part" + stringId : group.name;
+ 			ModelNode node = new ModelNode();
+ 			node.id = nodeId;
+ 			node.meshId = meshId;
+diff --git a/gdx/src/com/badlogic/gdx/graphics/glutils/GLFrameBuffer.java b/gdx/src/com/badlogic/gdx/graphics/glutils/GLFrameBuffer.java
+index b80d8fc..4029b8e 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/glutils/GLFrameBuffer.java
++++ b/gdx/src/com/badlogic/gdx/graphics/glutils/GLFrameBuffer.java
+@@ -51,6 +51,8 @@ public abstract class GLFrameBuffer<T extends GLTexture> implements Disposable {
+ 	/** the frame buffers **/
+ 	private final static Map<Application, Array<GLFrameBuffer>> buffers = new HashMap<Application, Array<GLFrameBuffer>>();
+ 
++	private final static int GL_DEPTH24_STENCIL8_OES = 0x88F0;
++
+ 	/** the color buffer texture **/
+ 	protected T colorTexture;
+ 
+@@ -68,6 +70,9 @@ public abstract class GLFrameBuffer<T extends GLTexture> implements Disposable {
+ 	/** the stencilbuffer render object handle **/
+ 	private int stencilbufferHandle;
+ 
++	/** the depth stencil packed render buffer object handle **/
++	private int depthStencilPackedBufferHandle;
++
+ 	/** width **/
+ 	protected final int width;
+ 
+@@ -80,6 +85,9 @@ public abstract class GLFrameBuffer<T extends GLTexture> implements Disposable {
+ 	/** stencil **/
+ 	protected final boolean hasStencil;
+ 
++	/** if has depth stencil packed buffer **/
++	private boolean hasDepthStencilPackedBuffer;
++
+ 	/** format **/
+ 	protected final Pixmap.Format format;
+ 
+@@ -174,14 +182,39 @@ public abstract class GLFrameBuffer<T extends GLTexture> implements Disposable {
+ 
+ 		int result = gl.glCheckFramebufferStatus(GL20.GL_FRAMEBUFFER);
+ 
++		if (result == GL20.GL_FRAMEBUFFER_UNSUPPORTED && hasDepth && hasStencil
++			&& Gdx.graphics.supportsExtension("GL_OES_packed_depth_stencil")) {
++			if (hasDepth) {
++				gl.glDeleteRenderbuffer(depthbufferHandle);
++				depthbufferHandle = 0;
++			}
++			if (hasStencil) {
++				gl.glDeleteRenderbuffer(stencilbufferHandle);
++				stencilbufferHandle = 0;
++			}
++
++			depthStencilPackedBufferHandle = gl.glGenRenderbuffer();
++			hasDepthStencilPackedBuffer = true;
++			gl.glBindRenderbuffer(GL20.GL_RENDERBUFFER, depthStencilPackedBufferHandle);
++			gl.glRenderbufferStorage(GL20.GL_RENDERBUFFER, GL_DEPTH24_STENCIL8_OES, colorTexture.getWidth(), colorTexture.getHeight());
++			gl.glBindRenderbuffer(GL20.GL_RENDERBUFFER, 0);
++
++			gl.glFramebufferRenderbuffer(GL20.GL_FRAMEBUFFER, GL20.GL_DEPTH_ATTACHMENT, GL20.GL_RENDERBUFFER, depthStencilPackedBufferHandle);
++			gl.glFramebufferRenderbuffer(GL20.GL_FRAMEBUFFER, GL20.GL_STENCIL_ATTACHMENT, GL20.GL_RENDERBUFFER, depthStencilPackedBufferHandle);
++			result = gl.glCheckFramebufferStatus(GL20.GL_FRAMEBUFFER);
++		}
++
+ 		gl.glBindFramebuffer(GL20.GL_FRAMEBUFFER, defaultFramebufferHandle);
+ 
+ 		if (result != GL20.GL_FRAMEBUFFER_COMPLETE) {
+ 			disposeColorTexture(colorTexture);
+ 
+-			if (hasDepth) gl.glDeleteRenderbuffer(depthbufferHandle);
+-
+-			if (hasStencil) gl.glDeleteRenderbuffer(stencilbufferHandle);
++			if (hasDepthStencilPackedBuffer) {
++				gl.glDeleteBuffer(depthStencilPackedBufferHandle);
++			} else {
++				if (hasDepth) gl.glDeleteRenderbuffer(depthbufferHandle);
++				if (hasStencil) gl.glDeleteRenderbuffer(stencilbufferHandle);
++			}
+ 
+ 			gl.glDeleteFramebuffer(framebufferHandle);
+ 
+@@ -203,10 +236,13 @@ public abstract class GLFrameBuffer<T extends GLTexture> implements Disposable {
+ 		GL20 gl = Gdx.gl20;
+ 
+ 		disposeColorTexture(colorTexture);
+-		
+-		if (hasDepth) gl.glDeleteRenderbuffer(depthbufferHandle);
+ 
+-		if (hasStencil) gl.glDeleteRenderbuffer(stencilbufferHandle);
++		if (hasDepthStencilPackedBuffer) {
++			gl.glDeleteBuffer(depthStencilPackedBufferHandle);
++		} else {
++			if (hasDepth) gl.glDeleteRenderbuffer(depthbufferHandle);
++			if (hasStencil) gl.glDeleteRenderbuffer(stencilbufferHandle);
++		}
+ 
+ 		gl.glDeleteFramebuffer(framebufferHandle);
+ 
+@@ -260,15 +296,20 @@ public abstract class GLFrameBuffer<T extends GLTexture> implements Disposable {
+ 		return framebufferHandle;
+ 	}
+ 
+-	/** @return The OpenGL handle of the (optional) depth buffer (see {@link GL20#glGenRenderbuffer()}) */
++	/** @return The OpenGL handle of the (optional) depth buffer (see {@link GL20#glGenRenderbuffer()}). May return 0 even if depth buffer enabled */
+ 	public int getDepthBufferHandle () {
+ 		return depthbufferHandle;
+ 	}
+ 
+-	/** @return The OpenGL handle of the (optional) stencil buffer (see {@link GL20#glGenRenderbuffer()}) */
++	/** @return The OpenGL handle of the (optional) stencil buffer (see {@link GL20#glGenRenderbuffer()}). May return 0 even if stencil buffer enabled */
+ 	public int getStencilBufferHandle () {
+ 		return stencilbufferHandle;
+ 	}
++	
++	/** @return The OpenGL handle of the packed depth & stencil buffer (GL_DEPTH24_STENCIL8_OES) or 0 if not used. **/
++	protected int getDepthStencilPackedBuffer () {
++		return depthStencilPackedBufferHandle;
++	}
+ 
+ 	/** @return the height of the framebuffer in pixels */
+ 	public int getHeight () {
+diff --git a/gdx/src/com/badlogic/gdx/math/CumulativeDistribution.java b/gdx/src/com/badlogic/gdx/math/CumulativeDistribution.java
+index d5adc35..55cf136 100644
+--- a/gdx/src/com/badlogic/gdx/math/CumulativeDistribution.java
++++ b/gdx/src/com/badlogic/gdx/math/CumulativeDistribution.java
+@@ -88,7 +88,7 @@ public class CumulativeDistribution <T>{
+ 			else break;
+ 		}
+ 
+-		return value.value;
++		return values.items[imin].value;
+ 	}
+ 
+ 	/** @return the value whose interval contains a random probability in [0,1] */
+diff --git a/gdx/src/com/badlogic/gdx/utils/DelayedRemovalArray.java b/gdx/src/com/badlogic/gdx/utils/DelayedRemovalArray.java
+index 737d28e..20dd30c 100644
+--- a/gdx/src/com/badlogic/gdx/utils/DelayedRemovalArray.java
++++ b/gdx/src/com/badlogic/gdx/utils/DelayedRemovalArray.java
+@@ -23,7 +23,7 @@ import java.util.Comparator;
+  * IllegalStateException. Only {@link #removeIndex(int)}, {@link #removeValue(Object, boolean)}, and add methods are allowed.
+  * <p>
+  * Code using this class must not rely on items being removed immediately. Consider using {@link SnapshotArray} if this is a
+- * problem.
++ * problem..
+  * @author Nathan Sweet */
+ public class DelayedRemovalArray<T> extends Array<T> {
+ 	private int iterating;
+diff --git a/gdx/src/com/badlogic/gdx/utils/JsonWriter.java b/gdx/src/com/badlogic/gdx/utils/JsonWriter.java
+index 0d984f0..3e872dd 100644
+--- a/gdx/src/com/badlogic/gdx/utils/JsonWriter.java
++++ b/gdx/src/com/badlogic/gdx/utils/JsonWriter.java
+@@ -186,28 +186,24 @@ public class JsonWriter extends Writer {
+ 			if (value == null) return "null";
+ 			String string = value.toString();
+ 			if (value instanceof Number || value instanceof Boolean) return string;
+-			StringBuilder buffer = new StringBuilder(string);
+-			buffer.replace('\\', "\\\\").replace('\r', "\\r").replace('\n', "\\n").replace('\t', "\\t");
++			string = string.replace("\\", "\\\\").replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t");
+ 			if (this == OutputType.minimal && !string.equals("true") && !string.equals("false") && !string.equals("null")
+ 				&& !string.contains("//") && !string.contains("/*")) {
+-				int length = buffer.length();
+-				if (length > 0 && buffer.charAt(length - 1) != ' ' && minimalValuePattern.matcher(buffer).matches())
+-					return buffer.toString();
++				int length = string.length();
++				if (length > 0 && string.charAt(length - 1) != ' ' && minimalValuePattern.matcher(string).matches()) return string;
+ 			}
+-			return '"' + buffer.replace('"', "\\\"").toString() + '"';
++			return '"' + string.replace("\"", "\\\"") + '"';
+ 		}
+ 
+ 		public String quoteName (String value) {
+-			StringBuilder buffer = new StringBuilder(value);
+-			buffer.replace('\\', "\\\\").replace('\r', "\\r").replace('\n', "\\n").replace('\t', "\\t");
++			value = value.replace("\\", "\\\\").replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t");
+ 			switch (this) {
+ 			case minimal:
+-				if (!value.contains("//") && !value.contains("/*") && minimalNamePattern.matcher(buffer).matches())
+-					return buffer.toString();
++				if (!value.contains("//") && !value.contains("/*") && minimalNamePattern.matcher(value).matches()) return value;
+ 			case javascript:
+-				if (javascriptPattern.matcher(buffer).matches()) return buffer.toString();
++				if (javascriptPattern.matcher(value).matches()) return value;
+ 			}
+-			return '"' + buffer.replace('"', "\\\"").toString() + '"';
++			return '"' + value.replace("\"", "\\\"") + '"';
+ 		}
+ 	}
+ }
+diff --git a/gdx/src/com/badlogic/gdx/utils/StringBuilder.java b/gdx/src/com/badlogic/gdx/utils/StringBuilder.java
+index 3559d88..c5334d2 100644
+--- a/gdx/src/com/badlogic/gdx/utils/StringBuilder.java
++++ b/gdx/src/com/badlogic/gdx/utils/StringBuilder.java
+@@ -1169,34 +1169,6 @@ public class StringBuilder implements Appendable, CharSequence {
+ 		return this;
+ 	}
+ 
+-	/** Replaces all instances of {@code find} with {@code replace}. */
+-	public StringBuilder replace (String find, String replace) {
+-		int findLength = find.length(), replaceLength = replace.length();
+-		int index = 0;
+-		while (true) {
+-			index = indexOf(find, index);
+-			if (index == -1) break;
+-			replace0(index, index + findLength, replace);
+-			index += replaceLength;
+-		}
+-		return this;
+-	}
+-
+-	/** Replaces all instances of {@code find} with {@code replace}. */
+-	public StringBuilder replace (char find, String replace) {
+-		int replaceLength = replace.length();
+-		int index = 0;
+-		while (true) {
+-			while (true) {
+-				if (index == length) return this;
+-				if (chars[index] == find) break;
+-				index++;
+-			}
+-			replace0(index, index + 1, replace);
+-			index += replaceLength;
+-		}
+-	}
+-
+ 	/** Reverses the order of characters in this builder.
+ 	 * 
+ 	 * @return this buffer. */
+diff --git a/tests/gdx-tests-android/assets/data/testpackobb b/tests/gdx-tests-android/assets/data/testpackobb
+new file mode 100644
+index 0000000..9ded43c
+--- /dev/null
++++ b/tests/gdx-tests-android/assets/data/testpackobb
+@@ -0,0 +1,33 @@
++
++obbasset-Textures1.png
++format: RGBA8888
++filter: Nearest,Nearest
++repeat: none
++water
++  rotate: false
++  xy: 0, 0
++  size: 64, 64
++  orig: 64, 64
++  offset: 0, 0
++  index: -1
++grass
++  rotate: false
++  xy: 0, 66
++  size: 64, 64
++  orig: 64, 64
++  offset: 0, 0
++  index: -1
++dirt
++  rotate: false
++  xy: 0, 132
++  size: 64, 64
++  orig: 64, 64
++  offset: 0, 0
++  index: -1
++blank
++  rotate: false
++  xy: 0, 198
++  size: 64, 64
++  orig: 64, 64
++  offset: 0, 0
++  index: -1
+diff --git a/tests/gdx-tests-android/build.gradle b/tests/gdx-tests-android/build.gradle
+index 12159c8..3731ff9 100644
+--- a/tests/gdx-tests-android/build.gradle
++++ b/tests/gdx-tests-android/build.gradle
+@@ -71,3 +71,59 @@ idea {
+ 		}
+ 	}
+ }
++
++// used to create obb file
++task copyAssets << {
++	def assets = fileTree('assets')
++	copy {
++		from assets
++		into "build/obbassets"
++		rename { fileName ->
++			fileName = "obbasset-" + fileName
++		}
++	}
++}
++
++task zipAssets(type: Zip) {
++	destinationDir = file("build/obb")
++	entryCompression = ZipEntryCompression.STORED
++	from "build/obbassets"
++	baseName = "main.1.com.badlogic.gdx.tests.android"
++	extension = "obb"
++}
++
++def getADBPath() {
++	def path
++	def localProperties = new File("local.properties")
++	if (localProperties.exists()) {
++		Properties properties = new Properties()
++		localProperties.withInputStream { instr ->
++			properties.load(instr)
++	}
++	def sdkDir = properties.getProperty('sdk.dir')
++	if (sdkDir) {
++	    path = sdkDir
++	} else {
++	    path = "$System.env.ANDROID_HOME"
++	}
++	} else {
++		path = "$System.env.ANDROID_HOME"
++	}
++
++	def adb = path + "/platform-tools/adb"
++	adb
++}
++
++task createOBBDir(type: Exec) {
++	def adb = getADBPath();
++	commandLine "$adb", 'shell', 'mkdir', '-p', '/mnt/sdcard/Android/obb/com.badlogic.gdx.tests.android'
++}
++task uploadOBB(type: Exec) {
++	def adb = getADBPath();
++	commandLine "$adb", 'push', 'build/obb/main.1.com.badlogic.gdx.tests.android.obb', '/mnt/sdcard/Android/obb/com.badlogic.gdx.tests.android'
++}
++
++copyAssets.dependsOn clean
++zipAssets.dependsOn copyAssets
++createOBBDir.dependsOn zipAssets
++uploadOBB.dependsOn createOBBDir
+diff --git a/tests/gdx-tests-android/src/com/badlogic/gdx/tests/android/APKExpansionTest.java b/tests/gdx-tests-android/src/com/badlogic/gdx/tests/android/APKExpansionTest.java
+new file mode 100644
+index 0000000..2f85271
+--- /dev/null
++++ b/tests/gdx-tests-android/src/com/badlogic/gdx/tests/android/APKExpansionTest.java
+@@ -0,0 +1,106 @@
++/*******************************************************************************
++ * Copyright 2011 See AUTHORS file.
++ * <p/>
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ * <p/>
++ * http://www.apache.org/licenses/LICENSE-2.0
++ * <p/>
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ ******************************************************************************/
++
++package com.badlogic.gdx.tests.android;
++
++import com.badlogic.gdx.Gdx;
++import com.badlogic.gdx.assets.AssetManager;
++import com.badlogic.gdx.assets.loaders.FileHandleResolver;
++import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
++import com.badlogic.gdx.audio.Sound;
++import com.badlogic.gdx.backends.android.AndroidFiles;
++import com.badlogic.gdx.graphics.GL20;
++import com.badlogic.gdx.graphics.Texture;
++import com.badlogic.gdx.graphics.Texture.TextureFilter;
++import com.badlogic.gdx.graphics.g2d.BitmapFont;
++import com.badlogic.gdx.graphics.g2d.SpriteBatch;
++import com.badlogic.gdx.graphics.g2d.TextureAtlas;
++import com.badlogic.gdx.graphics.g2d.TextureRegion;
++import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
++import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGeneratorLoader;
++import com.badlogic.gdx.graphics.g2d.freetype.FreetypeFontLoader;
++import com.badlogic.gdx.graphics.g2d.freetype.FreetypeFontLoader.FreeTypeFontLoaderParameter;
++import com.badlogic.gdx.tests.utils.GdxTest;
++
++/* 
++ * To use this test, an APK expansion file must be present on the device
++ * run: gradlew tests:gdx-tests-android:uploadOBB
++ * to generate and upload the aforementioned file
++ */
++public class APKExpansionTest extends GdxTest {
++    FileHandleResolver resolver;
++    Sound sound;
++    SpriteBatch batch;
++    Texture texture;
++    TextureRegion atlasTextureRegion;
++    AssetManager assetManager;
++
++    /** The OBB zip assets are taken from the android tests assets directory
++     Extension prefix is prepended to each asset and zipped up into a obb.
++     Extension prefix is required so we can be certain the assets are coming
++     from the obb, while keeping the structure of the assets file tree for easier testing
++     **/
++    String extensionPrefix = "obbasset-";
++
++    @Override
++    public void create () {
++        if ((((AndroidFiles)Gdx.files)).setAPKExpansion(1, 0)) {
++            resolver = new ZipFileHandleResolver();
++        } else {
++            Gdx.app.error("libgdx", "No Expansion can be opened");
++        }
++
++        assetManager = new AssetManager();
++        FileHandleResolver resolver = new InternalFileHandleResolver();
++        assetManager.setLoader(FreeTypeFontGenerator.class, new FreeTypeFontGeneratorLoader(resolver));
++        assetManager.setLoader(BitmapFont.class, ".ttf", new FreetypeFontLoader(resolver));
++
++        loadFont(assetManager, "data/DroidSerif-Regular.ttf", 12);
++        loadFont(assetManager, "data/"  + extensionPrefix + "DroidSerif-Regular.ttf", 12);
++
++        assetManager.load("data/" + extensionPrefix + "testpackobb", TextureAtlas.class);
++        assetManager.finishLoading();
++
++        sound = Gdx.audio.newSound(Gdx.files.internal("data/" + extensionPrefix + "chirp.ogg"));
++        sound.play();
++        texture = new Texture(resolver.resolve("data/" + extensionPrefix + "badlogic.jpg"));
++        batch = new SpriteBatch();
++        TextureAtlas atlas = assetManager.get("data/" + extensionPrefix + "testpackobb");
++        atlasTextureRegion = new TextureRegion(atlas.findRegion("water"));
++        sound = Gdx.audio.newSound(Gdx.files.internal("data/shotgun.ogg"));
++        sound.play();
++    }
++
++    @Override
++    public void render () {
++        Gdx.gl.glClearColor(1, 0, 0, 1);
++        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
++        batch.begin();
++        batch.draw(texture, 0, 0);
++        batch.draw(atlasTextureRegion, 0, 0);
++        batch.end();
++    }
++
++    private void loadFont(AssetManager assetManager, String fontName, int size) {
++       FreeTypeFontLoaderParameter param = new FreeTypeFontLoaderParameter();
++       param.fontFileName = fontName;
++       param.fontParameters.size = 12;
++       param.fontParameters.genMipMaps = true;
++       param.fontParameters.minFilter = TextureFilter.MipMapLinearLinear;
++       param.fontParameters.magFilter = TextureFilter.Linear;
++       assetManager.load(fontName + "size" + size + ".ttf", BitmapFont.class, param);
++    }
++}
+\ No newline at end of file
+diff --git a/tests/gdx-tests-android/src/com/badlogic/gdx/tests/android/AndroidTestStarter.java b/tests/gdx-tests-android/src/com/badlogic/gdx/tests/android/AndroidTestStarter.java
+index c5f4bd6..1b5c574 100644
+--- a/tests/gdx-tests-android/src/com/badlogic/gdx/tests/android/AndroidTestStarter.java
++++ b/tests/gdx-tests-android/src/com/badlogic/gdx/tests/android/AndroidTestStarter.java
+@@ -16,7 +16,6 @@
+ 
+ package com.badlogic.gdx.tests.android;
+ 
+-import java.util.ArrayList;
+ import java.util.List;
+ 
+ import android.app.ListActivity;
+@@ -38,6 +37,8 @@ public class AndroidTestStarter extends ListActivity {
+ 	public void onCreate (Bundle savedInstanceState) {
+ 		super.onCreate(savedInstanceState);
+ 		GdxTests.tests.add(MatrixTest.class);
++		if (!GdxTests.tests.contains(APKExpansionTest.class))
++			GdxTests.tests.add(APKExpansionTest.class);
+ 		List<String> testNames = GdxTests.getNames();
+ 		setListAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, testNames));
+ 
+diff --git a/tests/gdx-tests-android/src/com/badlogic/gdx/tests/android/ZipFileHandleResolver.java b/tests/gdx-tests-android/src/com/badlogic/gdx/tests/android/ZipFileHandleResolver.java
+new file mode 100644
+index 0000000..d66588a
+--- /dev/null
++++ b/tests/gdx-tests-android/src/com/badlogic/gdx/tests/android/ZipFileHandleResolver.java
+@@ -0,0 +1,31 @@
++/*******************************************************************************
++ * Copyright 2011 See AUTHORS file.
++ * 
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ * 
++ *   http://www.apache.org/licenses/LICENSE-2.0
++ * 
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ ******************************************************************************/
++
++package com.badlogic.gdx.tests.android;
++
++import com.badlogic.gdx.assets.loaders.FileHandleResolver;
++import com.badlogic.gdx.backends.android.AndroidZipFileHandle;
++import com.badlogic.gdx.files.FileHandle;
++
++/** @author sarkanyi */
++public class ZipFileHandleResolver implements FileHandleResolver {
++
++	@Override
++	public FileHandle resolve(String fileName) {
++		return new AndroidZipFileHandle(fileName);
++	}
++
++}
+\ No newline at end of file
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/shadows/system/ShadowSystem.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/shadows/system/ShadowSystem.java
+new file mode 100644
+index 0000000..3b24167
+--- /dev/null
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/shadows/system/ShadowSystem.java
+@@ -0,0 +1,140 @@
++/*******************************************************************************
++ * Copyright 2011 See AUTHORS file.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *   http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ ******************************************************************************/
++
++package com.badlogic.gdx.tests.g3d.shadows.system;
++
++import java.util.Set;
++
++import com.badlogic.gdx.graphics.Camera;
++import com.badlogic.gdx.graphics.Cubemap.CubemapSide;
++import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
++import com.badlogic.gdx.graphics.g3d.environment.PointLight;
++import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
++import com.badlogic.gdx.graphics.g3d.utils.ShaderProvider;
++
++/** Shadow system provides functionalities to render shadows.
++ * <p>
++ * Typical use: <br />
++ *
++ * <pre>
++ * // Init system:
++ * Array&lt;ModelBatch&gt; passBatches = new Array&lt;ModelBatch&gt;();
++ * ModelBatch mainBatch;
++ * ShadowSystem system = new XXXShadowSystem(cam, instances);
++ * for (int i = 0; i &lt; system.getPassQuantity(); i++) {
++ * 	passBatches.add(new ModelBatch(system.getPassShaderProvider(i)));
++ * }
++ * mainBatch = new ModelBatch(system.getShaderProvider());
++ * 
++ * // Render scene with shadows:
++ * system.update();
++ * for (int i = 0; i &lt; system.getPassQuantity(); i++) {
++ * 	system.begin(i);
++ * 	Camera camera;
++ * 	while ((camera = system.next()) != null) {
++ * 		passBatches.get(i).begin(camera);
++ * 		passBatches.get(i).render(instances, environment);
++ * 		passBatches.get(i).end();
++ * 	}
++ * 	camera = null;
++ * 	system.end(i);
++ * }
++ * 
++ * Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
++ * Gdx.gl.glClearColor(0, 0, 0, 1);
++ * Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
++ * 
++ * mainBatch.begin(cam);
++ * mainBatch.render(instances, environment);
++ * mainBatch.end();
++ * </pre>
++ *
++ * </p>
++ *
++ * <p>
++ * Current environnment should be alway be synchonized with shadow system lights. It means that if you add or remove light from
++ * environment, you should do it in shadow system too. <br />
++ * If you have two different environments, when you switch, you should add and remove all lights in shadow system.
++ * </p>
++ * @author realitix */
++public interface ShadowSystem {
++
++	/** Return number of pass
++	 * @return int */
++	public int getPassQuantity ();
++
++	/** Return shaderProvider of the pass n
++	 * @return ShaderProvider */
++	public ShaderProvider getPassShaderProvider (int n);
++
++	/** Return shaderProvider used for main rendering
++	 * @return ShaderProvider */
++	public ShaderProvider getShaderProvider ();
++
++	/** Add spot light in shadow system
++	 * @param spot SpotLight to add in the ShadowSystem */
++	public void addLight (SpotLight spot);
++
++	/** Add directional light in shadow system
++	 * @param dir DirectionalLight to add in the ShadowSystem */
++	public void addLight (DirectionalLight dir);
++
++	/** Add point light in shadow system
++	 * @param point PointLight to add in the ShadowSystem */
++	public void addLight (PointLight point);
++
++	/** Add point light in shadow system
++	 * @param point PointLight to add in the ShadowSystem
++	 * @param sides Set of side */
++	public void addLight (PointLight point, Set<CubemapSide> sides);
++
++	/** Remove light from the shadowSystem
++	 * @param spot SpotLight to remove in the ShadowSystem */
++	public void removeLight (SpotLight spot);
++
++	/** Remove light from the shadowSystem
++	 * @param dir DirectionalLight to remove in the ShadowSystem */
++	public void removeLight (DirectionalLight dir);
++
++	/** Remove light from the shadowSystem
++	 * @param point PointLight to remove in the ShadowSystem */
++	public void removeLight (PointLight point);
++
++	/** @param spot SpotLight to check
++	 * @return true if light analyzed */
++	public boolean hasLight (SpotLight spot);
++
++	/** @param dir Directional Light to check
++	 * @return true if light analyzed */
++	public boolean hasLight (DirectionalLight dir);
++
++	/** @param point PointLight to check
++	 * @return true if light analyzed */
++	public boolean hasLight (PointLight point);
++
++	/** Update shadowSystem */
++	public void update ();
++
++	/** Begin pass n rendering */
++	public void begin (int n);
++
++	/** Switch light
++	 * @return Current camera */
++	public Camera next ();
++
++	/** End pass n rendering */
++	public void end (int n);
++}
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/shadows/utils/DirectionalAnalyzer.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/shadows/utils/DirectionalAnalyzer.java
+new file mode 100644
+index 0000000..5d309d6
+--- /dev/null
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/shadows/utils/DirectionalAnalyzer.java
+@@ -0,0 +1,31 @@
++/*******************************************************************************
++ * Copyright 2011 See AUTHORS file.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *   http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ ******************************************************************************/
++
++package com.badlogic.gdx.tests.g3d.shadows.utils;
++
++import com.badlogic.gdx.graphics.Camera;
++import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
++
++/** Directional Analyzer computes the camera's properties needed by directional light. Implementation should use main camera
++ * frustum and scene objects to encompass all casting shadow objects.
++ * @author realitix */
++public interface DirectionalAnalyzer {
++	/** Compute the camera dimension based on directional light. Camera should be an orthographic camera.
++	 * @param light Current directional light
++	 * @param out Updated camera
++	 * @return Camera Camera for chaining */
++	public Camera analyze (DirectionalLight light, Camera out);
++}
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/shadows/utils/LightFilter.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/shadows/utils/LightFilter.java
+new file mode 100644
+index 0000000..4cdecf0
+--- /dev/null
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/shadows/utils/LightFilter.java
+@@ -0,0 +1,30 @@
++/*******************************************************************************
++ * Copyright 2011 See AUTHORS file.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *   http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ ******************************************************************************/
++
++package com.badlogic.gdx.tests.g3d.shadows.utils;
++
++import com.badlogic.gdx.graphics.Camera;
++import com.badlogic.gdx.graphics.g3d.environment.BaseLight;
++
++/** Select only casting shadow lights. Allows to optimize shadow system.
++ * @author realitix */
++public interface LightFilter {
++	/** Return true if light should be used for shadow computation.
++	 * @param light Current light
++	 * @param camera Light's camera
++	 * @return boolean */
++	public boolean filter (BaseLight light, Camera camera);
++}
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/shadows/utils/NearFarAnalyzer.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/shadows/utils/NearFarAnalyzer.java
+new file mode 100644
+index 0000000..6e2aab5
+--- /dev/null
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/shadows/utils/NearFarAnalyzer.java
+@@ -0,0 +1,30 @@
++/*******************************************************************************
++ * Copyright 2011 See AUTHORS file.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *   http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ ******************************************************************************/
++
++package com.badlogic.gdx.tests.g3d.shadows.utils;
++
++import com.badlogic.gdx.graphics.Camera;
++import com.badlogic.gdx.graphics.g3d.environment.BaseLight;
++
++/** Nearfar Analyzer computes near and far plane of camera. It has to call camera.update() after setting values. Updated camera's
++ * frustum should encompass all casting shadow objects.
++ * @author realitix */
++public interface NearFarAnalyzer {
++	/** Update near and far plane of camera.
++	 * @param light Current light
++	 * @param camera Light's camera */
++	public void analyze (BaseLight light, Camera camera);
++}
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/shadows/utils/ShadowMapAllocator.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/shadows/utils/ShadowMapAllocator.java
+new file mode 100644
+index 0000000..797223f
+--- /dev/null
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/shadows/utils/ShadowMapAllocator.java
+@@ -0,0 +1,48 @@
++/*******************************************************************************
++ * Copyright 2011 See AUTHORS file.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *   http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ ******************************************************************************/
++
++package com.badlogic.gdx.tests.g3d.shadows.utils;
++
++import com.badlogic.gdx.graphics.g3d.environment.BaseLight;
++
++/** Shadow map allocator return texture region for each light
++ * @author realitix */
++public interface ShadowMapAllocator {
++
++	/** Result of the allocator analyze */
++	public class ShadowMapRegion {
++		public int x, y, width, height;
++	}
++
++	/** Begin the texture allocation */
++	public void begin ();
++
++	/** End the texture allocation */
++	public void end ();
++
++	/** Find the next texture region for the current light
++	 * @param light Current light
++	 * @return ShadowMapRegion */
++	public ShadowMapRegion nextResult (BaseLight light);
++
++	/** Return shadow map width.
++	 * @return int */
++	public int getWidth ();
++
++	/** Return shadow map height.
++	 * @return int */
++	public int getHeight ();
++}

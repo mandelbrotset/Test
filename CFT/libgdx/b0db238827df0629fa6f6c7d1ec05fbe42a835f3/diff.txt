@@ -1,0 +1,1606 @@
+diff --git a/CHANGES b/CHANGES
+index fb3db4a..29fd840 100644
+--- a/CHANGES
++++ b/CHANGES
+@@ -1,3 +1,10 @@
++[1.5.3]
++- I18NBundle is now compatible with Android 2.2
++- Fixed GWT reflection includes for 3D particles
++- 3D ParticleEffectLoader registered by default
++- Added HttpRequestBuilder, see https://github.com/libgdx/libgdx/pull/2698
++- Added LwjglApplicationConfiguration.useHDPI for Mac OS X with retina displays. Allows you to get "real" pixel coordinates for mouse and display coordinates.
++
+ [1.5.2]
+ - Fixed issue #2433 with color markup and alpha animation. 
+ - Fixed natives loading for LWJGL on Mac OS X
+diff --git a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglApplication.java b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglApplication.java
+index fff278b..df00bdc 100644
+--- a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglApplication.java
++++ b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglApplication.java
+@@ -178,13 +178,13 @@ public class LwjglApplication implements Application {
+ 			} else {
+ 				graphics.config.x = Display.getX();
+ 				graphics.config.y = Display.getY();
+-				if (graphics.resize || Display.wasResized() || Display.getWidth() != graphics.config.width
+-					|| Display.getHeight() != graphics.config.height) {
+-					graphics.resize = false;
+-					Gdx.gl.glViewport(0, 0, Display.getWidth(), Display.getHeight());
+-					graphics.config.width = Display.getWidth();
+-					graphics.config.height = Display.getHeight();
+-					if (listener != null) listener.resize(Display.getWidth(), Display.getHeight());
++				if (graphics.resize || Display.wasResized() || (int)(Display.getWidth() * Display.getPixelScaleFactor()) != graphics.config.width
++					|| (int)(Display.getHeight() * Display.getPixelScaleFactor()) != graphics.config.height) {
++					graphics.resize = false;					
++					graphics.config.width = (int)(Display.getWidth() * Display.getPixelScaleFactor());
++					graphics.config.height = (int)(Display.getHeight() * Display.getPixelScaleFactor());
++					Gdx.gl.glViewport(0, 0, graphics.config.width, graphics.config.height);
++					if (listener != null) listener.resize(graphics.config.width, graphics.config.height);
+ 					graphics.requestRendering();
+ 				}
+ 			}
+diff --git a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglApplicationConfiguration.java b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglApplicationConfiguration.java
+index 785c138..23c5bda 100644
+--- a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglApplicationConfiguration.java
++++ b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglApplicationConfiguration.java
+@@ -75,6 +75,8 @@ public class LwjglApplicationConfiguration {
+ 	public String preferencesDirectory = ".prefs/";
+ 	/** Callback used when trying to create a display, can handle failures, default value is null (disabled) */
+ 	public LwjglGraphics.SetDisplayModeCallback setDisplayModeCallback;
++	/** enable HDPI mode on Mac OS X **/
++	public boolean useHDPI = false;
+ 
+ 	Array<String> iconPaths = new Array();
+ 	Array<FileType> iconFileTypes = new Array();	
+diff --git a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglGraphics.java b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglGraphics.java
+index f97ab34..d9ccc66 100644
+--- a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglGraphics.java
++++ b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglGraphics.java
+@@ -81,14 +81,14 @@ public class LwjglGraphics implements Graphics {
+ 		if (canvas != null)
+ 			return Math.max(1, canvas.getHeight());
+ 		else
+-			return Display.getHeight();
++			return (int)(Display.getHeight() * Display.getPixelScaleFactor());
+ 	}
+ 
+ 	public int getWidth () {
+ 		if (canvas != null)
+ 			return Math.max(1, canvas.getWidth());
+ 		else
+-			return Display.getWidth();
++			return (int)(Display.getWidth() * Display.getPixelScaleFactor());
+ 	}
+ 
+ 	public boolean isGL20Available () {
+@@ -129,10 +129,14 @@ public class LwjglGraphics implements Graphics {
+ 	}
+ 
+ 	void setupDisplay () throws LWJGLException {
++		if(config.useHDPI) {
++			System.setProperty("org.lwjgl.opengl.Display.enableHighDPI", "true");
++		}
++		
+ 		if (canvas != null) {
+ 			Display.setParent(canvas);
+ 		} else {
+-			boolean displayCreated = setDisplayMode(config.width, config.height, config.fullscreen);
++			boolean displayCreated = setDisplayMode(config.width, config.height, config.fullscreen);			
+ 			if (!displayCreated) {
+ 				if (config.setDisplayModeCallback != null) {
+ 					config = config.setDisplayModeCallback.onFailure(config);
+@@ -318,16 +322,17 @@ public class LwjglGraphics implements Graphics {
+ 
+ 	@Override
+ 	public boolean setDisplayMode (DisplayMode displayMode) {
+-		org.lwjgl.opengl.DisplayMode mode = ((LwjglDisplayMode)displayMode).mode;
++		org.lwjgl.opengl.DisplayMode mode = ((LwjglDisplayMode)displayMode).mode;		
+ 		try {
+ 			if (!mode.isFullscreenCapable()) {
+ 				Display.setDisplayMode(mode);
+ 			} else {
+ 				Display.setDisplayModeAndFullscreen(mode);
+-			}
+-			if (Gdx.gl != null) Gdx.gl.glViewport(0, 0, displayMode.width, displayMode.height);
+-			config.width = displayMode.width;
+-			config.height = displayMode.height;
++			}			
++			float scaleFactor = Display.getPixelScaleFactor();
++			config.width = (int)(mode.getWidth() * scaleFactor);
++			config.height = (int)(mode.getHeight() * scaleFactor);
++			if (Gdx.gl != null) Gdx.gl.glViewport(0, 0, config.width, config.height);
+ 			resize = true;
+ 			return true;
+ 		} catch (LWJGLException e) {
+@@ -382,9 +387,10 @@ public class LwjglGraphics implements Graphics {
+ 			Display.setFullscreen(fullscreen);
+ 			Display.setResizable(!fullscreen && config.resizable);
+ 			
+-			if (Gdx.gl != null) Gdx.gl.glViewport(0, 0, targetDisplayMode.getWidth(), targetDisplayMode.getHeight());
+-			config.width = targetDisplayMode.getWidth();
+-			config.height = targetDisplayMode.getHeight();
++			float scaleFactor = Display.getPixelScaleFactor();
++			config.width = (int)(targetDisplayMode.getWidth() * scaleFactor);
++			config.height = (int)(targetDisplayMode.getHeight() * scaleFactor);
++			if (Gdx.gl != null) Gdx.gl.glViewport(0, 0, config.width, config.height);
+ 			resize = true;
+ 			return true;
+ 		} catch (LWJGLException e) {
+diff --git a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglInput.java b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglInput.java
+index 89c2815..97e4e4e 100644
+--- a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglInput.java
++++ b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglInput.java
+@@ -46,6 +46,7 @@ import org.lwjgl.LWJGLException;
+ import org.lwjgl.input.Cursor;
+ import org.lwjgl.input.Keyboard;
+ import org.lwjgl.input.Mouse;
++import org.lwjgl.opengl.Display;
+ 
+ import com.badlogic.gdx.Gdx;
+ import com.badlogic.gdx.Input;
+@@ -196,11 +197,11 @@ final public class LwjglInput implements Input {
+ 	}
+ 
+ 	public int getX () {
+-		return Mouse.getX();
++		return (int)(Mouse.getX() * Display.getPixelScaleFactor());
+ 	}
+ 
+ 	public int getY () {
+-		return Gdx.graphics.getHeight() - 1 - Mouse.getY();
++		return Gdx.graphics.getHeight() - 1 - (int)(Mouse.getY() * Display.getPixelScaleFactor());
+ 	}
+ 
+ 	public boolean isAccelerometerAvailable () {
+@@ -771,8 +772,8 @@ final public class LwjglInput implements Input {
+ 			int events = 0;
+ 			while (Mouse.next()) {
+ 				events++;
+-				int x = Mouse.getEventX();
+-				int y = Gdx.graphics.getHeight() - Mouse.getEventY() - 1;
++				int x = (int)(Mouse.getEventX() * Display.getPixelScaleFactor());
++				int y = Gdx.graphics.getHeight() - (int)(Mouse.getEventY() * Display.getPixelScaleFactor()) - 1;
+ 				int button = Mouse.getEventButton();
+ 				int gdxButton = toGdxButton(button);
+ 				if (button != -1 && gdxButton == -1) continue; // Ignore unknown button.
+@@ -809,8 +810,8 @@ final public class LwjglInput implements Input {
+ 				touchEvents.add(event);
+ 				mouseX = event.x;
+ 				mouseY = event.y;
+-				deltaX = Mouse.getEventDX();
+-				deltaY = Mouse.getEventDY();
++				deltaX = (int)(Mouse.getEventDX() * Display.getPixelScaleFactor());
++				deltaY = (int)(Mouse.getEventDY() * Display.getPixelScaleFactor());
+ 			}
+ 
+ 			if (events == 0) {
+diff --git a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglNativesLoader.java b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglNativesLoader.java
+index c541696..f76d91d 100644
+--- a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglNativesLoader.java
++++ b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglNativesLoader.java
+@@ -30,7 +30,7 @@ public final class LwjglNativesLoader {
+ 	static public boolean load = true;
+ 
+ 	static {
+-		System.setProperty("org.lwjgl.input.Mouse.allowNegativeMouseCoords", "true");
++		System.setProperty("org.lwjgl.input.Mouse.allowNegativeMouseCoords", "true");		
+ 
+ 		// Don't extract natives if using JWS.
+ 		try {
+diff --git a/backends/gdx-backends-gwt/src/com/badlogic/gwtref/GwtReflect.gwt.xml b/backends/gdx-backends-gwt/src/com/badlogic/gwtref/GwtReflect.gwt.xml
+index b6942db..3fa7c56 100644
+--- a/backends/gdx-backends-gwt/src/com/badlogic/gwtref/GwtReflect.gwt.xml
++++ b/backends/gdx-backends-gwt/src/com/badlogic/gwtref/GwtReflect.gwt.xml
+@@ -36,6 +36,9 @@
+ 		value="com.badlogic.gdx.graphics.g3d.model" />
+ 
+ 	<extend-configuration-property name="gdx.reflect.include"
++		value="com.badlogic.gdx.Net" />
++	
++	<extend-configuration-property name="gdx.reflect.include"
+ 		value="com.badlogic.gdx.graphics.g3d.particles.ParallelArray" />
+ 		
+ 	<extend-configuration-property name="gdx.reflect.include"
+@@ -44,11 +47,11 @@
+ 	<extend-configuration-property name="gdx.reflect.include"
+ 		value="com.badlogic.gdx.graphics.g3d.particles.renderers.BillboardControllerRenderData" />
+ 	<extend-configuration-property name="gdx.reflect.include"
+-		value="com.badlogic.gdx.graphics.g3d.particle.renderers.ModelInstanceControllerRenderData" />
++		value="com.badlogic.gdx.graphics.g3d.particles.renderers.ModelInstanceControllerRenderData" />
+ 	<extend-configuration-property name="gdx.reflect.include"
+-		value="com.badlogic.gdx.graphics.g3d.particle.renderers.ParticleControllerRenderData" />
++		value="com.badlogic.gdx.graphics.g3d.particles.renderers.ParticleControllerRenderData" />
+ 	<extend-configuration-property name="gdx.reflect.include"
+-		value="com.badlogic.gdx.graphics.g3d.particle.renderers.PointSpriteControllerRenderData" />
++		value="com.badlogic.gdx.graphics.g3d.particles.renderers.PointSpriteControllerRenderData" />
+     <extend-configuration-property name="gdx.reflect.include"
+         value="java.util.Collection" />
+ 	<extend-configuration-property name="gdx.reflect.include"
+diff --git a/gdx/src/com/badlogic/gdx/Game.java b/gdx/src/com/badlogic/gdx/Game.java
+index f93cd5c..21f217c 100644
+--- a/gdx/src/com/badlogic/gdx/Game.java
++++ b/gdx/src/com/badlogic/gdx/Game.java
+@@ -24,7 +24,7 @@ package com.badlogic.gdx;
+  * screen is set.
+  * </p> */
+ public abstract class Game implements ApplicationListener {
+-	private Screen screen;
++	protected Screen screen;
+ 
+ 	@Override
+ 	public void dispose () {
+diff --git a/gdx/src/com/badlogic/gdx/assets/AssetManager.java b/gdx/src/com/badlogic/gdx/assets/AssetManager.java
+index 8927c9c..2244729 100644
+--- a/gdx/src/com/badlogic/gdx/assets/AssetManager.java
++++ b/gdx/src/com/badlogic/gdx/assets/AssetManager.java
+@@ -93,6 +93,8 @@ public class AssetManager implements Disposable {
+ 		setLoader(Texture.class, new TextureLoader(resolver));
+ 		setLoader(Skin.class, new SkinLoader(resolver));
+ 		setLoader(ParticleEffect.class, new ParticleEffectLoader(resolver));
++		setLoader(com.badlogic.gdx.graphics.g3d.particles.ParticleEffect.class,
++			new com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader(resolver));
+ 		setLoader(PolygonRegion.class, new PolygonRegionLoader(resolver));
+ 		setLoader(I18NBundle.class, new I18NBundleLoader(resolver));
+ 		setLoader(Model.class, ".g3dj", new G3dModelLoader(new JsonReader(), resolver));
+@@ -127,13 +129,13 @@ public class AssetManager implements Disposable {
+ 		if (asset == null) throw new GdxRuntimeException("Asset not loaded: " + fileName);
+ 		return asset;
+ 	}
+-	
++
+ 	/** @param type the asset type
+ 	 * @return all the assets matching the specified type */
+ 	public synchronized <T> Array<T> getAll (Class<T> type, Array<T> out) {
+ 		ObjectMap<String, RefCountedContainer> assetsByType = assets.get(type);
+-		if (assetsByType != null){
+-			for(ObjectMap.Entry<String, RefCountedContainer> asset : assetsByType.entries()){
++		if (assetsByType != null) {
++			for (ObjectMap.Entry<String, RefCountedContainer> asset : assetsByType.entries()) {
+ 				out.add(asset.value.getObject(type));
+ 			}
+ 		}
+@@ -423,9 +425,9 @@ public class AssetManager implements Disposable {
+ 			RefCountedContainer assetRef = assets.get(type).get(assetDesc.fileName);
+ 			assetRef.incRefCount();
+ 			incrementRefCountedDependencies(assetDesc.fileName);
+-            if (assetDesc.params != null && assetDesc.params.loadedCallback != null) {
+-                assetDesc.params.loadedCallback.finishedLoading(this, assetDesc.fileName, assetDesc.type);
+-            }
++			if (assetDesc.params != null && assetDesc.params.loadedCallback != null) {
++				assetDesc.params.loadedCallback.finishedLoading(this, assetDesc.fileName, assetDesc.type);
++			}
+ 			loaded++;
+ 		} else {
+ 			// else add a new task for the asset.
+@@ -572,6 +574,7 @@ public class AssetManager implements Disposable {
+ 	}
+ 
+ 	/** Disposes all assets in the manager and stops all asynchronous loading. */
++	@Override
+ 	public synchronized void dispose () {
+ 		log.debug("Disposing.");
+ 		clear();
+diff --git a/gdx/src/com/badlogic/gdx/net/HttpRequestBuilder.java b/gdx/src/com/badlogic/gdx/net/HttpRequestBuilder.java
+new file mode 100644
+index 0000000..c1a3f45
+--- /dev/null
++++ b/gdx/src/com/badlogic/gdx/net/HttpRequestBuilder.java
+@@ -0,0 +1,151 @@
++/*******************************************************************************
++ * Copyright 2011 See AUTHORS file.
++ * 
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ * 
++ *   http://www.apache.org/licenses/LICENSE-2.0
++ * 
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ ******************************************************************************/
++
++package com.badlogic.gdx.net;
++
++import java.io.InputStream;
++import java.util.Map;
++
++import com.badlogic.gdx.Net.HttpRequest;
++import com.badlogic.gdx.utils.Base64Coder;
++import com.badlogic.gdx.utils.Json;
++import com.badlogic.gdx.utils.Pools;
++
++/** A builder for {@link HttpRequest}s.
++ * 
++ * Make sure to call {@link #newRequest()} first, then set the request up and obtain it via {@link #build()} when you are done.
++ * 
++ * It also offers a few utility methods to deal with content encoding and HTTP headers.
++ * 
++ * @author Daniel Holderbaum */
++public class HttpRequestBuilder {
++
++	/** Will be added as a prefix to each URL when {@link #url(String)} is called. Empty by default. */
++	public static String baseUrl = "";
++
++	/** Will be set for each new HttpRequest. By default set to {@code 1000}. Can be overwritten via {@link #timeout(int)}. */
++	public static int defaultTimeout = 1000;
++
++	/** Will be used for the object serialization in case {@link #jsonContent(Object)} is called. */
++	public static Json json = new Json();
++
++	private HttpRequest httpRequest;
++
++	/** Initializes the builder and sets it up to build a new {@link HttpRequest} . */
++	public HttpRequestBuilder newRequest () {
++		if (httpRequest != null) {
++			throw new IllegalStateException("A new request has already been started. Call HttpRequestBuilder.build() first.");
++		}
++
++		httpRequest = Pools.obtain(HttpRequest.class);
++		httpRequest.setTimeOut(defaultTimeout);
++		return this;
++	}
++
++	/** @see HttpRequest#setMethod(String) */
++	public HttpRequestBuilder method (String httpMethod) {
++		validate();
++		httpRequest.setMethod(httpMethod);
++		return this;
++	}
++
++	/** The {@link #baseUrl} will automatically be added as a prefix to the given URL.
++	 * 
++	 * @see HttpRequest#setUrl(String) */
++	public HttpRequestBuilder url (String url) {
++		validate();
++		httpRequest.setUrl(baseUrl + url);
++		return this;
++	}
++
++	/** If this method is not called, the {@link #defaultTimeout} will be used.
++	 * 
++	 * @see HttpRequest#setTimeOut(int) */
++	public HttpRequestBuilder timeout (int timeOut) {
++		validate();
++		httpRequest.setTimeOut(timeOut);
++		return this;
++	}
++
++	/** @see HttpRequest#setFollowRedirects(boolean) */
++	public HttpRequestBuilder followRedirects (boolean followRedirects) {
++		validate();
++		httpRequest.setFollowRedirects(followRedirects);
++		return this;
++	}
++
++	/** @see HttpRequest#setHeader(String, String) */
++	public HttpRequestBuilder header (String name, String value) {
++		validate();
++		httpRequest.setHeader(name, value);
++		return this;
++	}
++
++	/** @see HttpRequest#setContent(String) */
++	public HttpRequestBuilder content (String content) {
++		validate();
++		httpRequest.setContent(content);
++		return this;
++	}
++
++	/** @see HttpRequest#setContent(java.io.InputStream, long) */
++	public HttpRequestBuilder content (InputStream contentStream, long contentLength) {
++		validate();
++		httpRequest.setContent(contentStream, contentLength);
++		return this;
++	}
++
++	/** Sets the correct {@code ContentType} and encodes the given parameter map, then sets it as the content. */
++	public HttpRequestBuilder formEncodedContent (Map<String, String> content) {
++		validate();
++		httpRequest.setHeader(HttpRequestHeader.ContentType, "application/x-www-form-urlencoded");
++		String formEncodedContent = HttpParametersUtils.convertHttpParameters(content);
++		httpRequest.setContent(formEncodedContent);
++		return this;
++	}
++
++	/** Sets the correct {@code ContentType} and encodes the given content object via {@link #json}, then sets it as the content. */
++	public HttpRequestBuilder jsonContent (Object content) {
++		validate();
++		httpRequest.setHeader(HttpRequestHeader.ContentType, "application/json");
++		String jsonContent = json.toJson(content);
++		httpRequest.setContent(jsonContent);
++		return this;
++	}
++
++	/** Sets the {@code Authorization} header via the Base64 encoded username and password. */
++	public HttpRequestBuilder basicAuthentication (String username, String password) {
++		validate();
++		httpRequest.setHeader(HttpRequestHeader.Authorization, "Basic " + Base64Coder.encodeString(username + ":" + password));
++		return this;
++	}
++
++	/** Returns the {@link HttpRequest} that has been setup by this builder so far. After using the request, it should be returned
++	 * to the pool via {@code Pools.free(request)}. */
++	public HttpRequest build () {
++		validate();
++		HttpRequest request = httpRequest;
++		httpRequest = null;
++		return request;
++	}
++
++	private void validate () {
++		if (httpRequest == null) {
++			throw new IllegalStateException("A new request has not been started yet. Call HttpRequestBuilder.newRequest() first.");
++		}
++	}
++
++}
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/MoveToAction.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/MoveToAction.java
+index ebd9530..fab2ed6 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/MoveToAction.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/MoveToAction.java
+@@ -26,8 +26,8 @@ public class MoveToAction extends TemporalAction {
+ 	private int alignment = Align.bottomLeft;
+ 
+ 	protected void begin () {
+-		startX = target.getX();
+-		startY = target.getY();
++		startX = target.getX(alignment);
++		startY = target.getY(alignment);
+ 	}
+ 
+ 	protected void update (float percent) {
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ImageTextButton.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ImageTextButton.java
+index 2ff205f..9991a53 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ImageTextButton.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ImageTextButton.java
+@@ -138,10 +138,6 @@ public class ImageTextButton extends Button {
+ 		return label.getText();
+ 	}
+ 
+-	public String toString () {
+-		return super.toString() + ": " + label.getText();
+-	}
+-
+ 	/** The style for an image text button, see {@link ImageTextButton}.
+ 	 * @author Nathan Sweet */
+ 	static public class ImageTextButtonStyle extends TextButtonStyle {
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Label.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Label.java
+index b7c6d2f..245426d 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Label.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Label.java
+@@ -250,10 +250,12 @@ public class Label extends Widget {
+ 		this.wrap = wrap;
+ 		invalidateHierarchy();
+ 	}
+-
+-	/** Provide any additional characters that should act as break characters when the label is wrapped. By default, only whitespace
+-	 * characters act as break chars. */
+-	public void setBreakChars (char[] breakChars) {
++	
++	/**
++	 * Provide any additional characters that should act as break characters when the label is wrapped.
++	 * By default, only whitespace characters act as break chars.
++	 */
++	public void setBreakChars(char[] breakChars) {
+ 		cache.setBreakChars(breakChars);
+ 		invalidateHierarchy();
+ 	}
+@@ -320,10 +322,6 @@ public class Label extends Widget {
+ 		return cache;
+ 	}
+ 
+-	public String toString () {
+-		return super.toString() + ": " + text;
+-	}
+-
+ 	/** The style for a label, see {@link Label}.
+ 	 * @author Nathan Sweet */
+ 	static public class LabelStyle {
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ScrollPane.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ScrollPane.java
+index 5fc40f9..cc89796 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ScrollPane.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ScrollPane.java
+@@ -1017,13 +1017,6 @@ public class ScrollPane extends WidgetGroup {
+ 		resetTransform(shapes);
+ 	}
+ 
+-	public String toString () {
+-		if (widget == null)
+-			return super.toString();
+-		else
+-			return super.toString() + ": " + widget.toString();
+-	}
+-
+ 	/** The style for a scroll pane, see {@link ScrollPane}.
+ 	 * @author mzechner
+ 	 * @author Nathan Sweet */
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Skin.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Skin.java
+index 6646472..7ec8690 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Skin.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Skin.java
+@@ -331,13 +331,30 @@ public class Skin implements Disposable {
+ 	/** Returns a tinted copy of a drawable found in the skin via {@link #getDrawable(String)}. */
+ 	public Drawable newDrawable (Drawable drawable, Color tint) {
+ 		Drawable newDrawable;
+-		if (drawable instanceof TextureRegionDrawable)
+-			newDrawable = ((TextureRegionDrawable)drawable).tint(tint);
+-		else if (drawable instanceof NinePatchDrawable)
+-			newDrawable = ((NinePatchDrawable)drawable).tint(tint);
+-		else if (drawable instanceof SpriteDrawable)
+-			newDrawable = ((SpriteDrawable)drawable).tint(tint);
+-		else
++		if (drawable instanceof TextureRegionDrawable) {
++			TextureRegion region = ((TextureRegionDrawable)drawable).getRegion();
++			Sprite sprite;
++			if (region instanceof AtlasRegion)
++				sprite = new AtlasSprite((AtlasRegion)region);
++			else
++				sprite = new Sprite(region);
++			sprite.setColor(tint);
++			newDrawable = new SpriteDrawable(sprite);
++		} else if (drawable instanceof NinePatchDrawable) {
++			NinePatchDrawable patchDrawable = new NinePatchDrawable((NinePatchDrawable)drawable);
++			patchDrawable.setPatch(new NinePatch(patchDrawable.getPatch(), tint));
++			newDrawable = patchDrawable;
++		} else if (drawable instanceof SpriteDrawable) {
++			SpriteDrawable spriteDrawable = new SpriteDrawable((SpriteDrawable)drawable);
++			Sprite sprite = spriteDrawable.getSprite();
++			if (sprite instanceof AtlasSprite)
++				sprite = new AtlasSprite((AtlasSprite)sprite);
++			else
++				sprite = new Sprite(sprite);
++			sprite.setColor(tint);
++			spriteDrawable.setSprite(sprite);
++			newDrawable = spriteDrawable;
++		} else
+ 			throw new GdxRuntimeException("Unable to copy, unknown drawable type: " + drawable.getClass());
+ 
+ 		if (newDrawable instanceof BaseDrawable) {
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/TextButton.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/TextButton.java
+index 07cf67c..0bac148 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/TextButton.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/TextButton.java
+@@ -101,10 +101,6 @@ public class TextButton extends Button {
+ 		return label.getText();
+ 	}
+ 
+-	public String toString () {
+-		return super.toString() + ": " + label.getText();
+-	}
+-
+ 	/** The style for a text button, see {@link TextButton}.
+ 	 * @author Nathan Sweet */
+ 	static public class TextButtonStyle extends ButtonStyle {
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/TextField.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/TextField.java
+index fb88cfe..7880dfb 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/TextField.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/TextField.java
+@@ -351,7 +351,7 @@ public class TextField extends Widget implements Disableable {
+ 
+ 		if (passwordMode && font.containsCharacter(passwordCharacter)) {
+ 			if (passwordBuffer == null) passwordBuffer = new StringBuilder(newDisplayText.length());
+-			if (passwordBuffer.length() > textLength) //
++			if (passwordBuffer.length() > textLength)
+ 				passwordBuffer.setLength(textLength);
+ 			else {
+ 				for (int i = passwordBuffer.length(); i < textLength; i++)
+@@ -516,6 +516,14 @@ public class TextField extends Widget implements Disableable {
+ 		this.messageText = messageText;
+ 	}
+ 
++	public void appendText (String str) {
++		if (str == null) throw new IllegalArgumentException("text cannot be null.");
++
++		clearSelection();
++		cursor = text.length();
++		paste(str, onlyFontChars);
++	}
++
+ 	public void setText (String str) {
+ 		if (str == null) throw new IllegalArgumentException("text cannot be null.");
+ 		if (str.equals(text)) return;
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/NinePatchDrawable.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/NinePatchDrawable.java
+index 3dc2d12..f818453 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/NinePatchDrawable.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/NinePatchDrawable.java
+@@ -16,7 +16,6 @@
+ 
+ package com.badlogic.gdx.scenes.scene2d.utils;
+ 
+-import com.badlogic.gdx.graphics.Color;
+ import com.badlogic.gdx.graphics.g2d.Batch;
+ import com.badlogic.gdx.graphics.g2d.NinePatch;
+ 
+@@ -62,11 +61,4 @@ public class NinePatchDrawable extends BaseDrawable {
+ 	public NinePatch getPatch () {
+ 		return patch;
+ 	}
+-
+-	/** Creates a new drawable that renders the same as this drawable tinted the specified color. */
+-	public NinePatchDrawable tint (Color tint) {
+-		NinePatchDrawable drawable = new NinePatchDrawable(this);
+-		drawable.setPatch(new NinePatch(drawable.getPatch(), tint));
+-		return drawable;
+-	}
+ }
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/SpriteDrawable.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/SpriteDrawable.java
+index 604d3dc..b231228 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/SpriteDrawable.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/SpriteDrawable.java
+@@ -64,17 +64,4 @@ public class SpriteDrawable extends BaseDrawable implements TransformDrawable {
+ 	public Sprite getSprite () {
+ 		return sprite;
+ 	}
+-
+-	/** Creates a new drawable that renders the same as this drawable tinted the specified color. */
+-	public SpriteDrawable tint (Color tint) {
+-		SpriteDrawable drawable = new SpriteDrawable(this);
+-		Sprite sprite = drawable.getSprite();
+-		if (sprite instanceof AtlasSprite)
+-			sprite = new AtlasSprite((AtlasSprite)sprite);
+-		else
+-			sprite = new Sprite(sprite);
+-		sprite.setColor(tint);
+-		drawable.setSprite(sprite);
+-		return drawable;
+-	}
+ }
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/TextureRegionDrawable.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/TextureRegionDrawable.java
+index f4b3cf3..3a462e5 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/TextureRegionDrawable.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/utils/TextureRegionDrawable.java
+@@ -16,12 +16,8 @@
+ 
+ package com.badlogic.gdx.scenes.scene2d.utils;
+ 
+-import com.badlogic.gdx.graphics.Color;
+ import com.badlogic.gdx.graphics.g2d.Batch;
+-import com.badlogic.gdx.graphics.g2d.Sprite;
+ import com.badlogic.gdx.graphics.g2d.TextureRegion;
+-import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
+-import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasSprite;
+ 
+ /** Drawable for a {@link TextureRegion}.
+  * @author Nathan Sweet */
+@@ -59,15 +55,4 @@ public class TextureRegionDrawable extends BaseDrawable implements TransformDraw
+ 	public TextureRegion getRegion () {
+ 		return region;
+ 	}
+-
+-	/** Creates a new drawable that renders the same as this drawable tinted the specified color. */
+-	public SpriteDrawable tint (Color tint) {
+-		Sprite sprite;
+-		if (region instanceof AtlasRegion)
+-			sprite = new AtlasSprite((AtlasRegion)region);
+-		else
+-			sprite = new Sprite(region);
+-		sprite.setColor(tint);
+-		return new SpriteDrawable(sprite);
+-	}
+ }
+diff --git a/gdx/src/com/badlogic/gdx/utils/I18NBundle.java b/gdx/src/com/badlogic/gdx/utils/I18NBundle.java
+index cc4f510..bb4fc8a 100644
+--- a/gdx/src/com/badlogic/gdx/utils/I18NBundle.java
++++ b/gdx/src/com/badlogic/gdx/utils/I18NBundle.java
+@@ -67,6 +67,9 @@ public class I18NBundle {
+ 
+ 	private static final String DEFAULT_ENCODING = "UTF-8";
+ 
++	// Locale.ROOT does not exist in Android API level 8
++	private static final Locale ROOT_LOCALE = new Locale("", "", "");
++
+ 	private static boolean simpleFormatter = false;
+ 	private static boolean exceptionOnMissingKey = true;
+ 
+@@ -170,7 +173,7 @@ public class I18NBundle {
+ 			// Check the loaded bundle (if any)
+ 			if (bundle != null) {
+ 				Locale bundleLocale = bundle.getLocale(); // WTH? GWT can't access bundle.locale directly
+-				boolean isBaseBundle = bundleLocale.equals(Locale.ROOT);
++				boolean isBaseBundle = bundleLocale.equals(ROOT_LOCALE);
+ 
+ 				if (!isBaseBundle || bundleLocale.equals(locale)) {
+ 					// Found the bundle for the requested locale
+@@ -267,7 +270,7 @@ public class I18NBundle {
+ 		if (language.length() > 0) {
+ 			locales.add((locales.size() == 0) ? locale : new Locale(language));
+ 		}
+-		locales.add(Locale.ROOT);
++		locales.add(ROOT_LOCALE);
+ 		return locales;
+ 	}
+ 
+@@ -296,7 +299,7 @@ public class I18NBundle {
+ 		if (candidateIndex != candidateLocales.size() - 1) {
+ 			// Load recursively the parent having the next candidate locale
+ 			parent = loadBundleChain(baseFileHandle, encoding, candidateLocales, candidateIndex + 1, baseBundle);
+-		} else if (baseBundle != null && targetLocale.equals(Locale.ROOT)) {
++		} else if (baseBundle != null && targetLocale.equals(ROOT_LOCALE)) {
+ 			return baseBundle;
+ 		}
+ 
+@@ -378,7 +381,7 @@ public class I18NBundle {
+ 	 * @exception NullPointerException if <code>baseFileHandle</code> or <code>locale</code> is <code>null</code> */
+ 	private static FileHandle toFileHandle (FileHandle baseFileHandle, Locale locale) {
+ 		StringBuilder sb = new StringBuilder(baseFileHandle.name());
+-		if (!locale.equals(Locale.ROOT)) {
++		if (!locale.equals(ROOT_LOCALE)) {
+ 			String language = locale.getLanguage();
+ 			String country = locale.getCountry();
+ 			String variant = locale.getVariant();
+diff --git a/gdx/src/com/badlogic/gdx/utils/JsonWriter.java b/gdx/src/com/badlogic/gdx/utils/JsonWriter.java
+index c6cdf8b..ee1c7ab 100644
+--- a/gdx/src/com/badlogic/gdx/utils/JsonWriter.java
++++ b/gdx/src/com/badlogic/gdx/utils/JsonWriter.java
+@@ -185,17 +185,14 @@ public class JsonWriter extends Writer {
+ 
+ 		static private Pattern javascriptPattern = Pattern.compile("^[a-zA-Z_$][a-zA-Z_$0-9]*$");
+ 		static private Pattern minimalNamePattern = Pattern.compile("^[^\":,}/ ][^:]*$");
+-		static private Pattern minimalValuePattern = Pattern.compile("^[^\":,{\\[\\]/ ][^}\\],]*$");
++		static private Pattern minimalValuePattern = Pattern.compile("^[^\":,{\\[]/ ][^}\\],]*$");
+ 
+ 		public String quoteValue (Object value) {
+ 			if (value == null || value instanceof Number || value instanceof Boolean) return String.valueOf(value);
+ 			String string = String.valueOf(value).replace("\\", "\\\\").replace("\r", "\\r").replace("\n", "\\n")
+ 				.replace("\t", "\\t");
+ 			if (this == OutputType.minimal && !string.equals("true") && !string.equals("false") && !string.equals("null")
+-				&& !string.contains("//") && !string.contains("/*")) {
+-				int length = string.length();
+-				if (length > 0 && string.charAt(length - 1) != ' ' && minimalValuePattern.matcher(string).matches()) return string;
+-			}
++				&& !string.contains("//") && !string.contains("/*") && minimalValuePattern.matcher(string).matches()) return string;
+ 			return '"' + string.replace("\"", "\\\"") + '"';
+ 		}
+ 
+diff --git a/gdx/src/com/badlogic/gdx/utils/Pools.java b/gdx/src/com/badlogic/gdx/utils/Pools.java
+index 411da44..305f178 100644
+--- a/gdx/src/com/badlogic/gdx/utils/Pools.java
++++ b/gdx/src/com/badlogic/gdx/utils/Pools.java
+@@ -16,15 +16,15 @@
+ 
+ package com.badlogic.gdx.utils;
+ 
+-/** Stores a map of {@link ReflectionPool}s by type for convenient static access.
++/** Stores a map of {@link Pool}s (usually {@link ReflectionPool}s) by type for convenient static access.
+  * @author Nathan Sweet */
+ public class Pools {
+-	static private final ObjectMap<Class, ReflectionPool> typePools = new ObjectMap();
++	static private final ObjectMap<Class, Pool> typePools = new ObjectMap();
+ 
+-	/** Returns a new or existing pool for the specified type, stored in a a Class to {@link ReflectionPool} map. Note the max size
+-	 * is ignored if this is not the first time this pool has been requested. */
++	/** Returns a new or existing pool for the specified type, stored in a Class to {@link Pool} map. Note the max size is ignored
++	 * if this is not the first time this pool has been requested. */
+ 	static public <T> Pool<T> get (Class<T> type, int max) {
+-		ReflectionPool pool = typePools.get(type);
++		Pool pool = typePools.get(type);
+ 		if (pool == null) {
+ 			pool = new ReflectionPool(type, 4, max);
+ 			typePools.put(type, pool);
+@@ -32,21 +32,26 @@ public class Pools {
+ 		return pool;
+ 	}
+ 
+-	/** Returns a new or existing pool for the specified type, stored in a a Class to {@link ReflectionPool} map. The max size of
+-	 * the pool used is 100. */
++	/** Returns a new or existing pool for the specified type, stored in a Class to {@link Pool} map. The max size of the pool used
++	 * is 100. */
+ 	static public <T> Pool<T> get (Class<T> type) {
+ 		return get(type, 100);
+ 	}
+ 
++	/** Sets an existing pool for the specified type, stored in a Class to {@link Pool} map. */
++	static public <T> void set (Class<T> type, Pool<T> pool) {
++		typePools.put(type, pool);
++	}
++
+ 	/** Obtains an object from the {@link #get(Class) pool}. */
+ 	static public <T> T obtain (Class<T> type) {
+-		return (T)get(type).obtain();
++		return get(type).obtain();
+ 	}
+ 
+ 	/** Frees an object from the {@link #get(Class) pool}. */
+ 	static public void free (Object object) {
+-		if (object == null) throw new IllegalArgumentException("object cannot be null.");
+-		ReflectionPool pool = typePools.get(object.getClass());
++		if (object == null) throw new IllegalArgumentException("Object cannot be null.");
++		Pool pool = typePools.get(object.getClass());
+ 		if (pool == null) return; // Ignore freeing an object that was never retained.
+ 		pool.free(object);
+ 	}
+@@ -60,8 +65,8 @@ public class Pools {
+ 	/** Frees the specified objects from the {@link #get(Class) pool}. Null objects within the array are silently ignored.
+ 	 * @param samePool If true, objects don't need to be from the same pool but the pool must be looked up for each object. */
+ 	static public void freeAll (Array objects, boolean samePool) {
+-		if (objects == null) throw new IllegalArgumentException("objects cannot be null.");
+-		ReflectionPool pool = null;
++		if (objects == null) throw new IllegalArgumentException("Objects cannot be null.");
++		Pool pool = null;
+ 		for (int i = 0, n = objects.size; i < n; i++) {
+ 			Object object = objects.get(i);
+ 			if (object == null) continue;
+diff --git a/gdx/src/com/badlogic/gdx/utils/UBJsonWriter.java b/gdx/src/com/badlogic/gdx/utils/UBJsonWriter.java
+index 10911e4..7920eed 100644
+--- a/gdx/src/com/badlogic/gdx/utils/UBJsonWriter.java
++++ b/gdx/src/com/badlogic/gdx/utils/UBJsonWriter.java
+@@ -341,6 +341,46 @@ public class UBJsonWriter implements Closeable {
+ 		return this;
+ 	}
+ 
++	/** Appends the given JsonValue, including all its fields recursively, to the stream.
++	 * @return this writer, for chaining */
++	public UBJsonWriter value (JsonValue value) throws IOException {
++		if (value.isObject()) {
++			if (value.name != null)
++				object(value.name);
++			else
++				object();
++			for (JsonValue child = value.child; child != null; child = child.next)
++				value(child);
++			pop();
++		} else if (value.isArray()) {
++			if (value.name != null)
++				array(value.name);
++			else
++				array();
++			for (JsonValue child = value.child; child != null; child = child.next)
++				value(child);
++			pop();
++		} else if (value.isBoolean()) {
++			if (value.name != null) name(value.name);
++			value(value.asBoolean());
++		} else if (value.isDouble()) {
++			if (value.name != null) name(value.name);
++			value(value.asDouble());
++		} else if (value.isLong()) {
++			if (value.name != null) name(value.name);
++			value(value.asLong());
++		} else if (value.isString()) {
++			if (value.name != null) name(value.name);
++			value(value.asString());
++		} else if (value.isNull()) {
++			if (value.name != null) name(value.name);
++			value();
++		} else {
++			throw new IOException("Unhandled JsonValue type");
++		}
++		return this;
++	}
++
+ 	/** Appends the object to the stream, if it is a known value type. This is a convenience method that calls through to the
+ 	 * appropriate value method.
+ 	 * @return this writer, for chaining */
+diff --git a/tests/gdx-tests-lwjgl/src/com/badlogic/gdx/tests/lwjgl/LwjglDebugStarter.java b/tests/gdx-tests-lwjgl/src/com/badlogic/gdx/tests/lwjgl/LwjglDebugStarter.java
+index 3fc5525..c8fd2f9 100644
+--- a/tests/gdx-tests-lwjgl/src/com/badlogic/gdx/tests/lwjgl/LwjglDebugStarter.java
++++ b/tests/gdx-tests-lwjgl/src/com/badlogic/gdx/tests/lwjgl/LwjglDebugStarter.java
+@@ -19,7 +19,8 @@ package com.badlogic.gdx.tests.lwjgl;
+ import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
+ import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
+ import com.badlogic.gdx.tests.FullscreenTest;
+-import com.badlogic.gdx.tests.JsonTest;
++import com.badlogic.gdx.tests.InputTest;
++import com.badlogic.gdx.tests.JsonReaderTest;
+ import com.badlogic.gdx.tests.extensions.ControllersTest;
+ import com.badlogic.gdx.tests.utils.GdxTest;
+ 
+@@ -31,10 +32,11 @@ public class LwjglDebugStarter {
+ //		new SharedLibraryLoader("../../extensions/gdx-freetype/libs/gdx-freetype-natives.jar").load("gdx-freetype");
+ //		new SharedLibraryLoader("../../extensions/gdx-controllers/gdx-controllers-desktop/libs/gdx-controllers-desktop-natives.jar").load("gdx-controllers-desktop");
+ //		new SharedLibraryLoader("../../gdx/libs/gdx-natives.jar").load("gdx");
+-
+-		GdxTest test = new ControllersTest();		
++		
++		GdxTest test = new FullscreenTest();		
+ 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
+ 		config.r = config.g = config.b = config.a = 8;
++		config.useHDPI = true;
+ //		config.width = 320;
+ //		config.height = 241;
+ 		config.width = 960;
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/FullscreenTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/FullscreenTest.java
+index 177fe38..f7e14ae 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/FullscreenTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/FullscreenTest.java
+@@ -20,6 +20,7 @@ import com.badlogic.gdx.Gdx;
+ import com.badlogic.gdx.Graphics.DisplayMode;
+ import com.badlogic.gdx.graphics.GL20;
+ import com.badlogic.gdx.graphics.Texture;
++import com.badlogic.gdx.graphics.g2d.BitmapFont;
+ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+ import com.badlogic.gdx.tests.utils.GdxTest;
+ 
+@@ -27,10 +28,12 @@ public class FullscreenTest extends GdxTest {
+ 	SpriteBatch batch;
+ 	Texture tex;
+ 	boolean fullscreen = false;
++	BitmapFont font;
+ 
+ 	@Override
+ 	public void create () {
+ 		batch = new SpriteBatch();
++		font = new BitmapFont();
+ 		tex = new Texture(Gdx.files.internal("data/badlogic.jpg"));
+ 		DisplayMode[] modes = Gdx.graphics.getDisplayModes();
+ 		for (DisplayMode mode : modes) {
+@@ -50,20 +53,31 @@ public class FullscreenTest extends GdxTest {
+ 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+ 		
+ 		batch.begin();
+-		batch.draw(tex, (float)Math.random() * Gdx.graphics.getWidth(), 0);
++		batch.draw(tex, Gdx.input.getX(), Gdx.graphics.getHeight() - Gdx.input.getY());
++		font.draw(batch, "" + Gdx.graphics.getWidth() + ", " + Gdx.graphics.getHeight(), 0, 20);
+ 		batch.end();
+ 		
+ 		if (Gdx.input.justTouched()) {
+ 			if (fullscreen) {
+ 				Gdx.graphics.setDisplayMode(480, 320, false);
+-				batch.getProjectionMatrix().setToOrtho2D(0, 0, 480, 320);
+-				Gdx.gl.glViewport(0, 0, 480, 320);
++				batch.getProjectionMatrix().setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
++				Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+ 				fullscreen = false;
+ 			} else {
+-				DisplayMode desktopDisplayMode = Gdx.graphics.getDesktopDisplayMode();
+-				Gdx.graphics.setDisplayMode(desktopDisplayMode.width, desktopDisplayMode.height, true);
+-				batch.getProjectionMatrix().setToOrtho2D(0, 0, desktopDisplayMode.width, desktopDisplayMode.height);
+-				Gdx.gl.glViewport(0, 0, desktopDisplayMode.width, desktopDisplayMode.height);
++				DisplayMode m = null;
++				for(DisplayMode mode: Gdx.graphics.getDisplayModes()) {
++					if(m == null) {
++						m = mode;
++					} else {
++						if(m.width < mode.width) {
++							m = mode;
++						}
++					}
++				}
++				
++				Gdx.graphics.setDisplayMode(m);
++				batch.getProjectionMatrix().setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
++				Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+ 				fullscreen = true;
+ 			}
+ 		}
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/I18NMessageTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/I18NMessageTest.java
+index bf13b46..826e333 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/I18NMessageTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/I18NMessageTest.java
+@@ -50,7 +50,7 @@ public class I18NMessageTest extends GdxTest {
+ 
+ 		try {
+ 			FileHandle bfh = Gdx.files.internal("data/i18n/message1");
+-			rb_root = I18NBundle.createBundle(bfh, Locale.ROOT);
++			rb_root = I18NBundle.createBundle(bfh, new Locale("", "", "")); // Locale.ROOT doesn't exist in Android API level 8
+ 			rb_default = I18NBundle.createBundle(bfh);
+ 			rb_en = I18NBundle.createBundle(bfh, new Locale("en", "US"));
+ 			rb_it = I18NBundle.createBundle(bfh, new Locale("it", "IT"));
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/I18NSimpleMessageTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/I18NSimpleMessageTest.java
+index 0e24acd..2784e2b 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/I18NSimpleMessageTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/I18NSimpleMessageTest.java
+@@ -52,7 +52,7 @@ public class I18NSimpleMessageTest extends GdxTest {
+ 
+ 		try {
+ 			FileHandle bfh = Gdx.files.internal("data/i18n/message2");
+-			rb_root = I18NBundle.createBundle(bfh, Locale.ROOT);
++			rb_root = I18NBundle.createBundle(bfh, new Locale("", "", "")); // Locale.ROOT doesn't exist in Android API level 8
+ 			rb_default = I18NBundle.createBundle(bfh);
+ 			rb_en = I18NBundle.createBundle(bfh, new Locale("en", "US"));
+ 			rb_it = I18NBundle.createBundle(bfh, new Locale("it", "IT"));
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/JsonReaderTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/JsonReaderTest.java
+new file mode 100644
+index 0000000..e6b0182
+--- /dev/null
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/JsonReaderTest.java
+@@ -0,0 +1,224 @@
++
++package com.badlogic.gdx.tests;
++
++import java.util.ArrayList;
++
++import com.badlogic.gdx.tests.utils.GdxTest;
++import com.badlogic.gdx.utils.Array;
++import com.badlogic.gdx.utils.Json;
++import com.badlogic.gdx.utils.ObjectMap;
++
++public class JsonReaderTest extends GdxTest {
++	Json json;
++
++	public void create () {
++		json = new Json();
++
++// json.fromJson(Test1.class, //
++// "{byteArrayField:[-1\n,-2]}"
++// );
++// if (true) return;
++
++		Test1 test = new Test1();
++		test.booleanField = true;
++		test.byteField = 123;
++		test.charField = 'Z';
++		test.shortField = 12345;
++		test.intField = 123456;
++		test.longField = 123456789;
++		test.floatField = 123.456f;
++		test.doubleField = 1.23456d;
++		test.BooleanField = true;
++		test.ByteField = -12;
++		test.CharacterField = 'X';
++		test.ShortField = -12345;
++		test.IntegerField = -123456;
++		test.LongField = -123456789l;
++		test.FloatField = -123.3f;
++		test.DoubleField = -0.121231d;
++		test.stringField = "stringvalue";
++		test.byteArrayField = new byte[] {2, 1, 0, -1, -2};
++		test.map = new ObjectMap();
++		test.map.put("one", 1);
++		test.map.put("two", 2);
++		test.map.put("nine", 9);
++		test.array = new Array();
++		test.array.add("meow");
++		test.array.add("moo");
++		roundTrip(test);
++
++		test = new Test1();
++		roundTrip(test);
++
++		test.array = new Array();
++		roundTrip(test);
++
++		test.array.add("meow");
++		roundTrip(test);
++
++		test.array.add("moo");
++		roundTrip(test);
++
++		test = new Test1();
++		test.map = new ObjectMap();
++		roundTrip(test);
++
++		test.map.put("one", 1);
++		roundTrip(test);
++
++		test.map.put("two", 2);
++		test.map.put("nine", 9);
++		roundTrip(test);
++
++		System.out.println();
++		System.out.println("Success!");
++	}
++
++	private void roundTrip (Object object) {
++		String text = json.toJson(object);
++		System.out.println(text);
++		test(text, object);
++
++		text = json.prettyPrint(object, 130);
++		test(text, object);
++	}
++
++	private void test (String text, Object object) {
++		check(text, object);
++
++		text = text.replace("{", "/*moo*/{/*moo*/");
++		check(text, object);
++
++		text = text.replace("}", "/*moo*/}/*moo*/");
++		text = text.replace("[", "/*moo*/[/*moo*/");
++		text = text.replace("]", "/*moo*/]/*moo*/");
++		text = text.replace(":", "/*moo*/:/*moo*/");
++		text = text.replace(",", "/*moo*/,/*moo*/");
++		check(text, object);
++
++		text = text.replace("/*moo*/", " /*moo*/ ");
++		check(text, object);
++
++		text = text.replace("/*moo*/", "// moo\n");
++		check(text, object);
++
++		text = text.replace("\n", "\r\n");
++		check(text, object);
++
++		text = text.replace(",", "\n");
++		check(text, object);
++
++		text = text.replace("\n", "\r\n");
++		check(text, object);
++
++		text = text.replace("\r\n", "\r\n\r\n");
++		check(text, object);
++	}
++
++	private void check (String text, Object object) {
++		Object object2 = json.fromJson(object.getClass(), text);
++		if (!object.equals(object2)) throw new RuntimeException("Fail!");
++	}
++
++	static public class Test1 {
++		// Primitives.
++		public boolean booleanField;
++		public byte byteField;
++		public char charField;
++		public short shortField;
++		public int intField;
++		public long longField;
++		public float floatField;
++		public double doubleField;
++		// Primitive wrappers.
++		public Boolean BooleanField;
++		public Byte ByteField;
++		public Character CharacterField;
++		public Short ShortField;
++		public Integer IntegerField;
++		public Long LongField;
++		public Float FloatField;
++		public Double DoubleField;
++		// Other.
++		public String stringField;
++		public byte[] byteArrayField;
++		public Object object;
++		public ObjectMap<String, Integer> map;
++		public Array<String> array;
++
++		public boolean equals (Object obj) {
++			if (this == obj) return true;
++			if (obj == null) return false;
++			if (getClass() != obj.getClass()) return false;
++			Test1 other = (Test1)obj;
++			if (BooleanField == null) {
++				if (other.BooleanField != null) return false;
++			} else if (!BooleanField.equals(other.BooleanField)) return false;
++			if (ByteField == null) {
++				if (other.ByteField != null) return false;
++			} else if (!ByteField.equals(other.ByteField)) return false;
++			if (CharacterField == null) {
++				if (other.CharacterField != null) return false;
++			} else if (!CharacterField.equals(other.CharacterField)) return false;
++			if (DoubleField == null) {
++				if (other.DoubleField != null) return false;
++			} else if (!DoubleField.equals(other.DoubleField)) return false;
++			if (FloatField == null) {
++				if (other.FloatField != null) return false;
++			} else if (!FloatField.equals(other.FloatField)) return false;
++			if (IntegerField == null) {
++				if (other.IntegerField != null) return false;
++			} else if (!IntegerField.equals(other.IntegerField)) return false;
++			if (LongField == null) {
++				if (other.LongField != null) return false;
++			} else if (!LongField.equals(other.LongField)) return false;
++			if (ShortField == null) {
++				if (other.ShortField != null) return false;
++			} else if (!ShortField.equals(other.ShortField)) return false;
++			if (stringField == null) {
++				if (other.stringField != null) return false;
++			} else if (!stringField.equals(other.stringField)) return false;
++			if (booleanField != other.booleanField) return false;
++
++			Object list1 = arrayToList(byteArrayField);
++			Object list2 = arrayToList(other.byteArrayField);
++			if (list1 != list2) {
++				if (list1 == null || list2 == null) return false;
++				if (!list1.equals(list2)) return false;
++			}
++
++			if (object != other.object) {
++				if (object == null || other.object == null) return false;
++				if (object != this && !object.equals(other.object)) return false;
++			}
++
++			if (map != other.map) {
++				if (map == null || other.map == null) return false;
++				if (!map.keys().toArray().equals(other.map.keys().toArray())) return false;
++				if (!map.values().toArray().equals(other.map.values().toArray())) return false;
++			}
++
++			if (array != other.array) {
++				if (array == null || other.array == null) return false;
++				if (!array.equals(other.array)) return false;
++			}
++
++			if (byteField != other.byteField) return false;
++			if (charField != other.charField) return false;
++			if (Double.doubleToLongBits(doubleField) != Double.doubleToLongBits(other.doubleField)) return false;
++			if (Float.floatToIntBits(floatField) != Float.floatToIntBits(other.floatField)) return false;
++			if (intField != other.intField) return false;
++			if (longField != other.longField) return false;
++			if (shortField != other.shortField) return false;
++			return true;
++		}
++	}
++
++	static Object arrayToList (Object array) {
++		if (array == null || !array.getClass().isArray()) return array;
++		ArrayList list = new ArrayList(java.lang.reflect.Array.getLength(array));
++		for (int i = 0, n = java.lang.reflect.Array.getLength(array); i < n; i++)
++			list.add(arrayToList(java.lang.reflect.Array.get(array, i)));
++		return list;
++	}
++}
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/JsonTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/JsonTest.java
+deleted file mode 100644
+index 985dba4..0000000
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/JsonTest.java
++++ /dev/null
+@@ -1,244 +0,0 @@
+-
+-package com.badlogic.gdx.tests;
+-
+-import java.util.ArrayList;
+-
+-import com.badlogic.gdx.tests.utils.GdxTest;
+-import com.badlogic.gdx.utils.Array;
+-import com.badlogic.gdx.utils.Json;
+-import com.badlogic.gdx.utils.ObjectMap;
+-
+-public class JsonTest extends GdxTest {
+-	Json json;
+-
+-	public void create () {
+-		json = new Json();
+-
+-// json.fromJson(Test1.class, //
+-// "{byteArrayField:[-1\n,-2]}"
+-// );
+-// if (true) return;
+-
+-		Test1 test = new Test1();
+-		test.booleanField = true;
+-		test.byteField = 123;
+-		test.charField = 'Z';
+-		test.shortField = 12345;
+-		test.intField = 123456;
+-		test.longField = 123456789;
+-		test.floatField = 123.456f;
+-		test.doubleField = 1.23456d;
+-		test.BooleanField = true;
+-		test.ByteField = -12;
+-		test.CharacterField = 'X';
+-		test.ShortField = -12345;
+-		test.IntegerField = -123456;
+-		test.LongField = -123456789l;
+-		test.FloatField = -123.3f;
+-		test.DoubleField = -0.121231d;
+-		test.stringField = "stringvalue";
+-		test.byteArrayField = new byte[] {2, 1, 0, -1, -2};
+-		test.map = new ObjectMap();
+-		test.map.put("one", 1);
+-		test.map.put("two", 2);
+-		test.map.put("nine", 9);
+-		test.array = new Array();
+-		test.array.add("meow");
+-		test.array.add("moo");
+-		roundTrip(test);
+-
+-		test = new Test1();
+-		roundTrip(test);
+-
+-		test.array = new Array();
+-		roundTrip(test);
+-
+-		test.array.add("meow");
+-		roundTrip(test);
+-
+-		test.array.add("moo");
+-		roundTrip(test);
+-
+-		test = new Test1();
+-		test.map = new ObjectMap();
+-		roundTrip(test);
+-
+-		test.map.put("one", 1);
+-		roundTrip(test);
+-
+-		test.map.put("two", 2);
+-		test.map.put("nine", 9);
+-		roundTrip(test);
+-
+-		test.map.put("\nst\nuff\n", 9);
+-		test.map.put("\r\nst\r\nuff\r\n", 9);
+-		roundTrip(test);
+-
+-		equals(json.toJson("meow"), "meow");
+-		equals(json.toJson("meow "), "\"meow \"");
+-		equals(json.toJson(" meow"), "\" meow\"");
+-		equals(json.toJson(" meow "), "\" meow \"");
+-		equals(json.toJson("\nmeow\n"), "\\nmeow\\n");
+-		equals(json.toJson(Array.with(1, 2, 3), null, int.class), "[1,2,3]");
+-		equals(json.toJson(Array.with("1", "2", "3"), null, String.class), "[1,2,3]");
+-		equals(json.toJson(Array.with(" 1", "2 ", " 3 "), null, String.class), "[\" 1\",\"2 \",\" 3 \"]");
+-		equals(json.toJson(Array.with("1", "", "3"), null, String.class), "[1,\"\",3]");
+-
+-		System.out.println();
+-		System.out.println("Success!");
+-	}
+-
+-	private String roundTrip (Object object) {
+-		String text = json.toJson(object);
+-		System.out.println(text);
+-		test(text, object);
+-
+-		text = json.prettyPrint(object, 130);
+-		test(text, object);
+-
+-		return text;
+-	}
+-
+-	private void test (String text, Object object) {
+-		check(text, object);
+-
+-		text = text.replace("{", "/*moo*/{/*moo*/");
+-		check(text, object);
+-
+-		text = text.replace("}", "/*moo*/}/*moo*/");
+-		text = text.replace("[", "/*moo*/[/*moo*/");
+-		text = text.replace("]", "/*moo*/]/*moo*/");
+-		text = text.replace(":", "/*moo*/:/*moo*/");
+-		text = text.replace(",", "/*moo*/,/*moo*/");
+-		check(text, object);
+-
+-		text = text.replace("/*moo*/", " /*moo*/ ");
+-		check(text, object);
+-
+-		text = text.replace("/*moo*/", "// moo\n");
+-		check(text, object);
+-
+-		text = text.replace("\n", "\r\n");
+-		check(text, object);
+-
+-		text = text.replace(",", "\n");
+-		check(text, object);
+-
+-		text = text.replace("\n", "\r\n");
+-		check(text, object);
+-
+-		text = text.replace("\r\n", "\r\n\r\n");
+-		check(text, object);
+-	}
+-
+-	private void check (String text, Object object) {
+-		Object object2 = json.fromJson(object.getClass(), text);
+-		equals(object, object2);
+-	}
+-
+-	private void equals (Object a, Object b) {
+-		if (!a.equals(b)) throw new RuntimeException("Fail!\n" + a + "\n!=\n" + b);
+-	}
+-
+-	static public class Test1 {
+-		// Primitives.
+-		public boolean booleanField;
+-		public byte byteField;
+-		public char charField;
+-		public short shortField;
+-		public int intField;
+-		public long longField;
+-		public float floatField;
+-		public double doubleField;
+-		// Primitive wrappers.
+-		public Boolean BooleanField;
+-		public Byte ByteField;
+-		public Character CharacterField;
+-		public Short ShortField;
+-		public Integer IntegerField;
+-		public Long LongField;
+-		public Float FloatField;
+-		public Double DoubleField;
+-		// Other.
+-		public String stringField;
+-		public byte[] byteArrayField;
+-		public Object object;
+-		public ObjectMap<String, Integer> map;
+-		public Array<String> array;
+-
+-		public boolean equals (Object obj) {
+-			if (this == obj) return true;
+-			if (obj == null) return false;
+-			if (getClass() != obj.getClass()) return false;
+-			Test1 other = (Test1)obj;
+-			if (BooleanField == null) {
+-				if (other.BooleanField != null) return false;
+-			} else if (!BooleanField.equals(other.BooleanField)) return false;
+-			if (ByteField == null) {
+-				if (other.ByteField != null) return false;
+-			} else if (!ByteField.equals(other.ByteField)) return false;
+-			if (CharacterField == null) {
+-				if (other.CharacterField != null) return false;
+-			} else if (!CharacterField.equals(other.CharacterField)) return false;
+-			if (DoubleField == null) {
+-				if (other.DoubleField != null) return false;
+-			} else if (!DoubleField.equals(other.DoubleField)) return false;
+-			if (FloatField == null) {
+-				if (other.FloatField != null) return false;
+-			} else if (!FloatField.equals(other.FloatField)) return false;
+-			if (IntegerField == null) {
+-				if (other.IntegerField != null) return false;
+-			} else if (!IntegerField.equals(other.IntegerField)) return false;
+-			if (LongField == null) {
+-				if (other.LongField != null) return false;
+-			} else if (!LongField.equals(other.LongField)) return false;
+-			if (ShortField == null) {
+-				if (other.ShortField != null) return false;
+-			} else if (!ShortField.equals(other.ShortField)) return false;
+-			if (stringField == null) {
+-				if (other.stringField != null) return false;
+-			} else if (!stringField.equals(other.stringField)) return false;
+-			if (booleanField != other.booleanField) return false;
+-
+-			Object list1 = arrayToList(byteArrayField);
+-			Object list2 = arrayToList(other.byteArrayField);
+-			if (list1 != list2) {
+-				if (list1 == null || list2 == null) return false;
+-				if (!list1.equals(list2)) return false;
+-			}
+-
+-			if (object != other.object) {
+-				if (object == null || other.object == null) return false;
+-				if (object != this && !object.equals(other.object)) return false;
+-			}
+-
+-			if (map != other.map) {
+-				if (map == null || other.map == null) return false;
+-				if (!map.keys().toArray().equals(other.map.keys().toArray())) return false;
+-				if (!map.values().toArray().equals(other.map.values().toArray())) return false;
+-			}
+-
+-			if (array != other.array) {
+-				if (array == null || other.array == null) return false;
+-				if (!array.equals(other.array)) return false;
+-			}
+-
+-			if (byteField != other.byteField) return false;
+-			if (charField != other.charField) return false;
+-			if (Double.doubleToLongBits(doubleField) != Double.doubleToLongBits(other.doubleField)) return false;
+-			if (Float.floatToIntBits(floatField) != Float.floatToIntBits(other.floatField)) return false;
+-			if (intField != other.intField) return false;
+-			if (longField != other.longField) return false;
+-			if (shortField != other.shortField) return false;
+-			return true;
+-		}
+-	}
+-
+-	static Object arrayToList (Object array) {
+-		if (array == null || !array.getClass().isArray()) return array;
+-		ArrayList list = new ArrayList(java.lang.reflect.Array.getLength(array));
+-		for (int i = 0, n = java.lang.reflect.Array.getLength(array); i < n; i++)
+-			list.add(arrayToList(java.lang.reflect.Array.get(array, i)));
+-		return list;
+-	}
+-}
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/extensions/ControllersTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/extensions/ControllersTest.java
+index 2cc1be6..413262c 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/extensions/ControllersTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/extensions/ControllersTest.java
+@@ -45,7 +45,57 @@ public class ControllersTest extends GdxTest {
+ 	@Override
+ 	public void create () {
+ 		setupUi();
++	}
++
++	void print (String message) {
++		String[] lines = console.getItems().toArray(String.class);
++		String[] newLines = new String[lines.length + 1];
++		System.arraycopy(lines, 0, newLines, 0, lines.length);
++		newLines[newLines.length - 1] = message;
++		console.setItems(newLines);
++		scrollPane.invalidate();
++		scrollPane.validate();
++		scrollPane.setScrollPercentY(1.0f);
++	}
++
++	void clear () {
++		console.setItems(new String[0]);
++	}
++
++	private void setupUi () {
++		// setup a tiny ui with a console and a clear button.
++		skin = new Skin(Gdx.files.internal("data/uiskin.json"));
++		stage = new Stage();
++		ui = new Table();
++		ui.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
++		console = new List(skin);
++		scrollPane = new ScrollPane(console);
++		scrollPane.setScrollbarsOnTop(true);
++		TextButton clear = new TextButton("Clear", skin);
++		ui.add(scrollPane).expand(true, true).fill();
++		ui.row();
++		ui.add(clear).expand(true, false).fill();
++		stage.addActor(ui);
++		clear.addListener(new ClickListener() {
++			@Override
++			public void clicked (InputEvent event, float x, float y) {
++				clear();
++			}
++		});
++		Gdx.input.setInputProcessor(stage);
++	}
++
++	@Override
++	public void resize (int width, int height) {
++		ui.setSize(width, height);
++		ui.invalidate();
++		stage.getViewport().update(width, height, true);
++	}
+ 
++	boolean initialized = false;
++
++	private void initialize () {
++		if (initialized) return;
+ 		// print the currently connected controllers to the console
+ 		print("Controllers: " + Controllers.getControllers().size);
+ 		int i = 0;
+@@ -121,55 +171,12 @@ public class ControllersTest extends GdxTest {
+ 				return false;
+ 			}
+ 		});
+-	}
+-
+-	void print (String message) {
+-		String[] lines = console.getItems().toArray(String.class);
+-		String[] newLines = new String[lines.length + 1];
+-		System.arraycopy(lines, 0, newLines, 0, lines.length);
+-		newLines[newLines.length - 1] = message;
+-		console.setItems(newLines);
+-		scrollPane.invalidate();
+-		scrollPane.validate();
+-		scrollPane.setScrollPercentY(1.0f);
+-	}
+-
+-	void clear () {
+-		console.setItems(new String[0]);
+-	}
+-
+-	private void setupUi () {
+-		// setup a tiny ui with a console and a clear button.
+-		skin = new Skin(Gdx.files.internal("data/uiskin.json"));
+-		stage = new Stage();
+-		ui = new Table();
+-		ui.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+-		console = new List(skin);
+-		scrollPane = new ScrollPane(console);
+-		scrollPane.setScrollbarsOnTop(true);
+-		TextButton clear = new TextButton("Clear", skin);
+-		ui.add(scrollPane).expand(true, true).fill();
+-		ui.row();
+-		ui.add(clear).expand(true, false).fill();
+-		stage.addActor(ui);
+-		clear.addListener(new ClickListener() {
+-			@Override
+-			public void clicked (InputEvent event, float x, float y) {
+-				clear();
+-			}
+-		});
+-		Gdx.input.setInputProcessor(stage);
+-	}
+-
+-	@Override
+-	public void resize (int width, int height) {
+-		ui.setSize(width, height);
+-		ui.invalidate();
+-		stage.getViewport().update(width, height, true);
++		initialized = true;
+ 	}
+ 
+ 	@Override
+ 	public void render () {
++		initialize();
+ 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+ 		stage.act(Gdx.graphics.getDeltaTime());
+ 		stage.draw();
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/utils/GdxTests.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/utils/GdxTests.java
+index fad1460..9ddfb59 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/utils/GdxTests.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/utils/GdxTests.java
+@@ -227,7 +227,7 @@ public class GdxTests {
+ 		YDownTest.class,
+ 		FreeTypeFontLoaderTest.class,
+ 		PngTest.class,
+-		JsonTest.class
++		JsonReaderTest.class
+ 		// @on
+ 
+ 		// SoundTouchTest.class, Mpg123Test.class, WavTest.class, FreeTypeTest.class,

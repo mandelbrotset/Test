@@ -1,0 +1,1723 @@
+diff --git a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglGraphics.java b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglGraphics.java
+index 8307d2e..bd5146e 100644
+--- a/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglGraphics.java
++++ b/backends/gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglGraphics.java
+@@ -32,16 +32,12 @@ import com.badlogic.gdx.graphics.GL20;
+ import com.badlogic.gdx.graphics.GL30;
+ import com.badlogic.gdx.graphics.Pixmap;
+ import com.badlogic.gdx.graphics.Pixmap.Format;
+-import com.badlogic.gdx.utils.Array;
+ import com.badlogic.gdx.utils.GdxRuntimeException;
+ 
+ /** An implementation of the {@link Graphics} interface based on Lwjgl.
+  * @author mzechner */
+ public class LwjglGraphics implements Graphics {
+-	/** The OpenGL (not ES) version */
+-	static int major, minor, release;
+-	/** The suppored OpenGL extensions */
+-	static Array<String> extensions;
++	static int major, minor;
+ 
+ 	GL20 gl20;
+ 	GL30 gl30;
+@@ -56,6 +52,7 @@ public class LwjglGraphics implements Graphics {
+ 	boolean resize = false;
+ 	LwjglApplicationConfiguration config;
+ 	BufferFormat bufferFormat = new BufferFormat(8, 8, 8, 8, 16, 8, 0, false);
++	String extensions;
+ 	volatile boolean isContinuous = true;
+ 	volatile boolean requestRendering = false;
+ 	boolean softwareMode;
+@@ -132,14 +129,14 @@ public class LwjglGraphics implements Graphics {
+ 	}
+ 
+ 	void setupDisplay () throws LWJGLException {
+-		if (config.useHDPI) {
++		if(config.useHDPI) {
+ 			System.setProperty("org.lwjgl.opengl.Display.enableHighDPI", "true");
+ 		}
+-
++		
+ 		if (canvas != null) {
+ 			Display.setParent(canvas);
+ 		} else {
+-			boolean displayCreated = setDisplayMode(config.width, config.height, config.fullscreen);
++			boolean displayCreated = setDisplayMode(config.width, config.height, config.fullscreen);			
+ 			if (!displayCreated) {
+ 				if (config.setDisplayModeCallback != null) {
+ 					config = config.setDisplayModeCallback.onFailure(config);
+@@ -174,74 +171,22 @@ public class LwjglGraphics implements Graphics {
+ 			config.initialBackgroundColor.b);
+ 
+ 		Display.setLocation(config.x, config.y);
+-		createDisplayPixelFormat(config.useGL30);
+-		extractVersion();
+-		extractExtensions();
++		createDisplayPixelFormat();
+ 		initiateGLInstances();
+ 	}
+ 
+-	private static void extractVersion () {
+-		// See https://www.opengl.org/wiki/GLAPI/glGetString, format is:
+-		// <major> "." <minor> ("." <release>) (<space> (<vendor_specific_info>))
+-		String version = org.lwjgl.opengl.GL11.glGetString(GL11.GL_VERSION);
++	private void createDisplayPixelFormat () {
+ 		try {
+-			String[] v = version.split(" ", 2)[0].split("\\.", 3);
+-			major = Integer.parseInt(v[0]);
+-			minor = Integer.parseInt(v[1]);
+-			release = v.length > 2 ? Integer.parseInt(v[2]) : 0;
+-		} catch (Throwable t) {
+-			throw new GdxRuntimeException("Error extracting the OpenGL version: "+version, t);
+-		}
+-	}
+-
+-	private static void extractExtensions () {
+-		extensions = new Array<String>();
+-		if (isOpenGLOrHigher(3, 2)) {
+-			int numExtensions = GL11.glGetInteger(GL30.GL_NUM_EXTENSIONS);
+-			for (int i = 0; i < numExtensions; ++i)
+-				extensions.add(org.lwjgl.opengl.GL30.glGetStringi(GL20.GL_EXTENSIONS, i));
+-		} else {
+-			extensions.addAll(org.lwjgl.opengl.GL11.glGetString(GL20.GL_EXTENSIONS).split(" "));
+-		}
+-	}
+-
+-	/** @return whether the supported OpenGL (not ES) version is equal or higher to the specified version. */
+-	private static boolean isOpenGLOrHigher (int major, int minor) {
+-		return LwjglGraphics.major > major || (LwjglGraphics.major == major && LwjglGraphics.minor >= minor);
+-	}
+-
+-	/** @return whether the supported OpenGL (not ES) version is compatible with OpenGL ES 3.x. */
+-	private static boolean compatibleWithGLES3 () {
+-		// OpenGL ES 3.0 is compatible with OpenGL 4.3 core, see http://en.wikipedia.org/wiki/OpenGL_ES#OpenGL_ES_3.0
+-		return isOpenGLOrHigher(4, 3);
+-	}
+-	
+-	/** @return whether the supported OpenGL (not ES) version is compatible with OpenGL ES 2.x. */
+-	private static boolean compatibleWithGLES2 () {
+-		// OpenGL ES 2.0 is compatible with OpenGL 4.1 core
+-		// see https://www.opengl.org/registry/specs/ARB/ES2_compatibility.txt
+-		return isOpenGLOrHigher(4, 1) || extensions.contains("GL_ARB_ES2_compatibility", false);
+-	}
+-
+-	private static boolean supportsFBO () {
+-		// FBO is in core since OpenGL 3.0, see https://www.opengl.org/wiki/Framebuffer_Object
+-		return isOpenGLOrHigher(3, 0) || extensions.contains("GL_EXT_framebuffer_object", false)
+-			|| extensions.contains("GL_ARB_framebuffer_object", false);
+-	}
+-
+-	private void createDisplayPixelFormat (boolean useGL30) {
+-		try {
+-			if (useGL30) {
+-				ContextAttribs context = new ContextAttribs(4, 3).withForwardCompatible(false).withProfileCore(true);
++			if (config.useGL30) {
++				ContextAttribs context = new ContextAttribs(3, 2).withForwardCompatible(false).withProfileCore(true);
+ 				try {
+ 					Display.create(new PixelFormat(config.r + config.g + config.b, config.a, config.depth, config.stencil,
+ 						config.samples), context);
+ 				} catch (Exception e) {
+-					System.out.println("LwjglGraphics: OpenGL 4.3+ core profile (GLES 3.0) not supported.");
+-					createDisplayPixelFormat(false);
+-					return;
++					System.out.println("LwjglGraphics: couldn't create OpenGL 3.2+ core profile context");
++					throw e;
+ 				}
+-				System.out.println("LwjglGraphics: created OpenGL 4.3+ core profile context. This is experimental!");
++				System.out.println("LwjglGraphics: created OpenGL 3.2+ core profile context. This is experimental!");
+ 			} else {
+ 				Display
+ 					.create(new PixelFormat(config.r + config.g + config.b, config.a, config.depth, config.stencil, config.samples));
+@@ -277,7 +222,7 @@ public class LwjglGraphics implements Graphics {
+ 					if (!softwareMode && config.allowSoftwareMode) {
+ 						softwareMode = true;
+ 						System.setProperty("org.lwjgl.opengl.Display.allowSoftwareOpenGL", "true");
+-						createDisplayPixelFormat(useGL30);
++						createDisplayPixelFormat();
+ 						return;
+ 					}
+ 					String glInfo = glInfo();
+@@ -298,20 +243,25 @@ public class LwjglGraphics implements Graphics {
+ 	}
+ 
+ 	public void initiateGLInstances () {
+-		if (config.useGL30 && compatibleWithGLES3()) {
++		String version = org.lwjgl.opengl.GL11.glGetString(GL11.GL_VERSION);
++		major = Integer.parseInt("" + version.charAt(0));
++		minor = Integer.parseInt("" + version.charAt(2));
++
++		if (config.useGL30 && major >= 3) {
+ 			gl30 = new LwjglGL30();
+ 			gl20 = gl30;
+ 		} else {
+ 			gl20 = new LwjglGL20();
+ 		}
+ 
+-		if (!isOpenGLOrHigher(2, 0))
+-			throw new GdxRuntimeException("OpenGL 2.0 or higher with the FBO extension is required. OpenGL version: "
+-				+ GL11.glGetString(GL11.GL_VERSION) + "\n" + glInfo());
+-
+-		if (!supportsFBO()) {
+-			throw new GdxRuntimeException("OpenGL 2.0 or higher with the FBO extension is required. OpenGL version: "
+-				+ GL11.glGetString(GL11.GL_VERSION) + ", FBO extension: false\n" + glInfo());
++		if (major <= 1)
++			throw new GdxRuntimeException("OpenGL 2.0 or higher with the FBO extension is required. OpenGL version: " + version);
++		if (major == 2 || version.contains("2.1")) {
++			if (!supportsExtension("GL_EXT_framebuffer_object") && !supportsExtension("GL_ARB_framebuffer_object")) {
++				String glInfo = glInfo();
++				throw new GdxRuntimeException("OpenGL 2.0 or higher with the FBO extension is required. OpenGL version: " + version
++					+ ", FBO extension: false" + (glInfo.isEmpty() ? "" : ("\n" + glInfo())));
++			}
+ 		}
+ 
+ 		Gdx.gl = gl20;
+@@ -372,13 +322,13 @@ public class LwjglGraphics implements Graphics {
+ 
+ 	@Override
+ 	public boolean setDisplayMode (DisplayMode displayMode) {
+-		org.lwjgl.opengl.DisplayMode mode = ((LwjglDisplayMode)displayMode).mode;
++		org.lwjgl.opengl.DisplayMode mode = ((LwjglDisplayMode)displayMode).mode;		
+ 		try {
+ 			if (!mode.isFullscreenCapable()) {
+ 				Display.setDisplayMode(mode);
+ 			} else {
+ 				Display.setDisplayModeAndFullscreen(mode);
+-			}
++			}			
+ 			float scaleFactor = Display.getPixelScaleFactor();
+ 			config.width = (int)(mode.getWidth() * scaleFactor);
+ 			config.height = (int)(mode.getHeight() * scaleFactor);
+@@ -434,7 +384,7 @@ public class LwjglGraphics implements Graphics {
+ 			}
+ 
+ 			boolean resizable = !fullscreen && config.resizable;
+-
++			
+ 			Display.setDisplayMode(targetDisplayMode);
+ 			Display.setFullscreen(fullscreen);
+ 			// Workaround for bug in LWJGL whereby resizable state is lost on DisplayMode change
+@@ -442,7 +392,7 @@ public class LwjglGraphics implements Graphics {
+ 				Display.setResizable(!resizable);
+ 			}
+ 			Display.setResizable(resizable);
+-
++			
+ 			float scaleFactor = Display.getPixelScaleFactor();
+ 			config.width = (int)(targetDisplayMode.getWidth() * scaleFactor);
+ 			config.height = (int)(targetDisplayMode.getHeight() * scaleFactor);
+@@ -497,8 +447,24 @@ public class LwjglGraphics implements Graphics {
+ 	}
+ 
+ 	@Override
+-	public boolean supportsExtension (String extension) {
+-		return extensions.contains(extension, false);
++	public boolean supportsExtension(String extension) {
++		if (extensions == null) {
++			if(gl30 != null) {
++				//old style glGetString(GL_EXTENSIONS) is not valid in 3.2 core:
++				StringBuilder extensionsBuilder = new StringBuilder();
++
++				int numExtensions = GL11.glGetInteger(GL30.GL_NUM_EXTENSIONS);
++				for (int i = 0; i < numExtensions; ++i) {
++					extensionsBuilder.append(gl30.glGetStringi(GL20.GL_EXTENSIONS, i));
++					extensionsBuilder.append(" ");
++				}
++				extensions = extensionsBuilder.toString();
++			} else {
++				extensions = gl20.glGetString(GL20.GL_EXTENSIONS);
++			}
++		}
++
++		return extensions.contains(extension);
+ 	}
+ 
+ 	@Override
+diff --git a/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/GwtNet.java b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/GwtNet.java
+index 8a9479d..c3fbed8 100644
+--- a/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/GwtNet.java
++++ b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/GwtNet.java
+@@ -79,13 +79,16 @@ public class GwtNet implements Net {
+ 			Map<String, List<String>> headers = new HashMap<String, List<String>>();
+ 			Header[] responseHeaders = response.getHeaders();
+ 			for (int i = 0; i < responseHeaders.length; i++) {
+-				String headerName = responseHeaders[i].getName();
+-				List<String> headerValues = headers.get(headerName);
+-				if (headerValues == null) {
+-					headerValues = new ArrayList<String>();
+-					headers.put(headerName, headerValues);
++				Header header = responseHeaders[i];
++				if (header != null) {
++					String headerName = responseHeaders[i].getName();
++					List<String> headerValues = headers.get(headerName);
++					if (headerValues == null) {
++						headerValues = new ArrayList<String>();
++						headers.put(headerName, headerValues);
++					}
++					headerValues.add(responseHeaders[i].getValue());
+ 				}
+-				headerValues.add(responseHeaders[i].getValue());
+ 			}
+ 			return headers;
+ 		}
+diff --git a/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/graphics/glutils/VertexBufferObjectWithVAO.java b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/graphics/glutils/VertexBufferObjectWithVAO.java
+new file mode 100644
+index 0000000..76fd807
+--- /dev/null
++++ b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/graphics/glutils/VertexBufferObjectWithVAO.java
+@@ -0,0 +1,238 @@
++package com.badlogic.gdx.graphics.glutils;
++
++import java.nio.ByteBuffer;
++import java.nio.FloatBuffer;
++import java.nio.IntBuffer;
++
++import com.badlogic.gdx.Gdx;
++import com.badlogic.gdx.graphics.GL20;
++import com.badlogic.gdx.graphics.GL30;
++import com.badlogic.gdx.graphics.VertexAttribute;
++import com.badlogic.gdx.graphics.VertexAttributes;
++import com.badlogic.gdx.utils.BufferUtils;
++
++/**
++ * <p>
++ * A {@link VertexData} implementation that uses vertex buffer objects and vertex array objects.
++ * (This is required for OpenGL 3.0+ core profiles. In particular, the default VAO has been
++ * deprecated, as has the use of client memory for passing vertex attributes.) Use of VAOs should
++ * give a slight performance benefit since you don't have to bind the attributes on every draw
++ * anymore.
++ * </p>
++ *
++ * <p>
++ * If the OpenGL ES context was lost you can call {@link #invalidate()} to recreate a new OpenGL vertex buffer object.
++ * </p>
++ *
++ * <p>
++ * VertexBufferObjectWithVAO objects must be disposed via the {@link #dispose()} method when no longer needed
++ * </p>
++ *
++ * Code adapted from {@link VertexBufferObject}.
++ * @author mzechner, Dave Clayton <contact@redskyforge.com>, Nate Austin <nate.austin gmail>
++ */
++public class VertexBufferObjectWithVAO implements VertexData {
++	final static IntBuffer tmpHandle = BufferUtils.newIntBuffer(1);
++
++	final VertexAttributes attributes;
++	final FloatBuffer buffer;
++	int bufferHandle;
++	final boolean isStatic;
++	final int usage;
++	boolean isDirty = false;
++	boolean isBound = false;
++	boolean vaoDirty = true;
++	int vaoHandle = -1;
++
++
++	/**
++	 * Constructs a new interleaved VertexBufferObjectWithVAO.
++	 *
++	 * @param isStatic    whether the vertex data is static.
++	 * @param numVertices the maximum number of vertices
++	 * @param attributes  the {@link com.badlogic.gdx.graphics.VertexAttribute}s.
++	 */
++	public VertexBufferObjectWithVAO(boolean isStatic, int numVertices, VertexAttribute... attributes) {
++		this(isStatic, numVertices, new VertexAttributes(attributes));
++	}
++
++	/**
++	 * Constructs a new interleaved VertexBufferObjectWithVAO.
++	 *
++	 * @param isStatic    whether the vertex data is static.
++	 * @param numVertices the maximum number of vertices
++	 * @param attributes  the {@link VertexAttributes}.
++	 */
++	public VertexBufferObjectWithVAO(boolean isStatic, int numVertices, VertexAttributes attributes) {
++		this.isStatic = isStatic;
++		this.attributes = attributes;
++
++		buffer = BufferUtils.newFloatBuffer(this.attributes.vertexSize / 4 * numVertices);
++		buffer.flip();
++		bufferHandle = Gdx.gl20.glGenBuffer();
++		usage = isStatic ? GL20.GL_STATIC_DRAW : GL20.GL_DYNAMIC_DRAW;
++	}
++
++	@Override
++	public VertexAttributes getAttributes() {
++		return attributes;
++	}
++
++	@Override
++	public int getNumVertices() {
++		return buffer.limit() * 4 / attributes.vertexSize;
++	}
++
++	@Override
++	public int getNumMaxVertices() {
++		return buffer.capacity() * 4 / attributes.vertexSize;
++	}
++
++	@Override
++	public FloatBuffer getBuffer() {
++		isDirty = true;
++		return buffer;
++	}
++
++	private void bufferChanged() {
++		if (isBound) {
++			Gdx.gl20.glBufferData(GL20.GL_ARRAY_BUFFER, buffer.limit(), buffer, usage);
++			isDirty = false;
++		}
++	}
++
++	@Override
++	public void setVertices (float[] vertices, int offset, int count) {
++		isDirty = true;
++		BufferUtils.copy(vertices, buffer, count, offset);
++		buffer.position(0);
++		buffer.limit(count);
++		bufferChanged();
++	}
++
++	@Override
++	public void updateVertices (int targetOffset, float[] vertices, int sourceOffset, int count) {
++		isDirty = true;
++		final int pos = buffer.position();
++		buffer.position(targetOffset);
++		BufferUtils.copy(vertices, sourceOffset, count, buffer);
++		buffer.position(pos);
++		bufferChanged();
++	}
++
++	/**
++	 * Binds this VertexBufferObject for rendering via glDrawArrays or glDrawElements
++	 *
++	 * @param shader the shader
++	 */
++	@Override
++	public void bind(ShaderProgram shader) {
++		bind(shader, null);
++	}
++
++	@Override
++	public void bind(ShaderProgram shader, int[] locations) {
++		GL30 gl = Gdx.gl30;
++		if (vaoDirty || !gl.glIsVertexArray(vaoHandle)) {
++			tmpHandle.clear();
++			gl.glGenVertexArrays(1, tmpHandle);
++			vaoHandle = tmpHandle.get(0);
++			gl.glBindVertexArray(vaoHandle);
++
++			//initialize the VAO with our vertex attributes and buffer:
++			bindAttributes(shader, locations);
++			vaoDirty = false;
++
++		} else {
++			//else simply bind the VAO.
++			gl.glBindVertexArray(vaoHandle);
++		}
++		//if our data has changed upload it:
++		bindData(gl);
++
++		isBound = true;
++	}
++
++	private void bindAttributes(ShaderProgram shader, int[] locations) {
++		final GL20 gl = Gdx.gl20;
++		gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, bufferHandle);
++		final int numAttributes = attributes.size();
++		if (locations == null) {
++			for (int i = 0; i < numAttributes; i++) {
++				final VertexAttribute attribute = attributes.get(i);
++				final int location = shader.getAttributeLocation(attribute.alias);
++				if (location < 0) continue;
++				shader.enableVertexAttribute(location);
++
++				shader.setVertexAttribute(location, attribute.numComponents, attribute.type, attribute.normalized, attributes.vertexSize,
++						attribute.offset);
++			}
++
++		} else {
++			for (int i = 0; i < numAttributes; i++) {
++				final VertexAttribute attribute = attributes.get(i);
++				final int location = locations[i];
++				if (location < 0) continue;
++				shader.enableVertexAttribute(location);
++
++				shader.setVertexAttribute(location, attribute.numComponents, attribute.type, attribute.normalized, attributes.vertexSize,
++						attribute.offset);
++			}
++		}
++	}
++
++	private void bindData(GL20 gl) {
++		if (isDirty) {
++			gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, bufferHandle);
++			buffer.limit(buffer.limit());
++			gl.glBufferData(GL20.GL_ARRAY_BUFFER, buffer.limit(), buffer, usage);
++			isDirty = false;
++		}
++	}
++
++	/**
++	 * Unbinds this VertexBufferObject.
++	 *
++	 * @param shader the shader
++	 */
++	@Override
++	public void unbind(final ShaderProgram shader) {
++		unbind(shader, null);
++	}
++
++	@Override
++	public void unbind(final ShaderProgram shader, final int[] locations) {
++		GL30 gl = Gdx.gl30;
++		gl.glBindVertexArray(0);
++		isBound = false;
++	}
++
++	/**
++	 * Invalidates the VertexBufferObject so a new OpenGL buffer handle is created. Use this in case of a context loss.
++	 */
++	@Override
++	public void invalidate() {
++		bufferHandle = Gdx.gl20.glGenBuffer();
++		isDirty = true;
++		vaoDirty = true;
++	}
++
++	/**
++	 * Disposes of all resources this VertexBufferObject uses.
++	 */
++	@Override
++	public void dispose() {
++		GL30 gl = Gdx.gl30;
++
++		gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, 0);
++		gl.glDeleteBuffer(bufferHandle);
++		bufferHandle = 0;
++
++		if (gl.glIsVertexArray(vaoHandle)) {
++			tmpHandle.clear();
++			tmpHandle.put(vaoHandle);
++			tmpHandle.flip();
++			gl.glDeleteVertexArrays(1, tmpHandle);
++		}
++	}
++}
+diff --git a/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/utils/reflect/ClassReflection.java b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/utils/reflect/ClassReflection.java
+index b6a27a2..4c3ce98 100644
+--- a/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/utils/reflect/ClassReflection.java
++++ b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/utils/reflect/ClassReflection.java
+@@ -60,6 +60,11 @@ public final class ClassReflection {
+ 		return ReflectionCache.getType(c).isStatic();
+ 	}
+ 
++	/** Determines if the supplied Class object represents an array class. */
++	static public boolean isArray (Class c) {
++		return ReflectionCache.getType(c).isArray();
++	}
++	
+ 	/** Creates a new instance of the class represented by the supplied Class. */
+ 	static public <T> T newInstance (Class<T> c) throws ReflectionException {
+ 		try {
+diff --git a/extensions/gdx-setup/src/com/badlogic/gdx/setup/Dependency.java b/extensions/gdx-setup/src/com/badlogic/gdx/setup/Dependency.java
+index 3a90781..153bca3 100644
+--- a/extensions/gdx-setup/src/com/badlogic/gdx/setup/Dependency.java
++++ b/extensions/gdx-setup/src/com/badlogic/gdx/setup/Dependency.java
+@@ -10,10 +10,12 @@ import java.util.List;
+ public class Dependency {
+ 
+ 	private HashMap<ProjectType, String[]> subDependencyMap = new HashMap<ProjectType, String[]>();
++	private String[] gwtInherits;
+ 	private String name;
+ 
+-	public Dependency (String name, String[]... subDependencies) {
++	public Dependency (String name, String[] gwtInherits, String[]... subDependencies) {
+ 		this.name = name;
++		this.gwtInherits = gwtInherits;
+ 		for (ProjectType type : ProjectType.values()) {
+ 			subDependencyMap.put(type, subDependencies[type.ordinal()]);
+ 		}
+@@ -32,6 +34,10 @@ public class Dependency {
+ 		return incompat;
+ 	}
+ 
++	public String[] getGwtInherits () {
++		return gwtInherits;
++	}
++	
+ 	public String getName () {
+ 		return name;
+ 	}
+diff --git a/extensions/gdx-setup/src/com/badlogic/gdx/setup/DependencyBank.java b/extensions/gdx-setup/src/com/badlogic/gdx/setup/DependencyBank.java
+index 8a1a97a..44b6a8b 100644
+--- a/extensions/gdx-setup/src/com/badlogic/gdx/setup/DependencyBank.java
++++ b/extensions/gdx-setup/src/com/badlogic/gdx/setup/DependencyBank.java
+@@ -2,7 +2,6 @@ package com.badlogic.gdx.setup;
+ 
+ 
+ import java.util.HashMap;
+-import java.util.LinkedHashMap;
+ 
+ public class DependencyBank {
+ 
+@@ -32,11 +31,11 @@ public class DependencyBank {
+ 	static String aiVersion = "1.5.0";
+ 
+ 	HashMap<ProjectDependency, Dependency> gdxDependencies = new HashMap<ProjectDependency, Dependency>();
+-	LinkedHashMap<ProjectDependency, String[]> gwtInheritances = new LinkedHashMap<ProjectDependency, String[]>();
+ 
+ 	public DependencyBank() {
+ 		for (ProjectDependency projectDep : ProjectDependency.values()) {
+ 			Dependency dependency = new Dependency(projectDep.name(),
++					projectDep.getGwtInehrits(),
+ 					projectDep.getDependencies(ProjectType.CORE),
+ 					projectDep.getDependencies(ProjectType.DESKTOP),
+ 					projectDep.getDependencies(ProjectType.ANDROID),
+@@ -44,19 +43,12 @@ public class DependencyBank {
+ 					projectDep.getDependencies(ProjectType.HTML));
+ 			gdxDependencies.put(projectDep, dependency);
+ 		}
+-		gwtInheritances.put(ProjectDependency.GDX, new String[]{"com.badlogic.gdx.backends.gdx_backends_gwt"});
+-		gwtInheritances.put(ProjectDependency.CONTROLLERS, new String[]{"com.badlogic.gdx.controllers.controllers-gwt"});
+-		gwtInheritances.put(ProjectDependency.BOX2D, new String[]{"com.badlogic.gdx.physics.box2d.box2d-gwt"});
+-		gwtInheritances.put(ProjectDependency.BOX2DLIGHTS, new String[]{"Box2DLights"});
+-		gwtInheritances.put(ProjectDependency.ASHLEY, new String[]{"com.badlogic.ashley_gwt"});
+-		gwtInheritances.put(ProjectDependency.AI, new String[]{"com.badlogic.gdx.ai"});
+ 	}
+ 
+ 	public Dependency getDependency(ProjectDependency gdx) {
+ 		return gdxDependencies.get(gdx);
+ 	}
+ 
+-
+ 	/**
+ 	 * This enum will hold all dependencies available for libgdx, allowing the setup to pick the ones needed by default,
+ 	 * and allow the option to choose extensions as the user wishes.
+@@ -74,6 +66,7 @@ public class DependencyBank {
+ 			new String[]{"com.badlogicgames.gdx:gdx-backend-android:$gdxVersion", "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi", "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi-v7a", "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86"},
+ 			new String[]{"org.robovm:robovm-rt:${roboVMVersion}", "org.robovm:robovm-cocoatouch:${roboVMVersion}", "com.badlogicgames.gdx:gdx-backend-robovm:$gdxVersion", "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-ios"},
+ 			new String[]{"com.badlogicgames.gdx:gdx-backend-gwt:$gdxVersion", "com.badlogicgames.gdx:gdx:$gdxVersion:sources", "com.badlogicgames.gdx:gdx-backend-gwt:$gdxVersion:sources"},
++			new String[]{"com.badlogic.gdx.backends.gdx_backends_gwt"},
+ 			
+ 			"Core Library for LibGDX"
+ 		),
+@@ -83,6 +76,7 @@ public class DependencyBank {
+ 			new String[]{"com.badlogicgames.gdx:gdx-bullet:$gdxVersion", "com.badlogicgames.gdx:gdx-bullet-platform:$gdxVersion:natives-armeabi", "com.badlogicgames.gdx:gdx-bullet-platform:$gdxVersion:natives-armeabi-v7a", "com.badlogicgames.gdx:gdx-bullet-platform:$gdxVersion:natives-x86"},
+ 			new String[]{"com.badlogicgames.gdx:gdx-bullet-platform:$gdxVersion:natives-ios"},
+ 			null,
++			null,
+ 			
+ 			"3D Collision Detection and Rigid Body Dynamics"
+ 		),
+@@ -92,6 +86,7 @@ public class DependencyBank {
+ 			new String[]{"com.badlogicgames.gdx:gdx-freetype:$gdxVersion", "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-armeabi", "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-armeabi-v7a", "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-x86"},
+ 			new String[]{"com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-ios"},
+ 			null,
++			null,
+ 			
+ 			"Generate BitmapFonts from .ttf font files"
+ 		),
+@@ -101,6 +96,7 @@ public class DependencyBank {
+ 			new String[]{},
+ 			new String[]{},
+ 			new String[]{},
++			new String[]{},
+ 			
+ 			"Collection of tools, including 2D/3D particle editors, texture packers, and file processors"
+ 		),
+@@ -108,9 +104,10 @@ public class DependencyBank {
+ 			new String[]{"com.badlogicgames.gdx:gdx-controllers:$gdxVersion"},
+ 			new String[]{"com.badlogicgames.gdx:gdx-controllers-desktop:$gdxVersion", "com.badlogicgames.gdx:gdx-controllers-platform:$gdxVersion:natives-desktop"},
+ 			new String[]{"com.badlogicgames.gdx:gdx-controllers:$gdxVersion", "com.badlogicgames.gdx:gdx-controllers-android:$gdxVersion"},
+-			new String[] {}, // works on iOS but never reports any controllers :)
++			new String[]{}, // works on iOS but never reports any controllers :)
+ 			new String[]{"com.badlogicgames.gdx:gdx-controllers:$gdxVersion:sources", "com.badlogicgames.gdx:gdx-controllers-gwt:$gdxVersion", "com.badlogicgames.gdx:gdx-controllers-gwt:$gdxVersion:sources"},
+-			
++			new String[]{"com.badlogic.gdx.controllers.controllers-gwt"},
++
+ 			"Controller/Gamepad API"
+ 		),
+ 		BOX2D(
+@@ -119,6 +116,7 @@ public class DependencyBank {
+ 			new String[]{"com.badlogicgames.gdx:gdx-box2d:$gdxVersion", "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-armeabi", "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-armeabi-v7a", "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86"},
+ 			new String[]{"com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-ios"},
+ 			new String[]{"com.badlogicgames.gdx:gdx-box2d:$gdxVersion:sources", "com.badlogicgames.gdx:gdx-box2d-gwt:$gdxVersion:sources"},
++			new String[]{"com.badlogic.gdx.physics.box2d.box2d-gwt"},
+ 			
+ 			"2D Physics Library"
+ 		),	
+@@ -128,6 +126,7 @@ public class DependencyBank {
+ 			new String[]{"com.badlogicgames.box2dlights:box2dlights:$box2DLightsVersion"},
+ 			new String[]{},
+ 			new String[]{"com.badlogicgames.box2dlights:box2dlights:$box2DLightsVersion:sources"},
++			new String[]{"Box2DLights"},
+ 			
+ 			"2D Lighting framework that utilises Box2D"
+ 		),
+@@ -137,6 +136,7 @@ public class DependencyBank {
+ 			new String[]{"com.badlogicgames.ashley:ashley:$ashleyVersion"},
+ 			new String[]{},
+ 			new String[]{"com.badlogicgames.ashley:ashley:$ashleyVersion:sources"},
++			new String[]{"com.badlogic.ashley_gwt"},
+ 			
+ 			"Lightweight Entity framework"
+ 		),
+@@ -146,6 +146,7 @@ public class DependencyBank {
+ 			new String[]{"com.badlogicgames.gdx:gdx-ai:$aiVersion"},
+ 			new String[]{},
+ 			new String[]{"com.badlogicgames.gdx:gdx-ai:$aiVersion:sources"},
++			new String[]{"com.badlogic.gdx.ai"},
+ 			
+ 			"Artificial Intelligence framework"
+ 		);
+@@ -155,14 +156,16 @@ public class DependencyBank {
+ 		private String[] androidDependencies;
+ 		private String[] iosDependencies;
+ 		private String[] gwtDependencies;
++		private String[] gwtInherits;
+ 		private String description;
+ 
+-		ProjectDependency(String[] coreDeps, String[] desktopDeps, String[] androidDeps, String[] iosDeps, String[] gwtDeps, String description) {
++		ProjectDependency(String[] coreDeps, String[] desktopDeps, String[] androidDeps, String[] iosDeps, String[] gwtDeps, String[] gwtInhertis, String description) {
+ 			this.coreDependencies = coreDeps;
+ 			this.desktopDependencies = desktopDeps;
+ 			this.androidDependencies = androidDeps;
+ 			this.iosDependencies = iosDeps;
+ 			this.gwtDependencies = gwtDeps;
++			this.gwtInherits = gwtInhertis;
+ 			this.description = description;
+ 		}
+ 
+@@ -182,6 +185,10 @@ public class DependencyBank {
+ 			return null;
+ 		}
+ 		
++		public String[] getGwtInehrits() {
++			return gwtInherits;
++		}
++		
+ 		public String getDescription() {
+ 			return description;
+ 		}
+diff --git a/extensions/gdx-setup/src/com/badlogic/gdx/setup/ExternalExtension.java b/extensions/gdx-setup/src/com/badlogic/gdx/setup/ExternalExtension.java
+index 9d3fbde..67e6c9a 100644
+--- a/extensions/gdx-setup/src/com/badlogic/gdx/setup/ExternalExtension.java
++++ b/extensions/gdx-setup/src/com/badlogic/gdx/setup/ExternalExtension.java
+@@ -22,23 +22,25 @@ import java.util.Map;
+ public class ExternalExtension {
+ 
+ 	private String name;
++	private String[] gwtInherits;
+ 	private String description;
+ 	private String version;
+ 
+ 	private Map<String, List<String>> dependencies;
+ 
+-	public ExternalExtension (String name, String description, String version) {
++	public ExternalExtension (String name, String[] gwtInherits, String description, String version) {
+ 		this.name = name;
++		this.gwtInherits = gwtInherits;
+ 		this.description = description;
+ 		this.version = version;
+ 	}
+-
++	
+ 	public void setDependencies (Map<String, List<String>> dependencies) {
+ 		this.dependencies = dependencies;
+ 	}
+ 
+ 	public Dependency generateDependency () {
+-		Dependency dep = new Dependency(name, getPlatformDependencies("core"), getPlatformDependencies("desktop"),
++		Dependency dep = new Dependency(name, gwtInherits, getPlatformDependencies("core"), getPlatformDependencies("desktop"),
+ 			getPlatformDependencies("android"), getPlatformDependencies("ios"), getPlatformDependencies("html"));
+ 
+ 		return dep;
+diff --git a/extensions/gdx-setup/src/com/badlogic/gdx/setup/ExternalExtensionsDialog.java b/extensions/gdx-setup/src/com/badlogic/gdx/setup/ExternalExtensionsDialog.java
+index dd762fe..cb217e3 100644
+--- a/extensions/gdx-setup/src/com/badlogic/gdx/setup/ExternalExtensionsDialog.java
++++ b/extensions/gdx-setup/src/com/badlogic/gdx/setup/ExternalExtensionsDialog.java
+@@ -42,13 +42,14 @@ import java.util.List;
+ import java.util.Map;
+ 
+ import javax.swing.BorderFactory;
+-import javax.swing.JButton;
+ import javax.swing.JDialog;
+ import javax.swing.JLabel;
+ import javax.swing.JPanel;
+ import javax.swing.JScrollPane;
+ import javax.swing.JSeparator;
+ import javax.swing.JTable;
++import javax.swing.event.TableModelEvent;
++import javax.swing.event.TableModelListener;
+ import javax.swing.table.DefaultTableModel;
+ import javax.xml.parsers.DocumentBuilder;
+ import javax.xml.parsers.DocumentBuilderFactory;
+@@ -62,7 +63,7 @@ import org.xml.sax.SAXException;
+ 
+ import com.badlogic.gdx.setup.GdxSetupUI.SetupButton;
+ 
+-public class ExternalExtensionsDialog extends JDialog {
++public class ExternalExtensionsDialog extends JDialog implements TableModelListener {
+ 
+ 	private JPanel contentPane;
+ 	private SetupButton buttonOK;
+@@ -147,24 +148,11 @@ public class ExternalExtensionsDialog extends JDialog {
+ 		table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+ 
+ 		table.getTableHeader().setReorderingAllowed(false);
++		table.getModel().addTableModelListener(this);
+ 		table.addMouseListener(new MouseAdapter() {
+ 			public void mouseClicked (MouseEvent e) {
+ 				int row = table.getSelectedRow();
+ 				int column = table.getSelectedColumn();
+-
+-				if (column == 0) {
+-					ExternalExtension extension = ((ExtensionTableModel)table.getModel()).getExtension(row);
+-					Dependency dep = extension.generateDependency();
+-					boolean selected = (Boolean)table.getModel().getValueAt(row, 0);
+-					if (selected) {
+-						if (!mainDependencies.contains(dep)) {
+-							mainDependencies.add(dep);
+-						}
+-					} else {
+-						mainDependencies.remove(dep);
+-					}
+-				}
+-
+ 				if (column == 5) {
+ 					URI uri = ((ExtensionTableModel)table.getModel()).getURI(row, column);
+ 					if (uri != null) {
+@@ -223,6 +211,13 @@ public class ExternalExtensionsDialog extends JDialog {
+ 				String compatibility = eElement.getElementsByTagName("compatibility").item(0).getTextContent();
+ 				String url = eElement.getElementsByTagName("website").item(0).getTextContent();
+ 
++				String[] gwtInherits = null;
++				NodeList inheritsNode = eElement.getElementsByTagName("inherit");
++				gwtInherits = new String[inheritsNode.getLength()];
++
++				for (int j = 0; j < inheritsNode.getLength(); j++)
++					gwtInherits[j] = inheritsNode.item(j).getTextContent();
++
+ 				final HashMap<String, List<String>> dependencies = new HashMap<String, List<String>>();
+ 
+ 				addToDependencyMapFromXML(dependencies, eElement, "core");
+@@ -239,7 +234,7 @@ public class ExternalExtensionsDialog extends JDialog {
+ 				}
+ 
+ 				if (uri != null) {
+-					final ExternalExtension extension = new ExternalExtension(name, description, version);
++					final ExternalExtension extension = new ExternalExtension(name, gwtInherits, description, version);
+ 					extension.setDependencies(dependencies);
+ 					tableModel.addExtension(extension, false, name, description, version, compatibility, uri);
+ 				}
+@@ -403,5 +398,24 @@ public class ExternalExtensionsDialog extends JDialog {
+ 		}
+ 
+ 	}
++	
++	@Override
++	public void tableChanged (TableModelEvent e) {
++		int row = e.getFirstRow();
++		int column = e.getColumn();
++
++		if (column == 0) {
++			ExternalExtension extension = ((ExtensionTableModel)table.getModel()).getExtension(row);
++			Dependency dep = extension.generateDependency();
++			boolean selected = (Boolean)table.getModel().getValueAt(row, 0);
++			if (selected) {
++				if (!mainDependencies.contains(dep)) {
++					mainDependencies.add(dep);
++				}
++			} else {
++				mainDependencies.remove(dep);
++			}
++		}
++	}
+ 
+ }
+diff --git a/extensions/gdx-setup/src/com/badlogic/gdx/setup/GdxSetup.java b/extensions/gdx-setup/src/com/badlogic/gdx/setup/GdxSetup.java
+index 01d1229..62ae1d4 100644
+--- a/extensions/gdx-setup/src/com/badlogic/gdx/setup/GdxSetup.java
++++ b/extensions/gdx-setup/src/com/badlogic/gdx/setup/GdxSetup.java
+@@ -332,7 +332,7 @@ public class GdxSetup {
+ 		values.put("%API_LEVEL%", DependencyBank.androidAPILevel);
+ 		values.put("%GWT_VERSION%", DependencyBank.gwtVersion);
+ 		if (builder.modules.contains(ProjectType.HTML)) {
+-			values.put("%GWT_INHERITS%", parseGwtInherits(builder.bank.gwtInheritances, builder));
++			values.put("%GWT_INHERITS%", parseGwtInherits(builder));
+ 		}
+ 
+ 		copyAndReplace(outputDir, project, values);
+@@ -499,15 +499,17 @@ public class GdxSetup {
+ 		return params;
+ 	}
+ 
+-	private String parseGwtInherits (HashMap<ProjectDependency, String[]> gwtInheritances, ProjectBuilder builder) {
++	private String parseGwtInherits (ProjectBuilder builder) {
+ 		String parsed = "";
+-		for (ProjectDependency dep : gwtInheritances.keySet()) {
+-			if (containsDependency(builder.dependencies, dep)) {
+-				for (String inherit : gwtInheritances.get(dep)) {
++		
++		for (Dependency dep : builder.dependencies) {
++			if (dep.getGwtInherits() != null) {
++				for (String inherit : dep.getGwtInherits()) {
+ 					parsed += "\t<inherits name='" + inherit + "' />\n";
+ 				}
+ 			}
+ 		}
++		
+ 		return parsed;
+ 	}
+ 
+diff --git a/extensions/gdx-setup/src/com/badlogic/gdx/setup/GdxSetupUI.java b/extensions/gdx-setup/src/com/badlogic/gdx/setup/GdxSetupUI.java
+index fd8466c..2aabaef 100644
+--- a/extensions/gdx-setup/src/com/badlogic/gdx/setup/GdxSetupUI.java
++++ b/extensions/gdx-setup/src/com/badlogic/gdx/setup/GdxSetupUI.java
+@@ -29,7 +29,6 @@ import java.awt.Desktop;
+ import java.awt.Dimension;
+ import java.awt.EventQueue;
+ import java.awt.FileDialog;
+-import java.awt.FlowLayout;
+ import java.awt.Graphics;
+ import java.awt.GridBagConstraints;
+ import java.awt.GridBagLayout;
+@@ -88,7 +87,6 @@ public class GdxSetupUI extends JFrame {
+ 	ProjectBuilder builder;
+ 	List<ProjectType> modules = new ArrayList<ProjectType>();
+ 	List<Dependency> dependencies = new ArrayList<Dependency>();
+-	List<ExternalExtension> externalExtensions = new ArrayList<ExternalExtension>();
+ 
+ 	UI ui = new UI();
+ 	static Point point = new Point();
+diff --git a/extensions/gdx-setup/src/com/badlogic/gdx/setup/SettingsDialog.java b/extensions/gdx-setup/src/com/badlogic/gdx/setup/SettingsDialog.java
+index 60bc420..5106faa 100644
+--- a/extensions/gdx-setup/src/com/badlogic/gdx/setup/SettingsDialog.java
++++ b/extensions/gdx-setup/src/com/badlogic/gdx/setup/SettingsDialog.java
+@@ -42,7 +42,6 @@ import java.util.ArrayList;
+ import java.util.List;
+ 
+ import javax.swing.BorderFactory;
+-import javax.swing.JCheckBox;
+ import javax.swing.JDialog;
+ import javax.swing.JLabel;
+ import javax.swing.JOptionPane;
+diff --git a/extensions/gdx-setup/src/com/badlogic/gdx/setup/data/extensions.xml b/extensions/gdx-setup/src/com/badlogic/gdx/setup/data/extensions.xml
+index 79d1c01..a429498 100644
+--- a/extensions/gdx-setup/src/com/badlogic/gdx/setup/data/extensions.xml
++++ b/extensions/gdx-setup/src/com/badlogic/gdx/setup/data/extensions.xml
+@@ -1,20 +1,43 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <extensions>
+-    <extension>
+-       <name>Overlap2D</name>
+-       <description>Level and UI Editor Runtime</description>
+-       <package>com.underwaterapps.overlap2druntime</package>
+-       <version>0.0.8</version>
+-       <compatibility>1.5.3</compatibility>
+-       <website>http://overlap2d.com/</website>
+-       <projects>
+-           <core>
+-               <dependency>com.underwaterapps.overlap2druntime:overlap2d-runtime-libgdx</dependency>
+-           </core>
+-           <desktop></desktop>
+-           <android></android>
+-           <ios></ios>
+-           <html>null</html>
+-       </projects>
+-    </extension>
++	<extension>
++		<name>Overlap2D</name>
++		<description>Level and UI Editor Runtime</description>
++		<package>com.underwaterapps.overlap2druntime</package>
++		<version>0.0.8</version>
++		<compatibility>1.5.3</compatibility>
++		<website>http://overlap2d.com/</website>
++		<gwtInherits></gwtInherits>
++		<projects>
++			<core>
++				<dependency>com.underwaterapps.overlap2druntime:overlap2d-runtime-libgdx</dependency>
++			</core>
++			<desktop></desktop>
++			<android></android>
++			<ios></ios>
++			<html>null</html>
++		</projects>
++	</extension>
++	<extension>
++		<name>VisUI</name>
++		<description>Flat design skin for scene2d.ui and UI toolkit</description>
++		<package>com.kotcrab.vis.ui</package>
++		<version>0.6.1</version>
++		<compatibility>1.5.4</compatibility>
++		<website>https://github.com/kotcrab/VisEditor/wiki/VisUI</website>
++		<gwtInherits>
++		    <inherit>com.kotcrab.vis.vis-ui</inherit>
++		</gwtInherits>
++		<projects>
++			<core>
++				<dependency>com.kotcrab.vis:vis-ui</dependency>
++			</core>
++			<desktop></desktop>
++			<android></android>
++			<ios></ios>
++			<html>
++				<dependency>com.kotcrab.vis:vis-ui:sources</dependency>
++			</html>
++		</projects>
++	</extension>
+ </extensions>
+diff --git a/gdx/src/com/badlogic/gdx.gwt.xml b/gdx/src/com/badlogic/gdx.gwt.xml
+index 6865cdc..9630ee1 100644
+--- a/gdx/src/com/badlogic/gdx.gwt.xml
++++ b/gdx/src/com/badlogic/gdx.gwt.xml
+@@ -228,6 +228,7 @@
+ 		<include name="graphics/glutils/VertexArray.java"/> <!-- Emulated -->
+ 		<include name="graphics/glutils/VertexBufferObject.java"/> <!-- Emulated -->
+ 		<include name="graphics/glutils/VertexBufferObjectSubData.java"/>
++		<include name="graphics/glutils/VertexBufferObjectWithVAO.java"/> <!-- Emulated -->
+ 		<include name="graphics/glutils/VertexData.java"/>
+ 
+ 	<!-- graphics/profiling -->
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFont.java b/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFont.java
+index 866aba7..5e24c2f 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFont.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFont.java
+@@ -764,6 +764,10 @@ public class BitmapFont implements Disposable {
+ 			if (page == null) kerning[ch >>> LOG2_PAGE_SIZE] = page = new byte[PAGE_SIZE];
+ 			page[ch & PAGE_SIZE - 1] = (byte)value;
+ 		}
++
++		public String toString () {
++			return Character.toString((char)id);
++		}
+ 	}
+ 
+ 	static int indexOf (CharSequence text, char ch, int start) {
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFontCache.java b/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFontCache.java
+index 94d6e4b..6a77f24 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFontCache.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g2d/BitmapFontCache.java
+@@ -21,6 +21,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont.BitmapFontData;
+ import com.badlogic.gdx.graphics.g2d.BitmapFont.Glyph;
+ import com.badlogic.gdx.graphics.g2d.BitmapFont.HAlignment;
+ import com.badlogic.gdx.graphics.g2d.BitmapFont.TextBounds;
++import com.badlogic.gdx.utils.Array;
+ import com.badlogic.gdx.utils.IntArray;
+ import com.badlogic.gdx.utils.NumberUtils;
+ 
+@@ -31,32 +32,28 @@ import com.badlogic.gdx.utils.NumberUtils;
+  * @author davebaol
+  * @author Alexander Dorokhov */
+ public class BitmapFontCache {
+-
+ 	private final BitmapFont font;
+ 
+-	private float[][] vertexData;
+-
+-	private int[] idx;
++	/** Vertex data per page. */
++	private final float[][] pageVertices;
++	/** Number of vertex data entries per page. */
++	private final int[] idx;
++	/** For each page, an array with a value for each glyph from that page, where the value is the index of the character in the
++	 * full text being cached. */
++	private IntArray[] pageGlyphIndices;
+ 	/** Used internally to ensure a correct capacity for multi-page font vertex data. */
+-	private int[] tmpGlyphCount;
++	private int[] tempGlyphCount;
+ 
+ 	private float x, y;
+ 	private float color = Color.WHITE.toFloatBits();
+ 	private final Color tempColor = new Color(1, 1, 1, 1);
+ 	private final TextBounds textBounds = new TextBounds();
+-	private boolean integer = true;
+-	private int glyphCount = 0;
+-
+-	/** An array for each page containing an entry for each glyph from that page, where the entry is the index of the character in
+-	 * the full text being cached. */
+-	private IntArray[] glyphIndices;
+-
+-	private boolean textChanged;
+-	private float oldTint = 0;
+-
+-	private TextMarkup markup = new TextMarkup();
+-
++	private boolean integer;
++	private int glyphCount;
+ 	private int charsCount;
++	private boolean textChanged;
++	private float oldTint;
++	private final TextMarkup markup = new TextMarkup();
+ 
+ 	public BitmapFontCache (BitmapFont font) {
+ 		this(font, font.usesIntegerPositions());
+@@ -70,18 +67,17 @@ public class BitmapFontCache {
+ 		int regionsLength = font.regions.length;
+ 		if (regionsLength == 0) throw new IllegalArgumentException("The specified font must contain at least one texture page.");
+ 
+-		this.vertexData = new float[regionsLength][];
++		this.pageVertices = new float[regionsLength][];
+ 
+ 		this.idx = new int[regionsLength];
+-		int vertexDataLength = vertexData.length;
+-		if (vertexDataLength > 1) { // If we have multiple pages...
+-			// Contains the indices of the glyph in the Cache as they are added.
+-			glyphIndices = new IntArray[vertexDataLength];
+-			for (int i = 0, n = glyphIndices.length; i < n; i++) {
+-				glyphIndices[i] = new IntArray();
+-			}
+-
+-			tmpGlyphCount = new int[vertexDataLength];
++		int pageCount = pageVertices.length;
++		if (pageCount > 1) {
++			// Contains the indices of the glyph in the cache as they are added.
++			pageGlyphIndices = new IntArray[pageCount];
++			for (int i = 0, n = pageGlyphIndices.length; i < n; i++)
++				pageGlyphIndices[i] = new IntArray();
++
++			tempGlyphCount = new int[pageCount];
+ 		}
+ 	}
+ 
+@@ -104,8 +100,8 @@ public class BitmapFontCache {
+ 		x += xAmount;
+ 		y += yAmount;
+ 
+-		for (int j = 0, length = vertexData.length; j < length; j++) {
+-			float[] vertices = vertexData[j];
++		for (int j = 0, length = pageVertices.length; j < length; j++) {
++			float[] vertices = pageVertices[j];
+ 			for (int i = 0, n = idx[j]; i < n; i += 5) {
+ 				vertices[i] += xAmount;
+ 				vertices[i + 1] += yAmount;
+@@ -136,8 +132,8 @@ public class BitmapFontCache {
+ 	public void setAlphas (float alpha) {
+ 		int alphaBits = ((int)(254 * alpha)) << 24;
+ 		float prev = 0, newColor = 0;
+-		for (int j = 0, length = vertexData.length; j < length; j++) {
+-			float[] vertices = vertexData[j];
++		for (int j = 0, length = pageVertices.length; j < length; j++) {
++			float[] vertices = pageVertices[j];
+ 			for (int i = 2, n = idx[j]; i < n; i += 5) {
+ 				float c = vertices[i];
+ 				if (c == prev && i != 2) {
+@@ -155,8 +151,8 @@ public class BitmapFontCache {
+ 
+ 	/** Sets the color of all text currently in the cache. Does not affect subsequently added text. */
+ 	public void setColors (float color) {
+-		for (int j = 0, length = vertexData.length; j < length; j++) {
+-			float[] vertices = vertexData[j];
++		for (int j = 0, length = pageVertices.length; j < length; j++) {
++			float[] vertices = pageVertices[j];
+ 			for (int i = 2, n = idx[j]; i < n; i += 5)
+ 				vertices[i] = color;
+ 		}
+@@ -165,8 +161,8 @@ public class BitmapFontCache {
+ 	/** Sets the color of all text currently in the cache. Does not affect subsequently added text. */
+ 	public void setColors (Color tint) {
+ 		final float color = tint.toFloatBits();
+-		for (int j = 0, length = vertexData.length; j < length; j++) {
+-			float[] vertices = vertexData[j];
++		for (int j = 0, length = pageVertices.length; j < length; j++) {
++			float[] vertices = pageVertices[j];
+ 			for (int i = 2, n = idx[j]; i < n; i += 5)
+ 				vertices[i] = color;
+ 		}
+@@ -176,8 +172,8 @@ public class BitmapFontCache {
+ 	public void setColors (float r, float g, float b, float a) {
+ 		int intBits = ((int)(255 * a) << 24) | ((int)(255 * b) << 16) | ((int)(255 * g) << 8) | ((int)(255 * r));
+ 		float color = NumberUtils.intToFloatColor(intBits);
+-		for (int j = 0, length = vertexData.length; j < length; j++) {
+-			float[] vertices = vertexData[j];
++		for (int j = 0, length = pageVertices.length; j < length; j++) {
++			float[] vertices = pageVertices[j];
+ 			for (int i = 2, n = idx[j]; i < n; i += 5)
+ 				vertices[i] = color;
+ 		}
+@@ -192,33 +188,31 @@ public class BitmapFontCache {
+ 	/** Sets the color of the specified characters. This may only be called after {@link #setText(CharSequence, float, float)} and
+ 	 * is reset every time setText is called. */
+ 	public void setColors (float color, int start, int end) {
+-		if (vertexData.length == 1) { // only one page...
+-			float[] vertices = vertexData[0];
++		if (pageVertices.length == 1) { // only one page...
++			float[] vertices = pageVertices[0];
+ 			for (int i = start * 20 + 2, n = end * 20; i < n; i += 5)
+ 				vertices[i] = color;
+-		} else {
+-			int pageCount = vertexData.length;
+-
+-			// for each page...
+-			for (int i = 0; i < pageCount; i++) {
+-				float[] vertices = vertexData[i];
+-
+-				// we need to loop through the indices and determine whether the glyph is inside begin/end
+-				for (int j = 0, n = glyphIndices[i].size; j < n; j++) {
+-					int gInd = glyphIndices[i].items[j];
+-
+-					// break early if the glyph is outside our bounds
+-					if (gInd >= end) break;
++			return;
++		}
+ 
+-					// if the glyph is inside start and end, then change it's colour
+-					if (gInd >= start) { // && gInd < end
+-						// modify color index
+-						for (int off = 0; off < 20; off += 5)
+-							vertices[off + (j * 20 + 2)] = color;
+-					}
++		int pageCount = pageVertices.length;
++		for (int i = 0; i < pageCount; i++) {
++			float[] vertices = pageVertices[i];
++			IntArray glyphIndices = pageGlyphIndices[i];
++			// Loop through the indices and determine whether the glyph is inside begin/end.
++			for (int j = 0, n = glyphIndices.size; j < n; j++) {
++				int glyphIndex = glyphIndices.items[j];
++
++				// break early if the glyph is outside our bounds
++				if (glyphIndex >= end) break;
++
++				// if the glyph is inside start and end, then change it's colour
++				if (glyphIndex >= start) { // && glyphIndex < end
++					// modify color index
++					for (int off = 0; off < 20; off += 5)
++						vertices[off + (j * 20 + 2)] = color;
+ 				}
+ 			}
+-
+ 		}
+ 	}
+ 
+@@ -253,17 +247,17 @@ public class BitmapFontCache {
+ 
+ 	public void draw (Batch spriteBatch) {
+ 		TextureRegion[] regions = font.getRegions();
+-		for (int j = 0, n = vertexData.length; j < n; j++) {
++		for (int j = 0, n = pageVertices.length; j < n; j++) {
+ 			if (idx[j] > 0) { // ignore if this texture has no glyphs
+-				float[] vertices = vertexData[j];
++				float[] vertices = pageVertices[j];
+ 				spriteBatch.draw(regions[j].getTexture(), vertices, 0, idx[j]);
+ 			}
+ 		}
+ 	}
+ 
+ 	public void draw (Batch spriteBatch, int start, int end) {
+-		if (vertexData.length == 1) { // i.e. 1 page
+-			spriteBatch.draw(font.getRegion().getTexture(), vertexData[0], start * 20, (end - start) * 20);
++		if (pageVertices.length == 1) { // i.e. 1 page
++			spriteBatch.draw(font.getRegion().getTexture(), pageVertices[0], start * 20, (end - start) * 20);
+ 		} else { // i.e. multiple pages
+ 			// TODO: bounds check?
+ 
+@@ -274,15 +268,15 @@ public class BitmapFontCache {
+ 			TextureRegion[] regions = font.getRegions();
+ 
+ 			// for each page...
+-			for (int i = 0, pageCount = vertexData.length; i < pageCount; i++) {
++			for (int i = 0, pageCount = pageVertices.length; i < pageCount; i++) {
+ 
+ 				int offset = -1;
+ 				int count = 0;
+ 
+ 				// we need to loop through the indices and determine where we begin within the start/end bounds
+-				IntArray currentGlyphIndices = glyphIndices[i];
+-				for (int j = 0, n = currentGlyphIndices.size; j < n; j++) {
+-					int glyphIndex = currentGlyphIndices.items[j];
++				IntArray glyphIndices = pageGlyphIndices[i];
++				for (int j = 0, n = glyphIndices.size; j < n; j++) {
++					int glyphIndex = glyphIndices.items[j];
+ 
+ 					// break early if the glyph is outside our bounds
+ 					if (glyphIndex >= end) break;
+@@ -301,7 +295,7 @@ public class BitmapFontCache {
+ 				if (offset == -1 || count == 0) continue;
+ 
+ 				// render the page vertex data with our determined offset and length
+-				spriteBatch.draw(regions[i].getTexture(), vertexData[i], offset * 20, count * 20);
++				spriteBatch.draw(regions[i].getTexture(), pageVertices[i], offset * 20, count * 20);
+ 			}
+ 		}
+ 	}
+@@ -328,7 +322,7 @@ public class BitmapFontCache {
+ 		charsCount = 0;
+ 		markup.clear();
+ 		for (int i = 0, n = idx.length; i < n; i++) {
+-			if (glyphIndices != null) glyphIndices[i].clear();
++			if (pageGlyphIndices != null) pageGlyphIndices[i].clear();
+ 			idx[i] = 0;
+ 		}
+ 	}
+@@ -356,21 +350,20 @@ public class BitmapFontCache {
+ 		return count;
+ 	}
+ 
+-	private void requireSequence (CharSequence seq, int start, int end) {
+-		if (vertexData.length == 1) {
++	private void requireSequence (CharSequence str, int start, int end) {
++		if (pageVertices.length == 1) {
+ 			// don't scan sequence if we just have one page and markup is disabled
+-			int newGlyphCount = countGlyphs(seq, start, end);
++			int newGlyphCount = countGlyphs(str, start, end);
+ 			require(0, newGlyphCount);
+ 		} else {
+-			for (int i = 0, n = tmpGlyphCount.length; i < n; i++)
+-				tmpGlyphCount[i] = 0;
+-
+-			// determine # of glyphs in each page
++			for (int i = 0, n = tempGlyphCount.length; i < n; i++)
++				tempGlyphCount[i] = 0;
++			// Determine # of glyphs in each page.
+ 			while (start < end) {
+-				char ch = seq.charAt(start++);
++				char ch = str.charAt(start++);
+ 				if (ch == '[' && font.markupEnabled) {
+-					if (!(start < end && seq.charAt(start) == '[')) { // non escaped '['
+-						int colorTagLen = markup.parseColorTag(seq, -1, start, end);
++					if (!(start < end && str.charAt(start) == '[')) { // non escaped '['
++						int colorTagLen = markup.parseColorTag(str, -1, start, end);
+ 						if (colorTagLen >= 0) {
+ 							start += colorTagLen + 1;
+ 							continue;
+@@ -380,28 +373,28 @@ public class BitmapFontCache {
+ 				}
+ 				Glyph g = font.data.getGlyph(ch);
+ 				if (g == null) continue;
+-				tmpGlyphCount[g.page]++;
++				tempGlyphCount[g.page]++;
+ 			}
+-			// require that many for each page
+-			for (int i = 0, n = tmpGlyphCount.length; i < n; i++)
+-				require(i, tmpGlyphCount[i]);
++			// Require that many for each page.
++			for (int i = 0, n = tempGlyphCount.length; i < n; i++)
++				require(i, tempGlyphCount[i]);
+ 		}
+ 	}
+ 
+ 	private void require (int page, int glyphCount) {
+-		if (glyphIndices != null) {
+-			if (glyphCount > glyphIndices[page].items.length)
+-				glyphIndices[page].ensureCapacity(glyphCount - glyphIndices[page].items.length);
++		if (pageGlyphIndices != null) {
++			if (glyphCount > pageGlyphIndices[page].items.length)
++				pageGlyphIndices[page].ensureCapacity(glyphCount - pageGlyphIndices[page].items.length);
+ 		}
+ 
+ 		int vertexCount = idx[page] + glyphCount * 20;
+-		float[] vertices = vertexData[page];
++		float[] vertices = pageVertices[page];
+ 		if (vertices == null) {
+-			vertexData[page] = new float[vertexCount];
++			pageVertices[page] = new float[vertexCount];
+ 		} else if (vertices.length < vertexCount) {
+ 			float[] newVertices = new float[vertexCount];
+ 			System.arraycopy(vertices, 0, newVertices, 0, idx[page]);
+-			vertexData[page] = newVertices;
++			pageVertices[page] = newVertices;
+ 		}
+ 	}
+ 
+@@ -474,8 +467,8 @@ public class BitmapFontCache {
+ 				lastGlyph = data.getGlyph(ch);
+ 				if (lastGlyph != null) {
+ 					addGlyph(lastGlyph, //
+-						x + lastGlyph.xoffset * scaleX, //
+-						y + lastGlyph.yoffset * scaleY, //
++						x + lastGlyph.xoffset, //
++						y + lastGlyph.yoffset, //
+ 						lastGlyph.width * scaleX, //
+ 						lastGlyph.height * scaleY);
+ 					x += lastGlyph.xadvance * scaleX;
+@@ -501,8 +494,8 @@ public class BitmapFontCache {
+ 					x += lastGlyph.getKerning(ch) * scaleX;
+ 					lastGlyph = g;
+ 					addGlyph(lastGlyph, //
+-						x + g.xoffset * scaleX, //
+-						y + g.yoffset * scaleY, //
++						x + g.xoffset, //
++						y + g.yoffset, //
+ 						g.width * scaleX, //
+ 						g.height * scaleY);
+ 					x += g.xadvance * scaleX;
+@@ -522,11 +515,9 @@ public class BitmapFontCache {
+ 
+ 		final int page = glyph.page;
+ 
+-		if (glyphIndices != null) {
+-			glyphIndices[page].add(glyphCount++);
+-		}
++		if (pageGlyphIndices != null) pageGlyphIndices[page].add(glyphCount++);
+ 
+-		final float[] vertices = vertexData[page];
++		final float[] vertices = pageVertices[page];
+ 
+ 		if (integer) {
+ 			x = Math.round(x);
+@@ -788,7 +779,7 @@ public class BitmapFontCache {
+ 	}
+ 
+ 	public float[] getVertices (int page) {
+-		return vertexData[page];
++		return pageVertices[page];
+ 	}
+ 
+ 	/** Count of characters currently being in cache */
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g2d/TextMarkup.java b/gdx/src/com/badlogic/gdx/graphics/g2d/TextMarkup.java
+index cdf0dae..bafc346 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g2d/TextMarkup.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g2d/TextMarkup.java
+@@ -30,8 +30,27 @@ import com.badlogic.gdx.utils.StringBuilder;
+  * @author davebaol
+  * @author Alexander Dorokhov */
+ class TextMarkup {
+-	private static final Color tempColor = new Color();
+-	private static final StringBuilder tempColorBuffer = new StringBuilder();
++	static private final Color tempColor = new Color();
++	static private final StringBuilder tempColorBuffer = new StringBuilder();
++
++	static private Pool<ColorChunk> colorChunkPool;
++	static private Application app = null;
++
++	private Array<ColorChunk> colorChunks = new Array<ColorChunk>();
++	private Array<Color> currentColorStack = new Array<Color>();
++	private Color lastColor = Color.WHITE;
++	private Color defaultColor = Color.WHITE;
++
++	public TextMarkup () {
++		if (Gdx.app != app) {
++			colorChunkPool = new Pool<ColorChunk>(32) {
++				protected ColorChunk newObject () {
++					return new ColorChunk();
++				}
++			};
++			app = Gdx.app;
++		}
++	}
+ 
+ 	/** Parses a color tag.
+ 	 * @param str the input string
+@@ -92,25 +111,6 @@ class TextMarkup {
+ 		return -1; // Unclosed color tag
+ 	}
+ 
+-	private static Pool<ColorChunk> colorChunkPool;
+-	private static Application app = null;
+-
+-	private Array<ColorChunk> colorChunks = new Array<ColorChunk>();
+-	private Array<Color> currentColorStack = new Array<Color>();
+-	private Color lastColor = Color.WHITE;
+-	private Color defaultColor = Color.WHITE;
+-
+-	public TextMarkup () {
+-		if (Gdx.app != app) {
+-			colorChunkPool = new Pool<ColorChunk>(32) {
+-				protected ColorChunk newObject () {
+-					return new ColorChunk();
+-				}
+-			};
+-			app = Gdx.app;
+-		}
+-	}
+-
+ 	public void beginChunk (Color color, int start) {
+ 		ColorChunk newChunk = colorChunkPool.obtain();
+ 		newChunk.color.set(color);
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/Attributes.java b/gdx/src/com/badlogic/gdx/graphics/g3d/Attributes.java
+index 4608d2e..0fe5a9d 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/Attributes.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/Attributes.java
+@@ -132,7 +132,7 @@ public class Attributes implements Iterable<Attribute>, Comparator<Attribute> {
+ 	/** Removes the attribute from the material, i.e.: material.remove(BlendingAttribute.ID); Can also be used to remove multiple
+ 	 * attributes also, i.e. remove(AttributeA.ID | AttributeB.ID); */
+ 	public final void remove (final long mask) {
+-		for (int i = 0; i < attributes.size; i++) {
++		for (int i = attributes.size - 1; i >= 0; i--) {
+ 			final long type = attributes.get(i).type;
+ 			if ((mask & type) == type) {
+ 				attributes.removeIndex(i);
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/AtlasTmxMapLoader.java b/gdx/src/com/badlogic/gdx/maps/tiled/AtlasTmxMapLoader.java
+index f443eff..286615b 100644
+--- a/gdx/src/com/badlogic/gdx/maps/tiled/AtlasTmxMapLoader.java
++++ b/gdx/src/com/badlogic/gdx/maps/tiled/AtlasTmxMapLoader.java
+@@ -139,8 +139,10 @@ public class AtlasTmxMapLoader extends BaseTmxMapLoader<AtlasTmxMapLoader.AtlasT
+ 		try {
+ 			if (parameter != null) {
+ 				convertObjectToTileSpace = parameter.convertObjectToTileSpace;
++				flipY = parameter.flipY;
+ 			} else {
+ 				convertObjectToTileSpace = false;
++				flipY = true;
+ 			}
+ 
+ 			FileHandle tmxFile = resolve(fileName);
+@@ -203,8 +205,10 @@ public class AtlasTmxMapLoader extends BaseTmxMapLoader<AtlasTmxMapLoader.AtlasT
+ 
+ 		if (parameter != null) {
+ 			convertObjectToTileSpace = parameter.convertObjectToTileSpace;
++			flipY = parameter.flipY;
+ 		} else {
+ 			convertObjectToTileSpace = false;
++			flipY = true;
+ 		}
+ 
+ 		try {
+@@ -369,7 +373,7 @@ public class AtlasTmxMapLoader extends BaseTmxMapLoader<AtlasTmxMapLoader.AtlasT
+ 					int tileid = firstgid + region.index;
+ 					tile.setId(tileid);
+ 					tile.setOffsetX(offsetX);
+-					tile.setOffsetY(-offsetY);
++					tile.setOffsetY(flipY ? -offsetY : offsetY);
+ 					tileset.putTile(tileid, tile);
+ 				}
+ 			}
+@@ -388,7 +392,7 @@ public class AtlasTmxMapLoader extends BaseTmxMapLoader<AtlasTmxMapLoader.AtlasT
+ 						tile = new StaticTiledMapTile(region);
+ 						tile.setId(tileid);
+ 						tile.setOffsetX(offsetX);
+-						tile.setOffsetY(-offsetY);
++						tile.setOffsetY(flipY ? -offsetY : offsetY);
+ 						tileset.putTile(tileid, tile);
+ 					}
+ 				}
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/BaseTmxMapLoader.java b/gdx/src/com/badlogic/gdx/maps/tiled/BaseTmxMapLoader.java
+index f8dd3bc..5c829c2 100644
+--- a/gdx/src/com/badlogic/gdx/maps/tiled/BaseTmxMapLoader.java
++++ b/gdx/src/com/badlogic/gdx/maps/tiled/BaseTmxMapLoader.java
+@@ -42,6 +42,9 @@ public abstract class BaseTmxMapLoader<P extends AssetLoaderParameters<TiledMap>
+ 		public TextureFilter textureMagFilter = TextureFilter.Nearest;
+ 		/** Whether to convert the objects' pixel position and size to the equivalent in tile space. **/
+ 		public boolean convertObjectToTileSpace = false;
++		/** Whether to flip all Y coordinates so that Y positive is down. All LibGDX renderers require flipped Y coordinates, and
++		 * thus flipY set to true. This parameter is included for non-rendering related purposes of TMX files, or custom renderers. */
++		public boolean flipY = true;
+ 	}
+ 
+ 	protected static final int FLAG_FLIP_HORIZONTALLY = 0x80000000;
+@@ -52,6 +55,7 @@ public abstract class BaseTmxMapLoader<P extends AssetLoaderParameters<TiledMap>
+ 	protected XmlReader xml = new XmlReader();
+ 	protected Element root;
+ 	protected boolean convertObjectToTileSpace;
++	protected boolean flipY = true;
+ 
+ 	protected int mapTileWidth;
+ 	protected int mapTileHeight;
+@@ -87,7 +91,7 @@ public abstract class BaseTmxMapLoader<P extends AssetLoaderParameters<TiledMap>
+ 					if (tile != null) {
+ 						Cell cell = createTileLayerCell(flipHorizontally, flipVertically, flipDiagonally);
+ 						cell.setTile(tile);
+-						layer.setCell(x, height - 1 - y, cell);
++						layer.setCell(x, flipY ? height - 1 - y : y, cell);
+ 					}
+ 				}
+ 			}
+@@ -121,7 +125,10 @@ public abstract class BaseTmxMapLoader<P extends AssetLoaderParameters<TiledMap>
+ 	protected void loadImageLayer (TiledMap map, Element element, FileHandle tmxFile, ImageResolver imageResolver) {
+ 		if (element.getName().equals("imagelayer")) {
+ 			int x = Integer.parseInt(element.getAttribute("x", "0"));
+-			int y = mapHeightInPixels - Integer.parseInt(element.getAttribute("y", "0"));
++			int y = Integer.parseInt(element.getAttribute("y", "0"));
++
++			if (flipY) y = mapHeightInPixels - y;
++
+ 			TextureRegion texture = null;
+ 
+ 			Element image = element.getChildByName("image");
+@@ -164,7 +171,7 @@ public abstract class BaseTmxMapLoader<P extends AssetLoaderParameters<TiledMap>
+ 			float scaleY = convertObjectToTileSpace ? 1.0f / mapTileHeight : 1.0f;
+ 
+ 			float x = element.getFloatAttribute("x", 0) * scaleX;
+-			float y = (mapHeightInPixels - element.getFloatAttribute("y", 0)) * scaleY;
++			float y = (flipY ? (mapHeightInPixels - element.getFloatAttribute("y", 0)) : element.getFloatAttribute("y", 0)) * scaleY;
+ 
+ 			float width = element.getFloatAttribute("width", 0) * scaleX;
+ 			float height = element.getFloatAttribute("height", 0) * scaleY;
+@@ -177,7 +184,7 @@ public abstract class BaseTmxMapLoader<P extends AssetLoaderParameters<TiledMap>
+ 					for (int i = 0; i < points.length; i++) {
+ 						String[] point = points[i].split(",");
+ 						vertices[i * 2] = Float.parseFloat(point[0]) * scaleX;
+-						vertices[i * 2 + 1] = -Float.parseFloat(point[1]) * scaleY;
++						vertices[i * 2 + 1] = Float.parseFloat(point[1]) * scaleY * (flipY ? -1 : 1);
+ 					}
+ 					Polygon polygon = new Polygon(vertices);
+ 					polygon.setPosition(x, y);
+@@ -188,13 +195,13 @@ public abstract class BaseTmxMapLoader<P extends AssetLoaderParameters<TiledMap>
+ 					for (int i = 0; i < points.length; i++) {
+ 						String[] point = points[i].split(",");
+ 						vertices[i * 2] = Float.parseFloat(point[0]) * scaleX;
+-						vertices[i * 2 + 1] = -Float.parseFloat(point[1]) * scaleY;
++						vertices[i * 2 + 1] = Float.parseFloat(point[1]) * scaleY * (flipY ? -1 : 1);
+ 					}
+ 					Polyline polyline = new Polyline(vertices);
+ 					polyline.setPosition(x, y);
+ 					object = new PolylineMapObject(polyline);
+ 				} else if ((child = element.getChildByName("ellipse")) != null) {
+-					object = new EllipseMapObject(x, y - height, width, height);
++					object = new EllipseMapObject(x, flipY ? y - height : y, width, height);
+ 				}
+ 			}
+ 			if (object == null) {
+@@ -210,13 +217,13 @@ public abstract class BaseTmxMapLoader<P extends AssetLoaderParameters<TiledMap>
+ 					TextureMapObject textureMapObject = new TextureMapObject(textureRegion);
+ 					textureMapObject.getProperties().put("gid", id);
+ 					textureMapObject.setX(x);
+-					textureMapObject.setY(y - height);
++					textureMapObject.setY(flipY ? y - height : y);
+ 					textureMapObject.setScaleX(scaleX);
+ 					textureMapObject.setScaleY(scaleY);
+ 					textureMapObject.setRotation(element.getFloatAttribute("rotation", 0));
+ 					object = textureMapObject;
+ 				} else {
+-					object = new RectangleMapObject(x, y - height, width, height);
++					object = new RectangleMapObject(x, flipY ? y - height : y, width, height);
+ 				}
+ 			}
+ 			object.setName(element.getAttribute("name", null));
+@@ -233,7 +240,7 @@ public abstract class BaseTmxMapLoader<P extends AssetLoaderParameters<TiledMap>
+ 				object.getProperties().put("id", id);
+ 			}
+ 			object.getProperties().put("x", x * scaleX);
+-			object.getProperties().put("y", (y - height) * scaleY);
++			object.getProperties().put("y", (flipY ? y - height : y) * scaleY);
+ 			object.getProperties().put("width", width);
+ 			object.getProperties().put("height", height);
+ 			object.setVisible(element.getIntAttribute("visible", 1) == 1);
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/TmxMapLoader.java b/gdx/src/com/badlogic/gdx/maps/tiled/TmxMapLoader.java
+index a64e068..67de6aa 100644
+--- a/gdx/src/com/badlogic/gdx/maps/tiled/TmxMapLoader.java
++++ b/gdx/src/com/badlogic/gdx/maps/tiled/TmxMapLoader.java
+@@ -73,6 +73,7 @@ public class TmxMapLoader extends BaseTmxMapLoader<TmxMapLoader.Parameters> {
+ 	public TiledMap load (String fileName, TmxMapLoader.Parameters parameters) {
+ 		try {
+ 			this.convertObjectToTileSpace = parameters.convertObjectToTileSpace;
++			this.flipY = parameters.flipY;
+ 			FileHandle tmxFile = resolve(fileName);
+ 			root = xml.parse(tmxFile);
+ 			ObjectMap<String, Texture> textures = new ObjectMap<String, Texture>();
+@@ -100,8 +101,10 @@ public class TmxMapLoader extends BaseTmxMapLoader<TmxMapLoader.Parameters> {
+ 
+ 		if (parameter != null) {
+ 			convertObjectToTileSpace = parameter.convertObjectToTileSpace;
++			flipY = parameter.flipY;
+ 		} else {
+ 			convertObjectToTileSpace = false;
++			flipY = true;
+ 		}
+ 		try {
+ 			map = loadTilemap(root, tmxFile, new AssetManagerImageResolver(manager));
+@@ -379,7 +382,7 @@ public class TmxMapLoader extends BaseTmxMapLoader<TmxMapLoader.Parameters> {
+ 						TiledMapTile tile = new StaticTiledMapTile(tileRegion);
+ 						tile.setId(id);
+ 						tile.setOffsetX(offsetX);
+-						tile.setOffsetY(-offsetY);
++						tile.setOffsetY(flipY ? -offsetY : offsetY);
+ 						tileset.putTile(id++, tile);
+ 					}
+ 				}
+@@ -397,7 +400,7 @@ public class TmxMapLoader extends BaseTmxMapLoader<TmxMapLoader.Parameters> {
+ 					TiledMapTile tile = new StaticTiledMapTile(texture);
+ 					tile.setId(firstgid + tileElement.getIntAttribute("id"));
+ 					tile.setOffsetX(offsetX);
+-					tile.setOffsetY(-offsetY);
++					tile.setOffsetY(flipY ? -offsetY : offsetY);
+ 					tileset.putTile(tile.getId(), tile);
+ 				}
+ 			}
+diff --git a/gdx/src/com/badlogic/gdx/math/GeometryUtils.java b/gdx/src/com/badlogic/gdx/math/GeometryUtils.java
+index a75cfba..5080bef 100644
+--- a/gdx/src/com/badlogic/gdx/math/GeometryUtils.java
++++ b/gdx/src/com/badlogic/gdx/math/GeometryUtils.java
+@@ -165,9 +165,14 @@ public final class GeometryUtils {
+ 		x += (x0 + x1) * a;
+ 		y += (y0 + y1) * a;
+ 
+-		signedArea *= 0.5f;
+-		centroid.x = x / (6 * signedArea);
+-		centroid.y = y / (6 * signedArea);
++		if (signedArea == 0) {
++			centroid.x = 0;
++			centroid.y = 0;
++		} else {
++			signedArea *= 0.5f;
++			centroid.x = x / (6 * signedArea);
++			centroid.y = y / (6 * signedArea);
++		}
+ 		return centroid;
+ 	}
+ 
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/Group.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/Group.java
+index 8d82e34..07bc6b1 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/Group.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/Group.java
+@@ -152,6 +152,7 @@ public class Group extends Actor implements Cullable {
+ 			for (int i = 0, n = children.size; i < n; i++) {
+ 				Actor child = actors[i];
+ 				if (!child.isVisible()) continue;
++				if (!child.getDebug()) continue;
+ 				child.drawDebug(shapes);
+ 			}
+ 			shapes.flush();
+@@ -163,6 +164,7 @@ public class Group extends Actor implements Cullable {
+ 			for (int i = 0, n = children.size; i < n; i++) {
+ 				Actor child = actors[i];
+ 				if (!child.isVisible()) continue;
++				if (!child.getDebug()) continue;
+ 				float cx = child.x, cy = child.y;
+ 				child.x = cx + offsetX;
+ 				child.y = cy + offsetY;
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/Stage.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/Stage.java
+index 883167c..5f731c4 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/Stage.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/Stage.java
+@@ -635,7 +635,7 @@ public class Stage extends InputAdapter implements Disposable {
+ 		FocusEvent event = Pools.obtain(FocusEvent.class);
+ 		event.setStage(this);
+ 		event.setType(FocusEvent.Type.scroll);
+-		Actor oldScrollFocus = keyboardFocus;
++		Actor oldScrollFocus = scrollFocus;
+ 		if (oldScrollFocus != null) {
+ 			event.setFocused(false);
+ 			event.setRelatedActor(actor);
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ProgressBar.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ProgressBar.java
+index cd5f978..64b32dc 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ProgressBar.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/ProgressBar.java
+@@ -203,7 +203,7 @@ public class ProgressBar extends Widget implements Disableable {
+ 	}
+ 
+ 	public float getVisualPercent () {
+-		return visualInterpolation.apply(getPercent());
++		return visualInterpolation.apply((getVisualValue() - min) / (max - min));
+ 	}
+ 
+ 	/** Returns progress bar visual position within the range. */
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/TextField.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/TextField.java
+index 2fb173b..25fc57e 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/TextField.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/TextField.java
+@@ -881,7 +881,7 @@ public class TextField extends Widget implements Disableable {
+ 			} else {
+ 				boolean delete = character == DELETE;
+ 				boolean backspace = character == BACKSPACE;
+-				boolean add = style.font.containsCharacter(character)
++				boolean add = (!onlyFontChars || style.font.containsCharacter(character))
+ 					|| (writeEnters && (character == ENTER_ANDROID || character == ENTER_DESKTOP));
+ 				boolean remove = backspace || delete;
+ 				if (add || remove) {
+diff --git a/gdx/src/com/badlogic/gdx/utils/reflect/ClassReflection.java b/gdx/src/com/badlogic/gdx/utils/reflect/ClassReflection.java
+index 9030770..b110e84 100644
+--- a/gdx/src/com/badlogic/gdx/utils/reflect/ClassReflection.java
++++ b/gdx/src/com/badlogic/gdx/utils/reflect/ClassReflection.java
+@@ -56,6 +56,11 @@ public final class ClassReflection {
+ 	static public boolean isStaticClass (Class c) {
+ 		return Modifier.isStatic(c.getModifiers());
+ 	}
++	
++	/** Determines if the supplied Class object represents an array class. */
++	static public boolean isArray (Class c) {
++		return c.isArray();
++	}
+ 
+ 	/** Creates a new instance of the class represented by the supplied Class. */
+ 	static public <T> T newInstance (Class<T> c) throws ReflectionException {

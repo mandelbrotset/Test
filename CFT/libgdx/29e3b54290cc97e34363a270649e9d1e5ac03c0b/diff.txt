@@ -1,0 +1,1732 @@
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/Model.java b/gdx/src/com/badlogic/gdx/graphics/g3d/Model.java
+index 0ab0e67..43d196f 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/Model.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/Model.java
+@@ -28,9 +28,9 @@ import com.badlogic.gdx.graphics.g3d.old.materials.MaterialAttribute;
+ import com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor;
+ import com.badlogic.gdx.graphics.g3d.utils.TextureProvider;
+ import com.badlogic.gdx.graphics.g3d.utils.TextureProvider.FileTextureProvider;
+-import com.badlogic.gdx.math.collision.BoundingBox;
+ import com.badlogic.gdx.utils.Array;
+ import com.badlogic.gdx.utils.BufferUtils;
++import com.badlogic.gdx.utils.Disposable;
+ import com.badlogic.gdx.utils.ObjectMap;
+ import com.badlogic.gdx.utils.Pool;
+ 
+@@ -48,7 +48,7 @@ import com.badlogic.gdx.utils.Pool;
+  * @author badlogic
+  *
+  */
+-public class Model {
++public class Model implements Disposable {
+ 	/** the meshes of the model **/
+ 	public Array<Mesh> meshes = new Array<Mesh>();
+ 	/** parts of meshes, used by nodes that have a graphical representation FIXME not sure if superfluous, stored in Nodes as well, could be useful to create bullet meshes **/
+@@ -254,14 +254,14 @@ public class Model {
+ 			node.calculateTransforms(true);
+ 		}
+ 	}
+-	
+-	private final BoundingBox meshBounds = new BoundingBox();
+-	public BoundingBox getBoundingBox(final BoundingBox out) {
+-		out.inf();
+-		for (Mesh mesh : meshes) {
+-			mesh.calculateBoundingBox(meshBounds);
+-			out.ext(meshBounds);
++
++	@Override
++	public void dispose () {
++		for(Mesh mesh: meshes) {
++			mesh.dispose();
++		}
++		for(NewMaterial material: materials) {
++			// FIXME dispose textures! attribtue should probably be disposable, can decide whether it wants to get rid of resource or not
+ 		}
+-		return out;
+ 	}
+ }
+\ No newline at end of file
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/ModelBatch.java b/gdx/src/com/badlogic/gdx/graphics/g3d/ModelBatch.java
+index 527e724..bea6a5c 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/ModelBatch.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/ModelBatch.java
+@@ -1,6 +1,5 @@
+ package com.badlogic.gdx.graphics.g3d;
+ 
+-import com.badlogic.gdx.Gdx;
+ import com.badlogic.gdx.graphics.Camera;
+ import com.badlogic.gdx.graphics.g3d.test.Light;
+ import com.badlogic.gdx.graphics.g3d.utils.DefaultRenderableSorter;
+@@ -9,9 +8,10 @@ import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
+ import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
+ import com.badlogic.gdx.math.Matrix4;
+ import com.badlogic.gdx.utils.Array;
++import com.badlogic.gdx.utils.Disposable;
+ import com.badlogic.gdx.utils.Pool;
+ 
+-public class ModelBatch {
++public class ModelBatch implements Disposable {
+ 	protected Camera camera;
+ 	protected final Pool<Renderable> renderablesPool = new Pool<Renderable>() {
+ 		@Override
+@@ -72,31 +72,35 @@ public class ModelBatch {
+ 		camera = null;
+ 	}
+ 
+-	/** Add an instance to render */
+-	protected void addRenderable(final Renderable renderable) {
++	public void render(final Renderable renderable) {
+ 		renderable.shader = shaderProvider.getShader(renderable);
+ 		renderable.mesh.setAutoBind(false);
+ 		renderables.add(renderable);
+ 	}
+ 	
+-	public void addModel(final Model model, final Matrix4 transform) {
+-		addModel(model, transform, null, null);
++	public void render(final Model model, final Matrix4 transform) {
++		render(model, transform, null, null);
+ 	}
+ 	
+-	public void addModel(final Model model, final Matrix4 transform, final Light[] lights) {
+-		addModel(model, transform, lights, null);
++	public void render(final Model model, final Matrix4 transform, final Light[] lights) {
++		render(model, transform, lights, null);
+ 	}
+ 	
+-	public void addModel(final Model model, final Matrix4 transform, final Light[] lights, final Shader shader) {
++	public void render(final Model model, final Matrix4 transform, final Light[] lights, final Shader shader) {
+ 		int offset = renderables.size;
+ 		model.getRenderables(renderables, renderablesPool);
+ 		for (int i = offset; i < renderables.size; i++) {
+ 			Renderable renderable = renderables.get(i);
+ 			renderable.lights = lights;
+ 			renderable.shader = shader;
+-			renderable.transform.set(transform);
+-//			renderable.transform; FIXME multiply transform!
++			renderable.shader = shader;
++			renderable.transform.mul(transform);
+ 			reuseableRenderables.add(renderable);
+ 		}
+ 	}
++
++	@Override
++	public void dispose () {
++		shaderProvider.dispose();
++	}
+ }
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/Shader.java b/gdx/src/com/badlogic/gdx/graphics/g3d/Shader.java
+index b4b2bb0..5c4dd15 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/Shader.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/Shader.java
+@@ -2,8 +2,9 @@ package com.badlogic.gdx.graphics.g3d;
+ 
+ import com.badlogic.gdx.graphics.Camera;
+ import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
++import com.badlogic.gdx.utils.Disposable;
+ 
+-public interface Shader {
++public interface Shader extends Disposable {
+ 	int compareTo(Shader other); // TODO: probably better to add some weight value to sort on
+ 	boolean canRender(Renderable instance);
+ 	void begin(Camera camera, RenderContext context);
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/model/Node.java b/gdx/src/com/badlogic/gdx/graphics/g3d/model/Node.java
+index 3851040..2c94dcb 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/model/Node.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/model/Node.java
+@@ -42,7 +42,10 @@ public class Node {
+ 	 * @return the local transform
+ 	 */
+ 	public Matrix4 calculateLocalTransform() {
+-		// FIXME implement local transform calculation based on translation,rotation,scale
++		localTransform.idt();
++		localTransform.translate(translation);
++		localTransform.rotate(rotation);
++		localTransform.scale(scale.x, scale.y, scale.z);
+ 		return localTransform;
+ 	}
+ 
+@@ -52,7 +55,9 @@ public class Node {
+ 	 * @return the world transform
+ 	 */
+ 	public Matrix4 calculateWorldTransform() {
+-		// FIXME implement world transform calculation based on local transform and parent transform
++		worldTransform.set(localTransform);
++		if(parent != null) 
++			worldTransform.mul(parent.worldTransform);
+ 		return worldTransform;
+ 	}
+ 	
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/old/loaders/wavefront/ObjLoader.java b/gdx/src/com/badlogic/gdx/graphics/g3d/old/loaders/wavefront/ObjLoader.java
+index 4295289..a8637d3 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/old/loaders/wavefront/ObjLoader.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/old/loaders/wavefront/ObjLoader.java
+@@ -33,29 +33,20 @@ import com.badlogic.gdx.graphics.Texture;
+ import com.badlogic.gdx.graphics.Texture.TextureFilter;
+ import com.badlogic.gdx.graphics.VertexAttribute;
+ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
+-import com.badlogic.gdx.graphics.g3d.materials.ColorAttribute;
+-import com.badlogic.gdx.graphics.g3d.materials.NewMaterial;
+-import com.badlogic.gdx.graphics.g3d.materials.TextureAttribute;
+-import com.badlogic.gdx.graphics.g3d.Model;
+-import com.badlogic.gdx.graphics.g3d.model.data.ModelData;
+-import com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial;
+-import com.badlogic.gdx.graphics.g3d.model.data.ModelMesh;
+-import com.badlogic.gdx.graphics.g3d.model.data.ModelMeshPart;
+-import com.badlogic.gdx.graphics.g3d.model.data.ModelMeshPartMaterial;
+-import com.badlogic.gdx.graphics.g3d.model.data.ModelNode;
+-import com.badlogic.gdx.graphics.g3d.model.data.ModelTexture;
+ import com.badlogic.gdx.graphics.g3d.old.ModelLoaderHints;
+-import com.badlogic.gdx.graphics.g3d.utils.TextureDescriptor;
++import com.badlogic.gdx.graphics.g3d.old.loaders.StillModelLoader;
++import com.badlogic.gdx.graphics.g3d.old.materials.ColorAttribute;
++import com.badlogic.gdx.graphics.g3d.old.materials.Material;
++import com.badlogic.gdx.graphics.g3d.old.materials.TextureAttribute;
++import com.badlogic.gdx.graphics.g3d.old.model.still.StillModel;
++import com.badlogic.gdx.graphics.g3d.old.model.still.StillSubMesh;
+ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+-import com.badlogic.gdx.math.Quaternion;
+-import com.badlogic.gdx.math.Vector3;
+-import com.badlogic.gdx.utils.Array;
+ import com.badlogic.gdx.utils.FloatArray;
+ 
+ /** Loads Wavefront OBJ files.
+  * 
+  * @author mzechner, espitz */
+-public class ObjLoader /* implements StillModelLoader */ {
++public class ObjLoader implements StillModelLoader {
+ 	final FloatArray verts;
+ 	final FloatArray norms;
+ 	final FloatArray uvs;
+@@ -71,7 +62,7 @@ public class ObjLoader /* implements StillModelLoader */ {
+ 	/** Loads a Wavefront OBJ file from a given file handle.
+ 	 * 
+ 	 * @param file the FileHandle */
+-	public Model loadObj (FileHandle file) {
++	public StillModel loadObj (FileHandle file) {
+ 		return loadObj(file, false);
+ 	}
+ 
+@@ -79,7 +70,7 @@ public class ObjLoader /* implements StillModelLoader */ {
+ 	 * 
+ 	 * @param file the FileHandle
+ 	 * @param flipV whether to flip the v texture coordinate (Blender, Wings3D, et al) */
+-	public Model loadObj (FileHandle file, boolean flipV) {
++	public StillModel loadObj (FileHandle file, boolean flipV) {
+ 		return loadObj(file, file.parent(), flipV);
+ 	}
+ 
+@@ -88,7 +79,7 @@ public class ObjLoader /* implements StillModelLoader */ {
+ 	 * @param file the FileHandle
+ 	 * @param textureDir
+ 	 * @param flipV whether to flip the v texture coordinate (Blender, Wings3D, et al) */
+-	public Model loadObj (FileHandle file, FileHandle textureDir, boolean flipV) {
++	public StillModel loadObj (FileHandle file, FileHandle textureDir, boolean flipV) {
+ 		String line;
+ 		String[] tokens;
+ 		char firstChar;
+@@ -100,13 +91,10 @@ public class ObjLoader /* implements StillModelLoader */ {
+ 		groups.add(activeGroup);
+ 
+ 		BufferedReader reader = new BufferedReader(new InputStreamReader(file.read()), 4096);
+-		int id = 0;
+ 		try {
+ 			while ((line = reader.readLine()) != null) {
+ 
+ 				tokens = line.split("\\s+");
+-				if (tokens.length < 1)
+-					break;
+ 
+ 				if (tokens[0].length() == 0) {
+ 					continue;
+@@ -190,7 +178,7 @@ public class ObjLoader /* implements StillModelLoader */ {
+ 		// Get number of objects/groups remaining after removing empty ones
+ 		final int numGroups = groups.size();
+ 
+-		final ModelData data = new ModelData();
++		final StillModel model = new StillModel(new StillSubMesh[numGroups]);
+ 
+ 		for (int g = 0; g < numGroups; g++) {
+ 			Group group = groups.get(g);
+@@ -228,43 +216,23 @@ public class ObjLoader /* implements StillModelLoader */ {
+ 					finalIndices[i] = (short)i;
+ 				}
+ 			}
++			final Mesh mesh;
+ 
+ 			ArrayList<VertexAttribute> attributes = new ArrayList<VertexAttribute>();
+ 			attributes.add(new VertexAttribute(Usage.Position, 3, ShaderProgram.POSITION_ATTRIBUTE));
+ 			if (hasNorms) attributes.add(new VertexAttribute(Usage.Normal, 3, ShaderProgram.NORMAL_ATTRIBUTE));
+ 			if (hasUVs) attributes.add(new VertexAttribute(Usage.TextureCoordinates, 2, ShaderProgram.TEXCOORD_ATTRIBUTE + "0"));
+-		
+-			String nodeId = "node" + (++id);
+-			String meshId = "mesh" + id;
+-			String partId = "part" + id;
+-			ModelNode node = new ModelNode();
+-			node.id = nodeId;
+-			node.meshId = meshId;
+-			node.scale = new Vector3(1,1,1);
+-			node.translation = new Vector3();
+-			node.rotation = new Quaternion();
+-			ModelMeshPartMaterial pm = new ModelMeshPartMaterial();
+-			pm.meshPartId = partId;
+-			pm.materialId = group.materialName;
+-			node.meshPartMaterials = new ModelMeshPartMaterial[] { pm };
+-			ModelMeshPart part = new ModelMeshPart();
+-			part.id = partId;
+-			part.indices = finalIndices;
+-			part.primitiveType = GL10.GL_TRIANGLES;
+-			ModelMesh mesh = new ModelMesh();
+-			mesh.id = meshId;
+-			mesh.attributes = attributes.toArray(new VertexAttribute[attributes.size()]);
+-			mesh.vertices = finalVerts;
+-			mesh.parts = new ModelMeshPart[] { part };
+-			data.nodes.add(node);
+-			data.meshes.add(mesh);
+-			ModelMaterial mm = mtl.getMaterial(group.materialName);
+-			data.materials.add(mm);
++
++			mesh = new Mesh(true, numFaces * 3, numIndices, attributes.toArray(new VertexAttribute[attributes.size()]));
++			mesh.setVertices(finalVerts);
++			if (numIndices > 0) mesh.setIndices(finalIndices);
++
++			StillSubMesh subMesh = new StillSubMesh(group.name, mesh, GL10.GL_TRIANGLES);
++			subMesh.material = mtl.getMaterial(group.materialName);
++			model.subMeshes[g] = subMesh;
++
+ 		}
+ 
+-		//for (ModelMaterial m : mtl.materials)
+-			//data.materials.add(m);
+-		
+ 		// An instance of ObjLoader can be used to load more than one OBJ.
+ 		// Clearing the ArrayList cache instead of instantiating new
+ 		// ArrayLists should result in slightly faster load times for
+@@ -274,7 +242,7 @@ public class ObjLoader /* implements StillModelLoader */ {
+ 		if (uvs.size > 0) uvs.clear();
+ 		if (groups.size() > 0) groups.clear();
+ 
+-		return new Model(data);
++		return model;
+ 	}
+ 
+ 	private Group setActiveGroup (String name) {
+@@ -304,24 +272,25 @@ public class ObjLoader /* implements StillModelLoader */ {
+ 		int numFaces;
+ 		boolean hasNorms;
+ 		boolean hasUVs;
+-		NewMaterial mat;
++		Material mat;
+ 
+ 		Group (String name) {
+ 			this.name = name;
+ 			this.faces = new ArrayList<Integer>(200);
+ 			this.numFaces = 0;
+-			this.mat = new NewMaterial("");
++			this.mat = new Material("");
+ 			this.materialName = "default";
+ 		}
+ 	}
+ 
+-	public Model load (FileHandle handle, ModelLoaderHints hints) {
++	@Override
++	public StillModel load (FileHandle handle, ModelLoaderHints hints) {
+ 		return loadObj(handle, hints.flipV);
+ 	}
+ }
+ 
+ class MtlLoader {
+-	public ArrayList<ModelMaterial> materials = new ArrayList<ModelMaterial>();
++	private ArrayList<Material> materials = new ArrayList<Material>();
+ 	private static AssetManager assetManager;
+ 	private static Texture emptyTexture = null;
+ 
+@@ -343,7 +312,7 @@ class MtlLoader {
+ 		String curMatName = "default";
+ 		Color difcolor = Color.WHITE;
+ 		Color speccolor = Color.WHITE;
+-		String texFilename = null;
++		Texture texture = emptyTexture;
+ 
+ 		FileHandle file = Gdx.files.internal(name);
+ 		if (file == null || file.exists() == false) return;
+@@ -361,14 +330,8 @@ class MtlLoader {
+ 				} else if (tokens[0].charAt(0) == '#')
+ 					continue;
+ 				else if (tokens[0].toLowerCase().equals("newmtl")) {
+-					ModelMaterial mat = new ModelMaterial();
+-					mat.id = curMatName;
+-					mat.diffuse = new Color(difcolor);
+-					mat.specular = new Color(speccolor);
+-					mat.diffuseTextures = new Array<ModelTexture>();
+-					ModelTexture tex = new ModelTexture();
+-					tex.fileName = new String(texFilename);
+-					mat.diffuseTextures.add(tex);
++					Material mat = new Material(curMatName, new TextureAttribute(texture, 0, TextureAttribute.diffuseTexture),
++						new ColorAttribute(difcolor, ColorAttribute.diffuse), new ColorAttribute(speccolor, ColorAttribute.specular));
+ 					materials.add(mat);
+ 
+ 					if (tokens.length > 1) {
+@@ -397,9 +360,13 @@ class MtlLoader {
+ 				} else if (tokens[0].toLowerCase().equals("map_kd")) {
+ 					String textureName = tokens[1];
+ 					if (textureName.length() > 0) {
+-						texFilename = textureDir.child(textureName).toString();
++						String texname = textureDir.child(textureName).toString();
++						assetManager.load(texname, Texture.class);
++						assetManager.finishLoading();
++						texture = assetManager.get(texname, Texture.class);
++						texture.setFilter(TextureFilter.Linear, TextureFilter.Linear);
+ 					} else
+-						texFilename = null; 
++						texture = emptyTexture;
+ 
+ 				}
+ 
+@@ -410,27 +377,18 @@ class MtlLoader {
+ 		}
+ 
+ 		// last material
+-		ModelMaterial mat = new ModelMaterial();
+-		mat.id = curMatName;
+-		mat.diffuse = new Color(difcolor);
+-		mat.specular = new Color(speccolor);
+-		mat.diffuseTextures = new Array<ModelTexture>();
+-		ModelTexture tex = new ModelTexture();
+-		tex.fileName = new String(texFilename);
+-		mat.diffuseTextures.add(tex);
++		Material mat = new Material(curMatName, new TextureAttribute(texture, 0, TextureAttribute.diffuseTexture),
++			new ColorAttribute(difcolor, ColorAttribute.diffuse), new ColorAttribute(speccolor, ColorAttribute.specular));
+ 		materials.add(mat);
+ 
+ 		return;
+ 	}
+-	
+-	public ModelMaterial getMaterial(final String name) {
+-		for (final ModelMaterial m : materials)
+-			if (m.id.equals(name))
+-				return m;
+-		ModelMaterial mat = new ModelMaterial();
+-		mat.id = name;
+-		mat.diffuse = new Color(Color.WHITE);
+-		materials.add(mat);
+-		return mat;
++
++	public Material getMaterial (String name) {
++		name = name.replace('.', '_');
++		for (Material mat : materials) {
++			if (mat.getName().equals(name)) return mat;
++		}
++		return new Material("default");
+ 	}
+ }
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/test/TestShader.java b/gdx/src/com/badlogic/gdx/graphics/g3d/test/TestShader.java
+index 1009e65..1b266c4 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/test/TestShader.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/test/TestShader.java
+@@ -82,7 +82,7 @@ public class TestShader implements Shader {
+ 			prefix += "#define "+TextureAttribute.DiffuseAlias+"Flag\n";
+ 		if ((mask & ColorAttribute.Diffuse) == ColorAttribute.Diffuse)
+ 			prefix += "#define "+ColorAttribute.DiffuseAlias+"Flag\n";
+-
++		
+ 		program = new ShaderProgram(prefix + vertexShader, prefix + fragmentShader);
+ 		if (!program.isCompiled())
+ 			throw new GdxRuntimeException(program.getLog());
+@@ -227,4 +227,9 @@ public class TestShader implements Shader {
+ 			}
+ 		}
+ 	}
++
++	@Override
++	public void dispose () {
++		program.dispose();
++	}
+ }
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/test/test.fragment.glsl b/gdx/src/com/badlogic/gdx/graphics/g3d/test/test.fragment.glsl
+index 4aa2c1b..c983060 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/test/test.fragment.glsl
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/test/test.fragment.glsl
+@@ -8,6 +8,8 @@ precision mediump float;
+ #define LOWP
+ #endif
+ 
++varying vec3 v_normal;
++
+ #if defined(diffuseTextureFlag) || defined(specularTextureFlag)
+ varying MED vec2 v_texCoords0;
+ #endif
+@@ -40,7 +42,6 @@ struct Light
+ uniform Light lights[NUM_LIGHTS];
+ 
+ varying vec3 v_lightLambert;
+-varying vec3 v_normal;
+ #endif
+ #endif
+ 
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/test/test.vertex.glsl b/gdx/src/com/badlogic/gdx/graphics/g3d/test/test.vertex.glsl
+index 7ab3856..6ca4d05 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/test/test.vertex.glsl
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/test/test.vertex.glsl
+@@ -3,13 +3,10 @@
+ #endif
+ 
+ attribute vec3 a_position;
+-
+-#ifdef NUM_LIGHTS
+ attribute vec3 a_normal;
+ 
+ uniform mat3 u_normalMatrix;
+ varying vec3 v_normal;
+-#endif
+ 
+ #ifdef textureFlag
+ attribute vec2 a_texCoord0;
+@@ -41,10 +38,9 @@ void main() {
+ 		
+ 	vec4 pos = u_modelTrans * vec4(a_position, 1.0);
+ 	gl_Position = u_projTrans * pos;
+-
+-	#ifdef NUM_LIGHTS
+ 	v_normal = u_normalMatrix * a_normal;
+ 	
++	#ifdef NUM_LIGHTS
+ 	vec3 aggDir = vec3(0.0);
+ 	float aggWeight = 0.0;
+ 	vec3 aggCol = vec3(0.0);
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/DefaultShaderProvider.java b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/DefaultShaderProvider.java
+index 02ba015..8acfb00 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/DefaultShaderProvider.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/DefaultShaderProvider.java
+@@ -33,5 +33,8 @@ public class DefaultShaderProvider implements ShaderProvider {
+ 
+ 	@Override
+ 	public void dispose () {
++		for(Shader shader: shaders) {
++			shader.dispose();
++		}
+ 	}
+ }
+diff --git a/tests/gdx-tests-android/assets/data/g3d/cubes.g3dj b/tests/gdx-tests-android/assets/data/g3d/cubes.g3dj
+new file mode 100644
+index 0000000..33321c0
+--- /dev/null
++++ b/tests/gdx-tests-android/assets/data/g3d/cubes.g3dj
+@@ -0,0 +1,110 @@
++{
++	"version" : "1.0",
++	"meshes" : [
++		{
++			"id" : "Cube_001_Mesh",
++			"attributes" : [
++				"POSITION","NORMAL"
++			],
++			"vertices" : [
++				-1.0,-1.0,-1.0,-0.577349,-0.577349,-0.577349,1.0,1.0,-1.0,0.577349,0.577349,-0.577349,1.0,-1.0,-1.0,0.577349,-0.577349,-0.577349,-1.0,1.0,-1.0,-0.577349,0.577349,-0.577349,-1.0,1.0,1.0,-0.577349,0.577349,0.577349,-1.0,-1.0,1.0,-0.577349,-0.577349,0.577349,1.0,0.999999,1.0,0.577349,0.577349,0.577349,0.999999,-1.000001,1.0,0.577349,-0.577349,0.577349
++			],
++			"parts" : [
++				{
++					"id" : "part0",
++					"type" : "TRIANGLES",
++					"indices" : [
++						0,1,2,1,0,3,4,5,6,6,5,7,6,2,1,2,6,7,7,0,2,0,7,5,4,0,5,0,4,3,4,6,3,6,1,3
++					]
++				}
++			]
++		},
++		{
++			"id" : "Cube_Mesh",
++			"attributes" : [
++				"POSITION","NORMAL"
++			],
++			"vertices" : [
++				-1.0,-1.0,-1.0,-0.577349,-0.577349,-0.577349,1.0,1.0,-1.0,0.577349,0.577349,-0.577349,1.0,-1.0,-1.0,0.577349,-0.577349,-0.577349,-1.0,1.0,-1.0,-0.577349,0.577349,-0.577349,-1.0,1.0,1.0,-0.577349,0.577349,0.577349,-1.0,-1.0,1.0,-0.577349,-0.577349,0.577349,1.0,0.999999,1.0,0.577349,0.577349,0.577349,0.999999,-1.000001,1.0,0.577349,-0.577349,0.577349
++			],
++			"parts" : [
++				{
++					"id" : "part0",
++					"type" : "TRIANGLES",
++					"indices" : [
++						0,1,2,1,0,3,4,5,6,6,5,7,6,2,1,2,6,7,7,0,2,0,7,5,4,0,5,0,4,3,4,6,3,6,1,3
++					]
++				}
++			]
++		}
++	],
++	"materials" : [
++		{
++			"id" : "Material",
++			"type" : "LAMBERT",
++			"diffuse" : [0.800000,0.800000,0.800000],
++			"ambient" : [0.0,0.0,0.0],
++			"emissive" : [0.800000,0.800000,0.800000],
++			"opacity" : 1.000000
++		}
++	],
++	"nodes" : [
++		{
++			"id" : "Cube",
++			"translation" : [0.0,0.117356,0.933368],
++			"rotation" : [-0.707107,0.0,0.0,0.707107],
++			"scale" : [1.0,1.0,1.0],
++			"mesh" : "Cube_Mesh",
++			"materials" : [
++				{
++					"meshpartid" : "part0",
++					"materialid" : "Material"
++				}
++			],
++			"children" : [
++				{
++					"id" : "Cube_001",
++					"translation" : [0.0,3.260578,3.226436],
++					"rotation" : [0.0,0.0,0.0,1.0],
++					"scale" : [1.0,1.0,1.0],
++					"mesh" : "Cube_001_Mesh",
++					"materials" : [
++						{
++							"meshpartid" : "part0",
++							"materialid" : "Material"
++						}
++					]
++				}
++			]
++		}
++	],
++	"animations" : [
++		{
++			"id" : "Default Take",
++			"bones" : [
++				{
++					"boneId" : "Cube",
++					"keyframes" : [
++						{
++							"keytime" : 0.000000,
++							"translation" : [0.0,0.117356,0.933368],
++							"rotation" : [-0.707107,0.0,0.0,0.707107],
++							"scale" : [1.0,1.0,1.0]
++						}
++					]
++				},
++				{
++					"boneId" : "Cube_001",
++					"keyframes" : [
++						{
++							"keytime" : 0.000000,
++							"translation" : [0.0,3.260578,3.226436],
++							"rotation" : [0.0,0.0,0.0,1.0],
++							"scale" : [1.0,1.0,1.0]
++						}
++					]
++				}
++			]
++		}
++	]
++}
+\ No newline at end of file
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/BulletTestCollection.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/BulletTestCollection.java
+index d50319e..2ac9d6c 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/BulletTestCollection.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/BulletTestCollection.java
+@@ -160,7 +160,7 @@ public class BulletTestCollection extends GdxTest implements InputProcessor, Ges
+ 
+ 	@Override
+ 	public boolean needsGL20 () {
+-		return true;
++		return false;
+ 	}
+ 
+ 	@Override
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BaseBulletTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BaseBulletTest.java
+index 274ab51..4ccfbda 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BaseBulletTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BaseBulletTest.java
+@@ -19,26 +19,14 @@ package com.badlogic.gdx.tests.bullet;
+ import com.badlogic.gdx.Gdx;
+ import com.badlogic.gdx.Application.ApplicationType;
+ import com.badlogic.gdx.Input.Keys;
+-import com.badlogic.gdx.graphics.Color;
+ import com.badlogic.gdx.graphics.GL10;
+ import com.badlogic.gdx.graphics.Mesh;
+ import com.badlogic.gdx.graphics.PerspectiveCamera;
+ import com.badlogic.gdx.graphics.VertexAttribute;
+ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
+-import com.badlogic.gdx.graphics.g3d.Model;
+-import com.badlogic.gdx.graphics.g3d.ModelBatch;
+-import com.badlogic.gdx.graphics.g3d.model.data.ModelData;
+-import com.badlogic.gdx.graphics.g3d.model.data.ModelMaterial;
+-import com.badlogic.gdx.graphics.g3d.model.data.ModelMesh;
+-import com.badlogic.gdx.graphics.g3d.model.data.ModelMeshPart;
+-import com.badlogic.gdx.graphics.g3d.model.data.ModelMeshPartMaterial;
+-import com.badlogic.gdx.graphics.g3d.model.data.ModelNode;
+-import com.badlogic.gdx.graphics.g3d.old.loaders.wavefront.ObjLoader;
+ import com.badlogic.gdx.graphics.g3d.old.materials.Material;
+-import com.badlogic.gdx.graphics.g3d.test.Light;
+-import com.badlogic.gdx.graphics.g3d.test.TestShader;
+-import com.badlogic.gdx.math.Quaternion;
+-import com.badlogic.gdx.math.Vector3;
++import com.badlogic.gdx.graphics.g3d.old.model.still.StillModel;
++import com.badlogic.gdx.graphics.g3d.old.model.still.StillSubMesh;
+ import com.badlogic.gdx.math.collision.Ray;
+ import com.badlogic.gdx.physics.bullet.Bullet;
+ import com.badlogic.gdx.physics.bullet.btIDebugDraw;
+@@ -64,57 +52,20 @@ public class BaseBulletTest extends BulletTest {
+ 		initialized = true;
+ 	}
+ 	
+-	public Light[] lights = new Light[] {
+-		//new Light(Color.WHITE, Vector3.tmp.set(-10f, 10f, -10f), 150f),
+-		//new Light(Color.BLUE, Vector3.tmp.set(10f, 5f, 0f), 10f),
+-		//new Light(Color.GREEN, Vector3.tmp.set(0f, 10f, 5f), 5f)
+-	};
++	final float lightAmbient[] = new float[] {0.5f, 0.5f, 0.5f, 1f};
++	final float lightPosition[] = new float[] {10f, 10f, 10f, 1f};
++	final float lightDiffuse[] = new float[] {0.5f, 0.5f, 0.5f, 1f};
+ 
+-	public PerspectiveCamera camera;
+-	public BulletWorld world;
+-	public ObjLoader objLoader = new ObjLoader();
+-	public ModelBatch modelBatch;
+-			
++	PerspectiveCamera camera;
++	BulletWorld world;
++	
+ 	public BulletWorld createWorld() {
+ 		return new BulletWorld();
+ 	}
+ 	
+-	public static Model createSimpleModel(final VertexAttribute[] attributes, final float[] vertices, final short[] indices) {
+-		final ModelMesh mesh = new ModelMesh();
+-		mesh.attributes = attributes;
+-		mesh.id = "mesh1";
+-		mesh.vertices = vertices;
+-		ModelMeshPart mp = new ModelMeshPart();
+-		mp.id = "part1";
+-		mp.indices = indices;
+-		mp.primitiveType = GL10.GL_TRIANGLES;
+-		mesh.parts = new ModelMeshPart[] { mp };
+-		ModelNode node = new ModelNode();
+-		node.id = "node1";
+-		node.meshId = "mesh1";
+-		node.translation = new Vector3();
+-		node.rotation = new Quaternion();
+-		node.scale = new Vector3(1,1,1);
+-		ModelMeshPartMaterial pm = new ModelMeshPartMaterial();
+-		pm.meshPartId = "part1";
+-		pm.materialId = "mat1";
+-		node.meshPartMaterials = new ModelMeshPartMaterial[] { pm };
+-		ModelMaterial mat = new ModelMaterial();
+-		mat.id = "mat1";
+-		mat.diffuse = new Color(Color.WHITE);
+-		final ModelData data = new ModelData();
+-		data.meshes.add(mesh);
+-		data.nodes.add(node);
+-		data.materials.add(mat);
+-		return new Model(data);
+-	}
+-	
+ 	@Override
+ 	public void create () {
+ 		init();
+-		modelBatch = new ModelBatch();
+-		TestShader.ignoreUnimplemented = true;
+-		
+ 		world = createWorld();
+ 		world.performanceCounter = performanceCounter;
+ 
+@@ -129,20 +80,22 @@ public class BaseBulletTest extends BulletTest {
+ 		camera.update();
+ 		
+ 		// Create some simple meshes
+-		final Model groundModel = createSimpleModel(new VertexAttribute[] { new VertexAttribute(Usage.Position, 3, "a_position") },
+-			new float[] {20f, 0f, 20f, 20f, 0f, -20f, -20f, 0f, 20f, -20f, 0f, -20f},
+-			new short[] {0, 1, 2, 1, 2, 3}); 
++		final Mesh groundMesh = new Mesh(true, 4, 6, new VertexAttribute(Usage.Position, 3, "a_position"));
++		groundMesh.setVertices(new float[] {20f, 0f, 20f, 20f, 0f, -20f, -20f, 0f, 20f, -20f, 0f, -20f});
++		groundMesh.setIndices(new short[] {0, 1, 2, 1, 2, 3});
++		final StillModel groundModel = new StillModel(new StillSubMesh("ground", groundMesh, GL10.GL_TRIANGLES, new Material()));
+ 
+-		final Model boxModel = createSimpleModel(new VertexAttribute[] { new VertexAttribute(Usage.Position, 3, "a_position") },
+-			new float[] {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f,
+-						0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f},
+-			new short[] {0, 1, 2, 1, 2, 3, // top
+-						4, 5, 6, 5, 6, 7, // bottom
+-						0, 2, 4, 4, 6, 2, // front
+-						1, 3, 5, 5, 7, 3, // back
+-						2, 3, 6, 6, 7, 3, // left
+-						0, 1, 4, 4, 5, 1 // right
+-				});
++		final Mesh boxMesh = new Mesh(true, 8, 36, new VertexAttribute(Usage.Position, 3, "a_position"));
++		boxMesh.setVertices(new float[] {0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f,
++			0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f});
++		boxMesh.setIndices(new short[] {0, 1, 2, 1, 2, 3, // top
++			4, 5, 6, 5, 6, 7, // bottom
++			0, 2, 4, 4, 6, 2, // front
++			1, 3, 5, 5, 7, 3, // back
++			2, 3, 6, 6, 7, 3, // left
++			0, 1, 4, 4, 5, 1 // right
++			});
++		final StillModel boxModel = new StillModel(new StillSubMesh("box", boxMesh, GL10.GL_TRIANGLES, new Material()));
+ 
+ 		// Add the constructors
+ 		world.addConstructor("ground", new BulletConstructor(groundModel, 0f)); // mass = 0: static body
+@@ -179,10 +132,7 @@ public class BaseBulletTest extends BulletTest {
+ 	}
+ 	
+ 	protected void beginRender(boolean lighting) {
+-		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+-		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
+-		camera.update();
+-		/* GL10 gl = Gdx.gl10;
++		GL10 gl = Gdx.gl10;
+ 		gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
+ 		gl.glEnable(GL10.GL_DEPTH_TEST);
+ 		gl.glDepthFunc(GL10.GL_LEQUAL);
+@@ -195,13 +145,11 @@ public class BaseBulletTest extends BulletTest {
+ 			gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_DIFFUSE, lightDiffuse, 0);
+ 		} else
+ 			gl.glDisable(GL10.GL_LIGHTING);
+-		camera.apply(Gdx.gl10); */
++		camera.apply(Gdx.gl10);
+ 	}
+ 	
+ 	protected void renderWorld() {
+-		modelBatch.begin(camera);
+-		world.render(modelBatch, lights);
+-		modelBatch.end();
++		world.render();
+ 	}
+ 	
+ 	public void update() {
+@@ -220,7 +168,7 @@ public class BaseBulletTest extends BulletTest {
+ 		// Shoot a box
+ 		Ray ray = camera.getPickRay(x, y);
+ 		BulletEntity entity = world.add(what, ray.origin.x, ray.origin.y, ray.origin.z);
+-		entity.getColor().set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
++		entity.color.set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
+ 		((btRigidBody)entity.body).applyCentralImpulse(ray.direction.mul(impulse));
+ 		return entity;
+ 	}
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BaseEntity.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BaseEntity.java
+index e0e7bb0..4ae4499 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BaseEntity.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BaseEntity.java
+@@ -17,9 +17,7 @@ package com.badlogic.gdx.tests.bullet;
+ 
+ import com.badlogic.gdx.graphics.Color;
+ import com.badlogic.gdx.graphics.Mesh;
+-import com.badlogic.gdx.graphics.g3d.Model;
+-import com.badlogic.gdx.graphics.g3d.materials.ColorAttribute;
+-import com.badlogic.gdx.graphics.g3d.materials.NewMaterial;
++import com.badlogic.gdx.graphics.g3d.old.model.Model;
+ import com.badlogic.gdx.math.Matrix4;
+ import com.badlogic.gdx.utils.Disposable;
+ 
+@@ -29,21 +27,5 @@ import com.badlogic.gdx.utils.Disposable;
+ public abstract class BaseEntity implements Disposable {
+ 	public Matrix4 transform = new Matrix4();
+ 	public Model model;
+-	private Color color = new Color(1f, 1f, 1f, 1f);
+-	public Color getColor () {
+-		return color;
+-	}
+-	public void setColor (Color color) {
+-		setColor(color.r, color.g, color.b, color.a);
+-	}
+-	public void setColor (float r, float g, float b, float a) {
+-		if (model != null) {
+-			NewMaterial m = model.materials.get(0);
+-			if (m != null) {
+-				ColorAttribute ca = (ColorAttribute)m.get(ColorAttribute.Diffuse);
+-				if (ca != null)
+-					ca.color.set(r, g, b, a);
+-			}				
+-		}
+-	}
++	public Color color = new Color(1f, 1f, 1f, 1f);
+ }
+\ No newline at end of file
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BaseWorld.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BaseWorld.java
+index 4a3a9e3..c611591 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BaseWorld.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BaseWorld.java
+@@ -16,13 +16,10 @@
+ package com.badlogic.gdx.tests.bullet;
+ 
+ import com.badlogic.gdx.Gdx;
+-import com.badlogic.gdx.graphics.Camera;
+ import com.badlogic.gdx.graphics.Color;
+ import com.badlogic.gdx.graphics.GL10;
+ import com.badlogic.gdx.graphics.Mesh;
+-import com.badlogic.gdx.graphics.g3d.Model;
+-import com.badlogic.gdx.graphics.g3d.ModelBatch;
+-import com.badlogic.gdx.graphics.g3d.test.Light;
++import com.badlogic.gdx.graphics.g3d.old.model.Model;
+ import com.badlogic.gdx.math.Matrix4;
+ import com.badlogic.gdx.utils.Array;
+ import com.badlogic.gdx.utils.Disposable;
+@@ -68,23 +65,22 @@ public class BaseWorld<T extends BaseEntity> implements Disposable {
+ 		return entity;
+ 	}
+ 	
+-	public void render(final ModelBatch batch, final Light[] lights) {
+-		render(batch, lights, entities);
++	public void render() {
++		render(entities);
+ 	}
+ 	
+-	public void render(final ModelBatch batch, final Light[] lights, final Iterable<T> entities) {
++	public void render(final Iterable<T> entities) {
+ 		for (final T e : entities)
+-			batch.addModel(e.model, e.transform, lights);
++			render(e);
+ 	}
+ 	
+-	public void render(final ModelBatch batch, final Light[] lights, final T entity) {
+-		batch.addModel(entity.model, entity.transform, lights);
+-		//final GL10 gl = Gdx.gl10;
+-		//gl.glPushMatrix();
+-		//gl.glMultMatrixf(entity.transform.val, 0);
+-		//gl.glColor4f(entity.color.r, entity.color.g, entity.color.b, entity.color.a);
+-		//entity.model.render();
+-		//gl.glPopMatrix();
++	public void render(final T entity) {
++		final GL10 gl = Gdx.gl10;
++		gl.glPushMatrix();
++		gl.glMultMatrixf(entity.transform.val, 0);
++		gl.glColor4f(entity.color.r, entity.color.g, entity.color.b, entity.color.a);
++		entity.model.render();
++		gl.glPopMatrix();
+ 	}
+ 	
+ 	public void update() {	}
+@@ -99,8 +95,8 @@ public class BaseWorld<T extends BaseEntity> implements Disposable {
+ 			constructor.dispose();
+ 		constructors.clear();
+ 		
+-		//for (int i = 0; i < models.size; i++)
+-			//models.get(i).dispose();
++		for (int i = 0; i < models.size; i++)
++			models.get(i).dispose();
+ 		models.clear();
+ 	}
+ }
+\ No newline at end of file
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BulletConstructor.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BulletConstructor.java
+index bf9337b..d81651e 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BulletConstructor.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BulletConstructor.java
+@@ -16,7 +16,7 @@
+ package com.badlogic.gdx.tests.bullet;
+ 
+ import com.badlogic.gdx.graphics.Mesh;
+-import com.badlogic.gdx.graphics.g3d.Model;
++import com.badlogic.gdx.graphics.g3d.old.model.Model;
+ import com.badlogic.gdx.math.Matrix4;
+ import com.badlogic.gdx.math.Vector3;
+ import com.badlogic.gdx.math.collision.BoundingBox;
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BulletEntity.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BulletEntity.java
+index 74b6dc3..36157ba 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BulletEntity.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BulletEntity.java
+@@ -16,7 +16,7 @@
+ package com.badlogic.gdx.tests.bullet;
+ 
+ import com.badlogic.gdx.graphics.Mesh;
+-import com.badlogic.gdx.graphics.g3d.Model;
++import com.badlogic.gdx.graphics.g3d.old.model.Model;
+ import com.badlogic.gdx.math.Matrix4;
+ import com.badlogic.gdx.physics.bullet.btCollisionObject;
+ import com.badlogic.gdx.physics.bullet.btCollisionShape;
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BulletWorld.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BulletWorld.java
+index b679585..014dd20 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BulletWorld.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/BulletWorld.java
+@@ -16,8 +16,6 @@
+ package com.badlogic.gdx.tests.bullet;
+ 
+ import com.badlogic.gdx.Gdx;
+-import com.badlogic.gdx.graphics.g3d.ModelBatch;
+-import com.badlogic.gdx.graphics.g3d.test.Light;
+ import com.badlogic.gdx.math.Matrix4;
+ import com.badlogic.gdx.math.Vector3;
+ import com.badlogic.gdx.math.WindowedMean;
+@@ -112,14 +110,14 @@ public class BulletWorld extends BaseWorld<BulletEntity> {
+ 	}
+ 	
+ 	@Override
+-	public void render (ModelBatch batch, Light[] lights, Iterable<BulletEntity> entities) {
++	public void render() {
+ 		if (debugDrawer != null && debugDrawer.getDebugMode() > 0) {
+ 			debugDrawer.begin();
+ 			collisionWorld.debugDrawWorld();
+ 			debugDrawer.end();
+ 		}
+ 		if (renderMeshes)
+-			super.render(batch, lights, entities);
++			super.render();
+ 	}
+ 	
+ 	@Override
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/CollisionTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/CollisionTest.java
+index 437770f..f8f789b 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/CollisionTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/CollisionTest.java
+@@ -95,8 +95,8 @@ public class CollisionTest extends ShootTest {
+ 		
+ 		// Check what the projectile hits
+ 		if (projectile != null) {
+-			color = projectile.getColor();
+-			projectile.setColor(Color.RED);
++			color = projectile.color;
++			projectile.color = Color.RED;
+ 			world.collisionWorld.contactTest(projectile.body, contactCB);
+ 		}
+ 		// Check for other collisions
+@@ -104,23 +104,23 @@ public class CollisionTest extends ShootTest {
+ 		
+ 		if (hits.size > 0) {
+ 			for (int i = 0; i < hits.size; i++) {
+-				colors.add(hits.get(i).getColor());
+-				hits.get(i).setColor(Color.RED);
++				colors.add(hits.get(i).color);
++				hits.get(i).color = Color.RED;
+ 			}
+ 		}
+ 		if (contacts.size > 0) {
+ 			for (int i = 0; i < contacts.size; i++) {
+-				colors.add(contacts.get(i).getColor());
+-				contacts.get(i).setColor(Color.BLUE);
++				colors.add(contacts.get(i).color);
++				contacts.get(i).color = Color.BLUE;
+ 			}
+ 		}
+ 		render(false);
+ 		if (projectile != null)
+-			projectile.setColor(color);
++			projectile.color = color;
+ 		for (int i = 0; i < hits.size; i++)
+-			hits.get(i).setColor(colors.get(i));
++			hits.get(i).color = colors.get(i);
+ 		for (int i = 0; i < contacts.size; i++)
+-			contacts.get(i).setColor(colors.get(hits.size+i));
++			contacts.get(i).color = colors.get(hits.size+i);
+ 	}
+ 	
+ 	@Override
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/CollisionWorldTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/CollisionWorldTest.java
+index 98e7a55..9ebdc7f 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/CollisionWorldTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/CollisionWorldTest.java
+@@ -18,7 +18,7 @@ package com.badlogic.gdx.tests.bullet;
+ 
+ import com.badlogic.gdx.Gdx;
+ import com.badlogic.gdx.graphics.Color;
+-import com.badlogic.gdx.graphics.g3d.Model;
++import com.badlogic.gdx.graphics.g3d.old.model.Model;
+ import com.badlogic.gdx.math.Matrix4;
+ import com.badlogic.gdx.math.Vector3;
+ import com.badlogic.gdx.physics.bullet.ContactResultCallback;
+@@ -77,16 +77,16 @@ public class CollisionWorldTest extends BaseBulletTest {
+ 		world.addConstructor("collisionBox", new BulletConstructor(boxModel));
+ 		
+ 		world.add("collisionGround", 0f, 0f, 0f)
+-			.getColor().set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
++			.color.set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
+ 		
+ 		world.add("collisionBox", 0f, 1f, 5f)
+-			.getColor().set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
++			.color.set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
+ 		world.add("collisionBox", 0f, 1f, -5f)
+-			.getColor().set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
++			.color.set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
+ 		world.add("collisionBox", 5f, 1f, 0f)
+-			.getColor().set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
++			.color.set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
+ 		world.add("collisionBox", -5f, 1f, 0f)
+-			.getColor().set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
++			.color.set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
+ 		movingBox = world.add("collisionBox", -5f, 1f, 0f);
+ 		normalColor.set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
+ 	}
+@@ -118,19 +118,19 @@ public class CollisionWorldTest extends BaseBulletTest {
+ 		hit = false;
+ 		other = null;
+ 		world.collisionWorld.contactTest(movingBox.body, contactCB);
+-		movingBox.getColor().set(hit ? Color.RED : normalColor);
++		movingBox.color.set(hit ? Color.RED : normalColor);
+ 		
+ 		BulletEntity e = null;
+ 		if (other != null && other.userData != null && other.userData instanceof BulletEntity) { 
+ 			e = (BulletEntity)(other.userData);
+-			tmpColor.set(e.getColor());
+-			e.getColor().set(Color.RED);
++			tmpColor.set(e.color);
++			e.color.set(Color.RED);
+ 		}
+ 		
+ 		super.renderWorld();
+ 
+ 		if (e != null)
+-			e.getColor().set(tmpColor);
++			e.color.set(tmpColor);
+ 	}
+ 	
+ 	@Override
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/ConstraintsTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/ConstraintsTest.java
+index 8917a2f..66992c0 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/ConstraintsTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/ConstraintsTest.java
+@@ -21,7 +21,9 @@ import com.badlogic.gdx.graphics.GL10;
+ import com.badlogic.gdx.graphics.Mesh;
+ import com.badlogic.gdx.graphics.VertexAttribute;
+ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
+-import com.badlogic.gdx.graphics.g3d.Model;
++import com.badlogic.gdx.graphics.g3d.old.materials.Material;
++import com.badlogic.gdx.graphics.g3d.old.model.still.StillModel;
++import com.badlogic.gdx.graphics.g3d.old.model.still.StillSubMesh;
+ import com.badlogic.gdx.math.Vector3;
+ import com.badlogic.gdx.physics.bullet.btDiscreteDynamicsWorld;
+ import com.badlogic.gdx.physics.bullet.btDynamicsWorld;
+@@ -39,27 +41,28 @@ public class ConstraintsTest extends BaseBulletTest {
+ 	public void create () {
+ 		super.create();
+ 
+-		final Model barModel = createSimpleModel(new VertexAttribute[] { new VertexAttribute(Usage.Position, 3, "a_position")},
+-			new float[] {5f, 0.5f, 0.5f, 5f, 0.5f, -0.5f, -5f, 0.5f, 0.5f, -5f, 0.5f, -0.5f,
+-				5f, -0.5f, 0.5f, 5f, -0.5f, -0.5f, -5f, -0.5f, 0.5f, -5f, -0.5f, -0.5f},
+-			new short[] {0, 1, 2, 1, 2, 3, // top
+-				4, 5, 6, 5, 6, 7, // bottom
+-				0, 2, 4, 4, 6, 2, // front
+-				1, 3, 5, 5, 7, 3, // back
+-				2, 3, 6, 6, 7, 3, // left
+-				0, 1, 4, 4, 5, 1 // right
++		final Mesh barMesh = new Mesh(true, 8, 36, new VertexAttribute(Usage.Position, 3, "a_position"));
++		barMesh.setVertices(new float[] {5f, 0.5f, 0.5f, 5f, 0.5f, -0.5f, -5f, 0.5f, 0.5f, -5f, 0.5f, -0.5f,
++			5f, -0.5f, 0.5f, 5f, -0.5f, -0.5f, -5f, -0.5f, 0.5f, -5f, -0.5f, -0.5f});
++		barMesh.setIndices(new short[] {0, 1, 2, 1, 2, 3, // top
++			4, 5, 6, 5, 6, 7, // bottom
++			0, 2, 4, 4, 6, 2, // front
++			1, 3, 5, 5, 7, 3, // back
++			2, 3, 6, 6, 7, 3, // left
++			0, 1, 4, 4, 5, 1 // right
+ 			});
++		final StillModel barModel = new StillModel(new StillSubMesh("bar", barMesh, GL10.GL_TRIANGLES, new Material()));
+ 		world.addConstructor("bar", new BulletConstructor(barModel, 0f)); // mass = 0: static body
+ 		
+ 		// Create the entities
+ 		world.add("ground", 0f, 0f, 0f)
+-			.getColor().set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
++			.color.set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
+ 		
+ 		BulletEntity bar = world.add("bar", 0f, 7f, 0f);
+-		bar.getColor().set(0.75f + 0.25f * (float)Math.random(), 0.75f + 0.25f * (float)Math.random(), 0.75f + 0.25f * (float)Math.random(), 1f);
++		bar.color.set(0.75f + 0.25f * (float)Math.random(), 0.75f + 0.25f * (float)Math.random(), 0.75f + 0.25f * (float)Math.random(), 1f);
+ 		
+ 		BulletEntity box1 = world.add("box", -4.5f, 6f, 0f);
+-		box1.getColor().set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
++		box1.color.set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
+ 		btPoint2PointConstraint constraint = new btPoint2PointConstraint((btRigidBody)bar.body, (btRigidBody)box1.body, Vector3.tmp.set(-5, -0.5f, -0.5f), Vector3.tmp2.set(-0.5f, 0.5f, -0.5f));
+ 		((btDynamicsWorld)world.collisionWorld).addConstraint(constraint, false);
+ 		constraints.add(constraint);
+@@ -67,11 +70,11 @@ public class ConstraintsTest extends BaseBulletTest {
+ 		for (int i = 0; i < 10; i++) {
+ 			if (i % 2 == 0) {
+ 				box2 = world.add("box", -3.5f + (float)i, 6f, 0f);
+-				box2.getColor().set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
++				box2.color.set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
+ 				constraint = new btPoint2PointConstraint((btRigidBody)box1.body, (btRigidBody)box2.body, Vector3.tmp.set(0.5f, -0.5f, 0.5f), Vector3.tmp2.set(-0.5f, -0.5f, 0.5f));
+ 			} else {
+ 				box1 = world.add("box", -3.5f + (float)i, 6f, 0f);
+-				box1.getColor().set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
++				box1.color.set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
+ 				constraint = new btPoint2PointConstraint((btRigidBody)box2.body, (btRigidBody)box1.body, Vector3.tmp.set(0.5f, 0.5f, -0.5f), Vector3.tmp2.set(-0.5f, 0.5f, -0.5f));
+ 			}
+ 			((btDynamicsWorld)world.collisionWorld).addConstraint(constraint, false);
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/ContactCallbackTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/ContactCallbackTest.java
+index 681773c..57a0d68 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/ContactCallbackTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/ContactCallbackTest.java
+@@ -38,14 +38,14 @@ public class ContactCallbackTest extends BaseBulletTest {
+ 				final BulletEntity e = (BulletEntity)(entities.get(userValue0));
+ 				// Disable future callbacks for this entity
+ 				e.body.setContactCallbackFilter(0);
+-				e.getColor().set(Color.RED);
++				e.color.set(Color.RED);
+ 				Gdx.app.log("ContactCallbackTest", "Contact processed "+(++c));
+ 			}
+ 			if (match1) {
+ 				final BulletEntity e = (BulletEntity)(entities.get(userValue1));
+ 				// Disable future callbacks for this entity
+ 				e.body.setContactCallbackFilter(0);
+-				e.getColor().set(Color.RED);
++				e.color.set(Color.RED);
+ 				Gdx.app.log("ContactCallbackTest", "Contact processed "+(++c));
+ 			}
+ 		}
+@@ -69,13 +69,13 @@ public class ContactCallbackTest extends BaseBulletTest {
+ 		
+ 		// Create the entities
+ 		(ground = world.add("ground", 0f, 0f, 0f))
+-			.getColor().set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
++			.color.set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
+ 		
+ 		for (int x = 0; x < BOXCOUNT_X; x++) {
+ 			for (int y = 0; y < BOXCOUNT_Y; y++) {
+ 				for (int z = 0; z < BOXCOUNT_Z; z++) {
+ 					final BulletEntity e = (BulletEntity)world.add("box", BOXOFFSET_X + x * 2f, BOXOFFSET_Y + y * 2f, BOXOFFSET_Z + z * 2f);
+-					e.getColor().set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
++					e.color.set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
+ 
+ 					e.body.setContactCallbackFlag(2);
+ 					e.body.setContactCallbackFilter(2);
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/ConvexHullTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/ConvexHullTest.java
+index b09d146..35526fd 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/ConvexHullTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/ConvexHullTest.java
+@@ -19,7 +19,10 @@ package com.badlogic.gdx.tests.bullet;
+ import com.badlogic.gdx.Gdx;
+ import com.badlogic.gdx.graphics.GL10;
+ import com.badlogic.gdx.graphics.Mesh;
+-import com.badlogic.gdx.graphics.g3d.Model;
++import com.badlogic.gdx.graphics.g3d.old.loaders.ModelLoaderRegistry;
++import com.badlogic.gdx.graphics.g3d.old.loaders.wavefront.ObjLoader;
++import com.badlogic.gdx.graphics.g3d.old.model.still.StillModel;
++import com.badlogic.gdx.graphics.g3d.old.model.still.StillSubMesh;
+ import com.badlogic.gdx.physics.bullet.btConvexHullShape;
+ import com.badlogic.gdx.physics.bullet.btShapeHull;
+ 
+@@ -30,16 +33,17 @@ public class ConvexHullTest extends BaseBulletTest {
+ 	public void create () {
+ 		super.create();
+ 
+-		final Model sceneModel = objLoader.loadObj(Gdx.files.internal("data/car.obj"));
+-		world.addConstructor("car", new BulletConstructor(sceneModel, 5f, createConvexHullShape(sceneModel)));
++		final StillModel sceneModel = ModelLoaderRegistry.loadStillModel(Gdx.files.internal("data/car.obj"));
++		final Mesh sceneMesh = sceneModel.subMeshes[0].getMesh();
++		world.addConstructor("car", new BulletConstructor(sceneModel, 5f, createConvexHullShape(sceneMesh)));
+ 
+ 		// Create the entities
+ 		world.add("ground", 0f, 0f, 0f)
+-			.getColor().set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
++			.color.set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
+ 		
+ 		for (float y = 10f; y < 50f; y += 5f)
+ 			world.add("car", -2f+(float)Math.random()*4f, y, -2f+(float)Math.random()*4f)
+-				.getColor().set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
++				.color.set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
+ 	}
+ 	
+ 	@Override
+@@ -48,8 +52,7 @@ public class ConvexHullTest extends BaseBulletTest {
+ 		return true;
+ 	}
+ 	
+-	public static btConvexHullShape createConvexHullShape(final Model model) {
+-		final Mesh mesh = model.meshes.get(0);
++	public static btConvexHullShape createConvexHullShape(final Mesh mesh) {
+ 		final btConvexHullShape shape = new btConvexHullShape(mesh.getVerticesBuffer(), mesh.getNumVertices(), mesh.getVertexSize());
+ 		// now optimize the shape
+ 		final btShapeHull hull = new btShapeHull(shape);
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/FrustumCullingTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/FrustumCullingTest.java
+index 2ff8087..604d963 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/FrustumCullingTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/FrustumCullingTest.java
+@@ -22,7 +22,10 @@ import com.badlogic.gdx.graphics.Mesh;
+ import com.badlogic.gdx.graphics.PerspectiveCamera;
+ import com.badlogic.gdx.graphics.VertexAttribute;
+ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
+-import com.badlogic.gdx.graphics.g3d.Model;
++import com.badlogic.gdx.graphics.g3d.old.materials.Material;
++import com.badlogic.gdx.graphics.g3d.old.model.Model;
++import com.badlogic.gdx.graphics.g3d.old.model.still.StillModel;
++import com.badlogic.gdx.graphics.g3d.old.model.still.StillSubMesh;
+ import com.badlogic.gdx.math.Matrix4;
+ import com.badlogic.gdx.math.Quaternion;
+ import com.badlogic.gdx.math.Vector3;
+@@ -112,11 +115,12 @@ public class FrustumCullingTest extends BaseBulletTest {
+ 	}
+ 	
+ 	public static Model createFrustumModel(final Vector3... p) {
+-		return createSimpleModel(new VertexAttribute[] { new VertexAttribute(Usage.Position, 3, "a_position")},
+-			new float[] {
+-				p[0].x, p[0].y, p[0].z, p[1].x, p[1].y, p[1].z, p[2].x, p[2].y, p[2].z, p[3].x, p[3].y, p[3].z, // near
+-				p[4].x, p[4].y, p[4].z, p[5].x, p[5].y, p[5].z, p[6].x, p[6].y, p[6].z, p[7].x, p[7].y, p[7].z},// far
+-			new short[] {0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7});
++		final Mesh mesh = new Mesh(true, 8, 32, new VertexAttribute(Usage.Position, 3, "a_position"));
++		mesh.setVertices(new float[] {
++			p[0].x, p[0].y, p[0].z, p[1].x, p[1].y, p[1].z, p[2].x, p[2].y, p[2].z, p[3].x, p[3].y, p[3].z, // near
++			p[4].x, p[4].y, p[4].z, p[5].x, p[5].y, p[5].z, p[6].x, p[6].y, p[6].z, p[7].x, p[7].y, p[7].z});// far
++		mesh.setIndices(new short[] {0, 1, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7});
++		return new StillModel(new StillSubMesh("frustum", mesh, GL10.GL_LINES, new Material()));
+ 	}
+ 	
+ 	private float angleX, angleY, angleZ;
+@@ -146,7 +150,7 @@ public class FrustumCullingTest extends BaseBulletTest {
+ 					BOX_X_MIN + dX * (float)Math.random(), 
+ 					BOX_Y_MIN + dY * (float)Math.random(), 
+ 					BOX_Z_MIN + dZ * (float)Math.random()
+-				).getColor().set(Color.GRAY);
++				).color.set(Color.GRAY);
+ 		
+ 		frustumCam = new PerspectiveCamera(camera.fieldOfView, camera.viewportWidth, camera.viewportHeight);
+ 		frustumCam.far = Vector3.len(BOX_X_MAX, BOX_Y_MAX, BOX_Z_MAX);
+@@ -161,7 +165,7 @@ public class FrustumCullingTest extends BaseBulletTest {
+ 		final Model frustumModel = createFrustumModel(frustumCam.frustum.planePoints);
+ 		frustumObject = createFrustumObject(frustumCam.frustum.planePoints);
+ 		world.add(frustumEntity = new BulletEntity(frustumModel, frustumObject, 0, 0, 0));
+-		frustumEntity.getColor().set(Color.BLUE);
++		frustumEntity.color.set(Color.BLUE);
+ 		
+ 		world.renderMeshes = false;
+ 	}
+@@ -232,18 +236,16 @@ public class FrustumCullingTest extends BaseBulletTest {
+ 			world.performanceCounter.stop();
+ 		
+ 		for (int i = 0; i < visibleEntities.size; i++)
+-			visibleEntities.get(i).getColor().set(Color.RED);
+-
+-		modelBatch.begin(camera);
++			visibleEntities.get(i).color.set(Color.RED);
++		
+ 		if ((state & CULL_FRUSTUM) == CULL_FRUSTUM) {
+-			world.render(modelBatch, lights, visibleEntities);
+-			world.render(modelBatch, lights, frustumEntity);
++			world.render(visibleEntities);
++			world.render(frustumEntity);
+ 		} else
+-			world.render(modelBatch, lights);
+-		modelBatch.end();
++			world.render(world.entities);
+ 		
+ 		for (int i = 0; i < visibleEntities.size; i++)
+-			visibleEntities.get(i).getColor().set(Color.GRAY);
++			visibleEntities.get(i).color.set(Color.GRAY);
+ 	}
+ 	
+ 	@Override
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/InternalTickTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/InternalTickTest.java
+index 7139afd..125fb1f 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/InternalTickTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/InternalTickTest.java
+@@ -64,13 +64,13 @@ public class InternalTickTest extends BaseBulletTest {
+ 
+ 		// Create the entities
+ 		world.add("ground", 0f, 0f, 0f)
+-			.getColor().set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
++			.color.set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
+ 
+ 		for (int x = 0; x < BOXCOUNT_X; x++) {
+ 			for (int y = 0; y < BOXCOUNT_Y; y++) {
+ 				for (int z = 0; z < BOXCOUNT_Z; z++) {
+ 					world.add("box", BOXOFFSET_X + x, BOXOFFSET_Y + y, BOXOFFSET_Z + z)
+-						.getColor().set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
++						.color.set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
+ 				}
+ 			}
+ 		}
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/KinematicTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/KinematicTest.java
+index 02ebc38..59dcb86 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/KinematicTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/KinematicTest.java
+@@ -37,16 +37,16 @@ public class KinematicTest extends BaseBulletTest {
+ 
+ 		// Create the entities
+ 		world.add("ground", 0f, 0f, 0f)
+-			.getColor().set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
++			.color.set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
+ 		
+ 		kinematicBox1 = world.add("staticbox", position1.x, position1.y, position1.z);
+-		kinematicBox1.getColor().set(Color.RED);
++		kinematicBox1.color.set(Color.RED);
+ 		kinematicBox1.body.setCollisionFlags(kinematicBox1.body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT);
+ 		kinematicBox2 = world.add("staticbox", position2.x, position2.y, position2.z);
+-		kinematicBox2.getColor().set(Color.RED);
++		kinematicBox2.color.set(Color.RED);
+ 		kinematicBox2.body.setCollisionFlags(kinematicBox2.body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT);;
+ 		kinematicBox3 = world.add("staticbox", position3.x, position3.y, position3.z);
+-		kinematicBox3.getColor().set(Color.RED);
++		kinematicBox3.color.set(Color.RED);
+ 		kinematicBox3.body.setCollisionFlags(kinematicBox3.body.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT);;
+ 		// This makes bullet call btMotionState#getWorldTransform on every update:
+ 		kinematicBox3.body.setActivationState(gdxBullet.DISABLE_DEACTIVATION);
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/MeshShapeTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/MeshShapeTest.java
+index 8fca0f9..4177694 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/MeshShapeTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/MeshShapeTest.java
+@@ -17,7 +17,8 @@
+ package com.badlogic.gdx.tests.bullet;
+ 
+ import com.badlogic.gdx.Gdx;
+-import com.badlogic.gdx.graphics.g3d.Model;
++import com.badlogic.gdx.graphics.g3d.old.loaders.ModelLoaderRegistry;
++import com.badlogic.gdx.graphics.g3d.old.model.still.StillModel;
+ import com.badlogic.gdx.math.Matrix4;
+ import com.badlogic.gdx.math.Vector3;
+ import com.badlogic.gdx.math.collision.BoundingBox;
+@@ -31,8 +32,8 @@ public class MeshShapeTest extends BaseBulletTest {
+ 	public void create () {
+ 		super.create();
+ 		
+-		final Model sphereModel = objLoader.loadObj(Gdx.files.internal("data/sphere.obj"));
+-		// sphereModel.subMeshes[0].getMesh().scale(0.25f, 0.25f, 0.25f);
++		final StillModel sphereModel = ModelLoaderRegistry.loadStillModel(Gdx.files.internal("data/sphere.obj"));
++		sphereModel.subMeshes[0].getMesh().scale(0.25f, 0.25f, 0.25f);
+ 		final BoundingBox sphereBounds = new BoundingBox();
+ 		sphereModel.getBoundingBox(sphereBounds);
+ 	
+@@ -40,21 +41,21 @@ public class MeshShapeTest extends BaseBulletTest {
+ 		sphereConstructor.bodyInfo.setM_restitution(1f);
+ 		world.addConstructor("sphere", sphereConstructor);
+ 		
+-		final Model sceneModel = objLoader.loadObj(Gdx.files.internal("data/scene.obj"));
+-		final BulletConstructor sceneConstructor = new BulletConstructor(sceneModel, 0f, new btBvhTriangleMeshShape(true, sceneModel));
+-		sceneConstructor.bodyInfo.setM_restitution(0.25f);
+-		world.addConstructor("scene", sceneConstructor);
++		// final StillModel sceneModel = ModelLoaderRegistry.loadStillModel(Gdx.files.internal("data/scene.obj"));
++		// final BulletConstructor sceneConstructor = new BulletConstructor(sceneModel, 0f, new btBvhTriangleMeshShape(true, sceneModel));
++		// sceneConstructor.bodyInfo.setM_restitution(0.25f);
++		// world.addConstructor("scene", sceneConstructor);
+ 		
+-		world.add("scene", (new Matrix4()).setToTranslation(0f, 2f, 0f).rotate(Vector3.Y, -90))
+-			.getColor().set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
++		// world.add("scene", (new Matrix4()).setToTranslation(0f, 2f, 0f).rotate(Vector3.Y, -90))
++			// .color.set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
+ 
+ 		world.add("ground", 0f, 0f, 0f)
+-			.getColor().set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
++			.color.set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
+ 		
+ 		for (float x = -3; x < 7; x++) {
+ 			for (float z = -5; z < 5; z++) {
+ 				world.add("sphere", x, 10f + (float)Math.random() * 0.1f, z)
+-					.getColor().set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
++					.color.set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
+ 			}
+ 		}
+ 	}
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/RayCastTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/RayCastTest.java
+index 0085a92..9885870 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/RayCastTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/RayCastTest.java
+@@ -49,13 +49,13 @@ public class RayCastTest extends BaseBulletTest {
+ 
+ 		// Create the entities
+ 		world.add("ground", -7f, 0f, -7f)
+-			.getColor().set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
++			.color.set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
+ 
+ 		for (int x = 0; x < BOXCOUNT_X; x++) {
+ 			for (int y = 0; y < BOXCOUNT_Y; y++) {
+ 				for (int z = 0; z < BOXCOUNT_Z; z++) {
+ 					world.add("box", BOXOFFSET_X + x, BOXOFFSET_Y + y, BOXOFFSET_Z + z)
+-						.getColor().set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
++						.color.set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
+ 				}
+ 			}
+ 		}
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/RayPickRagdollTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/RayPickRagdollTest.java
+index 181c964..399e93e 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/RayPickRagdollTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/RayPickRagdollTest.java
+@@ -20,7 +20,10 @@ import com.badlogic.gdx.graphics.GL10;
+ import com.badlogic.gdx.graphics.Mesh;
+ import com.badlogic.gdx.graphics.VertexAttribute;
+ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
+-import com.badlogic.gdx.graphics.g3d.Model;
++import com.badlogic.gdx.graphics.g3d.old.materials.Material;
++import com.badlogic.gdx.graphics.g3d.old.model.Model;
++import com.badlogic.gdx.graphics.g3d.old.model.still.StillModel;
++import com.badlogic.gdx.graphics.g3d.old.model.still.StillSubMesh;
+ import com.badlogic.gdx.math.MathUtils;
+ import com.badlogic.gdx.math.Matrix4;
+ import com.badlogic.gdx.math.Vector3;
+@@ -64,7 +67,7 @@ public class RayPickRagdollTest extends BaseBulletTest {
+ 		world.addConstructor("lowerarm", new BulletConstructor(createCapsuleModel(0.04f, 0.25f), 1f, new btCapsuleShape(0.04f, 0.25f)));
+ 		
+ 		world.add("ground", 0f, 0f, 0f)
+-			.getColor().set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
++			.color.set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
+ 		
+ 		addRagdoll(0, 3f, 0);
+ 		addRagdoll(1f, 6f, 0);
+@@ -248,16 +251,16 @@ public class RayPickRagdollTest extends BaseBulletTest {
+ 	
+ 	protected Model createCapsuleModel(float radius, float height) {
+ 		final float hh = radius + 0.5f * height;
+-		return createSimpleModel(new VertexAttribute[] { new VertexAttribute(Usage.Position, 3, "a_position") }, 
+-			new float[] {radius, hh, radius, radius, hh, -radius, -radius, hh, radius, -radius, hh, -radius,
+-				radius, -hh, radius, radius, -hh, -radius, -radius, -hh, radius, -radius, -hh, -radius},
+-			new short[] {0, 1, 2, 1, 2, 3, // top
+-				4, 5, 6, 5, 6, 7, // bottom
+-				0, 2, 4, 4, 6, 2, // front
+-				1, 3, 5, 5, 7, 3, // back
+-				2, 3, 6, 6, 7, 3, // left
+-				0, 1, 4, 4, 5, 1 // right
++		final Mesh mesh = new Mesh(true, 8, 36, new VertexAttribute(Usage.Position, 3, "a_position"));
++		mesh.setVertices(new float[] {radius, hh, radius, radius, hh, -radius, -radius, hh, radius, -radius, hh, -radius,
++			radius, -hh, radius, radius, -hh, -radius, -radius, -hh, radius, -radius, -hh, -radius});
++		mesh.setIndices(new short[] {0, 1, 2, 1, 2, 3, // top
++			4, 5, 6, 5, 6, 7, // bottom
++			0, 2, 4, 4, 6, 2, // front
++			1, 3, 5, 5, 7, 3, // back
++			2, 3, 6, 6, 7, 3, // left
++			0, 1, 4, 4, 5, 1 // right
+ 			});
+-		// return new StillModel(new StillSubMesh("capsule", mesh, GL10.GL_TRIANGLES, new Material()));
++		return new StillModel(new StillSubMesh("capsule", mesh, GL10.GL_TRIANGLES, new Material()));
+ 	}
+ }
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/ShootTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/ShootTest.java
+index b4e178b..2c4aa74 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/ShootTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/ShootTest.java
+@@ -34,13 +34,13 @@ public class ShootTest extends BaseBulletTest {
+ 
+ 		// Create the entities
+ 		(ground = world.add("ground", 0f, 0f, 0f))
+-			.setColor(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
++			.color.set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
+ 
+ 		for (int x = 0; x < BOXCOUNT_X; x++) {
+ 			for (int y = 0; y < BOXCOUNT_Y; y++) {
+ 				for (int z = 0; z < BOXCOUNT_Z; z++) {
+ 					world.add("box", BOXOFFSET_X + x, BOXOFFSET_Y + y, BOXOFFSET_Z + z)
+-						.setColor(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
++						.color.set(0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 0.5f + 0.5f * (float)Math.random(), 1f);
+ 				}
+ 			}
+ 		}
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/SoftBodyTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/SoftBodyTest.java
+index 6d0a9d0..ed0daa6 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/SoftBodyTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/SoftBodyTest.java
+@@ -70,7 +70,7 @@ public class SoftBodyTest extends BaseBulletTest {
+ 		super.create();
+ 		
+ 		world.add("ground", 0f, 0f, 0f)
+-		.getColor().set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
++		.color.set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
+ 		
+ 		float x0 = -2f, y0 = 6f, z0 = -2f;
+ 		float x1 = 8f, y1 = 6f, z1 = 8f;
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/SoftMeshTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/SoftMeshTest.java
+index 0ca2030..ad15f4b 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/SoftMeshTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/SoftMeshTest.java
+@@ -67,7 +67,7 @@ public class SoftMeshTest extends BaseBulletTest {
+ 		world.maxSubSteps = 20;
+ 		
+ 		world.add("ground", 0f, 0f, 0f)
+-		.getColor().set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
++		.color.set(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);
+ 		
+ 		// Note: not every model is suitable for a one on one translation with a soft body, a better model might be added later.
+ 		final StillModel model = ModelLoaderRegistry.loadStillModel(Gdx.files.internal("data/wheel.obj"));
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/BatchRenderTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/BatchRenderTest.java
+index 7e84447..20868da 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/BatchRenderTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/BatchRenderTest.java
+@@ -6,12 +6,16 @@ import com.badlogic.gdx.graphics.GL10;
+ import com.badlogic.gdx.graphics.GL20;
+ import com.badlogic.gdx.graphics.PerspectiveCamera;
+ import com.badlogic.gdx.graphics.Texture;
+-import com.badlogic.gdx.graphics.g3d.Model;
+-import com.badlogic.gdx.graphics.g3d.ModelBatch;
++import com.badlogic.gdx.graphics.g3d.RenderBatch;
+ import com.badlogic.gdx.graphics.g3d.loader.JsonModelLoader;
+-import com.badlogic.gdx.graphics.g3d.old.loaders.wavefront.ObjLoader;
++import com.badlogic.gdx.graphics.g3d.old.loaders.ModelLoaderRegistry;
++import com.badlogic.gdx.graphics.g3d.old.materials.Material;
++import com.badlogic.gdx.graphics.g3d.old.materials.TextureAttribute;
++import com.badlogic.gdx.graphics.g3d.old.model.still.StillModel;
++import com.badlogic.gdx.graphics.g3d.old.model.still.StillSubMesh;
++import com.badlogic.gdx.graphics.g3d.test.InterimModel;
+ import com.badlogic.gdx.graphics.g3d.test.Light;
+-import com.badlogic.gdx.graphics.g3d.test.TestShader;
++import com.badlogic.gdx.graphics.g3d.test.NewModel;
+ import com.badlogic.gdx.graphics.g3d.utils.DefaultTextureBinder;
+ import com.badlogic.gdx.math.Matrix4;
+ import com.badlogic.gdx.math.Vector3;
+@@ -28,23 +32,23 @@ public class BatchRenderTest extends GdxTest {
+ 	float SIZE_X = 20f, SIZE_Y = 20f, SIZE_Z = 20f;
+ 	
+ 	public static class ModelInstance {
+-		public Model model;
++		public NewModel model;
+ 		public Matrix4 transform;
+-		public ModelInstance(Model model, Matrix4 transform) {
++		public ModelInstance(NewModel model, Matrix4 transform) {
+ 			this.model = model;
+ 			this.transform = transform;
+ 		}
+ 	}
+ 	PerspectiveCamera cam;
+ 	Array<ModelInstance> instances = new Array<ModelInstance>();
+-	Model sphereModel;
+-	Model sceneModel;
+-	Model cubeModel;
+-	Model carModel;
+-	Model testModel;
+-	Array<Model> cubes = new Array<Model>();
++	NewModel sphereModel;
++	NewModel sceneModel;
++	StillModel cubeModel;
++	NewModel carModel;
++	NewModel testModel;
++	Array<NewModel> cubes = new Array<NewModel>();
+ 	Array<Texture> textures = new Array<Texture>();
+-	ModelBatch renderBatch;
++	RenderBatch renderBatch;
+ 	DefaultTextureBinder exclusiveTextures;
+ 	Light[] lights;
+ 	
+@@ -55,8 +59,6 @@ public class BatchRenderTest extends GdxTest {
+ 	
+ 	@Override
+ 	public void create () {
+-		TestShader.ignoreUnimplemented = true;
+-		
+ 		final JsonModelLoader loader = new JsonModelLoader();
+ 
+ 		// need more higher resolution textures for this test...
+@@ -66,17 +68,15 @@ public class BatchRenderTest extends GdxTest {
+ 		for (int i = 0; i < TEXTURE_COUNT; i++)
+ 			textures.add(new Texture(Gdx.files.internal(TEXTURES[i%TEXTURES.length])));
+ 		
+-		ObjLoader objLoader = new ObjLoader();
+-		sphereModel = objLoader.loadObj(Gdx.files.internal("data/sphere.obj"));
+-		sceneModel = objLoader.loadObj(Gdx.files.internal("data/scene.obj"));
+-		cubeModel = objLoader.loadObj(Gdx.files.internal("data/cube.obj"));
+-		carModel = objLoader.loadObj(Gdx.files.internal("data/car.obj"));
+-		testModel = new Model(loader.parseModel(Gdx.files.internal("data/g3d/head.g3dj"),  null));
++		sphereModel = new InterimModel(ModelLoaderRegistry.loadStillModel(Gdx.files.internal("data/sphere.obj")));
++		sceneModel = new InterimModel(ModelLoaderRegistry.loadStillModel(Gdx.files.internal("data/scene.obj")));
++		cubeModel = ModelLoaderRegistry.loadStillModel(Gdx.files.internal("data/cube.obj"));
++		carModel = new InterimModel(ModelLoaderRegistry.loadStillModel(Gdx.files.internal("data/car.obj")));
++		testModel = new InterimModel(loader.load(Gdx.files.internal("data/g3d/test.g3dj"), null));
+ 		
+-		//StillSubMesh mesh = (StillSubMesh)(cubeModel.subMeshes[0]);
++		StillSubMesh mesh = (StillSubMesh)(cubeModel.subMeshes[0]);
+ 		for (int i = 0; i < textures.size; i++)
+-			cubes.add(cubeModel);
+-			// cubes.add(new InterimModel(new StillModel(new StillSubMesh(mesh.name, mesh.mesh, mesh.primitiveType, new Material("mat", new TextureAttribute(textures.get(i), 0, TextureAttribute.diffuseTexture))))));
++			cubes.add(new InterimModel(new StillModel(new StillSubMesh(mesh.name, mesh.mesh, mesh.primitiveType, new Material("mat", new TextureAttribute(textures.get(i), 0, TextureAttribute.diffuseTexture))))));
+ 		
+ 		createScene2();
+ 		
+@@ -87,7 +87,7 @@ public class BatchRenderTest extends GdxTest {
+ 		cam.lookAt(0, 0, 0);
+ 		cam.update();
+ 		
+-		renderBatch = new ModelBatch();
++		renderBatch = new RenderBatch();
+ 		
+ 		lights = new Light[] {
+ 			new Light(Color.WHITE, Vector3.tmp.set(-10f, 10f, -10f), 15f),
+@@ -118,8 +118,8 @@ public class BatchRenderTest extends GdxTest {
+ 	public void render () {
+ 		if ((dbgTimer += Gdx.graphics.getDeltaTime()) >= 1f) {
+ 			dbgTimer -= 1f;
+-			// Gdx.app.log("Test", "FPS: "+Gdx.graphics.getFramesPerSecond()+", binds: "+exclusiveTextures.getBindCount()+", reused: "+exclusiveTextures.getReuseCount());
+-			// exclusiveTextures.resetCounts();
++			Gdx.app.log("Test", "FPS: "+Gdx.graphics.getFramesPerSecond()+", binds: "+exclusiveTextures.getBindCount()+", reused: "+exclusiveTextures.getReuseCount());
++			exclusiveTextures.resetCounts();
+ 		}
+ 		GL20 gl = Gdx.gl20;
+ 		gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+@@ -128,12 +128,8 @@ public class BatchRenderTest extends GdxTest {
+ 		Gdx.gl.glDisable(GL20.GL_CULL_FACE);
+ 		
+ 		renderBatch.begin(cam);
+-		for (int i = 0; i < instances.size; i++) {
+-			if (instances.get(i).model == null)
+-				Gdx.app.log("Test", "Model "+i+" is null");
+-			else
+-				renderBatch.addModel(instances.get(i).model, instances.get(i).transform, lights);
+-		}
++		for (int i = 0; i < instances.size; i++)
++			renderBatch.render(instances.get(i).model, instances.get(i).transform, lights);
+ 		renderBatch.end();		
+ 	}
+ 	
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/JsonModelLoaderTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/JsonModelLoaderTest.java
+index 232c5ab..1798d42 100755
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/JsonModelLoaderTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/JsonModelLoaderTest.java
+@@ -21,7 +21,6 @@ public class JsonModelLoaderTest extends GdxTest {
+ 	@Override
+ 	public void create () {
+ 		JsonModelLoader loader = new JsonModelLoader();
+-		com.badlogic.gdx.graphics.g3d.Model model2 = new com.badlogic.gdx.graphics.g3d.Model(loader.parseModel(Gdx.files.internal("data/g3d/head2.g3dj"),  null));
+ 		model = loader.load(Gdx.files.internal("data/g3d/head2.g3dj"), null);
+ 		
+ 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/NewModelTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/NewModelTest.java
+index 09a14d8..213fa04 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/NewModelTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/NewModelTest.java
+@@ -34,7 +34,7 @@ public class NewModelTest extends GdxTest {
+ 	@Override
+ 	public void create () {
+ 		JsonModelLoader loader = new JsonModelLoader();
+-		model = new Model(loader.parseModel(Gdx.files.internal("data/g3d/head.g3dj"),  null));
++		model = new Model(loader.parseModel(Gdx.files.internal("data/g3d/cubes.g3dj"),  null));
+ 		modelBatch = new ModelBatch();
+ 		TestShader.ignoreUnimplemented = true;
+ 		shapeRenderer = new ShapeRenderer();
+@@ -56,17 +56,26 @@ public class NewModelTest extends GdxTest {
+ 		shapeRenderer.setProjectionMatrix(cam.combined);
+ 		shapeRenderer.begin(ShapeType.Line);
+ 		shapeRenderer.setColor(Color.RED);
+-		shapeRenderer.line(-100, 0, 0, 100, 0, 0);
++		shapeRenderer.line(0, 0, 0, 100, 0, 0);
+ 		shapeRenderer.setColor(Color.GREEN);
+-		shapeRenderer.line(0, -100, 0, 0, 100, 0);
++		shapeRenderer.line(0, 0, 0, 0, 100, 0);
+ 		shapeRenderer.setColor(Color.BLUE);
+-		shapeRenderer.line(0, 0, -100, 0, 0, 100);
++		shapeRenderer.line(0, 0, 0, 0, 0, 100);
+ 		shapeRenderer.end();
+ 		
++		transform.idt();
++		transform.translate(0, 0, -3);
++		
+ 		modelBatch.begin(cam);
+-		modelBatch.addModel(model, transform, lights);
++		modelBatch.render(model, transform, lights);
+ 		modelBatch.end();
+ 	}
++	
++	@Override
++	public void dispose () {
++		model.dispose();
++		modelBatch.dispose();
++	}
+ 
+ 	@Override
+ 	public boolean touchDown (int x, int y, int pointer, int newParam) {
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/utils/GdxTests.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/utils/GdxTests.java
+index 42c6ca4..9d25e81 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/utils/GdxTests.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/utils/GdxTests.java
+@@ -37,7 +37,6 @@ import com.badlogic.gdx.tests.*;
+ import com.badlogic.gdx.tests.bench.TiledMapBench;
+ import com.badlogic.gdx.tests.examples.MoveSpriteExample;
+ import com.badlogic.gdx.tests.g3d.BatchRenderTest;
+-import com.badlogic.gdx.tests.g3d.NewModelTest;
+ import com.badlogic.gdx.tests.g3d.JsonModelLoaderTest;
+ import com.badlogic.gdx.tests.gles2.HelloTriangle;
+ import com.badlogic.gdx.tests.gles2.SimpleVertexShader;
+@@ -78,10 +77,10 @@ public class GdxTests {
+ 		// SoundTouchTest.class, Mpg123Test.class, WavTest.class, FreeTypeTest.class,
+ 		// InternationalFontsTest.class, VorbisTest.class
+ 		TextButtonTest.class, TextButtonTestGL2.class, TextureBindTest.class, SortedSpriteTest.class,
+-		ExternalMusicTest.class, SoftKeyboardTest.class, DirtyRenderingTest.class, YDownTest.class,
++		ExternalMusicTest.class, SoftKeyboardTest.class, DirtyRenderingTest.class, YDownTest.class,  BatchRenderTest.class,
+ 		ScreenCaptureTest.class, BitmapFontTest.class, LabelScaleTest.class, GamepadTest.class, NetAPITest.class, TideMapAssetManagerTest.class, TideMapDirectLoaderTest.class, TiledMapAssetManagerTest.class, TiledMapBench.class,
+ 		RunnablePostTest.class, Vector2dTest.class, SuperKoalio.class, NinePatchTest.class,
+-		JsonModelLoaderTest.class, BatchRenderTest.class, NewModelTest.class));
++		JsonModelLoaderTest.class, BatchRenderTest.class));
+ 	
+ 	public static List<String> getNames () {
+ 		List<String> names = new ArrayList<String>(tests.size());

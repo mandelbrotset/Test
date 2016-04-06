@@ -1,0 +1,1898 @@
+diff --git a/.gitignore b/.gitignore
+index 3b328b3..4d2cc7f 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -169,6 +169,9 @@
+ /extensions/gdx-controllers/gdx-controllers-desktop/bin
+ /extensions/gdx-controllers/gdx-controllers-desktop/jni/target
+ /extensions/gdx-controllers/gdx-controllers-desktop/libs/windows32
++/extensions/gdx-controllers/gdx-controllers-desktop/libs/windows64
++/extensions/gdx-controllers/gdx-controllers-desktop/libs/linux32
++/extensions/gdx-controllers/gdx-controllers-desktop/libs/linux64
+ /extensions/gdx-controllers/gdx-controllers-android/bin
+ 
+ /gdx/target
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/jni/build-linux32.xml b/extensions/gdx-controllers/gdx-controllers-desktop/jni/build-linux32.xml
+new file mode 100644
+index 0000000..b594ce5
+--- /dev/null
++++ b/extensions/gdx-controllers/gdx-controllers-desktop/jni/build-linux32.xml
+@@ -0,0 +1,144 @@
++<project name="gdx-controllers-desktop-Linux-32" basedir="." default="postcompile">
++	<!-- include the environment -->
++	<property environment="env"/>	
++	<!-- output directory for temporary object files -->
++	<property name="buildDir" value="target/linux32" />
++	<!-- output directory for the shared library -->
++	<property name="libsDir" value="../libs/linux32" />
++	<!-- the name of the shared library -->
++	<property name="libName" value="libgdx-controllers-desktop.so"/>
++	<!-- the jni header jniPlatform to use -->
++	<property name="jniPlatform" value="linux"/>
++	<!-- the compilerPrefix for the C & C++ compilers -->
++	<property name="compilerPrefix" value=""/>	
++	
++	<!-- define gcc compiler, options and files to compile -->
++	<property name="gcc" value="${compilerPrefix}gcc"/>	
++	<property name="gcc-opts" value="-c -Wall -O2 -mfpmath=sse -msse -fmessage-length=0 -m32 -fPIC"/>
++	<fileset id="gcc-files" dir="./">
++		<exclude name="target/"/>		
++				<include name="memcpy_wrap.c"/>
++		<include name="**/*.c"/>
++
++		
++	</fileset>
++	
++	<!-- define g++ compiler, options and files to compile -->
++	<property name="g++" value="${compilerPrefix}g++"/>
++	<property name="g++-opts" value="-c -Wall -O2 -mfpmath=sse -msse -fmessage-length=0 -m32 -fPIC"/>
++	<fileset id="g++-files" dir="./">
++		<exclude name="target/"/>
++				<include name="*.cpp"/>
++		<include name="ois-v1-4svn/src/*.cpp"/>
++		<include name="ois-v1-4svn/src/linux/*.cpp"/>
++
++		
++	</fileset>
++
++	<!-- define linker and options -->
++	<property name="linker" value="${compilerPrefix}g++"/>
++	<property name="linker-opts" value="-shared -m32"/>
++	<property name="libraries" value="-lX11"/>
++	
++	<!-- cleans the build directory, removes all object files and shared libs -->
++	<target name="clean">
++		<delete includeemptydirs="true" quiet="true">
++			<fileset dir="${buildDir}"/>
++			<fileset dir="${libsDir}" includes="**/*" excludes="**/.svn"/>
++		</delete>
++	</target>
++	
++	<target name="precompile">
++		<condition property="compiler-found">
++			<and>
++				<or>
++					<!-- Include both b/c Windows might be either -->
++					<available file="${g++}" filepath="${env.PATH}"/>
++					<available file="${g++}" filepath="${env.Path}"/>
++				</or>
++				<or>
++					<!-- Include both b/c Windows might be either -->
++					<available file="${gcc}" filepath="${env.PATH}"/>
++					<available file="${gcc}" filepath="${env.Path}"/>
++				</or>
++			</and>
++		</condition>
++		<condition property="has-compiler">
++			<equals arg1="${compiler-found}" arg2="true"/>
++		</condition>
++		
++	</target>
++	
++	<target name="create-build-dir" depends="precompile" if="has-compiler">
++		<!-- FIXME this is pretty nasty :/ -->
++		<copy todir="${buildDir}">
++			<fileset refid="g++-files"/>
++			<fileset refid="gcc-files"/>
++		</copy>
++		<delete>
++			<fileset dir="${buildDir}">
++				<include name="*"/>
++				<exclude name="*.o"/>
++			</fileset>
++		</delete>
++	</target>
++
++	<!-- compiles all C and C++ files to object files in the build directory -->
++	<target name="compile" depends="create-build-dir" if="has-compiler">
++		<mkdir dir="${buildDir}"/>
++		<apply failonerror="true" executable="${g++}" dest="${buildDir}" verbose="true">
++			<arg line="${g++-opts}"/>
++			<arg value="-Ijni-headers"/>
++			<arg value="-Ijni-headers/${jniPlatform}"/>
++			<arg value="-I."/>
++						<arg value="-Iois-v1-4svn/includes"/>
++			<arg value="-Idinput/"/>
++
++			<srcfile/>
++			<arg value="-o"/>
++			<targetfile/>
++			<fileset refid="g++-files"/>
++			<chainedmapper>
++				<mapper type="glob" from="*.cpp" to="*.o"/>
++			</chainedmapper>
++		</apply>
++		<apply failonerror="true" executable="${gcc}" dest="${buildDir}" verbose="true">
++			<arg line="${gcc-opts}"/>
++			<arg value="-Ijni-headers"/>
++			<arg value="-Ijni-headers/${jniPlatform}"/>
++			<arg value="-I."/>
++						<arg value="-Iois-v1-4svn/includes"/>
++			<arg value="-Idinput/"/>
++
++			<srcfile/>
++			<arg value="-o"/>
++			<targetfile/>
++			<fileset refid="gcc-files"/>
++			<chainedmapper>
++				<mapper type="glob" from="*.c" to="*.o"/>
++			</chainedmapper>
++		</apply>
++	</target>	
++
++	<!-- links the shared library based on the previously compiled object files -->	
++	<target name="link" depends="compile" if="has-compiler">
++		<fileset dir="${buildDir}" id="objFileSet">
++			<patternset>
++				<include name="**/*.o" />
++			</patternset>
++		</fileset>
++		<pathconvert pathsep=" " property="objFiles" refid="objFileSet" />
++		<mkdir dir="${libsDir}" />
++		<exec executable="${linker}" failonerror="true" dir="${buildDir}">
++			<arg line="${linker-opts}" />
++			<arg value="-o" />
++			<arg path="${libsDir}/${libName}" />
++			<arg line="${objFiles}"/>
++			<arg line="${libraries}" />
++		</exec>
++	</target>	
++	
++	<target name="postcompile" depends="link">
++		
++	</target>
++</project>
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/jni/build-linux64.xml b/extensions/gdx-controllers/gdx-controllers-desktop/jni/build-linux64.xml
+new file mode 100644
+index 0000000..8d3a22c
+--- /dev/null
++++ b/extensions/gdx-controllers/gdx-controllers-desktop/jni/build-linux64.xml
+@@ -0,0 +1,144 @@
++<project name="gdx-controllers-desktop-Linux-64" basedir="." default="postcompile">
++	<!-- include the environment -->
++	<property environment="env"/>	
++	<!-- output directory for temporary object files -->
++	<property name="buildDir" value="target/linux64" />
++	<!-- output directory for the shared library -->
++	<property name="libsDir" value="../libs/linux64" />
++	<!-- the name of the shared library -->
++	<property name="libName" value="libgdx-controllers-desktop64.so"/>
++	<!-- the jni header jniPlatform to use -->
++	<property name="jniPlatform" value="linux"/>
++	<!-- the compilerPrefix for the C & C++ compilers -->
++	<property name="compilerPrefix" value=""/>	
++	
++	<!-- define gcc compiler, options and files to compile -->
++	<property name="gcc" value="${compilerPrefix}gcc"/>	
++	<property name="gcc-opts" value="-c -Wall -O2 -mfpmath=sse -msse -fmessage-length=0 -m64 -fPIC"/>
++	<fileset id="gcc-files" dir="./">
++		<exclude name="target/"/>		
++				<include name="memcpy_wrap.c"/>
++		<include name="**/*.c"/>
++
++		
++	</fileset>
++	
++	<!-- define g++ compiler, options and files to compile -->
++	<property name="g++" value="${compilerPrefix}g++"/>
++	<property name="g++-opts" value="-c -Wall -O2 -mfpmath=sse -msse -fmessage-length=0 -m64 -fPIC"/>
++	<fileset id="g++-files" dir="./">
++		<exclude name="target/"/>
++				<include name="*.cpp"/>
++		<include name="ois-v1-4svn/src/*.cpp"/>
++		<include name="ois-v1-4svn/src/linux/*.cpp"/>
++
++		
++	</fileset>
++
++	<!-- define linker and options -->
++	<property name="linker" value="${compilerPrefix}g++"/>
++	<property name="linker-opts" value="-shared -m64 -Wl,-wrap,memcpy"/>
++	<property name="libraries" value="-lX11"/>
++	
++	<!-- cleans the build directory, removes all object files and shared libs -->
++	<target name="clean">
++		<delete includeemptydirs="true" quiet="true">
++			<fileset dir="${buildDir}"/>
++			<fileset dir="${libsDir}" includes="**/*" excludes="**/.svn"/>
++		</delete>
++	</target>
++	
++	<target name="precompile">
++		<condition property="compiler-found">
++			<and>
++				<or>
++					<!-- Include both b/c Windows might be either -->
++					<available file="${g++}" filepath="${env.PATH}"/>
++					<available file="${g++}" filepath="${env.Path}"/>
++				</or>
++				<or>
++					<!-- Include both b/c Windows might be either -->
++					<available file="${gcc}" filepath="${env.PATH}"/>
++					<available file="${gcc}" filepath="${env.Path}"/>
++				</or>
++			</and>
++		</condition>
++		<condition property="has-compiler">
++			<equals arg1="${compiler-found}" arg2="true"/>
++		</condition>
++		
++	</target>
++	
++	<target name="create-build-dir" depends="precompile" if="has-compiler">
++		<!-- FIXME this is pretty nasty :/ -->
++		<copy todir="${buildDir}">
++			<fileset refid="g++-files"/>
++			<fileset refid="gcc-files"/>
++		</copy>
++		<delete>
++			<fileset dir="${buildDir}">
++				<include name="*"/>
++				<exclude name="*.o"/>
++			</fileset>
++		</delete>
++	</target>
++
++	<!-- compiles all C and C++ files to object files in the build directory -->
++	<target name="compile" depends="create-build-dir" if="has-compiler">
++		<mkdir dir="${buildDir}"/>
++		<apply failonerror="true" executable="${g++}" dest="${buildDir}" verbose="true">
++			<arg line="${g++-opts}"/>
++			<arg value="-Ijni-headers"/>
++			<arg value="-Ijni-headers/${jniPlatform}"/>
++			<arg value="-I."/>
++						<arg value="-Iois-v1-4svn/includes"/>
++			<arg value="-Idinput/"/>
++
++			<srcfile/>
++			<arg value="-o"/>
++			<targetfile/>
++			<fileset refid="g++-files"/>
++			<chainedmapper>
++				<mapper type="glob" from="*.cpp" to="*.o"/>
++			</chainedmapper>
++		</apply>
++		<apply failonerror="true" executable="${gcc}" dest="${buildDir}" verbose="true">
++			<arg line="${gcc-opts}"/>
++			<arg value="-Ijni-headers"/>
++			<arg value="-Ijni-headers/${jniPlatform}"/>
++			<arg value="-I."/>
++						<arg value="-Iois-v1-4svn/includes"/>
++			<arg value="-Idinput/"/>
++
++			<srcfile/>
++			<arg value="-o"/>
++			<targetfile/>
++			<fileset refid="gcc-files"/>
++			<chainedmapper>
++				<mapper type="glob" from="*.c" to="*.o"/>
++			</chainedmapper>
++		</apply>
++	</target>	
++
++	<!-- links the shared library based on the previously compiled object files -->	
++	<target name="link" depends="compile" if="has-compiler">
++		<fileset dir="${buildDir}" id="objFileSet">
++			<patternset>
++				<include name="**/*.o" />
++			</patternset>
++		</fileset>
++		<pathconvert pathsep=" " property="objFiles" refid="objFileSet" />
++		<mkdir dir="${libsDir}" />
++		<exec executable="${linker}" failonerror="true" dir="${buildDir}">
++			<arg line="${linker-opts}" />
++			<arg value="-o" />
++			<arg path="${libsDir}/${libName}" />
++			<arg line="${objFiles}"/>
++			<arg line="${libraries}" />
++		</exec>
++	</target>	
++	
++	<target name="postcompile" depends="link">
++		
++	</target>
++</project>
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/jni/build-macosx32.xml b/extensions/gdx-controllers/gdx-controllers-desktop/jni/build-macosx32.xml
+new file mode 100644
+index 0000000..5ea140e
+--- /dev/null
++++ b/extensions/gdx-controllers/gdx-controllers-desktop/jni/build-macosx32.xml
+@@ -0,0 +1,144 @@
++<project name="gdx-controllers-desktop-MacOsX-32" basedir="." default="postcompile">
++	<!-- include the environment -->
++	<property environment="env"/>	
++	<!-- output directory for temporary object files -->
++	<property name="buildDir" value="target/macosx32" />
++	<!-- output directory for the shared library -->
++	<property name="libsDir" value="../libs/macosx32" />
++	<!-- the name of the shared library -->
++	<property name="libName" value="libgdx-controllers-desktop.dylib"/>
++	<!-- the jni header jniPlatform to use -->
++	<property name="jniPlatform" value="mac"/>
++	<!-- the compilerPrefix for the C & C++ compilers -->
++	<property name="compilerPrefix" value=""/>	
++	
++	<!-- define gcc compiler, options and files to compile -->
++	<property name="gcc" value="${compilerPrefix}gcc"/>	
++	<property name="gcc-opts" value="-c -Wall -O2 -arch i386 -arch x86_64 -DFIXED_POINT -fmessage-length=0 -fPIC -mmacosx-version-min=10.5"/>
++	<fileset id="gcc-files" dir="./">
++		<exclude name="target/"/>		
++				<include name="memcpy_wrap.c"/>
++		<include name="**/*.c"/>
++
++		
++	</fileset>
++	
++	<!-- define g++ compiler, options and files to compile -->
++	<property name="g++" value="${compilerPrefix}g++"/>
++	<property name="g++-opts" value="-c -Wall -O2 -arch i386 -arch x86_64 -DFIXED_POINT -fmessage-length=0 -fPIC -mmacosx-version-min=10.5"/>
++	<fileset id="g++-files" dir="./">
++		<exclude name="target/"/>
++				<include name="*.cpp"/>
++		<include name="ois-v1-4svn/src/*.cpp"/>
++		<include name="ois-v1-4svn/src/linux/*.cpp"/>
++
++		
++	</fileset>
++
++	<!-- define linker and options -->
++	<property name="linker" value="${compilerPrefix}g++"/>
++	<property name="linker-opts" value="-shared -arch i386 -arch x86_64 -mmacosx-version-min=10.5"/>
++	<property name="libraries" value=""/>
++	
++	<!-- cleans the build directory, removes all object files and shared libs -->
++	<target name="clean">
++		<delete includeemptydirs="true" quiet="true">
++			<fileset dir="${buildDir}"/>
++			<fileset dir="${libsDir}" includes="**/*" excludes="**/.svn"/>
++		</delete>
++	</target>
++	
++	<target name="precompile">
++		<condition property="compiler-found">
++			<and>
++				<or>
++					<!-- Include both b/c Windows might be either -->
++					<available file="${g++}" filepath="${env.PATH}"/>
++					<available file="${g++}" filepath="${env.Path}"/>
++				</or>
++				<or>
++					<!-- Include both b/c Windows might be either -->
++					<available file="${gcc}" filepath="${env.PATH}"/>
++					<available file="${gcc}" filepath="${env.Path}"/>
++				</or>
++			</and>
++		</condition>
++		<condition property="has-compiler">
++			<equals arg1="${compiler-found}" arg2="true"/>
++		</condition>
++		
++	</target>
++	
++	<target name="create-build-dir" depends="precompile" if="has-compiler">
++		<!-- FIXME this is pretty nasty :/ -->
++		<copy todir="${buildDir}">
++			<fileset refid="g++-files"/>
++			<fileset refid="gcc-files"/>
++		</copy>
++		<delete>
++			<fileset dir="${buildDir}">
++				<include name="*"/>
++				<exclude name="*.o"/>
++			</fileset>
++		</delete>
++	</target>
++
++	<!-- compiles all C and C++ files to object files in the build directory -->
++	<target name="compile" depends="create-build-dir" if="has-compiler">
++		<mkdir dir="${buildDir}"/>
++		<apply failonerror="true" executable="${g++}" dest="${buildDir}" verbose="true">
++			<arg line="${g++-opts}"/>
++			<arg value="-Ijni-headers"/>
++			<arg value="-Ijni-headers/${jniPlatform}"/>
++			<arg value="-I."/>
++						<arg value="-Iois-v1-4svn/includes"/>
++			<arg value="-Idinput/"/>
++
++			<srcfile/>
++			<arg value="-o"/>
++			<targetfile/>
++			<fileset refid="g++-files"/>
++			<chainedmapper>
++				<mapper type="glob" from="*.cpp" to="*.o"/>
++			</chainedmapper>
++		</apply>
++		<apply failonerror="true" executable="${gcc}" dest="${buildDir}" verbose="true">
++			<arg line="${gcc-opts}"/>
++			<arg value="-Ijni-headers"/>
++			<arg value="-Ijni-headers/${jniPlatform}"/>
++			<arg value="-I."/>
++						<arg value="-Iois-v1-4svn/includes"/>
++			<arg value="-Idinput/"/>
++
++			<srcfile/>
++			<arg value="-o"/>
++			<targetfile/>
++			<fileset refid="gcc-files"/>
++			<chainedmapper>
++				<mapper type="glob" from="*.c" to="*.o"/>
++			</chainedmapper>
++		</apply>
++	</target>	
++
++	<!-- links the shared library based on the previously compiled object files -->	
++	<target name="link" depends="compile" if="has-compiler">
++		<fileset dir="${buildDir}" id="objFileSet">
++			<patternset>
++				<include name="**/*.o" />
++			</patternset>
++		</fileset>
++		<pathconvert pathsep=" " property="objFiles" refid="objFileSet" />
++		<mkdir dir="${libsDir}" />
++		<exec executable="${linker}" failonerror="true" dir="${buildDir}">
++			<arg line="${linker-opts}" />
++			<arg value="-o" />
++			<arg path="${libsDir}/${libName}" />
++			<arg line="${objFiles}"/>
++			<arg line="${libraries}" />
++		</exec>
++	</target>	
++	
++	<target name="postcompile" depends="link">
++		
++	</target>
++</project>
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/jni/build-windows32.xml b/extensions/gdx-controllers/gdx-controllers-desktop/jni/build-windows32.xml
+new file mode 100644
+index 0000000..49c75ba
+--- /dev/null
++++ b/extensions/gdx-controllers/gdx-controllers-desktop/jni/build-windows32.xml
+@@ -0,0 +1,144 @@
++<project name="gdx-controllers-desktop-Windows-32" basedir="." default="postcompile">
++	<!-- include the environment -->
++	<property environment="env"/>	
++	<!-- output directory for temporary object files -->
++	<property name="buildDir" value="target/windows32" />
++	<!-- output directory for the shared library -->
++	<property name="libsDir" value="../libs/windows32" />
++	<!-- the name of the shared library -->
++	<property name="libName" value="gdx-controllers-desktop.dll"/>
++	<!-- the jni header jniPlatform to use -->
++	<property name="jniPlatform" value="win32"/>
++	<!-- the compilerPrefix for the C & C++ compilers -->
++	<property name="compilerPrefix" value="i686-w64-mingw32-"/>	
++	
++	<!-- define gcc compiler, options and files to compile -->
++	<property name="gcc" value="${compilerPrefix}gcc"/>	
++	<property name="gcc-opts" value="-c -Wall -O2 -mfpmath=sse -msse2 -fmessage-length=0 -m32"/>
++	<fileset id="gcc-files" dir="./">
++		<exclude name="target/"/>		
++				<include name="memcpy_wrap.c"/>
++		<include name="**/*.c"/>
++
++		
++	</fileset>
++	
++	<!-- define g++ compiler, options and files to compile -->
++	<property name="g++" value="${compilerPrefix}g++"/>
++	<property name="g++-opts" value="-c -Wall -O2 -mfpmath=sse -msse2 -fmessage-length=0 -m32"/>
++	<fileset id="g++-files" dir="./">
++		<exclude name="target/"/>
++				<include name="*.cpp"/>
++		<include name="ois-v1-4svn/src/*.cpp"/>
++		<include name="ois-v1-4svn/src/win32/*.cpp"/>
++
++		
++	</fileset>
++
++	<!-- define linker and options -->
++	<property name="linker" value="${compilerPrefix}g++"/>
++	<property name="linker-opts" value="-Wl,--kill-at -shared -m32 -static-libgcc -static-libstdc++"/>
++	<property name="libraries" value="-ldinput8 -ldxguid"/>
++	
++	<!-- cleans the build directory, removes all object files and shared libs -->
++	<target name="clean">
++		<delete includeemptydirs="true" quiet="true">
++			<fileset dir="${buildDir}"/>
++			<fileset dir="${libsDir}" includes="**/*" excludes="**/.svn"/>
++		</delete>
++	</target>
++	
++	<target name="precompile">
++		<condition property="compiler-found">
++			<and>
++				<or>
++					<!-- Include both b/c Windows might be either -->
++					<available file="${g++}" filepath="${env.PATH}"/>
++					<available file="${g++}" filepath="${env.Path}"/>
++				</or>
++				<or>
++					<!-- Include both b/c Windows might be either -->
++					<available file="${gcc}" filepath="${env.PATH}"/>
++					<available file="${gcc}" filepath="${env.Path}"/>
++				</or>
++			</and>
++		</condition>
++		<condition property="has-compiler">
++			<equals arg1="${compiler-found}" arg2="true"/>
++		</condition>
++		
++	</target>
++	
++	<target name="create-build-dir" depends="precompile" if="has-compiler">
++		<!-- FIXME this is pretty nasty :/ -->
++		<copy todir="${buildDir}">
++			<fileset refid="g++-files"/>
++			<fileset refid="gcc-files"/>
++		</copy>
++		<delete>
++			<fileset dir="${buildDir}">
++				<include name="*"/>
++				<exclude name="*.o"/>
++			</fileset>
++		</delete>
++	</target>
++
++	<!-- compiles all C and C++ files to object files in the build directory -->
++	<target name="compile" depends="create-build-dir" if="has-compiler">
++		<mkdir dir="${buildDir}"/>
++		<apply failonerror="true" executable="${g++}" dest="${buildDir}" verbose="true">
++			<arg line="${g++-opts}"/>
++			<arg value="-Ijni-headers"/>
++			<arg value="-Ijni-headers/${jniPlatform}"/>
++			<arg value="-I."/>
++						<arg value="-Iois-v1-4svn/includes"/>
++			<arg value="-Idinput/"/>
++
++			<srcfile/>
++			<arg value="-o"/>
++			<targetfile/>
++			<fileset refid="g++-files"/>
++			<chainedmapper>
++				<mapper type="glob" from="*.cpp" to="*.o"/>
++			</chainedmapper>
++		</apply>
++		<apply failonerror="true" executable="${gcc}" dest="${buildDir}" verbose="true">
++			<arg line="${gcc-opts}"/>
++			<arg value="-Ijni-headers"/>
++			<arg value="-Ijni-headers/${jniPlatform}"/>
++			<arg value="-I."/>
++						<arg value="-Iois-v1-4svn/includes"/>
++			<arg value="-Idinput/"/>
++
++			<srcfile/>
++			<arg value="-o"/>
++			<targetfile/>
++			<fileset refid="gcc-files"/>
++			<chainedmapper>
++				<mapper type="glob" from="*.c" to="*.o"/>
++			</chainedmapper>
++		</apply>
++	</target>	
++
++	<!-- links the shared library based on the previously compiled object files -->	
++	<target name="link" depends="compile" if="has-compiler">
++		<fileset dir="${buildDir}" id="objFileSet">
++			<patternset>
++				<include name="**/*.o" />
++			</patternset>
++		</fileset>
++		<pathconvert pathsep=" " property="objFiles" refid="objFileSet" />
++		<mkdir dir="${libsDir}" />
++		<exec executable="${linker}" failonerror="true" dir="${buildDir}">
++			<arg line="${linker-opts}" />
++			<arg value="-o" />
++			<arg path="${libsDir}/${libName}" />
++			<arg line="${objFiles}"/>
++			<arg line="${libraries}" />
++		</exec>
++	</target>	
++	
++	<target name="postcompile" depends="link">
++		
++	</target>
++</project>
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/jni/build-windows64.xml b/extensions/gdx-controllers/gdx-controllers-desktop/jni/build-windows64.xml
+new file mode 100644
+index 0000000..55379e7
+--- /dev/null
++++ b/extensions/gdx-controllers/gdx-controllers-desktop/jni/build-windows64.xml
+@@ -0,0 +1,144 @@
++<project name="gdx-controllers-desktop-Windows-64" basedir="." default="postcompile">
++	<!-- include the environment -->
++	<property environment="env"/>	
++	<!-- output directory for temporary object files -->
++	<property name="buildDir" value="target/windows64" />
++	<!-- output directory for the shared library -->
++	<property name="libsDir" value="../libs/windows64" />
++	<!-- the name of the shared library -->
++	<property name="libName" value="gdx-controllers-desktop64.dll"/>
++	<!-- the jni header jniPlatform to use -->
++	<property name="jniPlatform" value="win32"/>
++	<!-- the compilerPrefix for the C & C++ compilers -->
++	<property name="compilerPrefix" value="x86_64-w64-mingw32-"/>	
++	
++	<!-- define gcc compiler, options and files to compile -->
++	<property name="gcc" value="${compilerPrefix}gcc"/>	
++	<property name="gcc-opts" value="-c -Wall -O2 -mfpmath=sse -msse2 -fmessage-length=0 -m64"/>
++	<fileset id="gcc-files" dir="./">
++		<exclude name="target/"/>		
++				<include name="memcpy_wrap.c"/>
++		<include name="**/*.c"/>
++
++		
++	</fileset>
++	
++	<!-- define g++ compiler, options and files to compile -->
++	<property name="g++" value="${compilerPrefix}g++"/>
++	<property name="g++-opts" value="-c -Wall -O2 -mfpmath=sse -msse2 -fmessage-length=0 -m64"/>
++	<fileset id="g++-files" dir="./">
++		<exclude name="target/"/>
++				<include name="*.cpp"/>
++		<include name="ois-v1-4svn/src/*.cpp"/>
++		<include name="ois-v1-4svn/src/win32/*.cpp"/>
++
++		
++	</fileset>
++
++	<!-- define linker and options -->
++	<property name="linker" value="${compilerPrefix}g++"/>
++	<property name="linker-opts" value="-Wl,--kill-at -shared -static-libgcc -static-libstdc++ -m64"/>
++	<property name="libraries" value="-ldinput8 -ldxguid"/>
++	
++	<!-- cleans the build directory, removes all object files and shared libs -->
++	<target name="clean">
++		<delete includeemptydirs="true" quiet="true">
++			<fileset dir="${buildDir}"/>
++			<fileset dir="${libsDir}" includes="**/*" excludes="**/.svn"/>
++		</delete>
++	</target>
++	
++	<target name="precompile">
++		<condition property="compiler-found">
++			<and>
++				<or>
++					<!-- Include both b/c Windows might be either -->
++					<available file="${g++}" filepath="${env.PATH}"/>
++					<available file="${g++}" filepath="${env.Path}"/>
++				</or>
++				<or>
++					<!-- Include both b/c Windows might be either -->
++					<available file="${gcc}" filepath="${env.PATH}"/>
++					<available file="${gcc}" filepath="${env.Path}"/>
++				</or>
++			</and>
++		</condition>
++		<condition property="has-compiler">
++			<equals arg1="${compiler-found}" arg2="true"/>
++		</condition>
++		
++	</target>
++	
++	<target name="create-build-dir" depends="precompile" if="has-compiler">
++		<!-- FIXME this is pretty nasty :/ -->
++		<copy todir="${buildDir}">
++			<fileset refid="g++-files"/>
++			<fileset refid="gcc-files"/>
++		</copy>
++		<delete>
++			<fileset dir="${buildDir}">
++				<include name="*"/>
++				<exclude name="*.o"/>
++			</fileset>
++		</delete>
++	</target>
++
++	<!-- compiles all C and C++ files to object files in the build directory -->
++	<target name="compile" depends="create-build-dir" if="has-compiler">
++		<mkdir dir="${buildDir}"/>
++		<apply failonerror="true" executable="${g++}" dest="${buildDir}" verbose="true">
++			<arg line="${g++-opts}"/>
++			<arg value="-Ijni-headers"/>
++			<arg value="-Ijni-headers/${jniPlatform}"/>
++			<arg value="-I."/>
++						<arg value="-Iois-v1-4svn/includes"/>
++			<arg value="-Idinput/"/>
++
++			<srcfile/>
++			<arg value="-o"/>
++			<targetfile/>
++			<fileset refid="g++-files"/>
++			<chainedmapper>
++				<mapper type="glob" from="*.cpp" to="*.o"/>
++			</chainedmapper>
++		</apply>
++		<apply failonerror="true" executable="${gcc}" dest="${buildDir}" verbose="true">
++			<arg line="${gcc-opts}"/>
++			<arg value="-Ijni-headers"/>
++			<arg value="-Ijni-headers/${jniPlatform}"/>
++			<arg value="-I."/>
++						<arg value="-Iois-v1-4svn/includes"/>
++			<arg value="-Idinput/"/>
++
++			<srcfile/>
++			<arg value="-o"/>
++			<targetfile/>
++			<fileset refid="gcc-files"/>
++			<chainedmapper>
++				<mapper type="glob" from="*.c" to="*.o"/>
++			</chainedmapper>
++		</apply>
++	</target>	
++
++	<!-- links the shared library based on the previously compiled object files -->	
++	<target name="link" depends="compile" if="has-compiler">
++		<fileset dir="${buildDir}" id="objFileSet">
++			<patternset>
++				<include name="**/*.o" />
++			</patternset>
++		</fileset>
++		<pathconvert pathsep=" " property="objFiles" refid="objFileSet" />
++		<mkdir dir="${libsDir}" />
++		<exec executable="${linker}" failonerror="true" dir="${buildDir}">
++			<arg line="${linker-opts}" />
++			<arg value="-o" />
++			<arg path="${libsDir}/${libName}" />
++			<arg line="${objFiles}"/>
++			<arg line="${libraries}" />
++		</exec>
++	</target>	
++	
++	<target name="postcompile" depends="link">
++		
++	</target>
++</project>
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/jni/build.xml b/extensions/gdx-controllers/gdx-controllers-desktop/jni/build.xml
+index 75b0bef..ddf5009 100755
+--- a/extensions/gdx-controllers/gdx-controllers-desktop/jni/build.xml
++++ b/extensions/gdx-controllers/gdx-controllers-desktop/jni/build.xml
+@@ -1,17 +1,27 @@
+ <project name="gdx-controllers-desktop-natives" basedir="." default="all">
+ 	<target name="clean">
+-		<ant antfile="build-windows32home.xml" target="clean"/>
++		<ant antfile="build-windows32.xml" target="clean"/>
++		<ant antfile="build-windows64.xml" target="clean"/>
++		<ant antfile="build-linux32.xml" target="clean"/>
++		<ant antfile="build-linux64.xml" target="clean"/>
+ 
+ 	</target>
+ 	
+ 	<target name="compile-natives">
+-		<ant antfile="build-windows32home.xml"/>
++		<ant antfile="build-windows32.xml"/>
++		<ant antfile="build-windows64.xml"/>
++		<ant antfile="build-linux32.xml"/>
++		<ant antfile="build-linux64.xml"/>
+ 
+ 	</target>
+ 	
+ 	<target name="pack-natives">
+ 		<jar destfile="../libs/gdx-controllers-desktop-natives.jar">
+ 			<fileset dir="../libs/windows32" includes="gdx-controllers-desktop.dll"/>
++			<fileset dir="../libs/windows64" includes="gdx-controllers-desktop64.dll"/>
++			<fileset dir="../libs/linux32" includes="libgdx-controllers-desktop.so"/>
++			<fileset dir="../libs/linux64" includes="libgdx-controllers-desktop64.so"/>
++			<fileset dir="../libs/macosx32" includes="libgdx-controllers-desktop.dylib"/>
+ 
+ 		</jar>
+ 	</target>
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/jni/com.badlogic.gdx.controllers.desktop.ois.Ois.cpp b/extensions/gdx-controllers/gdx-controllers-desktop/jni/com.badlogic.gdx.controllers.desktop.ois.Ois.cpp
+index 5eabe46..c4f4496 100755
+--- a/extensions/gdx-controllers/gdx-controllers-desktop/jni/com.badlogic.gdx.controllers.desktop.ois.Ois.cpp
++++ b/extensions/gdx-controllers/gdx-controllers-desktop/jni/com.badlogic.gdx.controllers.desktop.ois.Ois.cpp
+@@ -1,6 +1,6 @@
+ #include <com.badlogic.gdx.controllers.desktop.ois.Ois.h>
+ 
+-//@line:69
++//@line:57
+ 
+ 	#include <OISJoyStick.h>
+ 	#include <OISInputManager.h>
+@@ -12,7 +12,7 @@
+ 	JNIEXPORT jlong JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_getWindowHandleWindowsHack(JNIEnv* env, jobject object) {
+ 
+ 
+-//@line:84
++//@line:72
+ 
+ 	#ifdef _WIN32
+ 		HWND joyHwnd = CreateWindow(
+@@ -35,7 +35,7 @@
+ JNIEXPORT jlong JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_createInputManager(JNIEnv* env, jobject object, jlong hwnd) {
+ 
+ 
+-//@line:101
++//@line:89
+ 
+ 		std::ostringstream hwndStr;
+ 		hwndStr << hwnd;
+@@ -49,62 +49,21 @@ JNIEXPORT jlong JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_create
+ 
+ }
+ 
+-JNIEXPORT jobjectArray JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_getJoystickNames(JNIEnv* env, jobject object, jlong inputManagerPtr) {
++JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_getJoystickCount(JNIEnv* env, jobject object, jlong inputManagerPtr) {
+ 
+ 
+-//@line:112
++//@line:100
+ 
+ 		OIS::InputManager* inputManager = (OIS::InputManager*)inputManagerPtr;
+-		OIS::DeviceList map = inputManager->listFreeDevices();
+-		int joystickCount = inputManager->getNumberOfDevices(OIS::OISJoyStick);
+-		jobjectArray names = (jobjectArray)env->NewObjectArray(joystickCount, env->FindClass("java/lang/String"), env->NewStringUTF(""));
+-		int index = 0;
+-		for (OIS::DeviceList::iterator i = map.begin(); i != map.end(); ++i) {
+-			if (i->first != OIS::OISJoyStick) continue;
+-			env->SetObjectArrayElement(names, index++, env->NewStringUTF(i->second.c_str()));
+-		}
+-		return names;
+-	
+-
+-}
+-
+-JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_getVersionNumber(JNIEnv* env, jobject object, jlong inputManagerPtr) {
+-
+-
+-//@line:125
+-
+-		OIS::InputManager* inputManager = (OIS::InputManager*)inputManagerPtr;
+-	 	return inputManager->getVersionNumber();
++	 	return inputManager->getNumberOfDevices(OIS::OISJoyStick);
+ 	
+ 
+ }
+ 
+-JNIEXPORT jstring JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_getVersionName(JNIEnv* env, jobject object, jlong inputManagerPtr) {
+-
+-
+-//@line:130
+-
+-		OIS::InputManager* inputManager = (OIS::InputManager*)inputManagerPtr;
+-	 	return env->NewStringUTF(inputManager->getVersionName().c_str());
+-	 
+-
+-}
+-
+-JNIEXPORT jstring JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_getInputSystemName(JNIEnv* env, jobject object, jlong inputManagerPtr) {
+-
+-
+-//@line:135
+-
+-		OIS::InputManager* inputManager = (OIS::InputManager*)inputManagerPtr;
+-	 	return env->NewStringUTF(inputManager->inputSystemName().c_str());
+-	 
+-
+-}
+-
+ JNIEXPORT jlong JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_createJoystick(JNIEnv* env, jobject object, jlong inputManagerPtr) {
+ 
+ 
+-//@line:140
++//@line:105
+ 
+ 		OIS::InputManager* inputManager = (OIS::InputManager*)inputManagerPtr;
+ 		try {
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/jni/com.badlogic.gdx.controllers.desktop.ois.Ois.h b/extensions/gdx-controllers/gdx-controllers-desktop/jni/com.badlogic.gdx.controllers.desktop.ois.Ois.h
+index 8624461..c3cfa9a 100755
+--- a/extensions/gdx-controllers/gdx-controllers-desktop/jni/com.badlogic.gdx.controllers.desktop.ois.Ois.h
++++ b/extensions/gdx-controllers/gdx-controllers-desktop/jni/com.badlogic.gdx.controllers.desktop.ois.Ois.h
+@@ -1,69 +1,45 @@
+-/* DO NOT EDIT THIS FILE - it is machine generated */
+-#include <jni.h>
+-/* Header for class com_badlogic_gdx_controllers_desktop_ois_Ois */
+-
+-#ifndef _Included_com_badlogic_gdx_controllers_desktop_ois_Ois
+-#define _Included_com_badlogic_gdx_controllers_desktop_ois_Ois
+-#ifdef __cplusplus
+-extern "C" {
+-#endif
+-/*
+- * Class:     com_badlogic_gdx_controllers_desktop_ois_Ois
+- * Method:    getWindowHandleWindowsHack
+- * Signature: ()J
+- */
+-JNIEXPORT jlong JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_getWindowHandleWindowsHack
+-  (JNIEnv *, jobject);
+-
+-/*
+- * Class:     com_badlogic_gdx_controllers_desktop_ois_Ois
+- * Method:    createInputManager
+- * Signature: (J)J
+- */
+-JNIEXPORT jlong JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_createInputManager
+-  (JNIEnv *, jobject, jlong);
+-
+-/*
+- * Class:     com_badlogic_gdx_controllers_desktop_ois_Ois
+- * Method:    getJoystickNames
+- * Signature: (J)[Ljava/lang/String;
+- */
+-JNIEXPORT jobjectArray JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_getJoystickNames
+-  (JNIEnv *, jobject, jlong);
+-
+-/*
+- * Class:     com_badlogic_gdx_controllers_desktop_ois_Ois
+- * Method:    getVersionNumber
+- * Signature: (J)I
+- */
+-JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_getVersionNumber
+-  (JNIEnv *, jobject, jlong);
+-
+-/*
+- * Class:     com_badlogic_gdx_controllers_desktop_ois_Ois
+- * Method:    getVersionName
+- * Signature: (J)Ljava/lang/String;
+- */
+-JNIEXPORT jstring JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_getVersionName
+-  (JNIEnv *, jobject, jlong);
+-
+-/*
+- * Class:     com_badlogic_gdx_controllers_desktop_ois_Ois
+- * Method:    getInputSystemName
+- * Signature: (J)Ljava/lang/String;
+- */
+-JNIEXPORT jstring JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_getInputSystemName
+-  (JNIEnv *, jobject, jlong);
+-
+-/*
+- * Class:     com_badlogic_gdx_controllers_desktop_ois_Ois
+- * Method:    createJoystick
+- * Signature: (J)J
+- */
+-JNIEXPORT jlong JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_createJoystick
+-  (JNIEnv *, jobject, jlong);
+-
+-#ifdef __cplusplus
+-}
+-#endif
+-#endif
++/* DO NOT EDIT THIS FILE - it is machine generated */
++#include <jni.h>
++/* Header for class com_badlogic_gdx_controllers_desktop_ois_Ois */
++
++#ifndef _Included_com_badlogic_gdx_controllers_desktop_ois_Ois
++#define _Included_com_badlogic_gdx_controllers_desktop_ois_Ois
++#ifdef __cplusplus
++extern "C" {
++#endif
++/*
++ * Class:     com_badlogic_gdx_controllers_desktop_ois_Ois
++ * Method:    getWindowHandleWindowsHack
++ * Signature: ()J
++ */
++JNIEXPORT jlong JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_getWindowHandleWindowsHack
++  (JNIEnv *, jobject);
++
++/*
++ * Class:     com_badlogic_gdx_controllers_desktop_ois_Ois
++ * Method:    createInputManager
++ * Signature: (J)J
++ */
++JNIEXPORT jlong JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_createInputManager
++  (JNIEnv *, jobject, jlong);
++
++/*
++ * Class:     com_badlogic_gdx_controllers_desktop_ois_Ois
++ * Method:    getJoystickCount
++ * Signature: (J)I
++ */
++JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_getJoystickCount
++  (JNIEnv *, jobject, jlong);
++
++/*
++ * Class:     com_badlogic_gdx_controllers_desktop_ois_Ois
++ * Method:    createJoystick
++ * Signature: (J)J
++ */
++JNIEXPORT jlong JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_Ois_createJoystick
++  (JNIEnv *, jobject, jlong);
++
++#ifdef __cplusplus
++}
++#endif
++#endif
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/jni/com.badlogic.gdx.controllers.desktop.ois.OisJoystick.cpp b/extensions/gdx-controllers/gdx-controllers-desktop/jni/com.badlogic.gdx.controllers.desktop.ois.OisJoystick.cpp
+index fd75f72..70566df 100755
+--- a/extensions/gdx-controllers/gdx-controllers-desktop/jni/com.badlogic.gdx.controllers.desktop.ois.OisJoystick.cpp
++++ b/extensions/gdx-controllers/gdx-controllers-desktop/jni/com.badlogic.gdx.controllers.desktop.ois.OisJoystick.cpp
+@@ -76,7 +76,7 @@
+ 
+ }
+ 
+-JNIEXPORT void JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_update(JNIEnv* env, jobject object, jlong joystickPtr, jobject callback) {
++JNIEXPORT void JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_updateJni(JNIEnv* env, jobject object, jlong joystickPtr, jobject callback) {
+ 
+ 
+ //@line:191
+@@ -89,7 +89,7 @@ JNIEXPORT void JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick
+ 
+ }
+ 
+-JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_getAxesCount(JNIEnv* env, jobject object, jlong joystickPtr) {
++JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_getAxesCountJni(JNIEnv* env, jobject object, jlong joystickPtr) {
+ 
+ 
+ //@line:198
+@@ -100,7 +100,7 @@ JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick
+ 
+ }
+ 
+-JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_getButtonCount(JNIEnv* env, jobject object, jlong joystickPtr) {
++JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_getButtonCountJni(JNIEnv* env, jobject object, jlong joystickPtr) {
+ 
+ 
+ //@line:203
+@@ -111,7 +111,7 @@ JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick
+ 
+ }
+ 
+-JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_getPovCount(JNIEnv* env, jobject object, jlong joystickPtr) {
++JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_getPovCountJni(JNIEnv* env, jobject object, jlong joystickPtr) {
+ 
+ 
+ //@line:208
+@@ -122,7 +122,7 @@ JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick
+ 
+ }
+ 
+-JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_getSliderCount(JNIEnv* env, jobject object, jlong joystickPtr) {
++JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_getSliderCountJni(JNIEnv* env, jobject object, jlong joystickPtr) {
+ 
+ 
+ //@line:213
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/jni/com.badlogic.gdx.controllers.desktop.ois.OisJoystick.h b/extensions/gdx-controllers/gdx-controllers-desktop/jni/com.badlogic.gdx.controllers.desktop.ois.OisJoystick.h
+index 4ad393b..234938e 100755
+--- a/extensions/gdx-controllers/gdx-controllers-desktop/jni/com.badlogic.gdx.controllers.desktop.ois.OisJoystick.h
++++ b/extensions/gdx-controllers/gdx-controllers-desktop/jni/com.badlogic.gdx.controllers.desktop.ois.OisJoystick.h
+@@ -1,76 +1,76 @@
+-/* DO NOT EDIT THIS FILE - it is machine generated */
+-#include <jni.h>
+-/* Header for class com_badlogic_gdx_controllers_desktop_ois_OisJoystick */
+-
+-#ifndef _Included_com_badlogic_gdx_controllers_desktop_ois_OisJoystick
+-#define _Included_com_badlogic_gdx_controllers_desktop_ois_OisJoystick
+-#ifdef __cplusplus
+-extern "C" {
+-#endif
+-#undef com_badlogic_gdx_controllers_desktop_ois_OisJoystick_MIN_AXIS
+-#define com_badlogic_gdx_controllers_desktop_ois_OisJoystick_MIN_AXIS -32768L
+-#undef com_badlogic_gdx_controllers_desktop_ois_OisJoystick_MAX_AXIS
+-#define com_badlogic_gdx_controllers_desktop_ois_OisJoystick_MAX_AXIS 32767L
+-/*
+- * Class:     com_badlogic_gdx_controllers_desktop_ois_OisJoystick
+- * Method:    initialize
+- * Signature: (Lcom/badlogic/gdx/controllers/desktop/ois/OisJoystick;)V
+- */
+-JNIEXPORT void JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_initialize
+-  (JNIEnv *, jobject, jobject);
+-
+-/*
+- * Class:     com_badlogic_gdx_controllers_desktop_ois_OisJoystick
+- * Method:    update
+- * Signature: (JLcom/badlogic/gdx/controllers/desktop/ois/OisJoystick;)V
+- */
+-JNIEXPORT void JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_update
+-  (JNIEnv *, jobject, jlong, jobject);
+-
+-/*
+- * Class:     com_badlogic_gdx_controllers_desktop_ois_OisJoystick
+- * Method:    getAxesCount
+- * Signature: (J)I
+- */
+-JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_getAxesCount
+-  (JNIEnv *, jobject, jlong);
+-
+-/*
+- * Class:     com_badlogic_gdx_controllers_desktop_ois_OisJoystick
+- * Method:    getButtonCount
+- * Signature: (J)I
+- */
+-JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_getButtonCount
+-  (JNIEnv *, jobject, jlong);
+-
+-/*
+- * Class:     com_badlogic_gdx_controllers_desktop_ois_OisJoystick
+- * Method:    getPovCount
+- * Signature: (J)I
+- */
+-JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_getPovCount
+-  (JNIEnv *, jobject, jlong);
+-
+-/*
+- * Class:     com_badlogic_gdx_controllers_desktop_ois_OisJoystick
+- * Method:    getSliderCount
+- * Signature: (J)I
+- */
+-JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_getSliderCount
+-  (JNIEnv *, jobject, jlong);
+-
+-#ifdef __cplusplus
+-}
+-#endif
+-#endif
+-/* Header for class com_badlogic_gdx_controllers_desktop_ois_OisJoystick_OisPov */
+-
+-#ifndef _Included_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_OisPov
+-#define _Included_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_OisPov
+-#ifdef __cplusplus
+-extern "C" {
+-#endif
+-#ifdef __cplusplus
+-}
+-#endif
+-#endif
++/* DO NOT EDIT THIS FILE - it is machine generated */
++#include <jni.h>
++/* Header for class com_badlogic_gdx_controllers_desktop_ois_OisJoystick */
++
++#ifndef _Included_com_badlogic_gdx_controllers_desktop_ois_OisJoystick
++#define _Included_com_badlogic_gdx_controllers_desktop_ois_OisJoystick
++#ifdef __cplusplus
++extern "C" {
++#endif
++#undef com_badlogic_gdx_controllers_desktop_ois_OisJoystick_MIN_AXIS
++#define com_badlogic_gdx_controllers_desktop_ois_OisJoystick_MIN_AXIS -32768L
++#undef com_badlogic_gdx_controllers_desktop_ois_OisJoystick_MAX_AXIS
++#define com_badlogic_gdx_controllers_desktop_ois_OisJoystick_MAX_AXIS 32767L
++/*
++ * Class:     com_badlogic_gdx_controllers_desktop_ois_OisJoystick
++ * Method:    initialize
++ * Signature: (Lcom/badlogic/gdx/controllers/desktop/ois/OisJoystick;)V
++ */
++JNIEXPORT void JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_initialize
++  (JNIEnv *, jobject, jobject);
++
++/*
++ * Class:     com_badlogic_gdx_controllers_desktop_ois_OisJoystick
++ * Method:    updateJni
++ * Signature: (JLcom/badlogic/gdx/controllers/desktop/ois/OisJoystick;)V
++ */
++JNIEXPORT void JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_updateJni
++  (JNIEnv *, jobject, jlong, jobject);
++
++/*
++ * Class:     com_badlogic_gdx_controllers_desktop_ois_OisJoystick
++ * Method:    getAxesCountJni
++ * Signature: (J)I
++ */
++JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_getAxesCountJni
++  (JNIEnv *, jobject, jlong);
++
++/*
++ * Class:     com_badlogic_gdx_controllers_desktop_ois_OisJoystick
++ * Method:    getButtonCountJni
++ * Signature: (J)I
++ */
++JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_getButtonCountJni
++  (JNIEnv *, jobject, jlong);
++
++/*
++ * Class:     com_badlogic_gdx_controllers_desktop_ois_OisJoystick
++ * Method:    getPovCountJni
++ * Signature: (J)I
++ */
++JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_getPovCountJni
++  (JNIEnv *, jobject, jlong);
++
++/*
++ * Class:     com_badlogic_gdx_controllers_desktop_ois_OisJoystick
++ * Method:    getSliderCountJni
++ * Signature: (J)I
++ */
++JNIEXPORT jint JNICALL Java_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_getSliderCountJni
++  (JNIEnv *, jobject, jlong);
++
++#ifdef __cplusplus
++}
++#endif
++#endif
++/* Header for class com_badlogic_gdx_controllers_desktop_ois_OisJoystick_OisPov */
++
++#ifndef _Included_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_OisPov
++#define _Included_com_badlogic_gdx_controllers_desktop_ois_OisJoystick_OisPov
++#ifdef __cplusplus
++extern "C" {
++#endif
++#ifdef __cplusplus
++}
++#endif
++#endif
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/libs/gdx-controllers-desktop-natives.jar b/extensions/gdx-controllers/gdx-controllers-desktop/libs/gdx-controllers-desktop-natives.jar
+index fee96f3..fecb065 100755
+Binary files a/extensions/gdx-controllers/gdx-controllers-desktop/libs/gdx-controllers-desktop-natives.jar and b/extensions/gdx-controllers/gdx-controllers-desktop/libs/gdx-controllers-desktop-natives.jar differ
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/DesktopControllerManager.java b/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/DesktopControllerManager.java
+new file mode 100644
+index 0000000..c0790f4
+--- /dev/null
++++ b/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/DesktopControllerManager.java
+@@ -0,0 +1,26 @@
++
++package com.badlogic.gdx.controllers;
++
++import com.badlogic.gdx.utils.Array;
++
++/** @author Nathan Sweet */
++public class DesktopControllerManager implements ControllerManager {
++	final Array<Controller> controllers = new Array();
++	final Array<ControllerListener> listeners = new Array();
++
++	public DesktopControllerManager () {
++		new OisControllers(this);
++	}
++
++	public Array<Controller> getControllers () {
++		return controllers;
++	}
++
++	public void addListener (ControllerListener listener) {
++		listeners.add(listener);
++	}
++
++	public void removeListener (ControllerListener listener) {
++		listeners.removeValue(listener, true);
++	}
++}
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/DesktopControllers.java b/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/DesktopControllers.java
+new file mode 100644
+index 0000000..b63b34d
+--- /dev/null
++++ b/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/DesktopControllers.java
+@@ -0,0 +1,25 @@
++
++package com.badlogic.gdx.controllers;
++
++import java.awt.Frame;
++import java.lang.reflect.Field;
++import java.lang.reflect.InvocationTargetException;
++import java.lang.reflect.Method;
++
++import javax.swing.JFrame;
++import javax.swing.SwingUtilities;
++
++import org.lwjgl.opengl.Display;
++
++import com.badlogic.gdx.ApplicationAdapter;
++import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
++import com.badlogic.gdx.backends.lwjgl.LwjglFrame;
++import com.badlogic.gdx.controllers.desktop.ois.Ois;
++import com.badlogic.gdx.controllers.desktop.ois.OisListener;
++import com.badlogic.gdx.controllers.desktop.ois.OisJoystick;
++import com.badlogic.gdx.controllers.desktop.ois.OisJoystick.OisPov;
++import com.badlogic.gdx.utils.GdxRuntimeException;
++import com.badlogic.gdx.utils.SharedLibraryLoader;
++
++public class DesktopControllers {
++}
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/DesktopControllersBuild.java b/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/DesktopControllersBuild.java
+new file mode 100755
+index 0000000..3cd86ae
+--- /dev/null
++++ b/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/DesktopControllersBuild.java
+@@ -0,0 +1,77 @@
++
++package com.badlogic.gdx.controllers;
++
++import com.badlogic.gdx.jnigen.AntScriptGenerator;
++import com.badlogic.gdx.jnigen.BuildConfig;
++import com.badlogic.gdx.jnigen.BuildExecutor;
++import com.badlogic.gdx.jnigen.BuildTarget;
++import com.badlogic.gdx.jnigen.NativeCodeGenerator;
++import com.badlogic.gdx.jnigen.BuildTarget.TargetOs;
++
++public class DesktopControllersBuild {
++	public static void main (String[] args) throws Exception {
++		new NativeCodeGenerator().generate("src/", "bin/", "jni/");
++		BuildConfig buildConfig = new BuildConfig("gdx-controllers-desktop");
++		
++		String[] windowsSrc = {"*.cpp",
++			"ois-v1-4svn/src/*.cpp",
++			"ois-v1-4svn/src/win32/*.cpp"
++		};
++		
++		String[] linuxSrc = { "*.cpp",
++			"ois-v1-4svn/src/*.cpp",
++			"ois-v1-4svn/src/linux/*.cpp"
++		};
++		
++		String[] macSrc = { "*.cpp",
++			"ois-v1-4svn/src/*.cpp",
++			"ois-v1-4svn/src/linux/*.cpp"
++		};
++		
++		String[] includes = new String[] {
++			"ois-v1-4svn/includes",
++			"dinput/"
++		};
++		
++		BuildTarget win32home = BuildTarget.newDefaultTarget(TargetOs.Windows, false);
++		win32home.buildFileName = "build-windows32home.xml";
++		win32home.excludeFromMasterBuildFile = true;
++		win32home.is64Bit = false;
++		win32home.compilerPrefix = "";
++		win32home.cppIncludes = windowsSrc;
++		win32home.headerDirs = includes;
++		win32home.cIncludes = new String[0];
++		win32home.libraries = "-ldinput8 -ldxguid";
++		
++		BuildTarget win32 = BuildTarget.newDefaultTarget(TargetOs.Windows, false);
++		win32.cppIncludes = windowsSrc;
++		win32.headerDirs = includes;
++		win32.libraries = "-ldinput8 -ldxguid";
++		
++		BuildTarget win64 = BuildTarget.newDefaultTarget(TargetOs.Windows, true);
++		win64.cppIncludes = windowsSrc;
++		win64.headerDirs = includes;
++		win64.libraries = "-ldinput8 -ldxguid";
++		
++		BuildTarget lin32 = BuildTarget.newDefaultTarget(TargetOs.Linux, false);
++		lin32.cppIncludes = linuxSrc;
++		lin32.headerDirs = includes;
++		lin32.libraries = "-lX11";
++
++		BuildTarget lin64 = BuildTarget.newDefaultTarget(TargetOs.Linux, true);
++		lin64.cppIncludes = linuxSrc;
++		lin64.headerDirs = includes;
++		lin64.libraries = "-lX11";
++		
++		BuildTarget mac = BuildTarget.newDefaultTarget(TargetOs.MacOsX, false);
++		mac.cppIncludes = macSrc;
++		mac.headerDirs = includes;
++		mac.libraries = ""; // FIXME
++		
++		new AntScriptGenerator().generate(buildConfig, win32home, win32, win64, lin32, lin64, mac);
++		if(!BuildExecutor.executeAnt("jni/build-linux32.xml", "-Dhas-compiler=true -v postcompile")) {
++			throw new Exception("build failed");
++		}
++		BuildExecutor.executeAnt("jni/build.xml", "pack-natives");
++	}
++}
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/OisControllers.java b/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/OisControllers.java
+new file mode 100644
+index 0000000..e45f3d9
+--- /dev/null
++++ b/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/OisControllers.java
+@@ -0,0 +1,74 @@
++
++package com.badlogic.gdx.controllers;
++
++import com.badlogic.gdx.utils.Array;
++import com.badlogic.gdx.utils.Pool;
++
++public class OisControllers {
++	private final Ois ois = new Ois();
++	final OisController[] controllers;
++	final Array<Event> eventQueue = new Array();
++	final Pool<Event> eventPool = new Pool<Event>(16, 1000) {
++		protected Event newObject () {
++			return new Event();
++		}
++	};
++
++	public OisControllers (DesktopControllerManager manager) {
++		Array<OisJoystick> joysticks = ois.getJoysticks();
++		controllers = new OisController[joysticks.size];
++		for (int i = 0, n = joysticks.size; i < n; i++) {
++			OisJoystick joystick = joysticks.get(i);
++			controllers = new OisController(joystick);
++		}
++	}
++
++	static public class OisController implements Controller {
++		private OisJoystick joystick;
++
++		public OisController (OisJoystick joystick) {
++			this.joystick = joystick;
++		}
++
++		public void setAccelerometerSensitivity (float sensitivity) {
++		}
++
++		public int getControlCount (ControlType type) {
++			switch (type) {
++			case button:
++				return joystick.getButtonCount();
++			case axis:
++				return joystick.getAxisCount();
++			case slider:
++				return joystick.getSliderCount();
++			case pov:
++				return joystick.getPovCount();
++			}
++			return 0;
++		}
++
++		public void addListener (ControllerListener listener) {
++		}
++
++		public void removeListener (ControllerListener listener) {
++		}
++
++		public String getName () {
++			return name;
++		}
++
++		public String toString () {
++			return name;
++		}
++	}
++
++	static class Event {
++		static final int BUTTON_DOWN = 0;
++		static final int BUTTON_UP = 1;
++		static final int AXIS = 2;
++
++		int type;
++		OisController controller;
++		float axisValue;
++	}
++}
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/DesktopControllerManager.java b/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/DesktopControllerManager.java
+deleted file mode 100644
+index 9dedf0a..0000000
+--- a/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/DesktopControllerManager.java
++++ /dev/null
+@@ -1,29 +0,0 @@
+-
+-package com.badlogic.gdx.controllers.desktop;
+-
+-import com.badlogic.gdx.controllers.Controller;
+-import com.badlogic.gdx.controllers.ControllerListener;
+-import com.badlogic.gdx.controllers.ControllerManager;
+-import com.badlogic.gdx.utils.Array;
+-
+-/** @author Nathan Sweet */
+-public class DesktopControllerManager implements ControllerManager {
+-	final Array<Controller> controllers = new Array();
+-	final Array<ControllerListener> listeners = new Array();
+-
+-	public DesktopControllerManager () {
+-		new OisControllers(this);
+-	}
+-
+-	public Array<Controller> getControllers () {
+-		return controllers;
+-	}
+-
+-	public void addListener (ControllerListener listener) {
+-		listeners.add(listener);
+-	}
+-
+-	public void removeListener (ControllerListener listener) {
+-		listeners.removeValue(listener, true);
+-	}
+-}
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/DesktopControllers.java b/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/DesktopControllers.java
+deleted file mode 100644
+index ae65afa..0000000
+--- a/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/DesktopControllers.java
++++ /dev/null
+@@ -1,25 +0,0 @@
+-
+-package com.badlogic.gdx.controllers.desktop;
+-
+-import java.awt.Frame;
+-import java.lang.reflect.Field;
+-import java.lang.reflect.InvocationTargetException;
+-import java.lang.reflect.Method;
+-
+-import javax.swing.JFrame;
+-import javax.swing.SwingUtilities;
+-
+-import org.lwjgl.opengl.Display;
+-
+-import com.badlogic.gdx.ApplicationAdapter;
+-import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
+-import com.badlogic.gdx.backends.lwjgl.LwjglFrame;
+-import com.badlogic.gdx.controllers.desktop.ois.Ois;
+-import com.badlogic.gdx.controllers.desktop.ois.OisListener;
+-import com.badlogic.gdx.controllers.desktop.ois.OisJoystick;
+-import com.badlogic.gdx.controllers.desktop.ois.OisJoystick.OisPov;
+-import com.badlogic.gdx.utils.GdxRuntimeException;
+-import com.badlogic.gdx.utils.SharedLibraryLoader;
+-
+-public class DesktopControllers {
+-}
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/DesktopControllersBuild.java b/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/DesktopControllersBuild.java
+deleted file mode 100644
+index 27be7b4..0000000
+--- a/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/DesktopControllersBuild.java
++++ /dev/null
+@@ -1,37 +0,0 @@
+-
+-package com.badlogic.gdx.controllers.desktop;
+-
+-import com.badlogic.gdx.jnigen.AntScriptGenerator;
+-import com.badlogic.gdx.jnigen.BuildConfig;
+-import com.badlogic.gdx.jnigen.BuildExecutor;
+-import com.badlogic.gdx.jnigen.BuildTarget;
+-import com.badlogic.gdx.jnigen.NativeCodeGenerator;
+-import com.badlogic.gdx.jnigen.BuildTarget.TargetOs;
+-
+-public class DesktopControllersBuild {
+-	public static void main (String[] args) throws Exception {
+-		new NativeCodeGenerator().generate("src/", "bin/", "jni/");
+-		BuildConfig buildConfig = new BuildConfig("gdx-controllers-desktop");
+-		BuildTarget win32home = BuildTarget.newDefaultTarget(TargetOs.Windows, false);
+-		win32home.buildFileName = "build-windows32home.xml";
+-		win32home.is64Bit = false;
+-		win32home.compilerPrefix = "";
+-		win32home.cppIncludes = new String[] {
+-			"*.cpp",
+-			"ois-v1-4svn/src/*.cpp",
+-			"ois-v1-4svn/src/win32/*.cpp"
+-		};
+-		win32home.headerDirs = new String[] {
+-			"ois-v1-4svn/includes",
+-			"dinput/"
+-		};
+-		win32home.cIncludes = new String[0];
+-		win32home.libraries = "-ldinput8 -ldxguid";
+-
+-		new AntScriptGenerator().generate(buildConfig, win32home);
+-		if(!BuildExecutor.executeAnt("jni/build-windows32home.xml", "-Dhas-compiler=true -v postcompile")) {
+-			throw new Exception("build failed");
+-		}
+-		BuildExecutor.executeAnt("jni/build.xml", "pack-natives");
+-	}
+-}
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/OisControllers.java b/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/OisControllers.java
+deleted file mode 100644
+index ded16f2..0000000
+--- a/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/OisControllers.java
++++ /dev/null
+@@ -1,83 +0,0 @@
+-
+-package com.badlogic.gdx.controllers.desktop;
+-
+-import com.badlogic.gdx.controllers.ControlType;
+-import com.badlogic.gdx.controllers.Controller;
+-import com.badlogic.gdx.controllers.ControllerListener;
+-import com.badlogic.gdx.controllers.desktop.ois.Ois;
+-import com.badlogic.gdx.controllers.desktop.ois.OisJoystick;
+-import com.badlogic.gdx.utils.Array;
+-import com.badlogic.gdx.utils.Pool;
+-
+-import java.util.ArrayList;
+-
+-public class OisControllers {
+-	private final Ois ois = new Ois();
+-	final OisController[] controllers;
+-	final Array<Event> eventQueue = new Array();
+-	final Pool<Event> eventPool = new Pool<Event>(16, 1000) {
+-		protected Event newObject () {
+-			return new Event();
+-		}
+-	};
+-
+-	public OisControllers (DesktopControllerManager manager) {
+-		ArrayList<OisJoystick> joysticks = ois.getJoysticks();
+-		controllers = new OisController[joysticks.size()];
+-		for (int i = 0, n = joysticks.size(); i < n; i++) {
+-			OisJoystick joystick = joysticks.get(i);
+-			controllers = new OisController(joystick);
+-		}
+-	}
+-
+-	static public class OisController implements Controller {
+-		private OisJoystick joystick;
+-
+-		public OisController (OisJoystick joystick) {
+-			this.joystick = joystick;
+-		}
+-
+-		public void setAccelerometerSensitivity (float sensitivity) {
+-		}
+-
+-		public int getControlCount (ControlType type) {
+-			switch (type) {
+-			case button:
+-				return joystick.getButtonCount();
+-			case axis:
+-				return joystick.getAxisCount();
+-			case slider:
+-				return joystick.getSliderCount();
+-			case pov:
+-				return joystick.getPovCount();
+-			}
+-			return 0;
+-		}
+-
+-		public void addListener (ControllerListener listener) {
+-			listeners.add(listener);
+-		}
+-
+-		public void removeListener (ControllerListener listener) {
+-			listeners.removeValue(listener, true);
+-		}
+-
+-		public String getName () {
+-			return name;
+-		}
+-
+-		public String toString () {
+-			return name;
+-		}
+-	}
+-
+-	static class Event {
+-		static final int BUTTON_DOWN = 0;
+-		static final int BUTTON_UP = 1;
+-		static final int AXIS = 2;
+-
+-		int type;
+-		OisController controller;
+-		float axisValue;
+-	}
+-}
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/ois/Ois.java b/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/ois/Ois.java
+index 29d4188..74fe752 100755
+--- a/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/ois/Ois.java
++++ b/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/ois/Ois.java
+@@ -11,21 +11,20 @@ import org.lwjgl.opengl.Display;
+  * @author mzechner
+  * @author Nathan Sweet */
+ public class Ois {
+-	private final long inputManagerPtr;
++	private final long inputManager;
+ 	private final ArrayList<OisJoystick> joysticks = new ArrayList();
+ 
+ 	public Ois () {
+-		// hack doesn't work :/ FIXME - Try using hwnd from AWT for LwjglFrame.
++		// hack doesn't work :/
+ // if(System.getProperty("os.name").toLowerCase().contains("windows")) {
+ // inputManager = createInputManager(getWindowHandleWindowsHack());
+ // } else {
+-		inputManagerPtr = createInputManager(getWindowHandle());
++		inputManager = createInputManager(getWindowHandle());
+ // }
+ 
+-		String[] names = getJoystickNames(inputManagerPtr);
+-		for (int i = 0, n = names.length; i < n; i++) {
+-			System.out.println(names[i]);
+-			joysticks.add(new OisJoystick(createJoystick(inputManagerPtr)));
++		int count = getJoystickCount(inputManager);
++		for (int i = 0; i < count; i++) {
++			joysticks.add(new OisJoystick(createJoystick(inputManager)));
+ 		}
+ 	}
+ 
+@@ -34,8 +33,9 @@ public class Ois {
+ 	}
+ 
+ 	public void update () {
+-		for (int i = 0, n = joysticks.size(); i < n; i++)
+-			joysticks.get(i).update();
++		for (OisJoystick joystick : joysticks) {
++			joystick.update();
++		}
+ 	}
+ 
+ 	/** Returns the window handle from LWJGL needed by OIS. */
+@@ -53,18 +53,6 @@ public class Ois {
+ 		}
+ 	}
+ 
+-	public int getVersionNumber () {
+-		return getVersionNumber(inputManagerPtr);
+-	}
+-
+-	public String getVersionName () {
+-		return getVersionName(inputManagerPtr);
+-	}
+-
+-	public String getInputSystemName () {
+-		return getInputSystemName(inputManagerPtr);
+-	}
+-
+ 	// @off
+ 	/*JNI
+ 	#include <OISJoyStick.h>
+@@ -109,34 +97,11 @@ public class Ois {
+ 		return (jlong)inputManager;
+ 	*/
+ 
+-	private native String[] getJoystickNames (long inputManagerPtr); /*
++	private native int getJoystickCount (long inputManagerPtr); /*
+ 		OIS::InputManager* inputManager = (OIS::InputManager*)inputManagerPtr;
+-		OIS::DeviceList map = inputManager->listFreeDevices();
+-		int joystickCount = inputManager->getNumberOfDevices(OIS::OISJoyStick);
+-		jobjectArray names = (jobjectArray)env->NewObjectArray(joystickCount, env->FindClass("java/lang/String"), env->NewStringUTF(""));
+-		int index = 0;
+-		for (OIS::DeviceList::iterator i = map.begin(); i != map.end(); ++i) {
+-			if (i->first != OIS::OISJoyStick) continue;
+-			env->SetObjectArrayElement(names, index++, env->NewStringUTF(i->second.c_str()));
+-		}
+-		return names;
++	 	return inputManager->getNumberOfDevices(OIS::OISJoyStick);
+ 	*/
+ 
+-	private native int getVersionNumber (long inputManagerPtr); /*
+-		OIS::InputManager* inputManager = (OIS::InputManager*)inputManagerPtr;
+-	 	return inputManager->getVersionNumber();
+-	*/
+-	
+-	private native String getVersionName (long inputManagerPtr); /*
+-		OIS::InputManager* inputManager = (OIS::InputManager*)inputManagerPtr;
+-	 	return env->NewStringUTF(inputManager->getVersionName().c_str());
+-	 */
+-	
+-	private native String getInputSystemName (long inputManagerPtr); /*
+-		OIS::InputManager* inputManager = (OIS::InputManager*)inputManagerPtr;
+-	 	return env->NewStringUTF(inputManager->inputSystemName().c_str());
+-	 */
+-
+ 	private native long createJoystick (long inputManagerPtr); /*
+ 		OIS::InputManager* inputManager = (OIS::InputManager*)inputManagerPtr;
+ 		try {
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/ois/OisJoystick.java b/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/ois/OisJoystick.java
+index 5e81a9e..8bc2af7 100755
+--- a/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/ois/OisJoystick.java
++++ b/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/ois/OisJoystick.java
+@@ -56,23 +56,23 @@ public class OisJoystick {
+ 	}
+ 
+ 	public void update () {
+-		update(joystickPtr, this);
++		updateJni(joystickPtr, this);
+ 	}
+ 
+ 	public int getAxisCount () {
+-		return getAxesCount(joystickPtr);
++		return getAxesCountJni(joystickPtr);
+ 	}
+ 
+ 	public int getButtonCount () {
+-		return getButtonCount(joystickPtr);
++		return getButtonCountJni(joystickPtr);
+ 	}
+ 
+ 	public int getPovCount () {
+-		return getPovCount(joystickPtr);
++		return getPovCountJni(joystickPtr);
+ 	}
+ 
+ 	public int getSliderCount () {
+-		return getSliderCount(joystickPtr);
++		return getSliderCountJni(joystickPtr);
+ 	}
+ 
+ 	public float getAxis (int axisIndex) {
+@@ -188,29 +188,29 @@ public class OisJoystick {
+ 		initializeClasses(env, joystick);
+ 	*/
+ 	
+-	private native void update(long joystickPtr, OisJoystick callback); /*
++	private native void updateJni(long joystickPtr, OisJoystick callback); /*
+ 		OIS::JoyStick* joystick = (OIS::JoyStick*)joystickPtr;
+ 		Listener listener(env, callback);
+ 		joystick->setEventCallback(&listener);
+ 		joystick->capture();
+ 	*/
+ 	
+-	private native int getAxesCount (long joystickPtr); /*
++	private native int getAxesCountJni (long joystickPtr); /*
+ 		OIS::JoyStick* joystick = (OIS::JoyStick*)joystickPtr;
+ 		return joystick->getNumberOfComponents(OIS::OIS_Axis);
+ 	*/
+ 	
+-	private native int getButtonCount (long joystickPtr); /*
++	private native int getButtonCountJni (long joystickPtr); /*
+ 		OIS::JoyStick* joystick = (OIS::JoyStick*)joystickPtr;
+ 		return joystick->getNumberOfComponents(OIS::OIS_Button);
+ 	*/
+ 	
+-	private native int getPovCount (long joystickPtr); /*
++	private native int getPovCountJni (long joystickPtr); /*
+ 		OIS::JoyStick* joystick = (OIS::JoyStick*)joystickPtr;
+ 		return joystick->getNumberOfComponents(OIS::OIS_POV);
+ 	*/
+ 	
+-	private native int getSliderCount (long joystickPtr); /*
++	private native int getSliderCountJni (long joystickPtr); /*
+ 		OIS::JoyStick* joystick = (OIS::JoyStick*)joystickPtr;
+ 		return joystick->getNumberOfComponents(OIS::OIS_Slider);
+ 	 */
+diff --git a/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/ois/OisTest.java b/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/ois/OisTest.java
+index 39166b0..0375cd7 100755
+--- a/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/ois/OisTest.java
++++ b/extensions/gdx-controllers/gdx-controllers-desktop/src/com/badlogic/gdx/controllers/desktop/ois/OisTest.java
+@@ -3,7 +3,7 @@ package com.badlogic.gdx.controllers.desktop.ois;
+ 
+ import com.badlogic.gdx.ApplicationAdapter;
+ import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
+-import com.badlogic.gdx.controllers.desktop.DesktopControllersBuild;
++import com.badlogic.gdx.controllers.DesktopControllersBuild;
+ import com.badlogic.gdx.controllers.desktop.ois.OisJoystick.OisPov;
+ import com.badlogic.gdx.utils.SharedLibraryLoader;
+ 
+@@ -18,35 +18,40 @@ public class OisTest {
+ 			@Override
+ 			public void create () {
+ 				this.ois = new Ois();
+-				System.out.println(ois.getVersionNumber());
+-				System.out.println(ois.getVersionName());
+-				System.out.println(ois.getInputSystemName());
+-				ois.getJoysticks().get(0).setListener(new OisListener() {
+-					@Override
+-					public void sliderMoved (OisJoystick joystick, int slider, boolean x, boolean y) {
+-						System.out.println("slider " + slider + " moved, " + x + ", " + y);
+-					}
+-
+-					@Override
+-					public void povMoved (OisJoystick joystick, int pov, OisPov direction) {
+-						System.out.println("pov " + pov + " moved, " + direction);
+-					}
+-
+-					@Override
+-					public void buttonReleased (OisJoystick joystick, int button) {
+-						System.out.println("button " + button + " released");
+-					}
+-
+-					@Override
+-					public void buttonPressed (OisJoystick joystick, int button) {
+-						System.out.println("button " + button + " pressed");
+-					}
+-
+-					@Override
+-					public void axisMoved (OisJoystick joystick, int axis, float value) {
+-						System.out.println("axis " + axis + " moved, " + value);
+-					}
+-				});
++				if(ois.getJoysticks().size() > 0) {
++					ois.getJoysticks().get(0).setListener(new OisListener() {
++						
++						@Override
++						public void sliderMoved (OisJoystick joystick, int slider, boolean x, boolean y) {
++							// TODO Auto-generated method stub
++							
++						}
++						
++						@Override
++						public void povMoved (OisJoystick joystick, int pov, OisPov direction) {
++							// TODO Auto-generated method stub
++							
++						}
++						
++						@Override
++						public void buttonReleased (OisJoystick joystick, int button) {
++							// TODO Auto-generated method stub
++							
++						}
++						
++						@Override
++						public void buttonPressed (OisJoystick joystick, int button) {
++							// TODO Auto-generated method stub
++							
++						}
++						
++						@Override
++						public void axisMoved (OisJoystick joystick, int axis, float value) {
++							// TODO Auto-generated method stub
++							
++						}
++					});
++				}
+ 			}
+ 
+ 			public void render () {

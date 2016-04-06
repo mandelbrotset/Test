@@ -1,0 +1,3318 @@
+diff --git a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidFileHandle.java b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidFileHandle.java
+index 233316f..87b9e9d 100644
+--- a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidFileHandle.java
++++ b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidFileHandle.java
+@@ -113,7 +113,7 @@ public class AndroidFileHandle extends FileHandle {
+ 				throw new GdxRuntimeException("Error listing children: " + file + " (" + type + ")", ex);
+ 			}
+ 		}
+-		return super.list();
++		return super.list(suffix);
+ 	}
+ 
+ 	public boolean isDirectory () {
+diff --git a/backends/gdx-backend-iosmonotouch/src/com/badlogic/gdx/backends/ios/IOSSocket.java b/backends/gdx-backend-iosmonotouch/src/com/badlogic/gdx/backends/ios/IOSSocket.java
+index 484dc61..cc21fa5 100644
+--- a/backends/gdx-backend-iosmonotouch/src/com/badlogic/gdx/backends/ios/IOSSocket.java
++++ b/backends/gdx-backend-iosmonotouch/src/com/badlogic/gdx/backends/ios/IOSSocket.java
+@@ -52,7 +52,14 @@ public class IOSSocket implements Socket {
+ 				// create and connect the socket
+ 				// NOTE: there is no connection timeout setting available - will assume there is some sort of default!?
+ 				client = new TcpClient(host, port);
+-				setupConnection(hints); 
++				setupConnection(hints);
++				
++			   // Hack to catch socket exception
++			   // Keep compiler happy and catch the Mono SocketException explicitly.
++			   // This Mono exception is not caught by the java Exception catch.
++			    if (false) throw new cli.System.Net.Sockets.SocketException();
++			  } catch(cli.System.Net.Sockets.SocketException e) {
++			    throw new GdxRuntimeException("Error making a socket connection to " + host + ":" + port, e);
+ 			}
+ 			catch (Exception e) {
+ 				throw new GdxRuntimeException("Error making a socket connection to " + host + ":" + port, e);
+diff --git a/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/graphics/Texture.java b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/graphics/Texture.java
+index 425766b..fbae817 100644
+--- a/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/graphics/Texture.java
++++ b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/graphics/Texture.java
+@@ -170,6 +170,10 @@ public class Texture implements Disposable {
+ 			pixmap.getGLType(), pixmap.getPixels());
+ 	}
+ 
++	static public void setEnforcePotImages (boolean enforcePotImages) {
++		/* doesn't matter on GWT ... hopefully? */
++	}
++	
+ 	/** @return the width of the texture in pixels */
+ 	public int getWidth () {
+ 		return data.getWidth();
+diff --git a/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/java/lang/Thread.java b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/java/lang/Thread.java
+index e81c218..43d3f47 100644
+--- a/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/java/lang/Thread.java
++++ b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/java/lang/Thread.java
+@@ -16,8 +16,29 @@
+ 
+ package java.lang;
+ 
++import com.google.gwt.core.client.GWT;
++
+ public class Thread {
+ 	public static void sleep (long millis) throws InterruptedException {
+ 		// noop emu
+ 	}
++	
++	public static void setDefaultUncaughtExceptionHandler(final Thread.UncaughtExceptionHandler javaHandler) {
++		GWT.setUncaughtExceptionHandler(new GWT.UncaughtExceptionHandler() {
++			@Override
++			public void onUncaughtException (Throwable e) {
++				final Thread th = new Thread() {
++					@Override
++					public String toString() {
++						return "The only thread";
++					}
++				};
++				javaHandler.uncaughtException(th, e);
++			}
++		});
++	}
++	
++	public static interface UncaughtExceptionHandler {
++		void uncaughtException(Thread t, Throwable e);
++	}
+ }
+diff --git a/build-mac-ios.xml b/build-mac-ios.xml
+index 290672b..88e4da3 100644
+--- a/build-mac-ios.xml
++++ b/build-mac-ios.xml
+@@ -6,6 +6,20 @@
+ 		</ant>
+ 	</target>
+ 		
++    <target name="ios-java-only">
++        <ant antfile="build.xml" target="gdx-backend-iosmonotouch" dir=".">
++			<property name="compile-natives" value="false"/>
++		</ant>
++        <ant antfile="convert-ikvm.xml" dir=".">
++			<property name="IN" value="-srcpath:gdx/src/ dist/gdx.jar"/>
++			<property name="OUT" value="gdx/libs/ios32/gdx.dll"/>
++		</ant>
++        <ant antfile="convert-ikvm.xml" dir=".">
++			<property name="IN" value="-r:gdx/libs/ios32/gdx.dll -srcpath:backends/gdx-backend-iosmonotouch/src/ dist/gdx-backend-iosmonotouch.jar"/>
++			<property name="OUT" value="backends/gdx-backend-iosmonotouch/libs/ios32/gdx-backend-ios.dll"/>
++		</ant>
++    </target>
++    
+ 	<target name="core" depends="compile-jars">
+ 		<ant antfile="build-macosx32.xml" dir="gdx/jni">
+ 			<target name="clean"/>
+diff --git a/build-template.xml b/build-template.xml
+index d3be8b9..9855b68 100644
+--- a/build-template.xml
++++ b/build-template.xml
+@@ -49,7 +49,7 @@ zipfileset id="jarfiles" -> the jar files to be merged with the project's classe
+ 
+ 	<!-- compiles the java code -->
+ 	<target name="compile" depends="init">
+-		<javac debug="on" encoding="utf-8" source="1.6" target="1.6" destdir="${target}/java">
++		<javac debug="on" encoding="utf-8" source="1.6" target="1.6" destdir="${target}/java" includeantruntime="false">
+ 			<src>
+ 				<path refid="src"/>
+ 			</src>
+diff --git a/build.xml b/build.xml
+index 6d2dd6a..5d0dde8 100644
+--- a/build.xml
++++ b/build.xml
+@@ -6,7 +6,7 @@
+ 	<property name="env.NDK_HOME" value="/home/mzechner/android-ndk-r5"/>
+ 	
+ 	<!-- library version -->
+-	<property name="version" value="0.9.8"/>
++	<property name="version" value="0.9.9-SNAPSHOT"/>
+ 	
+ 	<!-- define distribution/output directory -->
+ 	<property name="distDir" value="${basedir}/dist"/>
+@@ -276,7 +276,7 @@
+ 			]]></header>
+ 			<bottom><![CDATA[
+ 				<div style="font-size:9pt"><i>
+-				Copyright 2010 Mario Zechner (contact@badlogicgames.com), Nathan Sweet (admin@esotericsoftware.com)
++				Copyright &copy; 2010-2013 Mario Zechner (contact@badlogicgames.com), Nathan Sweet (admin@esotericsoftware.com)
+ 				</i></div>
+ 			]]></bottom>
+ 			<fileset dir="gdx/src" defaultexcludes="yes">
+@@ -291,6 +291,10 @@
+ 			<fileset dir="backends" includes="gdx-backend-lwjgl/src/com/badlogic/gdx/backends/lwjgl/LwjglApplet.java"/>
+ 			<fileset dir="backends" includes="gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidApplication.java"/>
+ 			<fileset dir="backends" includes="gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidApplicationConfiguration.java"/>
++			<fileset dir="backends" includes="gdx-backend-iosmonotouch/src/com/badlogic/gdx/backends/ios/IOSApplication.java"/>
++			<fileset dir="backends" includes="gdx-backend-iosmonotouch/src/com/badlogic/gdx/backends/ios/IOSApplicationConfiguration.java"/>
++			<fileset dir="backends" includes="gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/GwtApplication.java"/>
++			<fileset dir="backends" includes="gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/GwtApplicationConfiguration.java"/>
+ 		</javadoc>
+ 	</target>
+ 	
+diff --git a/demos/vector-pinball/gdx-vectorpinball-ios/gdx-vectorpinball-ios.userprefs b/demos/vector-pinball/gdx-vectorpinball-ios/gdx-vectorpinball-ios.userprefs
+index 7a7d3f3..8120a65 100644
+--- a/demos/vector-pinball/gdx-vectorpinball-ios/gdx-vectorpinball-ios.userprefs
++++ b/demos/vector-pinball/gdx-vectorpinball-ios/gdx-vectorpinball-ios.userprefs
+@@ -1,5 +1,5 @@
+ ﻿<Properties>
+-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|iPhoneSimulator" />
++  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|iPhone" />
+   <MonoDevelop.Ide.Workbench ActiveDocument="gdx-vectorpinball-ios/Main.cs">
+     <Files>
+       <File FileName="gdx-vectorpinball-ios/Main.cs" Line="11" Column="3" />
+@@ -8,8 +8,10 @@
+     <Pads>
+       <Pad Id="ProjectPad">
+         <State expanded="True">
+-          <Node name="gdx-vectorpinball-ios" expanded="True" selected="True">
+-            <Node name="References" expanded="True" />
++          <Node name="gdx-vectorpinball-ios" expanded="True">
++            <Node name="References" expanded="True">
++              <Node name="/Users/badlogic/workspace/libgdx/backends/gdx-backend-iosmonotouch/libs/ikvm/bin/IKVM.OpenJDK.Charsets.dll" selected="True" />
++            </Node>
+           </Node>
+         </State>
+       </Pad>
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g2d/ParticleEmitter.java b/gdx/src/com/badlogic/gdx/graphics/g2d/ParticleEmitter.java
+index b4f8a80..8b02c23 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g2d/ParticleEmitter.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g2d/ParticleEmitter.java
+@@ -899,17 +899,17 @@ public class ParticleEmitter {
+ 		return Float.parseFloat(readString(reader, name));
+ 	}
+ 
+-	static class Particle extends Sprite {
+-		int life, currentLife;
+-		float scale, scaleDiff;
+-		float rotation, rotationDiff;
+-		float velocity, velocityDiff;
+-		float angle, angleDiff;
+-		float angleCos, angleSin;
+-		float transparency, transparencyDiff;
+-		float wind, windDiff;
+-		float gravity, gravityDiff;
+-		float[] tint;
++	public static class Particle extends Sprite {
++		protected int life, currentLife;
++		protected float scale, scaleDiff;
++		protected float rotation, rotationDiff;
++		protected float velocity, velocityDiff;
++		protected float angle, angleDiff;
++		protected float angleCos, angleSin;
++		protected float transparency, transparencyDiff;
++		protected float wind, windDiff;
++		protected float gravity, gravityDiff;
++		protected float[] tint;
+ 
+ 		public Particle (Sprite sprite) {
+ 			super(sprite);
+diff --git a/gdx/src/com/badlogic/gdx/maps/MapRenderer.java b/gdx/src/com/badlogic/gdx/maps/MapRenderer.java
+index c0a550a..d79e183 100644
+--- a/gdx/src/com/badlogic/gdx/maps/MapRenderer.java
++++ b/gdx/src/com/badlogic/gdx/maps/MapRenderer.java
+@@ -1,42 +1,42 @@
+ package com.badlogic.gdx.maps;
+ 
++import com.badlogic.gdx.graphics.OrthographicCamera;
+ import com.badlogic.gdx.math.Matrix4;
+ 
+ /**
+  * @brief models a common way of rendering Map objects
+  */
+ public interface MapRenderer {
+-
+-	public void setProjectionMatrix(Matrix4 projectionMatrix);
+-	
+ 	/**
+-	 * Begin rendering.
++	 * Sets the projection matrix and viewbounds from the given camera. If
++	 * the camera changes, you have to call this method again. The viewbounds
++	 * are taken from the camera's position and viewport size as well as the 
++	 * scale. This method will only work if the camera's direction vector
++	 * is (0,0,-1) and its up vector is (0, 1, 0), which are the defaults. 
++	 * @param camera the {@link OrthographicCamera}
+ 	 */
+-	public void begin();
++	public void setView(OrthographicCamera camera);
+ 	
+ 	/**
+-	 * End rendering.
+-	 */
+-	public void end();
+-	
+-	/**
+-	 * Renders all the layers of a map using the given viewbounds.
+-	 * 
++	 * Sets the projection matrix for rendering, as well as the bounds of the map
++	 * which should be rendered. Make sure that the frustum spanned by the projection
++	 * matrix coincides with the viewbounds.
++	 * @param projectionMatrix
+ 	 * @param viewboundsX
+ 	 * @param viewboundsY
+ 	 * @param viewboundsWidth
+ 	 * @param viewboundsHeight
+ 	 */
+-	public void render(float viewboundsX, float viewboundsY, float viewboundsWidth, float viewboundsHeight);
++	public void setView(Matrix4 projectionMatrix, float viewboundsX, float viewboundsY, float viewboundsWidth, float viewboundsHeight);
++	
++	/**
++	 * Renders all the layers of a map.
++	 */
++	public void render();
+ 	
+-	/** Renders the given layers of a map using the given viewbounds.
++	/** Renders the given layers of a map.
+ 	 * 
+-	 * @param viewboundsX
+-	 * @param viewboundsY
+-	 * @param viewboundsWidth
+-	 * @param viewboundsHeight
+ 	 * @param layers
+ 	 */
+-	public void render(float viewboundsX, float viewboundsY, float viewboundsWidth, float viewboundsHeight, int[] layers);
+-	
++	public void render(int[] layers);
+ }
+diff --git a/gdx/src/com/badlogic/gdx/maps/gleed/GleedMapLoader.java b/gdx/src/com/badlogic/gdx/maps/gleed/GleedMapLoader.java
+index ae24e4d..ee04f85 100644
+--- a/gdx/src/com/badlogic/gdx/maps/gleed/GleedMapLoader.java
++++ b/gdx/src/com/badlogic/gdx/maps/gleed/GleedMapLoader.java
+@@ -38,6 +38,7 @@ import com.badlogic.gdx.maps.objects.TextureMapObject;
+ import com.badlogic.gdx.math.Polygon;
+ import com.badlogic.gdx.math.Vector2;
+ import com.badlogic.gdx.utils.Array;
++import com.badlogic.gdx.utils.GdxRuntimeException;
+ import com.badlogic.gdx.utils.Logger;
+ import com.badlogic.gdx.utils.XmlReader;
+ import com.badlogic.gdx.utils.XmlReader.Element;
+@@ -53,20 +54,11 @@ public class GleedMapLoader  extends AsynchronousAssetLoader<Map, GleedMapLoader
+ 	static public class Parameters extends AssetLoaderParameters<Map> {
+ 	}
+ 	
+-	static private Logger s_logger = new Logger("GleedMapLoader");
+-	
+-	private String m_atlasFile = "";
+-	private TextureAtlas m_atlas = null;
+-	private String m_pathRoot = "data";
+-	private Map m_map = null;
+-	private AssetManager m_assetManager = null;
+-	
+-	/**
+-	 * @param loggingLevel logger level, output more or less information
+-	 */
+-	public static void setLoggingLevel(int loggingLevel) {
+-		s_logger.setLevel(loggingLevel);
+-	}
++	private String atlasFile = "";
++	private TextureAtlas atlas = null;
++	private String pathRoot = "data";
++	private Map map = null;
++	private AssetManager assetManager = null;
+ 	
+ 	/**
+ 	 * @param resolver
+@@ -84,27 +76,21 @@ public class GleedMapLoader  extends AsynchronousAssetLoader<Map, GleedMapLoader
+ 	 */
+ 	@Override
+ 	public void loadAsync (AssetManager manager, String fileName, Parameters parameter) {
+-		m_assetManager = manager;
+-		
+-		s_logger.info("loading file " + fileName);
++		assetManager = manager;
+ 		
+ 		try {
+ 			XmlReader reader = new XmlReader();
+ 			Element root = reader.parse(Gdx.files.internal(fileName));
+ 			
+-			s_logger.info("loading level properties");
+-			
+-			if (m_map == null) {
+-				m_map = new Map();
+-				loadProperties(root, m_map.getProperties());
++			if (map == null) {
++				map = new Map();
++				loadProperties(root, map.getProperties());
+ 			}
+ 			
+-			if (!m_atlasFile.isEmpty()) {
+-				s_logger.info("fetching texture atlas " + m_atlasFile);
+-				m_atlas = manager.get(m_atlasFile, TextureAtlas.class);
++			if (!atlasFile.isEmpty()) {
++				atlas = manager.get(atlasFile, TextureAtlas.class);
+ 			}
+ 			
+-			s_logger.info("loading layers");
+ 			Array<Element> layerElements = root.getChildByName("Layers").getChildrenByName("Layer");
+ 			
+ 			for (int i = 0; i < layerElements.size; ++i) {
+@@ -113,7 +99,7 @@ public class GleedMapLoader  extends AsynchronousAssetLoader<Map, GleedMapLoader
+ 			}
+ 			
+ 		} catch (Exception e) {
+-			s_logger.error("error loading file " + fileName + " " + e.getMessage());
++			throw new GdxRuntimeException("Couldn't load Gleed map '" + fileName + "'", e);
+ 		}
+ 	}
+ 	
+@@ -128,7 +114,7 @@ public class GleedMapLoader  extends AsynchronousAssetLoader<Map, GleedMapLoader
+ 	 */
+ 	@Override
+ 	public Map loadSync (AssetManager manager, String fileName, Parameters parameter) {
+-		return m_map;
++		return map;
+ 	}
+ 	
+ 	/**
+@@ -139,30 +125,27 @@ public class GleedMapLoader  extends AsynchronousAssetLoader<Map, GleedMapLoader
+ 	 */
+ 	@Override
+ 	public Array<AssetDescriptor> getDependencies (String fileName, Parameters parameter) {
+-		s_logger.info("getting asset dependencies for " + fileName);
+ 		Array<AssetDescriptor> dependencies = new Array<AssetDescriptor>();
+ 		
+ 		try {
+ 			XmlReader reader = new XmlReader();
+ 			Element root = reader.parse(Gdx.files.internal(fileName));
+ 			
+-			if (m_map == null) {
+-				m_map = new Map();
++			if (map == null) {
++				map = new Map();
+ 				
+-				loadProperties(root, m_map.getProperties());
++				loadProperties(root, map.getProperties());
+ 			}
+ 			
+-			MapProperties properties = m_map.getProperties();
++			MapProperties properties = map.getProperties();
+ 			
+-			m_atlasFile = properties.getAsString("atlas", "");
+-			m_pathRoot = properties.getAsString("assetRoot", "data");
++			atlasFile = properties.getAsString("atlas", "");
++			pathRoot = properties.getAsString("assetRoot", "data");
+ 			
+-			if (!m_atlasFile.isEmpty()) {
+-				s_logger.info("texture atlas dependency " + m_atlasFile);
+-				dependencies.add(new AssetDescriptor(m_atlasFile, TextureAtlas.class));
++			if (!atlasFile.isEmpty()) {
++				dependencies.add(new AssetDescriptor(atlasFile, TextureAtlas.class));
+ 			}
+ 			else {
+-				s_logger.info("textures asset folder " + m_pathRoot);
+ 				Array<Element> elements = root.getChildrenByNameRecursively("Item");
+ 				
+ 				for (int i = 0; i < elements.size; ++i) {
+@@ -170,14 +153,13 @@ public class GleedMapLoader  extends AsynchronousAssetLoader<Map, GleedMapLoader
+ 					
+ 					if (element.getAttribute("xsi:type", "").equals("TextureItem")) {
+ 						String[] pathParts = element.getChildByName("texture_filename").getText().split("\\\\");
+-						s_logger.info("texture dependency " + m_pathRoot + "/" + pathParts[pathParts.length - 1]);
+-						dependencies.add(new AssetDescriptor(m_pathRoot + "/" + pathParts[pathParts.length - 1], Texture.class));
++						dependencies.add(new AssetDescriptor(pathRoot + "/" + pathParts[pathParts.length - 1], Texture.class));
+ 					}
+ 				}
+ 			}
+ 			
+ 		} catch (Exception e) {
+-			s_logger.error("error loading asset dependencies " + fileName + " " + e.getMessage());
++			throw new GdxRuntimeException("Couldn't load dependencies of Gleed map '" + fileName + "'", e);
+ 		}
+ 		
+ 		return dependencies;
+@@ -238,7 +220,6 @@ public class GleedMapLoader  extends AsynchronousAssetLoader<Map, GleedMapLoader
+ 		layer.setName(element.getAttribute("Name", ""));
+ 		layer.setVisible(Boolean.parseBoolean(element.getAttribute("Visible", "true")));
+ 		
+-		s_logger.info("loading layer " + layer.getName());
+ 		Array<Element> items = element.getChildByName("Items").getChildrenByName("Item");
+ 		
+ 		for (int i = 0; i < items.size; ++i) {
+@@ -271,15 +252,13 @@ public class GleedMapLoader  extends AsynchronousAssetLoader<Map, GleedMapLoader
+ 			layer.getObjects().addObject(mapObject);
+ 		}
+ 		
+-		m_map.getLayers().addLayer(layer);
++		map.getLayers().addLayer(layer);
+ 	}
+ 	
+ 	private void loadObject(Element element, MapObject mapObject) {
+ 		mapObject.setName(element.getAttribute("Name", ""));
+ 		mapObject.setVisible(Boolean.parseBoolean(element.getAttribute("Visible", "true")));
+ 		loadProperties(element, mapObject.getProperties());
+-		
+-		s_logger.info("loading element " + mapObject.getName());
+ 	}
+ 	
+ 	private TextureMapObject loadTexture(Element item) {
+@@ -292,13 +271,13 @@ public class GleedMapLoader  extends AsynchronousAssetLoader<Map, GleedMapLoader
+ 		
+ 		TextureRegion region;
+ 		
+-		if (m_atlasFile.isEmpty()) {
++		if (atlasFile.isEmpty()) {
+ 			String[] pathParts = item.getChildByName("texture_filename").getText().split("\\\\");
+-			region = new TextureRegion(m_assetManager.get(m_pathRoot + "/" + pathParts[pathParts.length - 1], Texture.class));
++			region = new TextureRegion(assetManager.get(pathRoot + "/" + pathParts[pathParts.length - 1], Texture.class));
+ 		}
+ 		else {
+ 			String[] assetParts = item.getChildByName("asset_name").getText().split("\\\\");
+-			region = new TextureRegion(m_atlas.findRegion(assetParts[assetParts.length - 1]));
++			region = new TextureRegion(atlas.findRegion(assetParts[assetParts.length - 1]));
+ 		}
+ 		
+ 		region.flip(Boolean.parseBoolean(item.getChildByName("FlipHorizontally").getText()),
+diff --git a/gdx/src/com/badlogic/gdx/maps/gleed/GleedMapRenderer.java b/gdx/src/com/badlogic/gdx/maps/gleed/GleedMapRenderer.java
+index 6adf8ed..72cf396 100644
+--- a/gdx/src/com/badlogic/gdx/maps/gleed/GleedMapRenderer.java
++++ b/gdx/src/com/badlogic/gdx/maps/gleed/GleedMapRenderer.java
+@@ -40,20 +40,17 @@ import com.badlogic.gdx.utils.Disposable;
+  * @brief Renderer for GLEED maps
+  */
+ public class GleedMapRenderer implements MapRenderer, Disposable {
+-
+-	// Renderer data
+-	private Map m_map;
+-	private SpriteBatch m_batch;
+-	private boolean m_ownSpriteBatch;
+-	private float m_units;
++	private Map map;
++	private SpriteBatch batch;
++	private boolean ownSpriteBatch;
++	private float units;
+ 	
+-	// Aux data for fustrum culling
+-	private Rectangle m_box = new Rectangle();
+-	private Rectangle m_cameraRectangle = new Rectangle();
+-	private Vector2 m_a = new Vector2();
+-	private Vector2 m_b = new Vector2();
+-	private Vector2 m_c = new Vector2();
+-	private Vector2 m_d = new Vector2();
++	private Rectangle box = new Rectangle();
++	private Rectangle viewBounds = new Rectangle();
++	private Vector2 a = new Vector2();
++	private Vector2 b = new Vector2();
++	private Vector2 c = new Vector2();
++	private Vector2 d = new Vector2();
+ 	
+ 	/**
+ 	 * @param map map data that will be used to render
+@@ -62,7 +59,7 @@ public class GleedMapRenderer implements MapRenderer, Disposable {
+ 	 */
+ 	public GleedMapRenderer(Map map) {
+ 		this(map, new SpriteBatch(), 1.0f);
+-		m_ownSpriteBatch = true;
++		ownSpriteBatch = true;
+ 	}
+ 	
+ 	/**
+@@ -71,133 +68,60 @@ public class GleedMapRenderer implements MapRenderer, Disposable {
+ 	 * @param units metres per pixel (used to scale textures, defaults to 1.0f)
+ 	 */
+ 	public GleedMapRenderer(Map map, SpriteBatch batch, float units) {
+-		m_map = map;
+-		m_units = units;
++		this.map = map;
++		this.units = units;
+ 		if (batch != null) {
+-			m_batch = batch;
+-			m_ownSpriteBatch = false;
++			this.batch = batch;
++			ownSpriteBatch = false;
+ 		}
+ 		else
+ 		{
+-			m_batch = new SpriteBatch();
+-			m_ownSpriteBatch = true;
++			batch = new SpriteBatch();
++			ownSpriteBatch = true;
+ 		}
+ 	}
+ 	
+-	/**
+-	 * @param projectionMatrix sets the projection matrix to the map's batch
+-	 */
+-	@Override
+-	public void setProjectionMatrix (Matrix4 projectionMatrix) {
+-		m_batch.setProjectionMatrix(projectionMatrix);
+-	}
+-
+-	/**
+-	 * Gets the rendering process ready
+-	 */
+ 	@Override
+-	public void begin () {
+-		m_batch.begin();
+-		m_batch.enableBlending();
+-	}
+-
+-	/**
+-	 * Finishes the rendering process for that frame
+-	 */
+-	@Override
+-	public void end () {
+-		m_batch.end();
++	public void setView(OrthographicCamera camera) {
++		batch.setProjectionMatrix(camera.combined);
++		float width = camera.viewportWidth * camera.zoom;
++		float height = camera.viewportHeight * camera.zoom;
++		viewBounds.set(camera.position.x - width / 2, camera.position.y - height / 2, width, height);
+ 	}
+ 	
+-	/**
+-	 * Renders all the map layers
+-	 * 
+-	 * @param camera 2D camera used to render
+-	 */
+-	public void render(OrthographicCamera camera) {
+-		m_cameraRectangle.x = camera.position.x - camera.viewportWidth * 0.5f * camera.zoom;
+-		m_cameraRectangle.y = camera.position.y - camera.viewportHeight * 0.5f * camera.zoom;
+-		m_cameraRectangle.width = camera.viewportWidth *  camera.zoom;
+-		m_cameraRectangle.height = camera.viewportHeight *  camera.zoom;
+-		
+-		setProjectionMatrix(camera.combined);
+-		
+-		MapLayers layers = m_map.getLayers();
+-		
+-		for (MapLayer layer : layers) {
+-			renderLayer(layer);
+-		}
+-	}
+-	
+-	/**
+-	 * @param camera camera 2D camera used to render
+-	 * @param layers layers indices to be rendered
+-	 */
+-	public void render(OrthographicCamera camera, int[] layers) {
+-		m_cameraRectangle.x = camera.position.x - camera.viewportWidth * 0.5f * camera.zoom;
+-		m_cameraRectangle.y = camera.position.y - camera.viewportHeight * 0.5f * camera.zoom;
+-		m_cameraRectangle.width = camera.viewportWidth *  camera.zoom;
+-		m_cameraRectangle.height = camera.viewportHeight *  camera.zoom;
+-
+-		setProjectionMatrix(camera.combined);
+-		
+-		MapLayers mapLayers = m_map.getLayers();
+-		
+-		for (int i = 0; i < layers.length; i++) {
+-			renderLayer(mapLayers.getLayer(i));
+-		}
++	@Override
++	public void setView (Matrix4 projection, float x, float y, float width, float height) {
++		batch.setProjectionMatrix(projection);
++		viewBounds.set(x, y, width, height);
+ 	}
+ 	
+-	/**
+-	 * Renders all the layers
+-	 * 
+-	 * @param viewboundsX bottom left x coordinate of the frustum
+-	 * @param viewboundsY bottom left y coordinate of the frustrum
+-	 * @param viewboundsWidth frustum width 
+-	 * @param viewboundsHeight frustum height
+-	 */
+ 	@Override
+-	public void render (float viewboundsX, float viewboundsY, float viewboundsWidth, float viewboundsHeight) {
+-		m_cameraRectangle.x = viewboundsX;
+-		m_cameraRectangle.y = viewboundsY;
+-		m_cameraRectangle.width = viewboundsWidth;
+-		m_cameraRectangle.height = viewboundsHeight;
+-		
+-		MapLayers layers = m_map.getLayers();
+-		
++	public void render () {
++		batch.begin();
++		batch.enableBlending();
++		MapLayers layers = map.getLayers();
+ 		for (MapLayer layer : layers) {
+ 			renderLayer(layer);
+ 		}
++		batch.end();
+ 	}
+ 
+-	/**
+-	 * @param viewboundsX bottom left x coordinate of the frustum
+-	 * @param viewboundsY bottom left y coordinate of the frustrum
+-	 * @param viewboundsWidth frustum width 
+-	 * @param viewboundsHeight frustum height
+-	 * @param layers layers indices to be rendered
+-	 */
+ 	@Override
+-	public void render (float viewboundsX, float viewboundsY, float viewboundsWidth, float viewboundsHeight, int[] layers) {
+-		m_cameraRectangle.x = viewboundsX;
+-		m_cameraRectangle.y = viewboundsY;
+-		m_cameraRectangle.width = viewboundsWidth;
+-		m_cameraRectangle.height = viewboundsHeight;
+-		
+-		MapLayers mapLayers = m_map.getLayers();
++	public void render (int[] layers) {
++		batch.begin();
++		batch.enableBlending();
++		MapLayers mapLayers = map.getLayers();
+ 		
+ 		for (int i = 0; i < layers.length; i++) {
+ 			renderLayer(mapLayers.getLayer(i));
+ 		}
++		batch.end();
+ 	}
+ 	
+-	/**
+-	 * Disposes the sprite batch in case the renderer owns it
+-	 */
+ 	@Override
+ 	public void dispose () {
+-		if (m_ownSpriteBatch) {
+-			m_batch.dispose();
++		if (ownSpriteBatch) {
++			batch.dispose();
+ 		}
+ 	}
+ 	
+@@ -226,29 +150,29 @@ public class GleedMapRenderer implements MapRenderer, Disposable {
+ 			setBounds(texture);
+ 
+ 			// If the image is in the frustum, draw it (culling)
+-			if (m_cameraRectangle.overlaps(m_box) ||
+-				 m_cameraRectangle.contains(m_box) ||
+-				 m_box.contains(m_cameraRectangle)) {
++			if (viewBounds.overlaps(box) ||
++				 viewBounds.contains(box) ||
++				 box.contains(viewBounds)) {
+ 			
+ 				// Skip complex rendering if there is no scaling nor rotation
+ 				if (texture.getRotation() == 0 &&
+ 					 texture.getScaleX() == 1.0f &&
+ 					 texture.getScaleY() == 1.0f) {
+ 					
+-					m_batch.draw(texture.getTextureRegion(),
+-									 texture.getX() * m_units - texture.getOriginX(),
+-									 texture.getY() * m_units - texture.getOriginY());
++					batch.draw(texture.getTextureRegion(),
++									 texture.getX() * units - texture.getOriginX(),
++									 texture.getY() * units - texture.getOriginY());
+ 				}
+ 				else {
+-					m_batch.draw(texture.getTextureRegion(),
+-									 texture.getX() * m_units - texture.getOriginX(),
+-									 texture.getY() * m_units - texture.getOriginY(),
++					batch.draw(texture.getTextureRegion(),
++									 texture.getX() * units - texture.getOriginX(),
++									 texture.getY() * units - texture.getOriginY(),
+ 									 texture.getOriginX(),
+ 									 texture.getOriginY(),
+ 									 texture.getTextureRegion().getRegionWidth(),
+ 									 texture.getTextureRegion().getRegionHeight(),
+-									 texture.getScaleX() * m_units,
+-									 texture.getScaleY() * m_units,
++									 texture.getScaleX() * units,
++									 texture.getScaleY() * units,
+ 									 -MathUtils.radiansToDegrees * texture.getRotation());
+ 				}
+ 			}
+@@ -258,65 +182,65 @@ public class GleedMapRenderer implements MapRenderer, Disposable {
+ 	private void setBounds(TextureMapObject texture) {
+ 		TextureRegion region = texture.getTextureRegion();
+ 		
+-		float x1 = -region.getRegionWidth() * 0.5f * m_units * texture.getScaleX();
++		float x1 = -region.getRegionWidth() * 0.5f * units * texture.getScaleX();
+ 		float x2 = -x1;
+-		float y1 = -region.getRegionHeight() * 0.5f * m_units * texture.getScaleY();
++		float y1 = -region.getRegionHeight() * 0.5f * units * texture.getScaleY();
+ 		float y2 = -y1;
+ 		
+ 		float rotation = texture.getRotation();
+ 		
+ 		// Skip sin and cos calculations if we don't have rotation
+ 		if (rotation == 0.0f) {
+-			m_a.x = x1;
+-			m_a.y = y1;
++			a.x = x1;
++			a.y = y1;
+ 			
+-			m_b.x = x2;
+-			m_b.y = y1;
++			b.x = x2;
++			b.y = y1;
+ 			
+-			m_c.x = x2;
+-			m_c.y = y2;
++			c.x = x2;
++			c.y = y2;
+ 			
+-			m_d.x = x1;
+-			m_d.y = y2;
++			d.x = x1;
++			d.y = y2;
+ 		}
+ 		else {
+ 			float sin = (float)Math.sin(rotation);
+ 			float cos = (float)Math.cos(rotation);
+ 			
+-			m_a.x = x1 * cos - y1 * sin;
+-			m_a.y = x1 * sin - y1 * cos;
++			a.x = x1 * cos - y1 * sin;
++			a.y = x1 * sin - y1 * cos;
+ 			
+-			m_b.x = x2 * cos - y1 * sin;
+-			m_b.y = x2 * sin - y1 * cos;
++			b.x = x2 * cos - y1 * sin;
++			b.y = x2 * sin - y1 * cos;
+ 			
+-			m_c.x = x2 * cos - y2 * sin;
+-			m_c.y = x2 * sin - y2 * cos;
++			c.x = x2 * cos - y2 * sin;
++			c.y = x2 * sin - y2 * cos;
+ 			
+-			m_d.x = x1 * cos - y2 * sin;
+-			m_d.y = x1 * sin - y2 * cos;
++			d.x = x1 * cos - y2 * sin;
++			d.y = x1 * sin - y2 * cos;
+ 		}
+ 		
+ 		
+ 		float posX = texture.getX();
+ 		float posY = texture.getY();
+ 		
+-		m_a.x += posX * m_units;
+-		m_a.y += posY * m_units;
+-		m_b.x += posX * m_units;
+-		m_b.y += posY * m_units;
+-		m_c.x += posX * m_units;
+-		m_c.y += posY * m_units;
+-		m_d.x += posX * m_units;
+-		m_d.y += posY * m_units;
+-		
+-		float minX = Math.min(Math.min(Math.min(m_a.x, m_b.x), m_c.x), m_d.x);
+-		float minY = Math.min(Math.min(Math.min(m_a.y, m_b.y), m_c.y), m_d.y);
+-		float maxX = Math.max(Math.max(Math.max(m_a.x, m_b.x), m_c.x), m_d.x);
+-		float maxY = Math.max(Math.max(Math.max(m_a.y, m_b.y), m_c.y), m_d.y);
+-		
+-		m_box.x = minX;
+-		m_box.y = minY;
+-		m_box.width = maxX - minX;
+-		m_box.height = maxY - minY;
++		a.x += posX * units;
++		a.y += posY * units;
++		b.x += posX * units;
++		b.y += posY * units;
++		c.x += posX * units;
++		c.y += posY * units;
++		d.x += posX * units;
++		d.y += posY * units;
++		
++		float minX = Math.min(Math.min(Math.min(a.x, b.x), c.x), d.x);
++		float minY = Math.min(Math.min(Math.min(a.y, b.y), c.y), d.y);
++		float maxX = Math.max(Math.max(Math.max(a.x, b.x), c.x), d.x);
++		float maxY = Math.max(Math.max(Math.max(a.y, b.y), c.y), d.y);
++		
++		box.x = minX;
++		box.y = minY;
++		box.width = maxX - minX;
++		box.height = maxY - minY;
+ 	}
+ }
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/TideMapLoader.java b/gdx/src/com/badlogic/gdx/maps/tiled/TideMapLoader.java
+deleted file mode 100644
+index f9e0f04..0000000
+--- a/gdx/src/com/badlogic/gdx/maps/tiled/TideMapLoader.java
++++ /dev/null
+@@ -1,286 +0,0 @@
+-package com.badlogic.gdx.maps.tiled;
+-
+-import java.io.IOException;
+-import java.util.StringTokenizer;
+-
+-import com.badlogic.gdx.assets.AssetDescriptor;
+-import com.badlogic.gdx.assets.AssetLoaderParameters;
+-import com.badlogic.gdx.assets.AssetManager;
+-import com.badlogic.gdx.assets.loaders.FileHandleResolver;
+-import com.badlogic.gdx.assets.loaders.SynchronousAssetLoader;
+-import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
+-import com.badlogic.gdx.files.FileHandle;
+-import com.badlogic.gdx.graphics.Texture;
+-import com.badlogic.gdx.graphics.g2d.TextureRegion;
+-import com.badlogic.gdx.maps.ImageResolver;
+-import com.badlogic.gdx.maps.MapProperties;
+-import com.badlogic.gdx.maps.ImageResolver.AssetManagerImageResolver;
+-import com.badlogic.gdx.maps.ImageResolver.DirectImageResolver;
+-import com.badlogic.gdx.maps.tiled.tiles.AnimatedTiledMapTile;
+-import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile;
+-import com.badlogic.gdx.utils.Array;
+-import com.badlogic.gdx.utils.GdxRuntimeException;
+-import com.badlogic.gdx.utils.ObjectMap;
+-import com.badlogic.gdx.utils.XmlReader;
+-import com.badlogic.gdx.utils.XmlReader.Element;
+-
+-public class TideMapLoader extends SynchronousAssetLoader<TiledMap, TideMapLoader.Parameters> {
+-
+-	public static class Parameters extends AssetLoaderParameters<TiledMap> {
+-		
+-	}
+-	
+-	private XmlReader xml = new XmlReader();
+-	private Element root;
+-	
+-	public TideMapLoader() {
+-		super(new InternalFileHandleResolver());
+-	}
+-	
+-	public TideMapLoader (FileHandleResolver resolver) {
+-		super(resolver);
+-	}
+-
+-	public TiledMap load (String fileName) {
+-		try {
+-			FileHandle tideFile = resolve(fileName);
+-			root = xml.parse(tideFile);
+-			ObjectMap<String, Texture> textures = new ObjectMap<String, Texture>();
+-			for(FileHandle textureFile: loadTileSheets(root, tideFile)) {
+-				textures.put(textureFile.path(), new Texture(textureFile));
+-			}
+-			DirectImageResolver imageResolver = new DirectImageResolver(textures);
+-			TiledMap map = loadMap(root, tideFile, imageResolver);
+-			map.setOwnedTextures(textures.values().toArray());
+-			return map;
+-		} catch(IOException e) {
+-			throw new GdxRuntimeException("Couldn't load tilemap '" + fileName + "'", e);
+-		}
+-
+-	}
+-	
+-	@Override
+-	public TiledMap load (AssetManager assetManager, String fileName, Parameters parameter) {
+-		FileHandle tideFile = resolve(fileName);
+-		try {
+-			return loadMap(root, tideFile, new AssetManagerImageResolver(assetManager));
+-		} catch (Exception e) {
+-			throw new GdxRuntimeException("Couldn't load tilemap '" + fileName + "'", e);
+-		}
+-	}
+-
+-	@Override
+-	public Array<AssetDescriptor> getDependencies (String fileName, Parameters parameter) {
+-		Array<AssetDescriptor> dependencies = new Array<AssetDescriptor>();
+-		try {
+-			FileHandle tmxFile = resolve(fileName);
+-			root = xml.parse(tmxFile);
+-			for(FileHandle image: loadTileSheets(root, tmxFile)) {
+-				dependencies.add(new AssetDescriptor(image.path(), Texture.class));
+-			}
+-			return dependencies;
+-		} catch (IOException e) {
+-			throw new GdxRuntimeException("Couldn't load tilemap '" + fileName + "'", e);
+-		}
+-	}
+-	
+-	/**
+-	 * Loads the map data, given the XML root element and an {@link ImageResolver} used
+-	 * to return the tileset Textures
+-	 * @param root the XML root element 
+-	 * @param tmxFile the Filehandle of the tmx file
+-	 * @param imageResolver the {@link ImageResolver}
+-	 * @return the {@link TiledMap}
+-	 */
+-	private TiledMap loadMap(Element root, FileHandle tmxFile, ImageResolver imageResolver) {
+-		TiledMap map = new TiledMap();
+-		Element properties = root.getChildByName("properties");
+-		if (properties != null) {
+-			loadProperties(map.getProperties(), properties);
+-		}
+-		Element tilesheets = root.getChildByName("TileSheets");
+-		for (Element tilesheet : tilesheets.getChildrenByName("TileSheet")) {
+-			loadTileSheet(map, tilesheet, tmxFile, imageResolver);
+-		}
+-		Element layers = root.getChildByName("Layers");
+-		for (Element layer : layers.getChildrenByName("Layer")) {
+-			loadLayer(map, layer);
+-		}
+-		return map;
+-	}
+-	
+-	/**
+-	 * Loads the tilesets
+-	 * @param root the root XML element
+-	 * @return a list of filenames for images containing tiles
+-	 * @throws IOException 
+-	 */
+-	private Array<FileHandle> loadTileSheets(Element root, FileHandle tideFile) throws IOException {
+-		Array<FileHandle> images = new Array<FileHandle>();
+-		Element tilesheets = root.getChildByName("TileSheets");
+-		for (Element tileset : tilesheets.getChildrenByName("TileSheet")) {
+-			Element imageSource = tileset.getChildByName("ImageSource");
+-			FileHandle image = getRelativeFileHandle(tideFile, imageSource.getText());
+-			images.add(image);
+-		}
+-		return images;
+-	}
+-	
+-	private void loadTileSheet(TiledMap map, Element element, FileHandle tideFile, ImageResolver imageResolver) {
+-		if (element.getName().equals("TileSheet")) {
+-			String id = element.getAttribute("Id");
+-			String description = element.getChildByName("Description").getText();
+-			String imageSource = element.getChildByName("ImageSource").getText();
+-			
+-			Element alignment = element.getChildByName("Alignment");
+-			String sheetSize = alignment.getAttribute("SheetSize");
+-			String tileSize = alignment.getAttribute("TileSize");
+-			String margin = alignment.getAttribute("Margin");
+-			String spacing = alignment.getAttribute("Spacing");
+-			
+-			String[] sheetSizeParts = sheetSize.split(" x ");
+-			int sheetSizeX = Integer.parseInt(sheetSizeParts[0]);
+-			int sheetSizeY = Integer.parseInt(sheetSizeParts[1]);
+-			
+-			String[] tileSizeParts = tileSize.split(" x ");
+-			int tileSizeX = Integer.parseInt(tileSizeParts[0]);
+-			int tileSizeY = Integer.parseInt(tileSizeParts[1]);
+-			
+-			String[] marginParts = margin.split(" x ");
+-			int marginX = Integer.parseInt(marginParts[0]);
+-			int marginY = Integer.parseInt(marginParts[1]);
+-
+-			String[] spacingParts = margin.split(" x ");
+-			int spacingX = Integer.parseInt(spacingParts[0]);
+-			int spacingY = Integer.parseInt(spacingParts[1]);
+-
+-			FileHandle image = getRelativeFileHandle(tideFile, imageSource);
+-			Texture texture = imageResolver.getImage(image.path());
+-			
+-			// TODO: Actually load the tilesheet
+-			// Need to make global ids as Tide doesn't have global ids.
+-			TiledMapTileSets tilesets = map.getTileSets();
+-			int firstgid = 1;
+-			for (TiledMapTileSet tileset : tilesets) {
+-				firstgid += tileset.size();
+-			}
+-			
+-			TiledMapTileSet tileset = new TiledMapTileSet();
+-			tileset.setName(id);
+-			tileset.getProperties().put("firstgid", firstgid);
+-			int gid = firstgid;
+-			
+-			int stopWidth = texture.getWidth() - tileSizeX;
+-			int stopHeight = texture.getHeight() - tileSizeY;
+-			
+-			for (int y = marginY; y <= stopHeight; y += tileSizeY + spacingY) {
+-				for (int x = marginX; x <= stopWidth; x += tileSizeX + spacingX) {
+-					TiledMapTile tile = new StaticTiledMapTile(new TextureRegion(texture, x, y, tileSizeX, tileSizeY));
+-					tileset.putTile(gid++, tile);
+-				}
+-			}
+-			
+-			Element properties = element.getChildByName("Proeprties");
+-			if (properties != null) {
+-				loadProperties(tileset.getProperties(), properties);
+-			}
+-			
+-			tilesets.addTileSet(tileset);
+-		}
+-	}
+-	
+-	private void loadLayer(TiledMap map, Element element) {
+-		if (element.getName().equals("Layer")) {
+-			String id = element.getAttribute("Id");
+-			String visible = element.getAttribute("Visible");
+-			
+-			Element dimensions = element.getChildByName("Dimensions");
+-			String layerSize = dimensions.getAttribute("LayerSize");
+-			String tileSize = dimensions.getAttribute("TileSize");
+-			
+-			String[] layerSizeParts = layerSize.split(" x ");
+-			int layerSizeX = Integer.parseInt(layerSizeParts[0]);
+-			int layerSizeY = Integer.parseInt(layerSizeParts[1]);
+-			
+-			String[] tileSizeParts = tileSize.split(" x ");
+-			int tileSizeX = Integer.parseInt(tileSizeParts[0]);
+-			int tileSizeY = Integer.parseInt(tileSizeParts[1]);
+-			
+-			TiledMapTileLayer layer = new TiledMapTileLayer(layerSizeX, layerSizeY, tileSizeX, tileSizeY);
+-			Element tileArray = element.getChildByName("TileArray");
+-			Array<Element> rows = tileArray.getChildrenByName("Row");
+-			TiledMapTileSets tilesets = map.getTileSets();
+-			TiledMapTileSet currentTileSet = null;
+-			int firstgid = 0;
+-			int x, y;
+-			for (int row = 0, rowCount = rows.size; row < rowCount; row++) {
+-				Element currentRow = rows.get(row);
+-				y = row;
+-				x = 0;
+-				for (int child = 0, childCount = currentRow.getChildCount(); child < childCount; child++) {
+-					Element currentChild = currentRow.getChild(child);
+-					String name = currentChild.getName();
+-					if (name.equals("TileSheet")) {
+-						currentTileSet = tilesets.getTileSet(currentChild.getAttribute("Ref"));
+-						firstgid = currentTileSet.getProperties().getAsInteger("firstgid");
+-					} else if (name.equals("Null")) {
+-						x += currentChild.getIntAttribute("Count");
+-					} else if (name.equals("Static")) {
+-						layer.setCell(x, y, currentTileSet.getTile(firstgid + currentChild.getIntAttribute("Index")));
+-					} else if (name.equals("Animated")) {
+-						// Create an AnimatedTile
+-						int interval = currentChild.getInt("Interval");
+-						Element frames = currentChild.getChildByName("Frames");
+-						Array<StaticTiledMapTile> frameTiles = new Array<StaticTiledMapTile>();
+-						for (int frameChild = 0, frameChildCount = frames.getChildCount(); frameChild < frameChildCount; frameChild++) {
+-							Element frame = frames.getChild(frameChild);
+-							String frameName = frame.getName();
+-							if (frameName.equals("TileSheet")) {
+-								currentTileSet = tilesets.getTileSet(currentChild.getAttribute("Ref"));
+-								firstgid = currentTileSet.getProperties().getAsInteger("firstgid");
+-							} else if (frameName.equals("Static")) {
+-								frameTiles.add((StaticTiledMapTile) currentTileSet.getTile(firstgid + frame.getIntAttribute("Index")));
+-							}
+-						}
+-						layer.setCell(x, y, new AnimatedTiledMapTile(interval / 1000f, frameTiles)); //TODO: Reuse existing animated tiles
+-					}
+-				}
+-			}
+-		}
+-	}
+-	
+-	private void loadProperties(MapProperties properties, Element element) {
+-		if (element.getName().equals("Properties")) {
+-			for (Element property : element.getChildrenByName("Property")) {
+-				String key = property.getAttribute("Key", null);
+-				String type = property.getAttribute("Type", null);
+-				String value = property.getText();
+-				
+-				if (type.equals("Int32")) {
+-					
+-				} else if (type.equals("String")) {
+-					
+-				} else if (type.equals("Boolean")) {
+-					
+-				} else {
+-					properties.put(key, value);					
+-				}
+-			}
+-		}
+-	}
+-	
+-	private static FileHandle getRelativeFileHandle(FileHandle file, String path) {
+-		StringTokenizer tokenizer = new StringTokenizer(path, "\\/");
+-		FileHandle result = file.parent();
+-		while (tokenizer.hasMoreElements()) {
+-			String token = tokenizer.nextToken();
+-			if (token.equals(".."))
+-				result = result.parent();
+-			else {
+-				result = result.child(token);
+-			}
+-		}
+-		return result;		
+-	}
+-
+-}
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMap.java b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMap.java
+index e8a0552..bd2aed1 100644
+--- a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMap.java
++++ b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMap.java
+@@ -6,7 +6,7 @@ import com.badlogic.gdx.maps.Map;
+ import com.badlogic.gdx.utils.Array;
+ 
+ /**
+- * @brief Represents a tiled map, adds the concept of tiles and tilesets
++ * @brief Represents a Tiled created map, adds the concept of tiles and tilesets
+  * 
+  * @see Map
+  */
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapRenderer.java b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapRenderer.java
+index 6d865b4..53030e3 100644
+--- a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapRenderer.java
++++ b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapRenderer.java
+@@ -1,737 +1,13 @@
+ package com.badlogic.gdx.maps.tiled;
+ 
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.C1;
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.C2;
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.C3;
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.C4;
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.U1;
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.U2;
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.U3;
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.U4;
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.V1;
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.V2;
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.V3;
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.V4;
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.X1;
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.X2;
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.X3;
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.X4;
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.Y1;
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.Y2;
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.Y3;
+-import static com.badlogic.gdx.graphics.g2d.SpriteBatch.Y4;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.*;
+ 
+-import com.badlogic.gdx.Gdx;
+-import com.badlogic.gdx.graphics.Color;
+-import com.badlogic.gdx.graphics.GL10;
+-import com.badlogic.gdx.graphics.GL11;
+-import com.badlogic.gdx.graphics.OrthographicCamera;
+-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+-import com.badlogic.gdx.graphics.g2d.SpriteCache;
+-import com.badlogic.gdx.graphics.g2d.TextureRegion;
+-import com.badlogic.gdx.maps.MapLayer;
++import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+ import com.badlogic.gdx.maps.MapObject;
+-import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
+-import com.badlogic.gdx.math.Matrix4;
+-import com.badlogic.gdx.math.Rectangle;
++import com.badlogic.gdx.maps.MapRenderer;
++import com.badlogic.gdx.math.Polygon;
+ 
+-public interface TiledMapRenderer {
+-	
+-	public void setView(Matrix4 projectionMatrix, float viewBoundsX, float viewBoundsY, float viewBoundsWidth, float viewBoundsHeight);
+-	public void setView(OrthographicCamera camera);
+-	
+-	public void begin();
+-	public void end();
+-	
+-	public void render();
++public interface TiledMapRenderer extends MapRenderer {
+ 	public void renderObject(MapObject object);
+ 	public void renderTileLayer(TiledMapTileLayer layer);
+-	
+-	public class BatchTiledMapRenderer implements TiledMapRenderer {
+-		
+-		protected TiledMap map;
+-
+-		protected float unitScale;
+-		
+-		protected SpriteBatch spriteBatch;
+-		
+-		protected Rectangle viewBounds; 
+-
+-		public TiledMap getMap() {
+-			return map;			
+-		}
+-		
+-		public float getUnitScale() {
+-			return unitScale;
+-		}
+-		
+-		public SpriteBatch getSpriteBatch() {
+-			return spriteBatch;
+-		}
+-
+-		public Rectangle getViewBounds() {
+-			return viewBounds;
+-		}
+-		
+-		public BatchTiledMapRenderer(TiledMap map) {
+-			this.map = map;
+-			this.unitScale = 1;
+-			this.spriteBatch = new SpriteBatch();
+-			this.viewBounds = new Rectangle();
+-		}
+-		
+-		public BatchTiledMapRenderer(TiledMap map, float unitScale) {
+-			this.map = map;
+-			this.unitScale = unitScale;
+-			this.viewBounds = new Rectangle();
+-			this.spriteBatch = new SpriteBatch();
+-		}
+-		
+-		@Override
+-		public void setView(Matrix4 projectionMatrix, float viewBoundsX, float viewBoundsY, float viewBoundsWidth, float viewBoundsHeight) {
+-			spriteBatch.setProjectionMatrix(projectionMatrix);
+-			viewBounds.set(viewBoundsX, viewBoundsY, viewBoundsWidth, viewBoundsHeight);
+-		}
+-		
+-		@Override
+-		public void setView(OrthographicCamera camera) {
+-			setView(camera.combined, camera.position.x - camera.viewportWidth / 2, camera.position.y - camera.viewportHeight / 2, camera.viewportWidth, camera.viewportHeight);
+-		}
+-		
+-		@Override
+-		public void begin () {
+-			spriteBatch.begin();
+-		}
+-
+-		@Override
+-		public void end () {
+-			spriteBatch.end();
+-		}
+-		
+-		@Override
+-		public void render () {
+-			for (MapLayer layer : map.getLayers()) {
+-				if (layer.getVisible()) {
+-					if (layer instanceof TiledMapTileLayer) {
+-						renderTileLayer((TiledMapTileLayer) layer);
+-					} else {
+-						for (MapObject object : layer.getObjects()) {
+-							renderObject(object);
+-						}
+-					}					
+-				}				
+-			}			
+-		}
+-
+-		@Override
+-		public void renderObject (MapObject object) {
+-			// Do nothing
+-		}
+-
+-		@Override
+-		public void renderTileLayer (TiledMapTileLayer layer) {
+-			// Do nothing			
+-		}
+-
+-	}
+-	
+-	public class CacheTiledMapRenderer implements TiledMapRenderer {
+-		protected TiledMap map;
+-
+-		protected float unitScale;
+-		
+-		protected SpriteCache spriteCache;
+-		
+-		protected Rectangle viewBounds; 
+-
+-		public TiledMap getMap() {
+-			return map;			
+-		}
+-		
+-		public float getUnitScale() {
+-			return unitScale;
+-		}
+-		
+-		public SpriteCache getSpriteCache() {
+-			return spriteCache;
+-		}
+-
+-		public Rectangle getViewBounds() {
+-			return viewBounds;
+-		}
+-		
+-		public CacheTiledMapRenderer(TiledMap map) {
+-			this.map = map;
+-			this.unitScale = 1;
+-			this.spriteCache = new SpriteCache();
+-			this.viewBounds = new Rectangle();
+-		}
+-		
+-		public CacheTiledMapRenderer(TiledMap map, float unitScale) {
+-			this.map = map;
+-			this.unitScale = unitScale;
+-			this.viewBounds = new Rectangle();
+-			this.spriteCache = new SpriteCache();
+-		}
+-		
+-		@Override
+-		public void setView(Matrix4 projectionMatrix, float viewBoundsX, float viewBoundsY, float viewBoundsWidth, float viewBoundsHeight) {
+-			spriteCache.setProjectionMatrix(projectionMatrix);
+-			viewBounds.set(viewBoundsX, viewBoundsY, viewBoundsWidth, viewBoundsHeight);
+-		}
+-		
+-		@Override
+-		public void setView(OrthographicCamera camera) {
+-			setView(camera.combined, camera.position.x - camera.viewportWidth / 2, camera.position.y - camera.viewportHeight / 2, camera.viewportWidth, camera.viewportHeight);
+-		}
+-		
+-		@Override
+-		public void begin () {
+-			spriteCache.begin();
+-		}
+-
+-		@Override
+-		public void end () {
+-			spriteCache.end();
+-		}
+-		
+-		@Override
+-		public void render () {
+-			for (MapLayer layer : map.getLayers()) {
+-				if (layer.getVisible()) {
+-					if (layer instanceof TiledMapTileLayer) {
+-						renderTileLayer((TiledMapTileLayer) layer);
+-					} else {
+-						for (MapObject object : layer.getObjects()) {
+-							renderObject(object);
+-						}
+-					}					
+-				}				
+-			}			
+-		}
+-
+-		@Override
+-		public void renderObject (MapObject object) {
+-			// Do nothing
+-		}
+-
+-		@Override
+-		public void renderTileLayer (TiledMapTileLayer layer) {
+-			// Do nothing			
+-		}
+-		
+-	}
+-	public class IsometricTiledMapRenderer extends  BatchTiledMapRenderer {
+-
+-		private TiledMap map;
+-		
+-		private float[] vertices = new float[20];
+-		
+-		public IsometricTiledMapRenderer(TiledMap map) {
+-			super(map);
+-		}
+-		
+-		public IsometricTiledMapRenderer(TiledMap map, float unitScale) {
+-			super(map, unitScale);
+-		}	
+-		
+-		@Override
+-		public void renderObject (MapObject object) {
+-			
+-		}
+-		
+-		@Override
+-		public void renderTileLayer (TiledMapTileLayer layer) {
+-
+-			final float color = Color.toFloatBits(1, 1, 1, layer.getOpacity());
+-			
+-			int col1 = 0;
+-			int col2 = layer.getWidth() - 1;
+-			
+-			int row1 = 0;
+-			int row2 = layer.getHeight() - 1;
+-			
+-			float tileWidth = layer.getTileWidth() * unitScale;
+-			float tileHeight = layer.getTileHeight() * unitScale;
+-			float halfTileWidth = tileWidth * 0.5f;
+-			float halfTileHeight = tileHeight * 0.5f;
+-			
+-			for (int row = row2; row >= row1; row--) {
+-				for (int col = col1; col <= col2; col++) {
+-					float x = (col * halfTileWidth) + (row * halfTileWidth);
+-					float y = (row * halfTileHeight) - (col * halfTileHeight);
+-
+-					final TiledMapTileLayer.Cell cell = layer.getCell(col, row);
+-					final TiledMapTile tile = cell.getTile();
+-					if (tile != null) {
+-						
+-						final boolean flipX = cell.getFlipHorizontally();
+-						final boolean flipY = cell.getFlipVertically();
+-						final int rotations = cell.getRotation();
+-						
+-						TextureRegion region = tile.getTextureRegion();
+-						
+-						float x1 = x;
+-						float y1 = y;
+-						float x2 = x1 + region.getRegionWidth() * unitScale;
+-						float y2 = y1 + region.getRegionHeight() * unitScale;
+-						
+-						float u1 = region.getU();
+-						float v1 = region.getV2();
+-						float u2 = region.getU2();
+-						float v2 = region.getV();
+-						
+-						vertices[X1] = x1;
+-						vertices[Y1] = y1;
+-						vertices[C1] = color;
+-						vertices[U1] = u1;
+-						vertices[V1] = v1;
+-						
+-						vertices[X2] = x1;
+-						vertices[Y2] = y2;
+-						vertices[C2] = color;
+-						vertices[U2] = u1;
+-						vertices[V2] = v2;
+-						
+-						vertices[X3] = x2;
+-						vertices[Y3] = y2;
+-						vertices[C3] = color;
+-						vertices[U3] = u2;
+-						vertices[V3] = v2;
+-						
+-						vertices[X4] = x2;
+-						vertices[Y4] = y1;
+-						vertices[C4] = color;
+-						vertices[U4] = u2;
+-						vertices[V4] = v1;							
+-						
+-						if (flipX) {
+-							float temp = vertices[U1];
+-							vertices[U1] = vertices[U3];
+-							vertices[U3] = temp;
+-							temp = vertices[U2];
+-							vertices[U2] = vertices[U4];
+-							vertices[U4] = temp;
+-						}
+-						if (flipY) {
+-							float temp = vertices[V1];
+-							vertices[V1] = vertices[V3];
+-							vertices[V3] = temp;
+-							temp = vertices[V2];
+-							vertices[V2] = vertices[V4];
+-							vertices[V4] = temp;
+-						}
+-						if (rotations != 0) {
+-							switch (rotations) {
+-								case Cell.ROTATE_90: {
+-									float tempV = vertices[V1];
+-									vertices[V1] = vertices[V2];
+-									vertices[V2] = vertices[V3];
+-									vertices[V3] = vertices[V4];
+-									vertices[V4] = tempV;
+-
+-									float tempU = vertices[U1];
+-									vertices[U1] = vertices[U2];
+-									vertices[U2] = vertices[U3];
+-									vertices[U3] = vertices[U4];
+-									vertices[U4] = tempU;									
+-									break;
+-								}
+-								case Cell.ROTATE_180: {
+-									float tempU = vertices[U1];
+-									vertices[U1] = vertices[U3];
+-									vertices[U3] = tempU;
+-									tempU = vertices[U2];
+-									vertices[U2] = vertices[U4];
+-									vertices[U4] = tempU;									
+-									float tempV = vertices[V1];
+-									vertices[V1] = vertices[V3];
+-									vertices[V3] = tempV;
+-									tempV = vertices[V2];
+-									vertices[V2] = vertices[V4];
+-									vertices[V4] = tempV;
+-									break;
+-								}
+-								case Cell.ROTATE_270: {
+-									float tempV = vertices[V1];
+-									vertices[V1] = vertices[V4];
+-									vertices[V4] = vertices[V3];
+-									vertices[V3] = vertices[V2];
+-									vertices[V2] = tempV;
+-
+-									float tempU = vertices[U1];
+-									vertices[U1] = vertices[U4];
+-									vertices[U4] = vertices[U3];
+-									vertices[U3] = vertices[U2];
+-									vertices[U2] = tempU;									
+-									break;
+-								}
+-							}								
+-						}
+-						spriteBatch.draw(region.getTexture(), vertices, 0, 20);
+-					}					
+-				}
+-			}
+-		}
+-		
+-	}
+-	
+-	public class OrthogonalTiledMapRenderer extends BatchTiledMapRenderer {
+-		
+-		private float[] vertices = new float[20];
+-		
+-		public OrthogonalTiledMapRenderer(TiledMap map) {
+-			super(map);
+-		}
+-
+-		public OrthogonalTiledMapRenderer(TiledMap map, float unitScale) {
+-			super(map, unitScale);
+-		}		
+-		
+-		@Override
+-		public void renderObject (MapObject object) {
+-			
+-		}
+-
+-		@Override
+-		public void renderTileLayer (TiledMapTileLayer layer) {
+-			
+-			final float color = Color.toFloatBits(1, 1, 1, layer.getOpacity());
+-			
+-			final int layerWidth = layer.getWidth();
+-			final int layerHeight = layer.getHeight();
+-			
+-			final float layerTileWidth = layer.getTileWidth() * unitScale;
+-			final float layerTileHeight = layer.getTileHeight() * unitScale;
+-			
+-			final int col1 = Math.max(0, (int) (viewBounds.x / layerTileWidth));
+-			final int col2 = Math.min(layerWidth, (int) ((viewBounds.x + viewBounds.width + layerTileWidth) / layerTileWidth));
+-
+-			final int row1 = Math.max(0, (int) (viewBounds.y / layerTileHeight));
+-			final int row2 = Math.min(layerHeight, (int) ((viewBounds.y + viewBounds.height + layerTileHeight) / layerTileHeight));				
+-			
+-			for (int row = row1; row < row2; row++) {
+-				for (int col = col1; col < col2; col++) {
+-					final TiledMapTileLayer.Cell cell = layer.getCell(col, row);
+-					final TiledMapTile tile = cell.getTile();
+-					if (tile != null) {
+-						
+-						final boolean flipX = cell.getFlipHorizontally();
+-						final boolean flipY = cell.getFlipVertically();
+-						final int rotations = cell.getRotation();
+-						
+-						TextureRegion region = tile.getTextureRegion();
+-						
+-						float x1 = col * layerTileWidth;
+-						float y1 = row * layerTileHeight;
+-						float x2 = x1 + region.getRegionWidth() * unitScale;
+-						float y2 = y1 + region.getRegionHeight() * unitScale;
+-						
+-						float u1 = region.getU();
+-						float v1 = region.getV2();
+-						float u2 = region.getU2();
+-						float v2 = region.getV();
+-						
+-						vertices[X1] = x1;
+-						vertices[Y1] = y1;
+-						vertices[C1] = color;
+-						vertices[U1] = u1;
+-						vertices[V1] = v1;
+-						
+-						vertices[X2] = x1;
+-						vertices[Y2] = y2;
+-						vertices[C2] = color;
+-						vertices[U2] = u1;
+-						vertices[V2] = v2;
+-						
+-						vertices[X3] = x2;
+-						vertices[Y3] = y2;
+-						vertices[C3] = color;
+-						vertices[U3] = u2;
+-						vertices[V3] = v2;
+-						
+-						vertices[X4] = x2;
+-						vertices[Y4] = y1;
+-						vertices[C4] = color;
+-						vertices[U4] = u2;
+-						vertices[V4] = v1;							
+-						
+-						if (flipX) {
+-							float temp = vertices[U1];
+-							vertices[U1] = vertices[U3];
+-							vertices[U3] = temp;
+-							temp = vertices[U2];
+-							vertices[U2] = vertices[U4];
+-							vertices[U4] = temp;
+-						}
+-						if (flipY) {
+-							float temp = vertices[V1];
+-							vertices[V1] = vertices[V3];
+-							vertices[V3] = temp;
+-							temp = vertices[V2];
+-							vertices[V2] = vertices[V4];
+-							vertices[V4] = temp;
+-						}
+-						if (rotations != 0) {
+-							switch (rotations) {
+-								case Cell.ROTATE_90: {
+-									float tempV = vertices[V1];
+-									vertices[V1] = vertices[V2];
+-									vertices[V2] = vertices[V3];
+-									vertices[V3] = vertices[V4];
+-									vertices[V4] = tempV;
+-
+-									float tempU = vertices[U1];
+-									vertices[U1] = vertices[U2];
+-									vertices[U2] = vertices[U3];
+-									vertices[U3] = vertices[U4];
+-									vertices[U4] = tempU;									
+-									break;
+-								}
+-								case Cell.ROTATE_180: {
+-									float tempU = vertices[U1];
+-									vertices[U1] = vertices[U3];
+-									vertices[U3] = tempU;
+-									tempU = vertices[U2];
+-									vertices[U2] = vertices[U4];
+-									vertices[U4] = tempU;									
+-									float tempV = vertices[V1];
+-									vertices[V1] = vertices[V3];
+-									vertices[V3] = tempV;
+-									tempV = vertices[V2];
+-									vertices[V2] = vertices[V4];
+-									vertices[V4] = tempV;
+-									break;
+-								}
+-								case Cell.ROTATE_270: {
+-									float tempV = vertices[V1];
+-									vertices[V1] = vertices[V4];
+-									vertices[V4] = vertices[V3];
+-									vertices[V3] = vertices[V2];
+-									vertices[V2] = tempV;
+-
+-									float tempU = vertices[U1];
+-									vertices[U1] = vertices[U4];
+-									vertices[U4] = vertices[U3];
+-									vertices[U3] = vertices[U2];
+-									vertices[U2] = tempU;									
+-									break;
+-								}
+-							}								
+-						}
+-						spriteBatch.draw(region.getTexture(), vertices, 0, 20);
+-					}
+-				}
+-			}			
+-		}
+-		
+-	}
+-
+-	public class OrthogonalTiledMapRenderer2 extends CacheTiledMapRenderer {
+-
+-		protected TiledMap map;
+-
+-		protected float unitScale;
+-		
+-		protected SpriteCache spriteCache;
+-		
+-		protected Rectangle viewBounds; 
+-		
+-		private float[] vertices = new float[20];
+-		
+-		public boolean recache;
+-		
+-		public OrthogonalTiledMapRenderer2(TiledMap map) {
+-			super(map);
+-		}
+-		
+-		public OrthogonalTiledMapRenderer2(TiledMap map, float unitScale) {
+-			super(map, unitScale);
+-		}
+-
+-		@Override
+-		public void begin () {
+-			if (recache) {
+-				cached = false;
+-				recache = false;
+-				spriteCache.clear();
+-			}
+-			if (!cached) {
+-				spriteCache.beginCache();	
+-			} else {
+-				Gdx.gl.glEnable(GL10.GL_BLEND);
+-				Gdx.gl.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+-				spriteCache.begin();
+-			}
+-			
+-		}
+-
+-		@Override
+-		public void end () {
+-			if (!cached) {
+-				spriteCache.endCache();
+-				cached = true;
+-				begin();
+-				render();
+-				end();
+-			} else {
+-				spriteCache.end();
+-				Gdx.gl.glDisable(GL10.GL_BLEND);
+-			}
+-		}
+-
+-		@Override
+-		public void render () {
+-			if (cached) {
+-				spriteCache.draw(0);
+-			} else {
+-				for (MapLayer layer : map.getLayers()) {
+-					if (layer.getVisible()) {
+-						if (layer instanceof TiledMapTileLayer) {
+-							renderTileLayer((TiledMapTileLayer) layer);
+-						} else {
+-							for (MapObject object : layer.getObjects()) {
+-								renderObject(object);
+-							}
+-						}					
+-					}				
+-				}				
+-			}
+-
+-		}
+-
+-		boolean cached = false;
+-		int count = 0;
+-		@Override
+-		public void renderTileLayer (TiledMapTileLayer layer) {
+-			final float color = Color.toFloatBits(1, 1, 1, layer.getOpacity());
+-		
+-			final int layerWidth = layer.getWidth();
+-			final int layerHeight = layer.getHeight();
+-			
+-			final float layerTileWidth = layer.getTileWidth() * unitScale;
+-			final float layerTileHeight = layer.getTileHeight() * unitScale;
+-			
+-			final int col1 = Math.max(0, (int) (viewBounds.x / layerTileWidth));
+-			final int col2 = Math.min(layerWidth, (int) ((viewBounds.x + viewBounds.width + layerTileWidth) / layerTileWidth));
+-
+-			final int row1 = Math.max(0, (int) (viewBounds.y / layerTileHeight));
+-			final int row2 = Math.min(layerHeight, (int) ((viewBounds.y + viewBounds.height + layerTileHeight) / layerTileHeight));				
+-			
+-			for (int row = row1; row < row2; row++) {
+-				for (int col = col1; col < col2; col++) {
+-					final TiledMapTileLayer.Cell cell = layer.getCell(col, row);
+-					final TiledMapTile tile = cell.getTile();
+-					if (tile != null) {
+-						count++;
+-						final boolean flipX = cell.getFlipHorizontally();
+-						final boolean flipY = cell.getFlipVertically();
+-						final int rotations = cell.getRotation();
+-						
+-						TextureRegion region = tile.getTextureRegion();
+-						
+-						float x1 = col * layerTileWidth;
+-						float y1 = row * layerTileHeight;
+-						float x2 = x1 + region.getRegionWidth() * unitScale;
+-						float y2 = y1 + region.getRegionHeight() * unitScale;
+-						
+-						float u1 = region.getU();
+-						float v1 = region.getV2();
+-						float u2 = region.getU2();
+-						float v2 = region.getV();
+-						
+-						vertices[X1] = x1;
+-						vertices[Y1] = y1;
+-						vertices[C1] = color;
+-						vertices[U1] = u1;
+-						vertices[V1] = v1;
+-						
+-						vertices[X2] = x1;
+-						vertices[Y2] = y2;
+-						vertices[C2] = color;
+-						vertices[U2] = u1;
+-						vertices[V2] = v2;
+-						
+-						vertices[X3] = x2;
+-						vertices[Y3] = y2;
+-						vertices[C3] = color;
+-						vertices[U3] = u2;
+-						vertices[V3] = v2;
+-						
+-						vertices[X4] = x2;
+-						vertices[Y4] = y1;
+-						vertices[C4] = color;
+-						vertices[U4] = u2;
+-						vertices[V4] = v1;							
+-						
+-						if (flipX) {
+-							float temp = vertices[U1];
+-							vertices[U1] = vertices[U3];
+-							vertices[U3] = temp;
+-							temp = vertices[U2];
+-							vertices[U2] = vertices[U4];
+-							vertices[U4] = temp;
+-						}
+-						if (flipY) {
+-							float temp = vertices[V1];
+-							vertices[V1] = vertices[V3];
+-							vertices[V3] = temp;
+-							temp = vertices[V2];
+-							vertices[V2] = vertices[V4];
+-							vertices[V4] = temp;
+-						}
+-						if (rotations != 0) {
+-							switch (rotations) {
+-								case Cell.ROTATE_90: {
+-									float tempV = vertices[V1];
+-									vertices[V1] = vertices[V2];
+-									vertices[V2] = vertices[V3];
+-									vertices[V3] = vertices[V4];
+-									vertices[V4] = tempV;
+-
+-									float tempU = vertices[U1];
+-									vertices[U1] = vertices[U2];
+-									vertices[U2] = vertices[U3];
+-									vertices[U3] = vertices[U4];
+-									vertices[U4] = tempU;									
+-									break;
+-								}
+-								case Cell.ROTATE_180: {
+-									float tempU = vertices[U1];
+-									vertices[U1] = vertices[U3];
+-									vertices[U3] = tempU;
+-									tempU = vertices[U2];
+-									vertices[U2] = vertices[U4];
+-									vertices[U4] = tempU;									
+-									float tempV = vertices[V1];
+-									vertices[V1] = vertices[V3];
+-									vertices[V3] = tempV;
+-									tempV = vertices[V2];
+-									vertices[V2] = vertices[V4];
+-									vertices[V4] = tempV;
+-									break;
+-								}
+-								case Cell.ROTATE_270: {
+-									float tempV = vertices[V1];
+-									vertices[V1] = vertices[V4];
+-									vertices[V4] = vertices[V3];
+-									vertices[V3] = vertices[V2];
+-									vertices[V2] = tempV;
+-
+-									float tempU = vertices[U1];
+-									vertices[U1] = vertices[U4];
+-									vertices[U4] = vertices[U3];
+-									vertices[U3] = vertices[U2];
+-									vertices[U2] = tempU;									
+-									break;
+-								}
+-							}								
+-						}
+-						spriteCache.add(region.getTexture(), vertices, 0, 20);
+-					}
+-				}
+-			}
+-		}
+-		
+-	}
+ }
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileSet.java b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileSet.java
+index ed5ff81..3affe23 100644
+--- a/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileSet.java
++++ b/gdx/src/com/badlogic/gdx/maps/tiled/TiledMapTileSet.java
+@@ -67,10 +67,5 @@ public class TiledMapTileSet {
+ 	public void removeTile(int id) {
+ 		tiles.remove(id);
+ 	}
+-
+-	public int size() {
+-		return tiles.size;
+-	}
+ 	
+ }
+-
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/renderers/BatchTiledMapRenderer.java b/gdx/src/com/badlogic/gdx/maps/tiled/renderers/BatchTiledMapRenderer.java
+new file mode 100755
+index 0000000..a716922
+--- /dev/null
++++ b/gdx/src/com/badlogic/gdx/maps/tiled/renderers/BatchTiledMapRenderer.java
+@@ -0,0 +1,101 @@
++package com.badlogic.gdx.maps.tiled.renderers;
++
++import com.badlogic.gdx.graphics.OrthographicCamera;
++import com.badlogic.gdx.graphics.g2d.SpriteBatch;
++import com.badlogic.gdx.maps.MapLayer;
++import com.badlogic.gdx.maps.MapObject;
++import com.badlogic.gdx.maps.tiled.TiledMap;
++import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
++import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
++import com.badlogic.gdx.math.Matrix4;
++import com.badlogic.gdx.math.Rectangle;
++
++public abstract class BatchTiledMapRenderer implements TiledMapRenderer {
++	
++	protected TiledMap map;
++
++	protected float unitScale;
++	
++	protected SpriteBatch spriteBatch;
++	
++	protected Rectangle viewBounds; 
++
++	public TiledMap getMap() {
++		return map;			
++	}
++	
++	public float getUnitScale() {
++		return unitScale;
++	}
++	
++	public SpriteBatch getSpriteBatch() {
++		return spriteBatch;
++	}
++
++	public Rectangle getViewBounds() {
++		return viewBounds;
++	}
++	
++	public BatchTiledMapRenderer(TiledMap map) {
++		this.map = map;
++		this.unitScale = 1;
++		this.spriteBatch = new SpriteBatch();
++		this.viewBounds = new Rectangle();
++	}
++	
++	public BatchTiledMapRenderer(TiledMap map, float unitScale) {
++		this.map = map;
++		this.unitScale = unitScale;
++		this.viewBounds = new Rectangle();
++		this.spriteBatch = new SpriteBatch();
++	}
++	
++	@Override
++	public void setView(OrthographicCamera camera) {
++		spriteBatch.setProjectionMatrix(camera.combined);
++		float width = camera.viewportWidth * camera.zoom;
++		float height = camera.viewportHeight * camera.zoom;
++		viewBounds.set(camera.position.x - width / 2, camera.position.y - height / 2, width, height);
++	}
++	
++	@Override
++	public void setView (Matrix4 projection, float x, float y, float width, float height) {
++		spriteBatch.setProjectionMatrix(projection);
++		viewBounds.set(x, y, width, height);
++	}
++	
++	@Override
++	public void render () {
++		spriteBatch.begin();
++		for (MapLayer layer : map.getLayers()) {
++			if (layer.getVisible()) {
++				if (layer instanceof TiledMapTileLayer) {
++					renderTileLayer((TiledMapTileLayer) layer);
++				} else {
++					for (MapObject object : layer.getObjects()) {
++						renderObject(object);
++					}
++				}					
++			}				
++		}
++		spriteBatch.end();
++	}
++	
++	@Override
++	public void render (int[] layers) {
++		spriteBatch.begin();
++		for (int layerIdx : layers) {
++			MapLayer layer = map.getLayers().getLayer(layerIdx);
++			if (layer.getVisible()) {
++				if (layer instanceof TiledMapTileLayer) {
++					renderTileLayer((TiledMapTileLayer) layer);
++				} else {
++					for (MapObject object : layer.getObjects()) {
++						renderObject(object);
++					}
++				}					
++			}				
++		}		
++		spriteBatch.end();
++	}
++}
+\ No newline at end of file
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/renderers/IsometricTiledMapRenderer.java b/gdx/src/com/badlogic/gdx/maps/tiled/renderers/IsometricTiledMapRenderer.java
+new file mode 100755
+index 0000000..4083b51
+--- /dev/null
++++ b/gdx/src/com/badlogic/gdx/maps/tiled/renderers/IsometricTiledMapRenderer.java
+@@ -0,0 +1,185 @@
++package com.badlogic.gdx.maps.tiled.renderers;
++
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.C1;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.C2;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.C3;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.C4;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.U1;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.U2;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.U3;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.U4;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.V1;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.V2;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.V3;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.V4;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.X1;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.X2;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.X3;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.X4;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.Y1;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.Y2;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.Y3;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.Y4;
++
++import com.badlogic.gdx.graphics.Color;
++import com.badlogic.gdx.graphics.g2d.TextureRegion;
++import com.badlogic.gdx.maps.MapObject;
++import com.badlogic.gdx.maps.tiled.TiledMap;
++import com.badlogic.gdx.maps.tiled.TiledMapTile;
++import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
++import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
++
++public class IsometricTiledMapRenderer extends  BatchTiledMapRenderer {
++
++	private TiledMap map;
++	
++	private float[] vertices = new float[20];
++	
++	public IsometricTiledMapRenderer(TiledMap map) {
++		super(map);
++	}
++	
++	public IsometricTiledMapRenderer(TiledMap map, float unitScale) {
++		super(map, unitScale);
++	}	
++	
++	@Override
++	public void renderObject (MapObject object) {
++		
++	}
++	
++	@Override
++	public void renderTileLayer (TiledMapTileLayer layer) {
++
++		final float color = Color.toFloatBits(1, 1, 1, layer.getOpacity());
++		
++		int col1 = 0;
++		int col2 = layer.getWidth() - 1;
++		
++		int row1 = 0;
++		int row2 = layer.getHeight() - 1;
++		
++		float tileWidth = layer.getTileWidth() * unitScale;
++		float tileHeight = layer.getTileHeight() * unitScale;
++		float halfTileWidth = tileWidth * 0.5f;
++		float halfTileHeight = tileHeight * 0.5f;
++		
++		for (int row = row2; row >= row1; row--) {
++			for (int col = col1; col <= col2; col++) {
++				float x = (col * halfTileWidth) + (row * halfTileWidth);
++				float y = (row * halfTileHeight) - (col * halfTileHeight);
++
++				final TiledMapTileLayer.Cell cell = layer.getCell(col, row);
++				final TiledMapTile tile = cell.getTile();
++				if (tile != null) {
++					
++					final boolean flipX = cell.getFlipHorizontally();
++					final boolean flipY = cell.getFlipVertically();
++					final int rotations = cell.getRotation();
++					
++					TextureRegion region = tile.getTextureRegion();
++					
++					float x1 = x;
++					float y1 = y;
++					float x2 = x1 + region.getRegionWidth() * unitScale;
++					float y2 = y1 + region.getRegionHeight() * unitScale;
++					
++					float u1 = region.getU();
++					float v1 = region.getV2();
++					float u2 = region.getU2();
++					float v2 = region.getV();
++					
++					vertices[X1] = x1;
++					vertices[Y1] = y1;
++					vertices[C1] = color;
++					vertices[U1] = u1;
++					vertices[V1] = v1;
++					
++					vertices[X2] = x1;
++					vertices[Y2] = y2;
++					vertices[C2] = color;
++					vertices[U2] = u1;
++					vertices[V2] = v2;
++					
++					vertices[X3] = x2;
++					vertices[Y3] = y2;
++					vertices[C3] = color;
++					vertices[U3] = u2;
++					vertices[V3] = v2;
++					
++					vertices[X4] = x2;
++					vertices[Y4] = y1;
++					vertices[C4] = color;
++					vertices[U4] = u2;
++					vertices[V4] = v1;							
++					
++					if (flipX) {
++						float temp = vertices[U1];
++						vertices[U1] = vertices[U3];
++						vertices[U3] = temp;
++						temp = vertices[U2];
++						vertices[U2] = vertices[U4];
++						vertices[U4] = temp;
++					}
++					if (flipY) {
++						float temp = vertices[V1];
++						vertices[V1] = vertices[V3];
++						vertices[V3] = temp;
++						temp = vertices[V2];
++						vertices[V2] = vertices[V4];
++						vertices[V4] = temp;
++					}
++					if (rotations != 0) {
++						switch (rotations) {
++							case Cell.ROTATE_90: {
++								float tempV = vertices[V1];
++								vertices[V1] = vertices[V2];
++								vertices[V2] = vertices[V3];
++								vertices[V3] = vertices[V4];
++								vertices[V4] = tempV;
++
++								float tempU = vertices[U1];
++								vertices[U1] = vertices[U2];
++								vertices[U2] = vertices[U3];
++								vertices[U3] = vertices[U4];
++								vertices[U4] = tempU;									
++								break;
++							}
++							case Cell.ROTATE_180: {
++								float tempU = vertices[U1];
++								vertices[U1] = vertices[U3];
++								vertices[U3] = tempU;
++								tempU = vertices[U2];
++								vertices[U2] = vertices[U4];
++								vertices[U4] = tempU;									
++								float tempV = vertices[V1];
++								vertices[V1] = vertices[V3];
++								vertices[V3] = tempV;
++								tempV = vertices[V2];
++								vertices[V2] = vertices[V4];
++								vertices[V4] = tempV;
++								break;
++							}
++							case Cell.ROTATE_270: {
++								float tempV = vertices[V1];
++								vertices[V1] = vertices[V4];
++								vertices[V4] = vertices[V3];
++								vertices[V3] = vertices[V2];
++								vertices[V2] = tempV;
++
++								float tempU = vertices[U1];
++								vertices[U1] = vertices[U4];
++								vertices[U4] = vertices[U3];
++								vertices[U3] = vertices[U2];
++								vertices[U2] = tempU;									
++								break;
++							}
++						}								
++					}
++					spriteBatch.draw(region.getTexture(), vertices, 0, 20);
++				}					
++			}
++		}
++	}
++	
++}
+\ No newline at end of file
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/renderers/OrthogonalTiledMapRenderer.java b/gdx/src/com/badlogic/gdx/maps/tiled/renderers/OrthogonalTiledMapRenderer.java
+new file mode 100755
+index 0000000..cbdc93c
+--- /dev/null
++++ b/gdx/src/com/badlogic/gdx/maps/tiled/renderers/OrthogonalTiledMapRenderer.java
+@@ -0,0 +1,181 @@
++package com.badlogic.gdx.maps.tiled.renderers;
++
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.C1;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.C2;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.C3;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.C4;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.U1;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.U2;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.U3;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.U4;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.V1;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.V2;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.V3;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.V4;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.X1;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.X2;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.X3;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.X4;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.Y1;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.Y2;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.Y3;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.Y4;
++
++import com.badlogic.gdx.graphics.Color;
++import com.badlogic.gdx.graphics.g2d.TextureRegion;
++import com.badlogic.gdx.maps.MapObject;
++import com.badlogic.gdx.maps.tiled.TiledMap;
++import com.badlogic.gdx.maps.tiled.TiledMapTile;
++import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
++import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
++
++public class OrthogonalTiledMapRenderer extends BatchTiledMapRenderer {
++	
++	private float[] vertices = new float[20];
++	
++	public OrthogonalTiledMapRenderer(TiledMap map) {
++		super(map);
++	}
++
++	public OrthogonalTiledMapRenderer(TiledMap map, float unitScale) {
++		super(map, unitScale);
++	}		
++	
++	@Override
++	public void renderObject (MapObject object) {
++		
++	}
++
++	@Override
++	public void renderTileLayer (TiledMapTileLayer layer) {
++		
++		final float color = Color.toFloatBits(1, 1, 1, layer.getOpacity());
++		
++		final int layerWidth = layer.getWidth();
++		final int layerHeight = layer.getHeight();
++		
++		final float layerTileWidth = layer.getTileWidth() * unitScale;
++		final float layerTileHeight = layer.getTileHeight() * unitScale;
++		
++		final int col1 = Math.max(0, (int) (viewBounds.x / layerTileWidth));
++		final int col2 = Math.min(layerWidth, (int) ((viewBounds.x + viewBounds.width + layerTileWidth) / layerTileWidth));
++
++		final int row1 = Math.max(0, (int) (viewBounds.y / layerTileHeight));
++		final int row2 = Math.min(layerHeight, (int) ((viewBounds.y + viewBounds.height + layerTileHeight) / layerTileHeight));				
++		
++		for (int row = row1; row < row2; row++) {
++			for (int col = col1; col < col2; col++) {
++				final TiledMapTileLayer.Cell cell = layer.getCell(col, row);
++				final TiledMapTile tile = cell.getTile();
++				if (tile != null) {
++					
++					final boolean flipX = cell.getFlipHorizontally();
++					final boolean flipY = cell.getFlipVertically();
++					final int rotations = cell.getRotation();
++					
++					TextureRegion region = tile.getTextureRegion();
++					
++					float x1 = col * layerTileWidth;
++					float y1 = row * layerTileHeight;
++					float x2 = x1 + region.getRegionWidth() * unitScale;
++					float y2 = y1 + region.getRegionHeight() * unitScale;
++					
++					float u1 = region.getU();
++					float v1 = region.getV2();
++					float u2 = region.getU2();
++					float v2 = region.getV();
++					
++					vertices[X1] = x1;
++					vertices[Y1] = y1;
++					vertices[C1] = color;
++					vertices[U1] = u1;
++					vertices[V1] = v1;
++					
++					vertices[X2] = x1;
++					vertices[Y2] = y2;
++					vertices[C2] = color;
++					vertices[U2] = u1;
++					vertices[V2] = v2;
++					
++					vertices[X3] = x2;
++					vertices[Y3] = y2;
++					vertices[C3] = color;
++					vertices[U3] = u2;
++					vertices[V3] = v2;
++					
++					vertices[X4] = x2;
++					vertices[Y4] = y1;
++					vertices[C4] = color;
++					vertices[U4] = u2;
++					vertices[V4] = v1;							
++					
++					if (flipX) {
++						float temp = vertices[U1];
++						vertices[U1] = vertices[U3];
++						vertices[U3] = temp;
++						temp = vertices[U2];
++						vertices[U2] = vertices[U4];
++						vertices[U4] = temp;
++					}
++					if (flipY) {
++						float temp = vertices[V1];
++						vertices[V1] = vertices[V3];
++						vertices[V3] = temp;
++						temp = vertices[V2];
++						vertices[V2] = vertices[V4];
++						vertices[V4] = temp;
++					}
++					if (rotations != 0) {
++						switch (rotations) {
++							case Cell.ROTATE_90: {
++								float tempV = vertices[V1];
++								vertices[V1] = vertices[V2];
++								vertices[V2] = vertices[V3];
++								vertices[V3] = vertices[V4];
++								vertices[V4] = tempV;
++
++								float tempU = vertices[U1];
++								vertices[U1] = vertices[U2];
++								vertices[U2] = vertices[U3];
++								vertices[U3] = vertices[U4];
++								vertices[U4] = tempU;									
++								break;
++							}
++							case Cell.ROTATE_180: {
++								float tempU = vertices[U1];
++								vertices[U1] = vertices[U3];
++								vertices[U3] = tempU;
++								tempU = vertices[U2];
++								vertices[U2] = vertices[U4];
++								vertices[U4] = tempU;									
++								float tempV = vertices[V1];
++								vertices[V1] = vertices[V3];
++								vertices[V3] = tempV;
++								tempV = vertices[V2];
++								vertices[V2] = vertices[V4];
++								vertices[V4] = tempV;
++								break;
++							}
++							case Cell.ROTATE_270: {
++								float tempV = vertices[V1];
++								vertices[V1] = vertices[V4];
++								vertices[V4] = vertices[V3];
++								vertices[V3] = vertices[V2];
++								vertices[V2] = tempV;
++
++								float tempU = vertices[U1];
++								vertices[U1] = vertices[U4];
++								vertices[U4] = vertices[U3];
++								vertices[U3] = vertices[U2];
++								vertices[U2] = tempU;									
++								break;
++							}
++						}								
++					}
++					spriteBatch.draw(region.getTexture(), vertices, 0, 20);
++				}
++			}
++		}			
++	}
++	
++}
+\ No newline at end of file
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/renderers/OrthogonalTiledMapRenderer2.java b/gdx/src/com/badlogic/gdx/maps/tiled/renderers/OrthogonalTiledMapRenderer2.java
+new file mode 100755
+index 0000000..d0a4672
+--- /dev/null
++++ b/gdx/src/com/badlogic/gdx/maps/tiled/renderers/OrthogonalTiledMapRenderer2.java
+@@ -0,0 +1,283 @@
++package com.badlogic.gdx.maps.tiled.renderers;
++
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.C1;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.C2;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.C3;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.C4;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.U1;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.U2;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.U3;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.U4;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.V1;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.V2;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.V3;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.V4;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.X1;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.X2;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.X3;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.X4;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.Y1;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.Y2;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.Y3;
++import static com.badlogic.gdx.graphics.g2d.SpriteBatch.Y4;
++
++import com.badlogic.gdx.Gdx;
++import com.badlogic.gdx.graphics.Color;
++import com.badlogic.gdx.graphics.GL10;
++import com.badlogic.gdx.graphics.GL11;
++import com.badlogic.gdx.graphics.OrthographicCamera;
++import com.badlogic.gdx.graphics.g2d.SpriteCache;
++import com.badlogic.gdx.graphics.g2d.TextureRegion;
++import com.badlogic.gdx.maps.MapLayer;
++import com.badlogic.gdx.maps.MapObject;
++import com.badlogic.gdx.maps.tiled.TiledMap;
++import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
++import com.badlogic.gdx.maps.tiled.TiledMapTile;
++import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
++import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
++import com.badlogic.gdx.math.Matrix4;
++import com.badlogic.gdx.math.Rectangle;
++
++public class OrthogonalTiledMapRenderer2 implements TiledMapRenderer {
++
++	protected TiledMap map;
++
++	protected float unitScale;
++	
++	protected SpriteCache spriteCache;
++	
++	protected Rectangle viewBounds; 
++	
++	private float[] vertices = new float[20];
++	
++	public boolean recache;
++	
++	public OrthogonalTiledMapRenderer2(TiledMap map) {
++		this.map = map;
++		this.unitScale = 1;
++		this.spriteCache = new SpriteCache(4000, true);
++		this.viewBounds = new Rectangle();
++	}
++	
++	public OrthogonalTiledMapRenderer2(TiledMap map, float unitScale) {
++		this.map = map;
++		this.unitScale = unitScale;
++		this.viewBounds = new Rectangle();
++		this.spriteCache = new SpriteCache(4000, true);
++	}
++	
++	@Override
++	public void setView(OrthographicCamera camera) {
++		spriteCache.setProjectionMatrix(camera.combined);
++		float width = camera.viewportWidth * camera.zoom;
++		float height = camera.viewportHeight * camera.zoom;
++		viewBounds.set(camera.position.x - width / 2, camera.position.y - height / 2, width, height);
++		recache = true;
++	}
++	
++	@Override
++	public void setView (Matrix4 projection, float x, float y, float width, float height) {
++		spriteCache.setProjectionMatrix(projection);
++		viewBounds.set(x, y, width, height);
++		recache = true;
++	}
++
++	public void begin () {
++		if (recache) {
++			cached = false;
++			recache = false;
++			spriteCache.clear();
++		}
++		if (!cached) {
++			spriteCache.beginCache();	
++		} else {
++			Gdx.gl.glEnable(GL10.GL_BLEND);
++			Gdx.gl.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
++			spriteCache.begin();
++		}
++		
++	}
++
++	public void end () {
++		if (!cached) {
++			spriteCache.endCache();
++			cached = true;
++			Gdx.gl.glEnable(GL10.GL_BLEND);
++			Gdx.gl.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
++			spriteCache.begin();
++			spriteCache.draw(0);
++			spriteCache.end();
++			Gdx.gl.glDisable(GL10.GL_BLEND);
++		} else {
++			spriteCache.end();
++			Gdx.gl.glDisable(GL10.GL_BLEND);
++		}
++	}
++
++	@Override
++	public void render () {
++		begin();
++		if (cached) {
++			spriteCache.draw(0);
++		} else {
++			for (MapLayer layer : map.getLayers()) {
++				if (layer.getVisible()) {
++					if (layer instanceof TiledMapTileLayer) {
++						renderTileLayer((TiledMapTileLayer) layer);
++					} else {
++						for (MapObject object : layer.getObjects()) {
++							renderObject(object);
++						}
++					}					
++				}				
++			}				
++		}
++		end();
++	}
++	
++	@Override
++	public void render (int[] layers) {
++		// FIXME not implemented
++		throw new UnsupportedOperationException("Not implemented");
++	}
++
++	@Override
++	public void renderObject (MapObject object) {
++		// TODO Auto-generated method stub
++		
++	}
++
++	boolean cached = false;
++	int count = 0;
++	@Override
++	public void renderTileLayer (TiledMapTileLayer layer) {
++		final float color = Color.toFloatBits(1, 1, 1, layer.getOpacity());
++	
++		final int layerWidth = layer.getWidth();
++		final int layerHeight = layer.getHeight();
++		
++		final float layerTileWidth = layer.getTileWidth() * unitScale;
++		final float layerTileHeight = layer.getTileHeight() * unitScale;
++		
++		final int col1 = Math.max(0, (int) (viewBounds.x / layerTileWidth));
++		final int col2 = Math.min(layerWidth, (int) ((viewBounds.x + viewBounds.width + layerTileWidth) / layerTileWidth));
++
++		final int row1 = Math.max(0, (int) (viewBounds.y / layerTileHeight));
++		final int row2 = Math.min(layerHeight, (int) ((viewBounds.y + viewBounds.height + layerTileHeight) / layerTileHeight));				
++		
++		for (int row = row1; row < row2; row++) {
++			for (int col = col1; col < col2; col++) {
++				final TiledMapTileLayer.Cell cell = layer.getCell(col, row);
++				final TiledMapTile tile = cell.getTile();
++				if (tile != null) {
++					count++;
++					final boolean flipX = cell.getFlipHorizontally();
++					final boolean flipY = cell.getFlipVertically();
++					final int rotations = cell.getRotation();
++					
++					TextureRegion region = tile.getTextureRegion();
++					
++					float x1 = col * layerTileWidth;
++					float y1 = row * layerTileHeight;
++					float x2 = x1 + region.getRegionWidth() * unitScale;
++					float y2 = y1 + region.getRegionHeight() * unitScale;
++					
++					float u1 = region.getU();
++					float v1 = region.getV2();
++					float u2 = region.getU2();
++					float v2 = region.getV();
++					
++					vertices[X1] = x1;
++					vertices[Y1] = y1;
++					vertices[C1] = color;
++					vertices[U1] = u1;
++					vertices[V1] = v1;
++					
++					vertices[X2] = x1;
++					vertices[Y2] = y2;
++					vertices[C2] = color;
++					vertices[U2] = u1;
++					vertices[V2] = v2;
++					
++					vertices[X3] = x2;
++					vertices[Y3] = y2;
++					vertices[C3] = color;
++					vertices[U3] = u2;
++					vertices[V3] = v2;
++					
++					vertices[X4] = x2;
++					vertices[Y4] = y1;
++					vertices[C4] = color;
++					vertices[U4] = u2;
++					vertices[V4] = v1;							
++					
++					if (flipX) {
++						float temp = vertices[U1];
++						vertices[U1] = vertices[U3];
++						vertices[U3] = temp;
++						temp = vertices[U2];
++						vertices[U2] = vertices[U4];
++						vertices[U4] = temp;
++					}
++					if (flipY) {
++						float temp = vertices[V1];
++						vertices[V1] = vertices[V3];
++						vertices[V3] = temp;
++						temp = vertices[V2];
++						vertices[V2] = vertices[V4];
++						vertices[V4] = temp;
++					}
++					if (rotations != 0) {
++						switch (rotations) {
++							case Cell.ROTATE_90: {
++								float tempV = vertices[V1];
++								vertices[V1] = vertices[V2];
++								vertices[V2] = vertices[V3];
++								vertices[V3] = vertices[V4];
++								vertices[V4] = tempV;
++
++								float tempU = vertices[U1];
++								vertices[U1] = vertices[U2];
++								vertices[U2] = vertices[U3];
++								vertices[U3] = vertices[U4];
++								vertices[U4] = tempU;									
++								break;
++							}
++							case Cell.ROTATE_180: {
++								float tempU = vertices[U1];
++								vertices[U1] = vertices[U3];
++								vertices[U3] = tempU;
++								tempU = vertices[U2];
++								vertices[U2] = vertices[U4];
++								vertices[U4] = tempU;									
++								float tempV = vertices[V1];
++								vertices[V1] = vertices[V3];
++								vertices[V3] = tempV;
++								tempV = vertices[V2];
++								vertices[V2] = vertices[V4];
++								vertices[V4] = tempV;
++								break;
++							}
++							case Cell.ROTATE_270: {
++								float tempV = vertices[V1];
++								vertices[V1] = vertices[V4];
++								vertices[V4] = vertices[V3];
++								vertices[V3] = vertices[V2];
++								vertices[V2] = tempV;
++
++								float tempU = vertices[U1];
++								vertices[U1] = vertices[U4];
++								vertices[U4] = vertices[U3];
++								vertices[U3] = vertices[U2];
++								vertices[U2] = tempU;									
++								break;
++							}
++						}								
++					}
++					spriteCache.add(region.getTexture(), vertices, 0, 20);
++				}
++			}
++		}
++	}
++	
++}
+\ No newline at end of file
+diff --git a/gdx/src/com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java b/gdx/src/com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java
+deleted file mode 100644
+index bc192f0..0000000
+--- a/gdx/src/com/badlogic/gdx/maps/tiled/tiles/AnimatedTiledMapTile.java
++++ /dev/null
+@@ -1,47 +0,0 @@
+-package com.badlogic.gdx.maps.tiled.tiles;
+-
+-import com.badlogic.gdx.graphics.g2d.Animation;
+-import com.badlogic.gdx.graphics.g2d.TextureRegion;
+-import com.badlogic.gdx.maps.MapProperties;
+-import com.badlogic.gdx.maps.tiled.TiledMapTile;
+-import com.badlogic.gdx.utils.Array;
+-
+-public class AnimatedTiledMapTile implements TiledMapTile {
+-
+-	private Array<StaticTiledMapTile> frameTiles;
+-	
+-	private float animationTime;
+-	
+-	@Override
+-	public BlendMode getBlendMode () {
+-		// TODO Auto-generated method stub
+-		return null;
+-	}
+-
+-	@Override
+-	public void setBlendMode (BlendMode blendMode) {
+-		// TODO Auto-generated method stub
+-		
+-	}
+-
+-	@Override
+-	public TextureRegion getTextureRegion () {
+-		// TODO Auto-generated method stub
+-		return null;
+-	}
+-
+-	@Override
+-	public MapProperties getProperties () {
+-		// TODO Auto-generated method stub
+-		return null;
+-	}
+-
+-	public AnimatedTiledMapTile(float interval, Array<StaticTiledMapTile> frameTiles) {
+-
+-	}
+-	
+-	public void setAnimationTime(float animationTime) {
+-		this.animationTime = animationTime;
+-	}
+-	
+-}
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/RepeatAction.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/RepeatAction.java
+index 8fbfa7e..f7bed8f 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/RepeatAction.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/actions/RepeatAction.java
+@@ -27,6 +27,7 @@ public class RepeatAction extends DelegateAction {
+ 	public boolean act (float delta) {
+ 		if (executedCount == repeatCount) return true;
+ 		if (action.act(delta)) {
++			if (finished) return true;
+ 			if (repeatCount > 0) executedCount++;
+ 			if (executedCount == repeatCount) return true;
+ 			if (action != null) action.restart();
+diff --git a/gdx/src/com/badlogic/gdx/utils/Array.java b/gdx/src/com/badlogic/gdx/utils/Array.java
+index cea779a..c66ecd3 100644
+--- a/gdx/src/com/badlogic/gdx/utils/Array.java
++++ b/gdx/src/com/badlogic/gdx/utils/Array.java
+@@ -17,7 +17,6 @@
+ package com.badlogic.gdx.utils;
+ 
+ import com.badlogic.gdx.math.MathUtils;
+-
+ import java.util.Comparator;
+ import java.util.Iterator;
+ import java.util.NoSuchElementException;
+@@ -34,6 +33,7 @@ public class Array<T> implements Iterable<T> {
+ 	public boolean ordered;
+ 
+ 	private ArrayIterator iterator;
++	private Predicate.PredicateIterable<T> predicateIterable;
+ 
+ 	/** Creates an ordered array with a capacity of 16. */
+ 	public Array () {
+@@ -363,6 +363,17 @@ public class Array<T> implements Iterable<T> {
+ 			iterator.index = 0;
+ 		return iterator;
+ 	}
++	
++	/** Returns an iterable for the selected items in the array. Remove is supported, but not between hasNext() and next(). 
++	 * Note that the same iteratable instance is returned each time this method is called. 
++	 * Use the {@link Predicate.PredicateIterable} constructor for nested or multithreaded iteration. */
++	public Iterable<T> select(Predicate<T> predicate) {
++		if (predicateIterable == null)
++			predicateIterable = new Predicate.PredicateIterable<T>(this, predicate);
++		else
++			predicateIterable.set(this, predicate);
++		return predicateIterable;
++	}
+ 
+ 	/** Reduces the size of the array to the specified size. If the array is already smaller than the specified size, no action is
+ 	 * taken. */
+diff --git a/gdx/src/com/badlogic/gdx/utils/Predicate.java b/gdx/src/com/badlogic/gdx/utils/Predicate.java
+new file mode 100644
+index 0000000..ef795d6
+--- /dev/null
++++ b/gdx/src/com/badlogic/gdx/utils/Predicate.java
+@@ -0,0 +1,114 @@
++/*******************************************************************************
++ * Copyright 2011 See AUTHORS file.
++ * 
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ * 
++ *   http://www.apache.org/licenses/LICENSE-2.0
++ * 
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ ******************************************************************************/
++
++package com.badlogic.gdx.utils;
++
++import java.util.Iterator;
++
++import com.badlogic.gdx.utils.Array.ArrayIterator;
++
++/** Interface used to select items within an iterator against a predicate.
++ * @author Xoppa
++ */
++public interface Predicate<T> {
++	boolean evaluate(T arg0);
++	
++	public class PredicateIterator<T> implements Iterator<T> {
++		public Iterator<T> iterator;
++		public Predicate<T> predicate;
++		public boolean end = false;
++		public boolean peeked = false;
++		public T next = null;
++
++		public PredicateIterator(final Iterable<T> iterable, final Predicate<T> predicate) {
++			this(iterable.iterator(), predicate);
++		}
++		
++		public PredicateIterator(final Iterator<T> iterator, final Predicate<T> predicate) {
++			set(iterator, predicate);
++		}
++		
++		public void set(final Iterable<T> iterable, final Predicate<T> predicate) {
++			set(iterable.iterator(), predicate);
++		}
++		
++		public void set(final Iterator<T> iterator, final Predicate<T> predicate) {
++			this.iterator = iterator;
++			this.predicate = predicate;
++			end = peeked = false;
++			next = null;
++		}
++		
++		@Override
++		public boolean hasNext() {
++			if (end) return false;
++			if (next != null) return true;
++			peeked = true;
++			while(iterator.hasNext()) {
++				final T n = iterator.next();
++				if (predicate.evaluate(n)) {
++					next = n;
++					return true;
++				}
++			}
++			end = true;
++			return false;
++		}
++
++		@Override
++		public T next() {
++			if (next == null && !hasNext())
++				return null;
++			final T result = next;
++			next = null;
++			peeked = false;
++			return result;
++		}
++
++		@Override
++		public void remove() {
++			if (peeked)
++				throw new GdxRuntimeException("Cannot remove between a call to hasNext() and next().");
++			iterator.remove();
++		}
++	}
++	
++	public static class PredicateIterable<T> implements Iterable<T> {
++		public Iterable<T> iterable;
++		public Predicate<T> predicate;
++		public PredicateIterator<T> iterator = null;
++		
++		public PredicateIterable(Iterable<T> iterable, Predicate<T> predicate) {
++			set(iterable, predicate);
++		}
++		
++		public void set(Iterable<T> iterable, Predicate<T> predicate) {
++			this.iterable = iterable;
++			this.predicate = predicate;
++		}
++
++		/** Returns an iterator. Note that the same iterator instance is returned each time this method is called. 
++		 * Use the {@link Predicate.PredicateIterator} constructor for nested or multithreaded iteration. */
++		@Override
++		public Iterator<T> iterator() {
++			if (iterator == null)
++				iterator = new PredicateIterator<T>(iterable.iterator(), predicate);
++			else
++				iterator.set(iterable.iterator(), predicate);
++			return iterator;
++		}
++	}
++}
+diff --git a/tests/gdx-tests-gwt/war/index.html b/tests/gdx-tests-gwt/war/index.html
+index b95a852..e40006b 100644
+--- a/tests/gdx-tests-gwt/war/index.html
++++ b/tests/gdx-tests-gwt/war/index.html
+@@ -2,9 +2,13 @@
+ <html>
+   <head>
+     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+-    <div id="embed-com.badlogic.gdx.tests.gwt.GdxTestsGwt"></div>
+-    <script type="text/javascript" language="javascript" src="com.badlogic.gdx.tests.gwt.GdxTestsGwt/com.badlogic.gdx.tests.gwt.GdxTestsGwt.nocache.js"></script>
++    <title>libGDX GWT Test Runner</title>
+   </head>
+   <body>
++    <h1>libGDX GWT Test Runner</h1>
++    UI should load here shortly:<br>
++    <div id="embed-com.badlogic.gdx.tests.gwt.GdxTestsGwt"></div>
++    <small>This page is from <code>tests/gdx-tests-gwt/war/index.html</code></small>
++    <script type="text/javascript" language="javascript" src="com.badlogic.gdx.tests.gwt.GdxTestsGwt/com.badlogic.gdx.tests.gwt.GdxTestsGwt.nocache.js"></script>
+   </body>
+ </html>
+diff --git a/tests/gdx-tests-iosmonotouch/gdx-tests-iosmonotouch.userprefs b/tests/gdx-tests-iosmonotouch/gdx-tests-iosmonotouch.userprefs
+index 9985554..708b968 100644
+--- a/tests/gdx-tests-iosmonotouch/gdx-tests-iosmonotouch.userprefs
++++ b/tests/gdx-tests-iosmonotouch/gdx-tests-iosmonotouch.userprefs
+@@ -1,6 +1,6 @@
+ ﻿<Properties>
+   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|iPhoneSimulator" />
+-  <MonoDevelop.Ide.Workbench>
++  <MonoDevelop.Ide.Workbench ActiveDocument="gdx-tests-iosmonotouch/Main.cs">
+     <Files>
+       <File FileName="gdx-tests-iosmonotouch/Main.cs" Line="20" Column="4" />
+       <File FileName="../gdx-tests-android/assets/data/uiskin.atlas" Line="1" Column="1" />
+diff --git a/tests/gdx-tests-iosmonotouch/gdx-tests-iosmonotouch/convert.properties b/tests/gdx-tests-iosmonotouch/gdx-tests-iosmonotouch/convert.properties
+new file mode 100644
+index 0000000..39ba25e
+--- /dev/null
++++ b/tests/gdx-tests-iosmonotouch/gdx-tests-iosmonotouch/convert.properties
+@@ -0,0 +1,6 @@
++SRC =       ../../gdx-tests/src/
++CLASSPATH = ../../../gdx/bin
++EXCLUDE   = **/Internatio*.java
++IN        = -r:../../../gdx/libs/ios32/gdx.dll -recurse:target/*.class
++OUT       = gdx-tests.dll
++
+diff --git a/tests/gdx-tests-iosmonotouch/gdx-tests-iosmonotouch/convert.xml b/tests/gdx-tests-iosmonotouch/gdx-tests-iosmonotouch/convert.xml
+index 1e0a84b..8848391 100644
+--- a/tests/gdx-tests-iosmonotouch/gdx-tests-iosmonotouch/convert.xml
++++ b/tests/gdx-tests-iosmonotouch/gdx-tests-iosmonotouch/convert.xml
+@@ -1,28 +1,25 @@
+ <project name="gdx" default="convert" basedir=".">
+ 	<property environment="env"/>
+-	<property name="IKVM_HOME" value="${env.IKVM_HOME}"/>
++	<property file="convert.properties" />
++	<property name="IKVM_HOME" value="../../../../backends/gdx-backend-iosmonotouch/libs/ikvm"/>
+ 	<property name="MONO_HOME" value="/Developer/MonoTouch/usr/lib/mono/2.1"/>
+-	<property name="IN" value="-recurse:target/core/*.class"/>
+-	<property name="OUT" value="gdx.dll"/>
+-	<property name="SRC" value="src/"/>
+-	<property name="CLASSPATH" value=""/>
+-	<property name="EXCLUDE" value=""/>
+ 
+ 	<target name="compile">
+ 		<delete dir="target"/>
+ 		<mkdir dir="target"/>
+-		<javac srcdir="${SRC}" destdir="target" classpath="${CLASSPATH}" debug="true" debuglevel="lines, vars, and source">
++		<javac srcdir="${SRC}" debug="on" source="1.6" target="1.6" destdir="target" classpath="${CLASSPATH}">
+ 			<include name="**/*.java"/>
+ 			<exclude name="${EXCLUDE}"/>
+ 		</javac>
+ 	</target>
+ 
+-	<target name="convert">
++	<target name="convert" depends="compile">
+ 		<exec executable="mono">
+ 			<arg value="${IKVM_HOME}/bin/ikvmc.exe"/>
+ 			<arg value="-nostdlib"/>
+ 			<arg value="-target:library"/>
+ 			<arg value="-debug"/>
++			<arg value="-srcpath:${SRC}"/>
+ 			<arg value="-out:${OUT}"/>
+ 			<arg value="-r:${MONO_HOME}/mscorlib.dll"/>
+ 			<arg value="-r:${MONO_HOME}/System.dll"/>
+@@ -34,4 +31,4 @@
+ 			<arg line="${IN}"/>
+ 		</exec>
+ 	</target>
+-</project>
+\ No newline at end of file
++</project>
+diff --git a/tests/gdx-tests-lwjgl/src/com/badlogic/gdx/tests/lwjgl/LwjglDebugStarter.java b/tests/gdx-tests-lwjgl/src/com/badlogic/gdx/tests/lwjgl/LwjglDebugStarter.java
+index 1927beb..74fda89 100644
+--- a/tests/gdx-tests-lwjgl/src/com/badlogic/gdx/tests/lwjgl/LwjglDebugStarter.java
++++ b/tests/gdx-tests-lwjgl/src/com/badlogic/gdx/tests/lwjgl/LwjglDebugStarter.java
+@@ -39,7 +39,7 @@ public class LwjglDebugStarter {
+ 		new SharedLibraryLoader("../../extensions/gdx-controllers/gdx-controllers-desktop/libs/gdx-controllers-desktop-natives.jar").load("gdx-controllers-desktop");
+ 		new SharedLibraryLoader("../../gdx/libs/gdx-natives.jar").load("gdx");
+ 
+-		GdxTest test = new TiledMapDirectLoaderTest();
++		GdxTest test = new TiledMapBench();
+ 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
+ 		config.useGL20 = test.needsGL20();
+ 		new LwjglApplication(test, config);
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/GdxTests.gwt.xml b/tests/gdx-tests/src/com/badlogic/gdx/GdxTests.gwt.xml
+index 8f34583..66adb59 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/GdxTests.gwt.xml
++++ b/tests/gdx-tests/src/com/badlogic/gdx/GdxTests.gwt.xml
+@@ -26,11 +26,12 @@
+ 		<exclude name="**/VorbisTest.java"/> <!-- native -->
+ 		<exclude name="**/WavTest.java"/> <!-- naive -->
+ 		<exclude name="**/AssetsFileGenerator.java"/> <!-- utility -->
+-		<exclude name="**/GdxTests.java"/> <!-- utilty -->
+-		<exclude name="**/InternationalFontsTest.java"/> <!-- utilty -->
++		<exclude name="**/GdxTests.java"/> <!-- utility -->
++		<exclude name="**/InternationalFontsTest.java"/> <!-- utility -->
+ 		<exclude name="**/BulletTestCollection.java"/> <!-- native -->
+ 		<exclude name="**/bullet/"/> <!-- native -->
+ 		<exclude name="**/FloatTextureTest.java"/> <!-- GLES 2.0 extension -->
+ 		<exclude name="**/GLEEDTest.java"/>
++		<exclude name="**/NetAPITest.java"/> <!-- abuses FileHandle() -->
+ 	</source>
+ </module>
+\ No newline at end of file
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/GLEEDTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/GLEEDTest.java
+index 36eec89..303a4db 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/GLEEDTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/GLEEDTest.java
+@@ -63,7 +63,6 @@ public class GleedTest extends GdxTest {
+ 		manager = new AssetManager();
+ 		camera = new OrthographicCamera(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+ 		camera.zoom = 2.0f;
+-		GleedMapLoader.setLoggingLevel(Logger.INFO);
+ 		manager.setLoader(Map.class, new GleedMapLoader(new InternalFileHandleResolver()));
+ 		manager.load("data/gleedtest.xml", Map.class);
+ 		manager.load("data/font.fnt", BitmapFont.class);
+@@ -90,9 +89,8 @@ public class GleedTest extends GdxTest {
+ 		}
+ 		
+ 		if (state == State.Running) {
+-			renderer.begin();
+-			renderer.render(camera);
+-			renderer.end();
++			renderer.setView(camera);
++			renderer.render();
+ 			
+ 			if (Gdx.input.isKeyPressed(Keys.UP)) {
+ 				camera.position.y += 5.0f;
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/TiledMapAssetManagerTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/TiledMapAssetManagerTest.java
+index 38f6e2b..5ecab6a 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/TiledMapAssetManagerTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/TiledMapAssetManagerTest.java
+@@ -9,8 +9,8 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
+ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+ import com.badlogic.gdx.maps.tiled.TiledMap;
+ import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
+-import com.badlogic.gdx.maps.tiled.TiledMapRenderer.IsometricTiledMapRenderer;
+ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
++import com.badlogic.gdx.maps.tiled.renderers.IsometricTiledMapRenderer;
+ import com.badlogic.gdx.tests.utils.GdxTest;
+ import com.badlogic.gdx.tests.utils.OrthoCamController;
+ 
+@@ -20,10 +20,9 @@ public class TiledMapAssetManagerTest extends GdxTest {
+ 	private TiledMapRenderer renderer;
+ 	private OrthographicCamera camera;
+ 	private OrthoCamController cameraController;
+-	
+-	AssetManager assetManager;
+-	BitmapFont font;
+-	SpriteBatch batch;
++	private AssetManager assetManager;
++	private BitmapFont font;
++	private SpriteBatch batch;
+ 	
+ 	@Override
+ 	public void create() {		
+@@ -32,6 +31,7 @@ public class TiledMapAssetManagerTest extends GdxTest {
+ 		
+ 		camera = new OrthographicCamera();
+ 		camera.setToOrtho(false, (w / h) * 10, 10);
++		camera.zoom = 2;
+ 		camera.update();
+ 		
+ 		cameraController = new OrthoCamController(camera);
+@@ -54,9 +54,7 @@ public class TiledMapAssetManagerTest extends GdxTest {
+ 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+ 		camera.update();
+ 		renderer.setView(camera);
+-		renderer.begin();
+ 		renderer.render();
+-		renderer.end();
+ 		batch.begin();
+ 		font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 10, 20); 
+ 		batch.end();
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/TiledMapDirectLoaderTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/TiledMapDirectLoaderTest.java
+index 27921c3..2a22b5f 100755
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/TiledMapDirectLoaderTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/TiledMapDirectLoaderTest.java
+@@ -1,23 +1,14 @@
+ package com.badlogic.gdx.tests;
+ 
+ import com.badlogic.gdx.Gdx;
+-import com.badlogic.gdx.InputAdapter;
+-import com.badlogic.gdx.assets.AssetManager;
+-import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
+ import com.badlogic.gdx.graphics.GL10;
+ import com.badlogic.gdx.graphics.OrthographicCamera;
+-import com.badlogic.gdx.graphics.Texture;
+ import com.badlogic.gdx.graphics.g2d.BitmapFont;
+ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+-import com.badlogic.gdx.maps.MapLayer;
+ import com.badlogic.gdx.maps.tiled.TiledMap;
+ import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
+-import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
+ import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+-import com.badlogic.gdx.maps.tiled.TiledMapRenderer.IsometricTiledMapRenderer;
+-import com.badlogic.gdx.maps.tiled.TiledMapRenderer.OrthogonalTiledMapRenderer2;
+-import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+-import com.badlogic.gdx.math.Vector3;
++import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+ import com.badlogic.gdx.tests.utils.GdxTest;
+ import com.badlogic.gdx.tests.utils.OrthoCamController;
+ 
+@@ -27,9 +18,8 @@ public class TiledMapDirectLoaderTest extends GdxTest {
+ 	private TiledMapRenderer renderer;
+ 	private OrthographicCamera camera;
+ 	private OrthoCamController cameraController;
+-	
+-	BitmapFont font;
+-	SpriteBatch batch;
++	private BitmapFont font;
++	private SpriteBatch batch;
+ 	
+ 	@Override
+ 	public void create() {		
+@@ -47,7 +37,7 @@ public class TiledMapDirectLoaderTest extends GdxTest {
+ 		batch = new SpriteBatch();
+ 		
+ 		map = new TmxMapLoader().load("data/maps/tiles.tmx");
+-		renderer = new OrthogonalTiledMapRenderer2(map, 1f / 32f);
++		renderer = new OrthogonalTiledMapRenderer(map, 1f / 32f);
+ 	}
+ 
+ 	@Override
+@@ -56,9 +46,7 @@ public class TiledMapDirectLoaderTest extends GdxTest {
+ 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+ 		camera.update();
+ 		renderer.setView(camera);
+-		renderer.begin();
+ 		renderer.render();
+-		renderer.end();
+ 		batch.begin();
+ 		font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 10, 20); 
+ 		batch.end();
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bench/TiledMapBench.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bench/TiledMapBench.java
+index a9ca8cc..c593d46 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bench/TiledMapBench.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bench/TiledMapBench.java
+@@ -12,12 +12,13 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
+ import com.badlogic.gdx.maps.MapLayers;
+ import com.badlogic.gdx.maps.tiled.TiledMap;
+ import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
+-import com.badlogic.gdx.maps.tiled.TiledMapRenderer.OrthogonalTiledMapRenderer;
+-import com.badlogic.gdx.maps.tiled.TiledMapRenderer.OrthogonalTiledMapRenderer2;
+ import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
++import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
++import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer2;
+ import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile;
+ import com.badlogic.gdx.math.Vector3;
+ import com.badlogic.gdx.tests.utils.GdxTest;
++import com.badlogic.gdx.tests.utils.OrthoCamController;
+ 
+ public class TiledMapBench extends GdxTest {
+ 	
+@@ -25,15 +26,11 @@ public class TiledMapBench extends GdxTest {
+ 	private TiledMapRenderer renderer;
+ 	private OrthographicCamera camera;
+ 	private OrthoCamController cameraController;
+-	
+-	AssetManager assetManager;
+-	
+-	Texture tiles;
+-	
+-	Texture texture;
+-	
+-	BitmapFont font;
+-	SpriteBatch batch;
++	private AssetManager assetManager;
++	private Texture tiles;
++	private Texture texture;
++	private BitmapFont font;
++	private SpriteBatch batch;
+ 	
+ 	@Override
+ 	public void create() {		
+@@ -76,56 +73,11 @@ public class TiledMapBench extends GdxTest {
+ 	public void render() {
+ 		Gdx.gl.glClearColor(100f / 255f, 100f / 255f, 250f / 255f, 1f);
+ 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+-		if (cameraController.dirty) {
+-			camera.update();
+-			renderer.setView(camera);
+-			cameraController.dirty = false;
+-			((OrthogonalTiledMapRenderer2) renderer).recache = true;
+-		}
+-		renderer.begin();
++		camera.update();
++		renderer.setView(camera);
+ 		renderer.render();
+-		renderer.end();
+ 		batch.begin();
+ 		font.draw(batch, "FPS: " + Gdx.graphics.getFramesPerSecond(), 10, 20); 
+ 		batch.end();
+ 	}
+-	
+-	public class OrthoCamController extends InputAdapter {
+-		final OrthographicCamera camera;
+-		final Vector3 curr = new Vector3();
+-		final Vector3 last = new Vector3(-1, -1, -1);
+-		final Vector3 delta = new Vector3();
+-
+-		boolean dirty = true;
+-		
+-		public OrthoCamController (OrthographicCamera camera) {
+-			this.camera = camera;
+-		}
+-
+-		@Override
+-		public boolean touchDragged (int x, int y, int pointer) {
+-			camera.unproject(curr.set(x, y, 0));
+-			if (!(last.x == -1 && last.y == -1 && last.z == -1)) {
+-				camera.unproject(delta.set(last.x, last.y, 0));
+-				delta.sub(curr);
+-				camera.position.add(delta.x, delta.y, 0);
+-				dirty = true;
+-			}
+-			last.set(x, y, 0);
+-			return false;
+-		}
+-
+-		@Override
+-		public boolean touchUp (int x, int y, int pointer, int button) {
+-			last.set(-1, -1, -1);
+-			return false;
+-		}
+-	}
+-
+-	@Override
+-	public boolean needsGL20 () {
+-		// TODO Auto-generated method stub
+-		return false;
+-	}
+-	
+ }
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/gwt/GwtTestWrapper.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/gwt/GwtTestWrapper.java
+index ce25b41..526e810 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/gwt/GwtTestWrapper.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/gwt/GwtTestWrapper.java
+@@ -16,6 +16,7 @@
+ 
+ package com.badlogic.gdx.tests.gwt;
+ 
++import com.badlogic.gdx.Application;
+ import com.badlogic.gdx.Gdx;
+ import com.badlogic.gdx.Input;
+ import com.badlogic.gdx.InputAdapter;
+@@ -77,6 +78,7 @@ import com.badlogic.gdx.tests.ParticleEmitterTest;
+ import com.badlogic.gdx.tests.PixelsPerInchTest;
+ import com.badlogic.gdx.tests.ProjectiveTextureTest;
+ import com.badlogic.gdx.tests.RotationTest;
++import com.badlogic.gdx.tests.RunnablePostTest;
+ import com.badlogic.gdx.tests.ShadowMappingTest;
+ import com.badlogic.gdx.tests.ShapeRendererTest;
+ import com.badlogic.gdx.tests.SimpleAnimationTest;
+@@ -103,10 +105,13 @@ public class GwtTestWrapper extends GdxTest {
+ 	Skin skin;
+ 	BitmapFont font;
+ 	GdxTest test;
+-	boolean dispose;
++	boolean dispose = false;
+ 
+ 	@Override
+ 	public void create () {
++		Gdx.app.setLogLevel(Application.LOG_DEBUG);
++		Gdx.app.log("GdxTestGwt", "Setting up for " +tests.length+ " tests.");
++		
+ 		ui = new Stage(Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), true);
+ 		skin = new Skin(Gdx.files.internal("data/uiskin.json"));
+ 		font = new BitmapFont(Gdx.files.internal("data/arial-15.fnt"), false);
+@@ -125,6 +130,7 @@ public class GwtTestWrapper extends GdxTest {
+ 				public void clicked (InputEvent event, float x, float y) {
+ 					((InputWrapper)Gdx.input).multiplexer.removeProcessor(ui);
+ 					test = instancer.instance();
++					Gdx.app.log("GdxTestGwt", "Clicked on " + test.getClass().getName());
+ 					test.create();
+ 					test.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+ 				}
+@@ -139,14 +145,19 @@ public class GwtTestWrapper extends GdxTest {
+ 			@Override
+ 			public boolean keyUp (int keycode) {
+ 				if (keycode == Keys.ESCAPE) {
+-					dispose = true;
++					if (test != null) {
++						Gdx.app.log("GdxTestGwt", "Exiting current test.");
++						dispose = true;
++					}
+ 				}
+ 				return false;
+ 			}
+ 		};
+ 		((InputWrapper)Gdx.input).multiplexer.addProcessor(ui);
++		
++		Gdx.app.log("GdxTestGwt", "Test picker UI setup complete.");
+ 	}
+-
++	
+ 	public void render () {
+ 		if (test == null) {
+ 			Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+@@ -174,6 +185,9 @@ public class GwtTestWrapper extends GdxTest {
+ 	public void resize (int width, int height) {
+ 		ui.setViewport(width, height, false);
+ 		container.setSize(width, height);
++		if (test != null) {
++			test.resize(width, height);
++		}
+ 	}
+ 
+ 	class InputWrapper extends InputAdapter implements Input {
+@@ -562,7 +576,8 @@ public class GwtTestWrapper extends GdxTest {
+ 			public GdxTest instance () {
+ 				return new RotationTest();
+ 			}
+-		},
++		}, 
++// new Instancer() {public GdxTest instance(){return new RunnablePostTest();}}, // Goes into infinite loop
+ // new Instancer() {public GdxTest instance(){return new ScrollPaneTest();}}, // FIXME this messes up stuff, why?
+ // new Instancer() {public GdxTest instance(){return new ShaderMultitextureTest();}}, // FIXME fucks up stuff
+ 		new Instancer() {

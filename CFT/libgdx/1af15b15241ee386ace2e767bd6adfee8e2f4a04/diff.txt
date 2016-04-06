@@ -1,0 +1,674 @@
+diff --git a/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwApplication.java b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwApplication.java
+index 1c5024e..dc042b1 100644
+--- a/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwApplication.java
++++ b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwApplication.java
+@@ -13,8 +13,6 @@ import com.badlogic.gdx.utils.Array;
+ import com.badlogic.gdx.utils.Clipboard;
+ import com.badlogic.gdx.utils.GdxNativesLoader;
+ import com.badlogic.gdx.utils.GdxRuntimeException;
+-import com.badlogic.jglfw.GlfwCallbackAdapter;
+-import com.badlogic.jglfw.GlfwCallbacks;
+ 
+ import java.util.HashMap;
+ import java.util.Map;
+@@ -34,7 +32,6 @@ public class JglfwApplication implements Application {
+ 	final Array<LifecycleListener> lifecycleListeners = new Array();
+ 	final Map<String, Preferences> preferences = new HashMap();
+ 	final JglfwClipboard clipboard = new JglfwClipboard();
+-	final GlfwCallbacks callbacks = new GlfwCallbacks();
+ 	boolean running = true;
+ 	int logLevel = LOG_INFO;
+ 
+@@ -56,7 +53,7 @@ public class JglfwApplication implements Application {
+ 		this(listener, new JglfwApplicationConfiguration());
+ 	}
+ 
+-	public JglfwApplication (final ApplicationListener listener, JglfwApplicationConfiguration config) {
++	public JglfwApplication (ApplicationListener listener, JglfwApplicationConfiguration config) {
+ 		this.listener = listener;
+ 		this.config = config;
+ 
+@@ -66,73 +63,67 @@ public class JglfwApplication implements Application {
+ 		Gdx.app = this;
+ 		Gdx.graphics = graphics = new JglfwGraphics(config);
+ 		Gdx.files = files = new JglfwFiles();
+-		Gdx.input = input = new JglfwInput(this);
++		Gdx.input = input = new JglfwInput(graphics);
+ 		Gdx.net = net = new JglfwNet();
+ 
+-		glfwSetCallback(callbacks);
+-		callbacks.add(new GlfwCallbackAdapter() {
+-			public void windowSize (long window, int width, int height) {
+-				Gdx.gl.glViewport(0, 0, width, height);
+-				if (listener != null) listener.resize(width, height);
+-				graphics.requestRendering();
+-			}
+-
+-			public void windowRefresh (long window) {
+-				renderFrame();
+-			}
+-
+-			public void windowPos (long window, int x, int y) {
+-			}
+-
+-			public void windowIconify (long window, boolean iconified) {
+-			}
+-
+-			public void windowFocus (long window, boolean focused) {
+-			}
+-
+-			public boolean windowClose (long window) {
+-				return true;
+-			}
+-
+-			public void monitor (long monitor, boolean connected) {
+-			}
+-
+-			public void error (int error, String description) {
+-				throw new GdxRuntimeException("GLFW error " + error + ": " + description);
+-			}
+-		});
+-
+ 		mainLoop();
+ 	}
+ 
+ 	private void mainLoop () {
+ 		listener.create();
+ 		listener.resize(graphics.getWidth(), graphics.getHeight());
++		graphics.resize = false;
++
++		int lastWidth = graphics.getWidth();
++		int lastHeight = graphics.getHeight();
+ 
+ 		graphics.lastTime = System.nanoTime();
+ 		while (running) {
+ 			if (glfwWindowShouldClose(graphics.window)) exit();
+ 
++			graphics.config.x = glfwGetWindowX(graphics.window);
++			graphics.config.y = glfwGetWindowY(graphics.window);
++			int width = glfwGetWindowWidth(graphics.window);
++			int height = glfwGetWindowHeight(graphics.window);
++			if (graphics.resize || width != graphics.config.width || height != graphics.config.height) {
++				graphics.resize = false;
++				Gdx.gl.glViewport(0, 0, width, height);
++				graphics.config.width = width;
++				graphics.config.height = height;
++				if (listener != null) listener.resize(width, height);
++				graphics.requestRendering();
++			}
++
+ 			synchronized (runnables) {
+ 				executedRunnables.clear();
+ 				executedRunnables.addAll(runnables);
+ 				runnables.clear();
+ 			}
+-			if (executedRunnables.size > 0) {
+-				for (int i = 0; i < executedRunnables.size; i++)
+-					executedRunnables.get(i).run();
+-				if (!running) break;
+-				graphics.requestRendering();
++
++			boolean shouldRender = false;
++			for (int i = 0; i < executedRunnables.size; i++) {
++				shouldRender = true;
++				executedRunnables.get(i).run(); // calls out to random app code that could do anything ...
+ 			}
+ 
+-			input.update();
++			// If one of the runnables set running to false, for example after an exit().
++			if (!running) break;
++
++			input.resetStates();
++			glfwPollEvents();
++			shouldRender |= graphics.shouldRender();
++
++			// If input processing set running to false.
+ 			if (!running) break;
+ 
+-			if (graphics.shouldRender())
+-				renderFrame();
+-			else {
++			if (shouldRender) {
++				graphics.updateTime();
++				listener.render();
++				glfwSwapBuffers(graphics.window);
++			} else {
++				// Avoid burning CPU when not rendering.
+ 				try {
+-					Thread.sleep(16); // Avoid wasting CPU when not rendering.
++					Thread.sleep(16);
+ 				} catch (InterruptedException ignored) {
+ 				}
+ 			}
+@@ -151,12 +142,6 @@ public class JglfwApplication implements Application {
+ 		if (graphics.config.forceExit) System.exit(-1);
+ 	}
+ 
+-	void renderFrame () {
+-		graphics.updateTime();
+-		listener.render();
+-		glfwSwapBuffers(graphics.window);
+-	}
+-
+ 	public ApplicationListener getApplicationListener () {
+ 		return listener;
+ 	}
+@@ -275,8 +260,4 @@ public class JglfwApplication implements Application {
+ 			lifecycleListeners.removeValue(listener, true);
+ 		}
+ 	}
+-
+-	public GlfwCallbacks getCallbacks () {
+-		return callbacks;
+-	}
+ }
+diff --git a/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwApplicationConfiguration.java b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwApplicationConfiguration.java
+index 81814b3..5bf605d 100644
+--- a/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwApplicationConfiguration.java
++++ b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwApplicationConfiguration.java
+@@ -31,4 +31,6 @@ public class JglfwApplicationConfiguration {
+ 	public boolean useGL20 = false;
+ 	/** whether to call System.exit() when the main loop exits **/
+ 	public boolean forceExit = true;
++	
++	// FIXME add methods to allow enumeration of monitors/display modes before creating the application
+ }
+diff --git a/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwGraphics.java b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwGraphics.java
+index 25cfc78..95ea941 100644
+--- a/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwGraphics.java
++++ b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwGraphics.java
+@@ -39,6 +39,7 @@ public class JglfwGraphics implements Graphics {
+ 	JglfwGL20 gl20;
+ 
+ 	boolean sync;
++	boolean resize;
+ 	volatile boolean requestRendering;
+ 
+ 	public JglfwGraphics (JglfwApplicationConfiguration config) {
+@@ -46,6 +47,11 @@ public class JglfwGraphics implements Graphics {
+ 
+ 		bufferFormat = new BufferFormat(config.r, config.g, config.b, config.a, config.depth, config.stencil, config.samples, false);
+ 
++		createWindow();
++		createGL();
++	}
++
++	private void createWindow () {
+ 		long fullscreenMonitor = glfwGetPrimaryMonitor();
+ 		long[] monitors = glfwGetMonitors();
+ 		// Find index of primary monitor.
+@@ -64,19 +70,21 @@ public class JglfwGraphics implements Graphics {
+ 		}
+ 
+ 		// Create window.
+-		if (!createWindow(config.width, config.height, config.fullscreen)) {
++		if (!setDisplayMode(config.width, config.height, config.fullscreen)) {
+ 			throw new GdxRuntimeException("Unable to create window: " + config.width + "x" + config.height + ", fullscreen: "
+ 				+ config.fullscreen);
+ 		}
+-		if (config.x != -1 && config.y != -1) glfwSetWindowPos(window, config.x, config.y);
++
+ 		setVSync(config.vSync);
++		if (config.x != -1 && config.y != -1) glfwSetWindowPos(window, config.x, config.y);
++	}
+ 
+-		// Create GL.
++	private void createGL () {
+ 		String version = GL.glGetString(GL11.GL_VERSION);
+ 		glMajorVersion = Integer.parseInt("" + version.charAt(0));
+ 		glMinorVersion = Integer.parseInt("" + version.charAt(2));
++
+ 		if (config.useGL20 && (glMajorVersion >= 2 || version.contains("2.1"))) { // special case for MESA, wtf...
+-			// FIXME - Add check for whether GL 2.0 is actually supported.
+ 			gl20 = new JglfwGL20();
+ 			gl = gl20;
+ 		} else {
+@@ -89,6 +97,7 @@ public class JglfwGraphics implements Graphics {
+ 			}
+ 			gl = gl10;
+ 		}
++
+ 		Gdx.gl = gl;
+ 		Gdx.gl10 = gl10;
+ 		Gdx.gl11 = gl11;
+@@ -181,6 +190,7 @@ public class JglfwGraphics implements Graphics {
+ 	}
+ 
+ 	public DisplayMode[] getDisplayModes () {
++		// FIXME this should use GLFW methods on the current monitor in use
+ 		GraphicsDevice device = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+ 		java.awt.DisplayMode desktopMode = device.getDisplayMode();
+ 		java.awt.DisplayMode[] displayModes = device.getDisplayModes();
+@@ -197,57 +207,51 @@ public class JglfwGraphics implements Graphics {
+ 	}
+ 
+ 	public DisplayMode getDesktopDisplayMode () {
++		// FIXME this should use GLFW APIs using the current monitor
+ 		java.awt.DisplayMode mode = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDisplayMode();
+ 		return new JglfwDisplayMode(mode.getWidth(), mode.getHeight(), mode.getRefreshRate(), mode.getBitDepth());
+ 	}
+ 
+ 	public boolean setDisplayMode (DisplayMode displayMode) {
+-		if (displayMode.bitsPerPixel != 0) glfwWindowHint(GLFW_DEPTH_BITS, displayMode.bitsPerPixel);
+-		if (displayMode.bitsPerPixel != 0 || config.fullscreen)
+-			return createWindow(displayMode.width, displayMode.height, config.fullscreen);
+-
+ 		glfwSetWindowSize(window, displayMode.width, displayMode.height);
+ 		return true;
+ 	}
+ 
+ 	public boolean setDisplayMode (int width, int height, boolean fullscreen) {
+-		if (window == 0 || fullscreen != config.fullscreen || config.fullscreen) return createWindow(width, height, fullscreen);
+-
+-		glfwSetWindowSize(window, width, height);
+-		return true;
+-	}
++		// FIXME shouldn't this check against Graphics.fullscreen instead of config.fullscreen?
++		if (window == 0 || fullscreen != config.fullscreen) {
++			long fullscreenMonitor = 0;
++			if (fullscreen) {
++				long[] monitors = glfwGetMonitors();
++				if (monitors.length > 0)
++					fullscreenMonitor = fullscreenMonitorIndex < monitors.length ? monitors[fullscreenMonitorIndex] : 0;
++			}
+ 
+-	private boolean createWindow (int width, int height, boolean fullscreen) {
+-		long fullscreenMonitor = 0;
+-		if (fullscreen) {
+-			long[] monitors = glfwGetMonitors();
+-			if (monitors.length > 0)
+-				fullscreenMonitor = fullscreenMonitorIndex < monitors.length ? monitors[fullscreenMonitorIndex] : 0;
++			// need to set the window hints every time we create a window, glfwCreateWindow resets them.
++			glfwWindowHint(GLFW_RESIZABLE, config.resizable ? 1 : 0);
++			glfwWindowHint(GLFW_RED_BITS, config.r);
++			glfwWindowHint(GLFW_GREEN_BITS, config.g);
++			glfwWindowHint(GLFW_BLUE_BITS, config.b);
++			glfwWindowHint(GLFW_ALPHA_BITS, config.a);
++			glfwWindowHint(GLFW_DEPTH_BITS, config.depth);
++			glfwWindowHint(GLFW_STENCIL_BITS, config.stencil);
++			glfwWindowHint(GLFW_SAMPLES, config.samples);
++
++			// share old window if any, so context service
++			long window = glfwCreateWindow(config.width, config.height, config.title, fullscreenMonitor, this.window);
++			if (window == 0) return false;
++			if (this.window != 0) glfwDestroyWindow(window);
++			glfwMakeContextCurrent(window);
++			this.window = window;
++			return true;
+ 		}
+-
+-		glfwWindowHint(GLFW_RESIZABLE, config.resizable ? 1 : 0);
+-		glfwWindowHint(GLFW_RED_BITS, config.r);
+-		glfwWindowHint(GLFW_GREEN_BITS, config.g);
+-		glfwWindowHint(GLFW_BLUE_BITS, config.b);
+-		glfwWindowHint(GLFW_ALPHA_BITS, config.a);
+-		glfwWindowHint(GLFW_DEPTH_BITS, config.depth);
+-		glfwWindowHint(GLFW_STENCIL_BITS, config.stencil);
+-		glfwWindowHint(GLFW_SAMPLES, config.samples);
+-		glfwWindowHint(GLFW_DEPTH_BITS, config.bitsPerPixel);
+-
+-		long oldWindow = window;
+-		long newWindow = glfwCreateWindow(width, height, config.title, fullscreenMonitor, oldWindow);
+-		if (newWindow == 0) return false;
+-		if (oldWindow != 0) glfwDestroyWindow(oldWindow);
+-		glfwMakeContextCurrent(newWindow);
+-		window = newWindow;
+-		config.fullscreen = fullscreen;
++		glfwSetWindowSize(window, width, height);
+ 		return true;
+ 	}
+ 
+ 	public void setTitle (String title) {
++		if(title == null) glfwSetWindowTitle(window, "");
+ 		glfwSetWindowTitle(window, title);
+-		config.title = title;
+ 	}
+ 
+ 	public void setVSync (boolean vsync) {
+@@ -278,6 +282,7 @@ public class JglfwGraphics implements Graphics {
+ 	}
+ 
+ 	public boolean isFullscreen () {
++		// FIXME should use Graphics.fullscreen as config is never changed, no?
+ 		return config.fullscreen;
+ 	}
+ 
+diff --git a/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwInput.java b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwInput.java
+index 526ab94..001b7ff 100644
+--- a/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwInput.java
++++ b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwInput.java
+@@ -3,9 +3,11 @@ package com.badlogic.gdx.backends.jglfw;
+ 
+ import static com.badlogic.jglfw.Glfw.*;
+ 
++import com.badlogic.gdx.Gdx;
+ import com.badlogic.gdx.Input;
+ import com.badlogic.gdx.InputProcessor;
+-import com.badlogic.jglfw.GlfwCallbackAdapter;
++import com.badlogic.gdx.utils.GdxRuntimeException;
++import com.badlogic.jglfw.GlfwCallback;
+ 
+ import java.awt.Color;
+ import java.awt.FlowLayout;
+@@ -27,62 +29,61 @@ import javax.swing.event.DocumentListener;
+  * @author mzechner
+  * @author Nathan Sweet */
+ public class JglfwInput implements Input {
+-	JglfwApplication app;
++	JglfwGraphics graphics;
+ 	InputProcessor processor;
+ 	int pressedKeys = 0;
+-	boolean justTouched;
++	boolean justTouched = false;
++	long currentEventTimeStamp;
+ 	int deltaX, deltaY;
+ 
+-	public JglfwInput (final JglfwApplication app) {
+-		this.app = app;
++	public JglfwInput (JglfwGraphics graphics) {
++		this.graphics = graphics;
+ 
+-		app.callbacks.add(new GlfwCallbackAdapter() {
++		glfwSetCallback(new GlfwCallback() {
+ 			private int mouseX, mouseY, mousePressed;
+ 			private char lastCharacter;
+ 
+ 			public void key (long window, int key, int action) {
+ 				switch (action) {
+ 				case GLFW_PRESS:
+-					pressedKeys++;
+ 					if (processor != null) processor.keyDown(getGdxKeyCode(key));
+ 					break;
+ 				case GLFW_RELEASE:
+-					pressedKeys--;
+ 					if (processor != null) processor.keyDown(getGdxKeyCode(key));
+ 					break;
+ 				case GLFW_REPEAT:
+ 					if (processor != null && lastCharacter != 0) processor.keyTyped(lastCharacter);
+ 					break;
+ 				}
+-				app.graphics.requestRendering();
++				Gdx.graphics.requestRendering();
+ 			}
+ 
+ 			public void character (long window, char character) {
++				// FIXME controll chars like backspace aren't reported by this callback but
++				// key instead
+ 				lastCharacter = character;
+ 				if (processor != null) processor.keyTyped(character);
+-				app.graphics.requestRendering();
++				Gdx.graphics.requestRendering();
+ 			}
+ 
+ 			public void scroll (long window, double scrollX, double scrollY) {
+ 				if (processor != null) processor.scrolled((int)-Math.signum(scrollY));
+-				app.graphics.requestRendering();
++				Gdx.graphics.requestRendering();
+ 			}
+ 
+ 			public void mouseButton (long window, int button, boolean pressed) {
+ 				if (pressed) {
+ 					mousePressed++;
+-					if (processor != null) processor.touchDown(mouseX, mouseY, 0, button);
+ 					justTouched = true;
++					if (processor != null) processor.touchDown(mouseX, mouseY, 0, button);
+ 				} else {
+ 					mousePressed--;
+ 					if (processor != null) processor.touchUp(mouseX, mouseY, 0, button);
+ 				}
+-				app.graphics.requestRendering();
++				Gdx.graphics.requestRendering();
+ 			}
+ 
+ 			public void cursorPos (long window, int x, int y) {
+-				deltaX = x - mouseX;
+-				deltaY = y - mouseX;
+ 				mouseX = x;
+ 				mouseY = y;
+ 				if (processor != null) {
+@@ -91,17 +92,38 @@ public class JglfwInput implements Input {
+ 					else
+ 						processor.mouseMoved(mouseX, mouseY);
+ 				}
+-				app.graphics.requestRendering();
++				Gdx.graphics.requestRendering();
+ 			}
+ 
+ 			public void cursorEnter (long window, boolean entered) {
+ 			}
+-		});
+-	}
+ 
+-	public void update () {
+-		justTouched = false;
+-		glfwPollEvents();
++			public void windowSize (long window, int width, int height) {
++			}
++
++			public void windowRefresh (long window) {
++			}
++
++			public void windowPos (long window, int x, int y) {
++			}
++
++			public void windowIconify (long window, boolean iconified) {
++			}
++
++			public void windowFocus (long window, boolean focused) {
++			}
++
++			public boolean windowClose (long window) {
++				return true;
++			}
++
++			public void monitor (long monitor, boolean connected) {
++			}
++
++			public void error (int error, String description) {
++				throw new GdxRuntimeException("GLFW error " + error + ": " + description);
++			}
++		});
+ 	}
+ 
+ 	public float getAccelerometerX () {
+@@ -117,7 +139,7 @@ public class JglfwInput implements Input {
+ 	}
+ 
+ 	public int getX () {
+-		return glfwGetCursorPosX(app.graphics.window);
++		return glfwGetCursorPosX(graphics.window);
+ 	}
+ 
+ 	public int getX (int pointer) {
+@@ -128,7 +150,7 @@ public class JglfwInput implements Input {
+ 	}
+ 
+ 	public int getY () {
+-		return app.graphics.getHeight() - 1 - glfwGetCursorPosY(app.graphics.window);
++		return graphics.getHeight() - 1 - glfwGetCursorPosY(graphics.window);
+ 	}
+ 
+ 	public int getY (int pointer) {
+@@ -161,8 +183,12 @@ public class JglfwInput implements Input {
+ 	}
+ 
+ 	public boolean isTouched () {
+-		return glfwGetMouseButton(app.graphics.window, 0) || glfwGetMouseButton(app.graphics.window, 1)
+-			|| glfwGetMouseButton(app.graphics.window, 2);
++		return glfwGetMouseButton(graphics.window, 0) || glfwGetMouseButton(graphics.window, 1)
++			|| glfwGetMouseButton(graphics.window, 2);
++	}
++
++	public boolean justTouched () {
++		return justTouched;
+ 	}
+ 
+ 	public boolean isTouched (int pointer) {
+@@ -172,26 +198,22 @@ public class JglfwInput implements Input {
+ 			return isTouched();
+ 	}
+ 
+-	public boolean justTouched () {
+-		return justTouched;
+-	}
+-
+ 	public boolean isButtonPressed (int button) {
+-		return glfwGetMouseButton(app.graphics.window, button);
++		return glfwGetMouseButton(graphics.window, button);
+ 	}
+ 
+ 	public boolean isKeyPressed (int key) {
+ 		if (key == Input.Keys.ANY_KEY)
+ 			return pressedKeys > 0;
+ 		else
+-			return glfwGetKey(app.graphics.window, key);
++			return glfwGetKey(graphics.window, key);
+ 	}
+ 
+ 	public void getTextInput (final TextInputListener listener, final String title, final String text) {
+ 		SwingUtilities.invokeLater(new Runnable() {
+ 			public void run () {
+ 				final String output = JOptionPane.showInputDialog(null, title, text);
+-				app.postRunnable(new Runnable() {
++				Gdx.app.postRunnable(new Runnable() {
+ 					public void run () {
+ 						if (output != null)
+ 							listener.input(output);
+@@ -299,7 +321,7 @@ public class JglfwInput implements Input {
+ 	}
+ 
+ 	public long getCurrentEventTime () {
+-		return 0;
++		return currentEventTimeStamp;
+ 	}
+ 
+ 	public void setCatchBackKey (boolean catchBack) {
+@@ -317,7 +339,8 @@ public class JglfwInput implements Input {
+ 	}
+ 
+ 	public boolean isPeripheralAvailable (Peripheral peripheral) {
+-		return peripheral == Peripheral.HardwareKeyboard;
++		if (peripheral == Peripheral.HardwareKeyboard) return true;
++		return false;
+ 	}
+ 
+ 	public int getRotation () {
+@@ -329,18 +352,18 @@ public class JglfwInput implements Input {
+ 	}
+ 
+ 	public void setCursorCatched (boolean captured) {
+-		glfwSetInputMode(app.graphics.window, GLFW_CURSOR_MODE, captured ? GLFW_CURSOR_CAPTURED : GLFW_CURSOR_NORMAL);
++		glfwSetInputMode(graphics.window, GLFW_CURSOR_MODE, captured ? GLFW_CURSOR_CAPTURED : GLFW_CURSOR_NORMAL);
+ 	}
+ 
+ 	public boolean isCursorCatched () {
+-		return glfwGetInputMode(app.graphics.window, GLFW_CURSOR_MODE) == GLFW_CURSOR_CAPTURED;
++		return glfwGetInputMode(graphics.window, GLFW_CURSOR_MODE) == GLFW_CURSOR_CAPTURED;
+ 	}
+ 
+ 	public void setCursorPosition (int x, int y) {
+-		glfwSetCursorPos(app.graphics.window, x, y);
++		glfwSetCursorPos(graphics.window, x, y);
+ 	}
+ 
+-	static public int getGdxKeyCode (int lwjglKeyCode) {
++	public static int getGdxKeyCode (int lwjglKeyCode) {
+ 		switch (lwjglKeyCode) {
+ 		case GLFW_KEY_LEFT_BRACKET:
+ 			return Input.Keys.LEFT_BRACKET;
+@@ -541,7 +564,7 @@ public class JglfwInput implements Input {
+ 		}
+ 	}
+ 
+-	static public int getJglfwKeyCode (int gdxKeyCode) {
++	public static int getJglfwKeyCode (int gdxKeyCode) {
+ 		switch (gdxKeyCode) {
+ 		case Input.Keys.LEFT_BRACKET:
+ 			return GLFW_KEY_LEFT_BRACKET;
+@@ -705,4 +728,8 @@ public class JglfwInput implements Input {
+ 			return 0;
+ 		}
+ 	}
++
++	public void resetStates () {
++		justTouched = false;
++	}
+ }
+diff --git a/tests/gdx-tests-jglfw/src/com/badlogic/gdx/jglfw/tests/JglfwDebugStarter.java b/tests/gdx-tests-jglfw/src/com/badlogic/gdx/jglfw/tests/JglfwDebugStarter.java
+index 6ccd542..b2655f9 100644
+--- a/tests/gdx-tests-jglfw/src/com/badlogic/gdx/jglfw/tests/JglfwDebugStarter.java
++++ b/tests/gdx-tests-jglfw/src/com/badlogic/gdx/jglfw/tests/JglfwDebugStarter.java
+@@ -3,6 +3,7 @@ package com.badlogic.gdx.jglfw.tests;
+ 
+ import com.badlogic.gdx.backends.jglfw.JglfwApplication;
+ import com.badlogic.gdx.backends.jglfw.JglfwApplicationConfiguration;
++import com.badlogic.gdx.tests.FullscreenTest;
+ import com.badlogic.gdx.tests.SpriteBatchShaderTest;
+ import com.badlogic.gdx.tests.VertexArrayTest;
+ import com.badlogic.gdx.tests.superkoalio.SuperKoalio;
+@@ -19,7 +20,7 @@ public class JglfwDebugStarter {
+ 			.load("gdx-controllers-desktop");
+ 		new SharedLibraryLoader("../../gdx/libs/gdx-natives.jar").load("gdx");
+ 
+-		GdxTest test = new SpriteBatchShaderTest();
++		GdxTest test = new FullscreenTest();
+ 		JglfwApplicationConfiguration config = new JglfwApplicationConfiguration();
+ 		config.useGL20 = test.needsGL20();
+ 		new JglfwApplication(test, config);
+diff --git a/tests/gdx-tests-lwjgl/src/com/badlogic/gdx/tests/lwjgl/LwjglDebugStarter.java b/tests/gdx-tests-lwjgl/src/com/badlogic/gdx/tests/lwjgl/LwjglDebugStarter.java
+index 0449a69..0e58b1c 100644
+--- a/tests/gdx-tests-lwjgl/src/com/badlogic/gdx/tests/lwjgl/LwjglDebugStarter.java
++++ b/tests/gdx-tests-lwjgl/src/com/badlogic/gdx/tests/lwjgl/LwjglDebugStarter.java
+@@ -18,6 +18,7 @@ package com.badlogic.gdx.tests.lwjgl;
+ 
+ import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
+ import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
++import com.badlogic.gdx.tests.FullscreenTest;
+ import com.badlogic.gdx.tests.InputTest;
+ import com.badlogic.gdx.tests.TideMapAssetManagerTest;
+ import com.badlogic.gdx.tests.TideMapDirectLoaderTest;
+@@ -37,7 +38,7 @@ public class LwjglDebugStarter {
+ 		new SharedLibraryLoader("../../extensions/gdx-controllers/gdx-controllers-desktop/libs/gdx-controllers-desktop-natives.jar").load("gdx-controllers-desktop");
+ 		new SharedLibraryLoader("../../gdx/libs/gdx-natives.jar").load("gdx");
+ 
+-		GdxTest test = new SuperKoalio();
++		GdxTest test = new FullscreenTest();
+ 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
+ 		config.useGL20 = test.needsGL20();
+ 		new LwjglApplication(test, config);
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/FullscreenTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/FullscreenTest.java
+index 5511a48..069451d 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/FullscreenTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/FullscreenTest.java
+@@ -29,6 +29,7 @@ public class FullscreenTest extends GdxTest {
+ 
+ 	Mesh mesh;
+ 	Texture texture;
++	boolean fullscreen = false;
+ 
+ 	@Override
+ 	public void create () {
+@@ -41,7 +42,6 @@ public class FullscreenTest extends GdxTest {
+ 		for (DisplayMode mode : modes) {
+ 			System.out.println(mode);
+ 		}
+-		Gdx.graphics.setDisplayMode(800, 600, true);
+ 		Gdx.app.log("FullscreenTest", Gdx.graphics.getBufferFormat().toString());
+ 	}
+ 
+@@ -59,7 +59,14 @@ public class FullscreenTest extends GdxTest {
+ 		mesh.render(GL10.GL_TRIANGLES);
+ 
+ 		if (Gdx.input.justTouched()) {
+-			Gdx.graphics.setDisplayMode(480, 320, false);
++			if(fullscreen) {
++				Gdx.graphics.setDisplayMode(480, 320, false);
++				fullscreen = false;
++			} else {
++				DisplayMode desktopDisplayMode = Gdx.graphics.getDesktopDisplayMode();
++				Gdx.graphics.setDisplayMode(desktopDisplayMode.width, desktopDisplayMode.height, true);
++				fullscreen = true;
++			}
+ 		}
+ 	}
+ 

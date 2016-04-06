@@ -1,0 +1,4640 @@
+diff --git a/CHANGES b/CHANGES
+index 3fbdb85..9fb83e0 100644
+--- a/CHANGES
++++ b/CHANGES
+@@ -1,6 +1,11 @@
+-[0.9.9]
+-- support 'size' as a json skin data value for BitmapFont
++[1.0.0]
+ - added setAlpha(float a) method to Sprite class
++- added Input.Keys.toString(int keycode) and Input.Keys.valueOf(String keyname) methods
++- added Immersive Mode support to Android backend
++- added user object to Actor
++- altered Android's hide status bar behavior
++-- changed the way wakelocks are implemented. You no longer need any special permissions for the libgdx wakelock
++[0.9.9]
+ - added setCursorImage method to Input interface to support custom mouse cursors on the desktop
+ - removed Xamarin backend, see http://www.badlogicgames.com/wordpress/?p=3213
+ - added Select class for selecting kth ordered statistic from arrays (see Array.selectRanked() method)
+diff --git a/CONTRIBUTORS b/CONTRIBUTORS
+index 63be361..5226edf 100644
+--- a/CONTRIBUTORS
++++ b/CONTRIBUTORS
+@@ -165,4 +165,5 @@ caniep https://github.com/caniep
+ jrenner https://github.com/jrenner
+ sinistersnare https://github.com/sinistersnare
+ Ranzdo https://github.com/Ranzdo
+-mbforbes https://github.com/mbforbes
+\ No newline at end of file
++mbforbes https://github.com/mbforbes
++Unkn0wn0ne https://github.com/Unkn0wn0ne
+\ No newline at end of file
+diff --git a/backends/gdx-backend-android/.classpath b/backends/gdx-backend-android/.classpath
+index f768115..132e7f4 100644
+--- a/backends/gdx-backend-android/.classpath
++++ b/backends/gdx-backend-android/.classpath
+@@ -3,6 +3,6 @@
+ 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/gdx"/>
+ 	<classpathentry excluding="**/.svn/*" kind="src" path="src"/>
+ 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+-	<classpathentry kind="lib" path="libs/android-4.2.jar"/>
++	<classpathentry kind="lib" path="libs/android-4.4.jar"/>
+ 	<classpathentry kind="output" path="bin"/>
+ </classpath>
+diff --git a/backends/gdx-backend-android/libs/android-4.2.jar b/backends/gdx-backend-android/libs/android-4.2.jar
+deleted file mode 100755
+index 13c2539..0000000
+Binary files a/backends/gdx-backend-android/libs/android-4.2.jar and /dev/null differ
+diff --git a/backends/gdx-backend-android/libs/android-4.4.jar b/backends/gdx-backend-android/libs/android-4.4.jar
+new file mode 100644
+index 0000000..b9d655e
+Binary files /dev/null and b/backends/gdx-backend-android/libs/android-4.4.jar differ
+diff --git a/backends/gdx-backend-android/pom.xml b/backends/gdx-backend-android/pom.xml
+index 3778c4b..50b3c85 100644
+--- a/backends/gdx-backend-android/pom.xml
++++ b/backends/gdx-backend-android/pom.xml
+@@ -25,7 +25,7 @@
+       <artifactId>android</artifactId>
+       <version>${android.version}</version>
+       <scope>system</scope>
+-      <systemPath>${basedir}/libs/android-4.2.jar</systemPath>
++      <systemPath>${basedir}/libs/android-4.4.jar</systemPath>
+       <optional>true</optional>
+     </dependency>
+   </dependencies>
+diff --git a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidApplication.java b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidApplication.java
+index e8bdf9b..ca0b44d 100644
+--- a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidApplication.java
++++ b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidApplication.java
+@@ -24,8 +24,6 @@ import android.content.res.Configuration;
+ import android.os.Bundle;
+ import android.os.Debug;
+ import android.os.Handler;
+-import android.os.PowerManager;
+-import android.os.PowerManager.WakeLock;
+ import android.util.Log;
+ import android.view.Gravity;
+ import android.view.View;
+@@ -73,8 +71,10 @@ public class AndroidApplication extends Activity implements Application {
+ 	protected final Array<Runnable> runnables = new Array<Runnable>();
+ 	protected final Array<Runnable> executedRunnables = new Array<Runnable>();
+ 	protected final Array<LifecycleListener> lifecycleListeners = new Array<LifecycleListener>();
+-	protected WakeLock wakeLock = null;
+ 	protected int logLevel = LOG_INFO;
++	protected boolean useImmersiveMode = false;
++	protected boolean hideStatusBar = false;
++	protected boolean useWakelock = false;
+ 
+ 	/** This method has to be called in the {@link Activity#onCreate(Bundle)} method. It sets up all the things necessary to get
+ 	 * input, render via OpenGL and so on. If useGL20IfAvailable is set the AndroidApplication will try to create an OpenGL ES 2.0
+@@ -109,7 +109,10 @@ public class AndroidApplication extends Activity implements Application {
+ 		net = new AndroidNet(this);
+ 		this.listener = listener;
+ 		this.handler = new Handler();
+-
++		this.useImmersiveMode = config.useImmersiveMode;
++		this.hideStatusBar = config.hideStatusBar;
++		this.useWakelock = config.useWakelock;
++		
+ 		Gdx.app = this;
+ 		Gdx.input = this.getInput();
+ 		Gdx.audio = this.getAudio();
+@@ -125,8 +128,19 @@ public class AndroidApplication extends Activity implements Application {
+ 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+ 		getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+ 		setContentView(graphics.getView(), createLayoutParams());
+-		createWakeLock(config);
+-		hideStatusBar(config);
++		createWakeLock(this.useWakelock);
++		hideStatusBar(this.hideStatusBar);
++		useImmersiveMode(this.useImmersiveMode);
++		if (this.useImmersiveMode && getVersion() >= 19) {
++			try {
++				Class vlistener = Class.forName("com.badlogic.gdx.backends.android.AndroidVisibilityListener");
++				Object o = vlistener.newInstance();
++				Method method = vlistener.getDeclaredMethod("createListener", AndroidApplication.class);
++				method.invoke(o, this);
++			} catch (Exception e) {
++				log("AndroidApplication", "Failed to create AndroidVisibilityListener");
++			}
++		}
+ 	}
+ 
+ 	protected FrameLayout.LayoutParams createLayoutParams () {
+@@ -136,16 +150,14 @@ public class AndroidApplication extends Activity implements Application {
+ 		return layoutParams;
+ 	}
+ 
+-	protected void createWakeLock (AndroidApplicationConfiguration config) {
+-		if (config.useWakelock) {
+-			PowerManager powerManager = (PowerManager)getSystemService(Context.POWER_SERVICE);
+-			wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK, "libgdx wakelock");
++	protected void createWakeLock (boolean use) {
++		if (use) {
++			getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+ 		}
+ 	}
+ 
+-	protected void hideStatusBar (AndroidApplicationConfiguration config) {
+-		if (!config.hideStatusBar || getVersion() < 11)
+-			return;
++	protected void hideStatusBar (boolean hide) {
++		if (!hide || getVersion() < 11) return;
+ 
+ 		View rootView = getWindow().getDecorView();
+ 
+@@ -158,6 +170,31 @@ public class AndroidApplication extends Activity implements Application {
+ 		}
+ 	}
+ 
++	@Override
++	public void onWindowFocusChanged (boolean hasFocus) {
++		super.onWindowFocusChanged(hasFocus);
++		useImmersiveMode(this.useImmersiveMode);
++		hideStatusBar(this.hideStatusBar);
++	}
++
++	protected void useImmersiveMode (boolean use) {
++		if (!use || getVersion() < 19) return;
++
++		View view = getWindow().getDecorView();
++		try {
++			Method m = View.class.getMethod("setSystemUiVisibility", int.class);
++			int code = View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
++			code ^= View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
++			code ^= View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
++			code ^= View.SYSTEM_UI_FLAG_FULLSCREEN;
++			code ^= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
++			code ^= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
++			m.invoke(view, code);
++		} catch (Exception e) {
++			log("AndroidApplication", "Can't set immersive mode", e);
++		}
++	}
++
+ 	/** This method has to be called in the {@link Activity#onCreate(Bundle)} method. It sets up all the things necessary to get
+ 	 * input, render via OpenGL and so on. If useGL20IfAvailable is set the AndroidApplication will try to create an OpenGL ES 2.0
+ 	 * context which can then be used via {@link Graphics#getGL20()}. The {@link GL10} and {@link GL11} interfaces should not be
+@@ -197,7 +234,10 @@ public class AndroidApplication extends Activity implements Application {
+ 		net = new AndroidNet(this);
+ 		this.listener = listener;
+ 		this.handler = new Handler();
+-
++		this.useImmersiveMode = config.useImmersiveMode;
++		this.hideStatusBar = config.hideStatusBar;
++		this.useWakelock = config.useWakelock;
++		
+ 		Gdx.app = this;
+ 		Gdx.input = this.getInput();
+ 		Gdx.audio = this.getAudio();
+@@ -205,14 +245,24 @@ public class AndroidApplication extends Activity implements Application {
+ 		Gdx.graphics = this.getGraphics();
+ 		Gdx.net = this.getNet();
+ 
+-		createWakeLock(config);
+-		hideStatusBar(config);
++		createWakeLock(this.useWakelock);
++		hideStatusBar(this.hideStatusBar);
++		useImmersiveMode(this.useImmersiveMode);
++		if (this.useImmersiveMode && getVersion() >= 19) {
++			try {
++				Class vlistener = Class.forName("com.badlogic.gdx.backends.android.AndroidVisibilityListener");
++				Object o = vlistener.newInstance();
++				Method method = vlistener.getDeclaredMethod("createListener", AndroidApplication.class);
++				method.invoke(o, this);
++			} catch (Exception e) {
++				log("AndroidApplication", "Failed to create AndroidVisibilityListener");
++			}
++		}
+ 		return graphics.getView();
+ 	}
+ 
+ 	@Override
+ 	protected void onPause () {
+-		if (wakeLock != null) wakeLock.release();
+ 		boolean isContinuous = graphics.isContinuousRendering();
+ 		graphics.setContinuousRendering(true);
+ 		graphics.pause();
+@@ -245,7 +295,6 @@ public class AndroidApplication extends Activity implements Application {
+ 
+ 	@Override
+ 	protected void onResume () {
+-		if (wakeLock != null) wakeLock.acquire();
+ 		Gdx.app = this;
+ 		Gdx.input = this.getInput();
+ 		Gdx.audio = this.getAudio();
+@@ -277,7 +326,7 @@ public class AndroidApplication extends Activity implements Application {
+ 	public ApplicationListener getApplicationListener () {
+ 		return listener;
+ 	}
+-	
++
+ 	@Override
+ 	public Audio getAudio () {
+ 		return audio;
+@@ -297,7 +346,7 @@ public class AndroidApplication extends Activity implements Application {
+ 	public Input getInput () {
+ 		return input;
+ 	}
+-	
++
+ 	@Override
+ 	public Net getNet () {
+ 		return net;
+@@ -329,15 +378,15 @@ public class AndroidApplication extends Activity implements Application {
+ 	}
+ 
+ 	AndroidClipboard clipboard;
+-	
++
+ 	@Override
+-	public Clipboard getClipboard() {
++	public Clipboard getClipboard () {
+ 		if (clipboard == null) {
+ 			clipboard = new AndroidClipboard(this);
+ 		}
+ 		return clipboard;
+ 	}
+-	
++
+ 	@Override
+ 	public void postRunnable (Runnable runnable) {
+ 		synchronized (runnables) {
+@@ -404,21 +453,21 @@ public class AndroidApplication extends Activity implements Application {
+ 	}
+ 
+ 	@Override
+-	public int getLogLevel() {
++	public int getLogLevel () {
+ 		return logLevel;
+ 	}
+ 
+ 	@Override
+ 	public void addLifecycleListener (LifecycleListener listener) {
+-		synchronized(lifecycleListeners) {
++		synchronized (lifecycleListeners) {
+ 			lifecycleListeners.add(listener);
+ 		}
+ 	}
+ 
+ 	@Override
+ 	public void removeLifecycleListener (LifecycleListener listener) {
+-		synchronized(lifecycleListeners) {
++		synchronized (lifecycleListeners) {
+ 			lifecycleListeners.removeValue(listener, true);
+-		}		
++		}
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidApplicationConfiguration.java b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidApplicationConfiguration.java
+index bdc8d26..61fd862 100644
+--- a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidApplicationConfiguration.java
++++ b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidApplicationConfiguration.java
+@@ -17,7 +17,6 @@
+ package com.badlogic.gdx.backends.android;
+ 
+ import android.media.SoundPool;
+-import android.os.PowerManager.WakeLock;
+ 
+ import com.badlogic.gdx.audio.Sound;
+ import com.badlogic.gdx.backends.android.surfaceview.FillResolutionStrategy;
+@@ -51,8 +50,7 @@ public class AndroidApplicationConfiguration {
+ 	 * pre Android 2.0 devices. default: 0 **/
+ 	public int touchSleepTime = 0;
+ 
+-	/** whether to use a {@link WakeLock} or not. In case this is true you have to add the permission "android.permission.WAKE_LOCK"
+-	 * to your manifest file. default: false */
++	/** whether to keep the screen on and at full brightness or not while running the application. default: false */
+ 	public boolean useWakelock = false;
+ 
+ 	/** hide status bar buttons on Android 4.x and higher (API 14+). Doesn't work if "android:targetSdkVersion" less 11 or if API
+@@ -73,4 +71,7 @@ public class AndroidApplicationConfiguration {
+ 	 * In case this is true {@link GLSurfaceViewAPI18} will be used. This implementation properly supports attach to and detach
+ 	 * from window. default: false */
+ 	public boolean useGLSurfaceViewAPI18 = false;
++	
++	/** set this to true to enable Android 4.4 KitKat's 'Immersive mode' **/
++	public boolean useImmersiveMode = false;
+ }
+diff --git a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidMusic.java b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidMusic.java
+index f735fce..d66dbe6 100644
+--- a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidMusic.java
++++ b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidMusic.java
+@@ -97,12 +97,12 @@ public class AndroidMusic implements Music, MediaPlayer.OnCompletionListener {
+ 		player.setVolume(volume, volume);
+ 		this.volume = volume;
+ 	}
+-	
++
+ 	@Override
+ 	public float getVolume () {
+ 		return volume;
+ 	}
+-	
++
+ 	@Override
+ 	public void setPan (float pan, float volume) {
+ 		float leftVolume = volume;
+@@ -127,13 +127,31 @@ public class AndroidMusic implements Music, MediaPlayer.OnCompletionListener {
+ 		isPrepared = false;
+ 	}
+ 
++	public void setPosition (float position) {
++		try {
++			if (!isPrepared) {
++				player.prepare();
++				isPrepared = true;
++			}
++			player.seekTo((int)(position * 1000));
++		} catch (IllegalStateException e) {
++			e.printStackTrace();
++		} catch (IOException e) {
++			e.printStackTrace();
++		}
++	}
++
+ 	@Override
+ 	public float getPosition () {
+ 		return player.getCurrentPosition() / 1000f;
+ 	}
+-	
++
++	public float getDuration () {
++		return player.getDuration() / 1000f;
++	}
++
+ 	@Override
+-	public void setOnCompletionListener(OnCompletionListener listener) {
++	public void setOnCompletionListener (OnCompletionListener listener) {
+ 		onCompletionListener = listener;
+ 	}
+ 
+@@ -148,4 +166,4 @@ public class AndroidMusic implements Music, MediaPlayer.OnCompletionListener {
+ 			});
+ 		}
+ 	};
+-}
+\ No newline at end of file
++}
+diff --git a/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidVisibilityListener.java b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidVisibilityListener.java
+new file mode 100644
+index 0000000..8c17d18
+--- /dev/null
++++ b/backends/gdx-backend-android/src/com/badlogic/gdx/backends/android/AndroidVisibilityListener.java
+@@ -0,0 +1,44 @@
++/*******************************************************************************
++ * Copyright 2011 See AUTHORS file.
++ * 
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ * 
++ *   http://www.apache.org/licenses/LICENSE-2.0
++ * 
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ ******************************************************************************/
++package com.badlogic.gdx.backends.android;
++
++import android.view.View;
++
++/**
++ * Allows immersive mode support while maintaining Android 1.5 compatibility
++ * @author Unkn0wn0ne
++ */
++public class AndroidVisibilityListener {
++
++	public void createListener (final AndroidApplication application) {
++		try {
++			View rootView = application.getWindow().getDecorView();
++			rootView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
++				@Override
++				public void onSystemUiVisibilityChange (int arg0) {
++					application.handler.post(new Runnable() {
++						@Override
++						public void run () {
++							application.useImmersiveMode(true);
++						}
++					});
++				}
++			});
++		} catch (Throwable t) {
++			application.log("AndroidApplication", "Can't create OnSystemUiVisibilityChangeListener", t);
++		}
++	}
++}
+\ No newline at end of file
+diff --git a/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwApplication.java b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwApplication.java
+index 8ccfd2e..b350da7 100644
+--- a/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwApplication.java
++++ b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/JglfwApplication.java
+@@ -221,8 +221,12 @@ public class JglfwApplication implements Application {
+ 			if (graphics.shouldRender()) render(frameStartTime);
+ 		}
+ 
+-		if (targetFPS != 0)
+-			sleep(targetFPS == -1 ? 100 : (int)(1000f / targetFPS - (System.nanoTime() - frameStartTime) / 1000000f));
++		if (targetFPS != 0) {
++			if (targetFPS == -1)
++				sleep(100);
++			else
++				Sync.sync(targetFPS);
++		}
+ 	}
+ 
+ 	public boolean executeRunnables () {
+@@ -354,7 +358,7 @@ public class JglfwApplication implements Application {
+ 	}
+ 
+ 	@Override
+-	public int getLogLevel() {
++	public int getLogLevel () {
+ 		return logLevel;
+ 	}
+ 
+@@ -412,4 +416,4 @@ public class JglfwApplication implements Application {
+ 	public GlfwCallbacks getCallbacks () {
+ 		return callbacks;
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/Sync.java b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/Sync.java
+new file mode 100644
+index 0000000..899a55a
+--- /dev/null
++++ b/backends/gdx-backend-jglfw/src/com/badlogic/gdx/backends/jglfw/Sync.java
+@@ -0,0 +1,155 @@
++/*
++ * Copyright (c) 2002-2012 LWJGL Project
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions are
++ * met:
++ *
++ * * Redistributions of source code must retain the above copyright
++ *   notice, this list of conditions and the following disclaimer.
++ *
++ * * Redistributions in binary form must reproduce the above copyright
++ *   notice, this list of conditions and the following disclaimer in the
++ *   documentation and/or other materials provided with the distribution.
++ *
++ * * Neither the name of 'LWJGL' nor the names of
++ *   its contributors may be used to endorse or promote products derived
++ *   from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
++ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
++ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
++ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
++ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
++ * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++ * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
++ * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++package com.badlogic.gdx.backends.jglfw;
++
++/** A highly accurate sync method that continually adapts to the system it runs on to provide reliable results.
++ * 
++ * @author Riven
++ * @author kappaOne */
++class Sync {
++	/** number of nano seconds in a second */
++	private static final long NANOS_IN_SECOND = 1000L * 1000L * 1000L;
++
++	/** The time to sleep/yield until the next frame */
++	private static long nextFrame = 0;
++
++	/** whether the initialisation code has run */
++	private static boolean initialised = false;
++
++	/** for calculating the averages the previous sleep/yield times are stored */
++	private static RunningAvg sleepDurations = new RunningAvg(10);
++	private static RunningAvg yieldDurations = new RunningAvg(10);
++
++	/** An accurate sync method that will attempt to run at a constant frame rate. It should be called once every frame.
++	 * 
++	 * @param fps - the desired frame rate, in frames per second */
++	public static void sync (int fps) {
++		if (fps <= 0) return;
++		if (!initialised) initialise();
++
++		try {
++			// sleep until the average sleep time is greater than the time remaining till nextFrame
++			for (long t0 = System.nanoTime(), t1; (nextFrame - t0) > sleepDurations.avg(); t0 = t1) {
++				Thread.sleep(1);
++				sleepDurations.add((t1 = System.nanoTime()) - t0); // update average sleep time
++			}
++
++			// slowly dampen sleep average if too high to avoid yielding too much
++			sleepDurations.dampenForLowResTicker();
++
++			// yield until the average yield time is greater than the time remaining till nextFrame
++			for (long t0 = System.nanoTime(), t1; (nextFrame - t0) > yieldDurations.avg(); t0 = t1) {
++				Thread.yield();
++				yieldDurations.add((t1 = System.nanoTime()) - t0); // update average yield time
++			}
++		} catch (InterruptedException e) {
++
++		}
++
++		// schedule next frame, drop frame(s) if already too late for next frame
++		nextFrame = Math.max(nextFrame + NANOS_IN_SECOND / fps, System.nanoTime());
++	}
++
++	/** This method will initialise the sync method by setting initial values for sleepDurations/yieldDurations and nextFrame.
++	 * 
++	 * If running on windows it will start the sleep timer fix. */
++	private static void initialise () {
++		initialised = true;
++
++		sleepDurations.init(1000 * 1000);
++		yieldDurations.init((int)(-(System.nanoTime() - System.nanoTime()) * 1.333));
++
++		nextFrame = System.nanoTime();
++
++		String osName = System.getProperty("os.name");
++
++		if (osName.startsWith("Win")) {
++			// On windows the sleep functions can be highly inaccurate by
++			// over 10ms making in unusable. However it can be forced to
++			// be a bit more accurate by running a separate sleeping daemon
++			// thread.
++			Thread timerAccuracyThread = new Thread(new Runnable() {
++				public void run () {
++					try {
++						Thread.sleep(Long.MAX_VALUE);
++					} catch (Exception e) {
++					}
++				}
++			});
++
++			timerAccuracyThread.setName("LWJGL Sync");
++			timerAccuracyThread.setDaemon(true);
++			timerAccuracyThread.start();
++		}
++	}
++
++	private static class RunningAvg {
++		private final long[] slots;
++		private int offset;
++
++		private static final long DAMPEN_THRESHOLD = 10 * 1000L * 1000L; // 10ms
++		private static final float DAMPEN_FACTOR = 0.9f; // don't change: 0.9f is exactly right!
++
++		public RunningAvg (int slotCount) {
++			this.slots = new long[slotCount];
++			this.offset = 0;
++		}
++
++		public void init (long value) {
++			while (this.offset < this.slots.length) {
++				this.slots[this.offset++] = value;
++			}
++		}
++
++		public void add (long value) {
++			this.slots[this.offset++ % this.slots.length] = value;
++			this.offset %= this.slots.length;
++		}
++
++		public long avg () {
++			long sum = 0;
++			for (int i = 0; i < this.slots.length; i++) {
++				sum += this.slots[i];
++			}
++			return sum / this.slots.length;
++		}
++
++		public void dampenForLowResTicker () {
++			if (this.avg() > DAMPEN_THRESHOLD) {
++				for (int i = 0; i < this.slots.length; i++) {
++					this.slots[i] *= DAMPEN_FACTOR;
++				}
++			}
++		}
++	}
++}
+diff --git a/backends/gdx-backend-robovm/src/com/badlogic/gdx/backends/iosrobovm/IOSMusic.java b/backends/gdx-backend-robovm/src/com/badlogic/gdx/backends/iosrobovm/IOSMusic.java
+index 938d5c1..dba2c8b 100644
+--- a/backends/gdx-backend-robovm/src/com/badlogic/gdx/backends/iosrobovm/IOSMusic.java
++++ b/backends/gdx-backend-robovm/src/com/badlogic/gdx/backends/iosrobovm/IOSMusic.java
+@@ -90,6 +90,10 @@ public class IOSMusic implements Music {
+ 		track.setVolume(volume);
+ 	}
+ 
++	public void setPosition (float position) {
++		track.setCurrentTime(position / 1000);
++	}
++
+ 	@Override
+ 	public float getPosition () {
+ 		return (float) (track.getCurrentTime() * 1000.0);
+diff --git a/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/files/FileHandle.java b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/files/FileHandle.java
+index 756cdfb..a8a8529 100644
+--- a/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/files/FileHandle.java
++++ b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/files/FileHandle.java
+@@ -18,7 +18,6 @@ package com.badlogic.gdx.files;
+ 
+ import java.io.BufferedInputStream;
+ import java.io.BufferedReader;
+-import java.io.File;
+ import java.io.InputStream;
+ import java.io.OutputStream;
+ import java.io.Reader;
+@@ -124,6 +123,15 @@ public class FileHandle {
+ 		throw new GdxRuntimeException("Stub");
+ 	}
+ 
++	/** Returns a buffered stream for writing to this file. Parent directories will be created if necessary.
++	 * @param append If false, this file will be overwritten if it exists, otherwise it will be appended.
++	 * @param bufferSize The size of the buffer.
++	 * @throws GdxRuntimeException if this file handle represents a directory, if it is a {@link FileType#Classpath} or
++	 *            {@link FileType#Internal} file, or if it could not be written. */
++	public OutputStream write (boolean append, int bufferSize) {
++		throw new GdxRuntimeException("Stub");
++	}
++
+ 	/** Reads the remaining bytes from the specified stream and writes them to this file. The stream is closed. Parent directories
+ 	 * will be created if necessary.
+ 	 * @param append If false, this file will be overwritten if it exists, otherwise it will be appended.
+diff --git a/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/utils/reflect/Field.java b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/utils/reflect/Field.java
+index 081942d..b83d69c 100644
+--- a/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/utils/reflect/Field.java
++++ b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/utils/reflect/Field.java
+@@ -16,11 +16,8 @@
+ 
+ package com.badlogic.gdx.utils.reflect;
+ 
+-import java.lang.reflect.Modifier;
+-import java.lang.reflect.ParameterizedType;
+-import java.lang.reflect.Type;
+-
+ import com.badlogic.gwtref.client.ReflectionCache;
++import com.badlogic.gwtref.client.Type;
+ 
+ /** Provides information about, and access to, a single field of a class or interface.
+  * @author nexsoftware */
+@@ -103,7 +100,8 @@ public final class Field {
+ 	/** If the type of the field is parameterized, returns the Class object representing the parameter type at the specified index,
+ 	 * null otherwise. */
+ 	public Class getElementType (int index) {
+-		return field.getElementType(index).getClassOfType();
++		Type elementType = field.getElementType(index);
++		return elementType != null ? elementType.getClassOfType() : null;
+ 	}
+ 
+ 	/** Returns the value of the field on the supplied object. */
+diff --git a/build.xml b/build.xml
+index d395ff8..1c873fc 100644
+--- a/build.xml
++++ b/build.xml
+@@ -199,7 +199,7 @@
+ 			<pathelement location="${distDir}/gdx.jar"/>
+ 			<pathelement location="${distDir}/gdx-backend-android.jar"/>
+ 			<pathelement location="${distDir}/extensions/gdx-controllers/gdx-controllers.jar"/>
+-			<pathelement location="${basedir}/backends/gdx-backend-android/libs/android-4.2.jar"/>
++			<pathelement location="${basedir}/backends/gdx-backend-android/libs/android-4.4.jar"/>
+ 		</path>
+ 		<ant antfile="../../../build-template.xml" dir="extensions/gdx-controllers/gdx-controllers-android">
+ 			<property name="distDir" value="${distDir}/extensions/gdx-controllers"/>
+diff --git a/extensions/gdx-controllers/gdx-controllers-android/.classpath b/extensions/gdx-controllers/gdx-controllers-android/.classpath
+index 94cce81..fc07335 100644
+--- a/extensions/gdx-controllers/gdx-controllers-android/.classpath
++++ b/extensions/gdx-controllers/gdx-controllers-android/.classpath
+@@ -5,6 +5,6 @@
+ 	<classpathentry combineaccessrules="false" kind="src" path="/gdx"/>
+ 	<classpathentry combineaccessrules="false" kind="src" path="/gdx-backend-android"/>
+ 	<classpathentry combineaccessrules="false" kind="src" path="/gdx-controllers"/>
+-	<classpathentry kind="lib" path="/gdx-backend-android/libs/android-4.2.jar"/>
++	<classpathentry kind="lib" path="/gdx-backend-android/libs/android-4.4.jar"/>
+ 	<classpathentry kind="output" path="bin"/>
+ </classpath>
+diff --git a/extensions/gdx-setup-ui/src/aurelienribon/gdxsetupui/ProjectSetupConfiguration.java b/extensions/gdx-setup-ui/src/aurelienribon/gdxsetupui/ProjectSetupConfiguration.java
+index 573009a..493a69c 100644
+--- a/extensions/gdx-setup-ui/src/aurelienribon/gdxsetupui/ProjectSetupConfiguration.java
++++ b/extensions/gdx-setup-ui/src/aurelienribon/gdxsetupui/ProjectSetupConfiguration.java
+@@ -23,6 +23,6 @@ public class ProjectSetupConfiguration extends BaseProjectConfiguration {
+ 	public String mainClassName = "MyGdxGame";
+ 	public String packageName = "com.me.mygdxgame";
+ 	public String androidMinSdkVersion = "5";
+-	public String androidTargetSdkVersion = "17";
++	public String androidTargetSdkVersion = "19";
+ 	public String androidMaxSdkVersion = "";
+-}
+\ No newline at end of file
++}
+diff --git a/extensions/gdx-setup-ui/src/res/projects.zip b/extensions/gdx-setup-ui/src/res/projects.zip
+index 42f122e..d1aa5ea 100644
+Binary files a/extensions/gdx-setup-ui/src/res/projects.zip and b/extensions/gdx-setup-ui/src/res/projects.zip differ
+diff --git a/gdx/src/com/badlogic/gdx/Input.java b/gdx/src/com/badlogic/gdx/Input.java
+index 7ecebd1..2767aa0 100644
+--- a/gdx/src/com/badlogic/gdx/Input.java
++++ b/gdx/src/com/badlogic/gdx/Input.java
+@@ -268,29 +268,29 @@ public interface Input {
+ 				case ENDCALL:
+ 					return "End Call";
+ 				case NUM_0:
+-					return "Num 0";
++					return "0";
+ 				case NUM_1:
+-					return "Num 1";
++					return "1";
+ 				case NUM_2:
+-					return "Num 2";
++					return "2";
+ 				case NUM_3:
+-					return "Num 3";
++					return "3";
+ 				case NUM_4:
+-					return "Num 4";
++					return "4";
+ 				case NUM_5:
+-					return "Num 5";
++					return "5";
+ 				case NUM_6:
+-					return "Num 6";
++					return "6";
+ 				case NUM_7:
+-					return "Num 7";
++					return "7";
+ 				case NUM_8:
+-					return "Num 8";
++					return "8";
+ 				case NUM_9:
+-					return "Num 9";
++					return "9";
+ 				case STAR:
+-					return "Star";
++					return "*";
+ 				case POUND:
+-					return "Pound";
++					return "#";
+ 				case UP:
+ 					return "Up";
+ 				case DOWN:
+@@ -364,9 +364,9 @@ public interface Input {
+ 				case Z:
+ 					return "Z";
+ 				case COMMA:
+-					return "Comma";
++					return ",";
+ 				case PERIOD:
+-					return "Period";
++					return ".";
+ 				case ALT_LEFT:
+ 					return "L-Alt";
+ 				case ALT_RIGHT:
+@@ -390,29 +390,29 @@ public interface Input {
+ 				case DEL:
+ 					return "Delete";  // also BACKSPACE
+ 				case GRAVE:
+-					return "Grave";
++					return "`";
+ 				case MINUS:
+-					return "Minus";
++					return "-";
+ 				case EQUALS:
+-					return "Equals";
++					return "=";
+ 				case LEFT_BRACKET:
+-					return "Left Bracket";
++					return "[";
+ 				case RIGHT_BRACKET:
+-					return "Right Bracket";
++					return "]";
+ 				case BACKSLASH:
+-					return "Backslash";
++					return "\\";
+ 				case SEMICOLON:
+-					return "Semicolon";
++					return ";";
+ 				case APOSTROPHE:
+-					return "Apostrophe";
++					return "'";
+ 				case SLASH:
+-					return "Slash";
++					return "/";
+ 				case AT:
+ 					return "@";
+ 				case NUM:
+ 					return "Num";
+ 				case HEADSETHOOK:
+-					return "HEADSETHOOK";
++					return "Headset Hook";
+ 				case FOCUS:
+ 					return "Focus";
+ 				case PLUS:
+@@ -508,7 +508,7 @@ public interface Input {
+ 				case NUMPAD_9:
+ 					return "Numpad 9";
+ 				case COLON:
+-					return "Colon";
++					return ":";
+ 				case F1:
+ 					return "F1";
+ 				case F2:
+diff --git a/gdx/src/com/badlogic/gdx/assets/loaders/TextureLoader.java b/gdx/src/com/badlogic/gdx/assets/loaders/TextureLoader.java
+index f4df20c..6112737 100644
+--- a/gdx/src/com/badlogic/gdx/assets/loaders/TextureLoader.java
++++ b/gdx/src/com/badlogic/gdx/assets/loaders/TextureLoader.java
+@@ -76,9 +76,9 @@ public class TextureLoader extends AsynchronousAssetLoader<Texture, TextureLoade
+ 			}
+ 		} else {
+ 			info.data = parameter.textureData;
+-			if (!info.data.isPrepared()) info.data.prepare();
+ 			info.texture = parameter.texture;
+ 		}
++		if (!info.data.isPrepared()) info.data.prepare();
+ 	}
+ 
+ 	@Override
+diff --git a/gdx/src/com/badlogic/gdx/files/FileHandle.java b/gdx/src/com/badlogic/gdx/files/FileHandle.java
+index 0eccf2e..64a1824 100644
+--- a/gdx/src/com/badlogic/gdx/files/FileHandle.java
++++ b/gdx/src/com/badlogic/gdx/files/FileHandle.java
+@@ -23,6 +23,7 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
+ import com.badlogic.gdx.utils.StreamUtils;
+ 
+ import java.io.BufferedInputStream;
++import java.io.BufferedOutputStream;
+ import java.io.BufferedReader;
+ import java.io.File;
+ import java.io.FileInputStream;
+@@ -267,6 +268,15 @@ public class FileHandle {
+ 		}
+ 	}
+ 
++	/** Returns a buffered stream for writing to this file. Parent directories will be created if necessary.
++	 * @param append If false, this file will be overwritten if it exists, otherwise it will be appended.
++	 * @param bufferSize The size of the buffer.
++	 * @throws GdxRuntimeException if this file handle represents a directory, if it is a {@link FileType#Classpath} or
++	 *            {@link FileType#Internal} file, or if it could not be written. */
++	public OutputStream write (boolean append, int bufferSize) {
++		return new BufferedOutputStream(write(append), bufferSize);
++	}
++
+ 	/** Reads the remaining bytes from the specified stream and writes them to this file. The stream is closed. Parent directories
+ 	 * will be created if necessary.
+ 	 * @param append If false, this file will be overwritten if it exists, otherwise it will be appended.
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g2d/ParticleEmitter.java b/gdx/src/com/badlogic/gdx/graphics/g2d/ParticleEmitter.java
+index 9204d2b..4a8f8ab 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g2d/ParticleEmitter.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g2d/ParticleEmitter.java
+@@ -98,6 +98,7 @@ public class ParticleEmitter {
+ 	public ParticleEmitter (ParticleEmitter emitter) {
+ 		sprite = emitter.sprite;
+ 		name = emitter.name;
++		imagePath = emitter.imagePath;
+ 		setMaxParticleCount(emitter.maxParticleCount);
+ 		minParticleCount = emitter.minParticleCount;
+ 		delayValue.load(emitter.delayValue);
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g2d/PixmapPacker.java b/gdx/src/com/badlogic/gdx/graphics/g2d/PixmapPacker.java
+index 5e6878d..fd22575 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g2d/PixmapPacker.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g2d/PixmapPacker.java
+@@ -85,7 +85,7 @@ import com.badlogic.gdx.utils.OrderedMap;
+  * packer.dispose();
+  * </pre> */
+ public class PixmapPacker implements Disposable {
+-	
++
+ 	static final class Node {
+ 		public Node leftChild;
+ 		public Node rightChild;
+@@ -162,7 +162,7 @@ public class PixmapPacker implements Disposable {
+ 		Rectangle rect = new Rectangle(0, 0, image.getWidth() + borderPixels, image.getHeight() + borderPixels);
+ 		if (rect.getWidth() > pageWidth || rect.getHeight() > pageHeight)
+ 			throw new GdxRuntimeException("page size for '" + name + "' to small");
+-		
++
+ 		Node node = insert(currPage.root, rect);
+ 
+ 		if (node == null) {
+@@ -190,16 +190,19 @@ public class PixmapPacker implements Disposable {
+ 			this.currPage.image.drawPixmap(image, 0, 0, 1, 1, (int)rect.x - 1, (int)rect.y - 1, 1, 1);
+ 			this.currPage.image.drawPixmap(image, imageWidth - 1, 0, 1, 1, (int)rect.x + (int)rect.width, (int)rect.y - 1, 1, 1);
+ 			this.currPage.image.drawPixmap(image, 0, imageHeight - 1, 1, 1, (int)rect.x - 1, (int)rect.y + (int)rect.height, 1, 1);
+-			this.currPage.image.drawPixmap(image, imageWidth - 1, imageHeight - 1, 1, 1, (int)rect.x + (int)rect.width, (int)rect.y + (int)rect.height, 1, 1);
++			this.currPage.image.drawPixmap(image, imageWidth - 1, imageHeight - 1, 1, 1, (int)rect.x + (int)rect.width, (int)rect.y
++				+ (int)rect.height, 1, 1);
+ 			// Copy edge pixels into padding.
+ 			this.currPage.image.drawPixmap(image, 0, 0, imageWidth, 1, (int)rect.x, (int)rect.y - 1, (int)rect.width, 1);
+-			this.currPage.image.drawPixmap(image, 0, imageHeight - 1, imageWidth, 1, (int)rect.x, (int)rect.y + (int)rect.height, (int)rect.width, 1);
++			this.currPage.image.drawPixmap(image, 0, imageHeight - 1, imageWidth, 1, (int)rect.x, (int)rect.y + (int)rect.height,
++				(int)rect.width, 1);
+ 			this.currPage.image.drawPixmap(image, 0, 0, 1, imageHeight, (int)rect.x - 1, (int)rect.y, 1, (int)rect.height);
+-			this.currPage.image.drawPixmap(image, imageWidth - 1, 0, 1, imageHeight, (int)rect.x + (int)rect.width, (int)rect.y, 1, (int)rect.height);
++			this.currPage.image.drawPixmap(image, imageWidth - 1, 0, 1, imageHeight, (int)rect.x + (int)rect.width, (int)rect.y, 1,
++				(int)rect.height);
+ 		}
+-		
++
+ 		Pixmap.setBlending(blending);
+-		
++
+ 		currPage.addedRects.add(name);
+ 		return rect;
+ 	}
+@@ -284,12 +287,12 @@ public class PixmapPacker implements Disposable {
+ 		}
+ 		return null;
+ 	}
+-	
++
+ 	/** Returns the index of the page containing the given packed rectangle.
+ 	 * @param name the name of the image
+ 	 * @return the index of the page the image is stored in or -1 */
+ 	public synchronized int getPageIndex (String name) {
+-		for (int i=0; i<pages.size; i++) {
++		for (int i = 0; i < pages.size; i++) {
+ 			Rectangle rect = pages.get(i).rects.get(name);
+ 			if (rect != null) return i;
+ 		}
+@@ -315,7 +318,7 @@ public class PixmapPacker implements Disposable {
+ 		TextureAtlas atlas = new TextureAtlas();
+ 		for (Page page : pages) {
+ 			if (page.rects.size != 0) {
+-				Texture texture = new Texture(new PixmapTextureData(page.image, page.image.getFormat(), useMipMaps, true)) {
++				Texture texture = new Texture(new PixmapTextureData(page.image, page.image.getFormat(), useMipMaps, false, true)) {
+ 					@Override
+ 					public void dispose () {
+ 						super.dispose();
+@@ -343,7 +346,7 @@ public class PixmapPacker implements Disposable {
+ 		for (Page page : pages) {
+ 			if (page.texture == null) {
+ 				if (page.rects.size != 0 && page.addedRects.size > 0) {
+-					page.texture = new Texture(new PixmapTextureData(page.image, page.image.getFormat(), useMipMaps, true)) {
++					page.texture = new Texture(new PixmapTextureData(page.image, page.image.getFormat(), useMipMaps, false, true)) {
+ 						@Override
+ 						public void dispose () {
+ 							super.dispose();
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g2d/SpriteCache.java b/gdx/src/com/badlogic/gdx/graphics/g2d/SpriteCache.java
+index 10b6982..0b6886a 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g2d/SpriteCache.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g2d/SpriteCache.java
+@@ -33,6 +33,7 @@ import com.badlogic.gdx.math.Matrix4;
+ import com.badlogic.gdx.utils.Array;
+ import com.badlogic.gdx.utils.Disposable;
+ import com.badlogic.gdx.utils.GdxRuntimeException;
++import com.badlogic.gdx.utils.IntArray;
+ import com.badlogic.gdx.utils.NumberUtils;
+ 
+ import static com.badlogic.gdx.graphics.g2d.Sprite.*;
+@@ -79,7 +80,7 @@ public class SpriteCache implements Disposable {
+ 
+ 	private Cache currentCache;
+ 	private final Array<Texture> textures = new Array(8);
+-	private final Array<Integer> counts = new Array(8);
++	private final IntArray counts = new IntArray(8);
+ 
+ 	private float color = Color.WHITE.toFloatBits();
+ 	private Color tempColor = new Color(1, 1, 1, 1);
+@@ -247,7 +248,7 @@ public class SpriteCache implements Disposable {
+ 			textures.add(texture);
+ 			counts.add(count);
+ 		} else
+-			counts.set(lastIndex, counts.get(lastIndex) + count);
++			counts.incr(lastIndex, count);
+ 
+ 		mesh.getVerticesBuffer().put(vertices, offset, length);
+ 	}
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/attributes/DepthTestAttribute.java b/gdx/src/com/badlogic/gdx/graphics/g3d/attributes/DepthTestAttribute.java
+index 4b34143..db13b95 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/attributes/DepthTestAttribute.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/attributes/DepthTestAttribute.java
+@@ -37,7 +37,7 @@ public class DepthTestAttribute extends Attribute {
+    public float depthRangeNear;
+    /** Mapping of far clipping plane to window coordinates (default: 1) */
+    public float depthRangeFar;
+-   /** Whether to write to the depth mask, only applicable if depthFunc is non zero (default: true) */
++   /** Whether to write to the depth buffer (default: true) */
+    public boolean depthMask;
+ 
+    public DepthTestAttribute() {
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/shaders/DefaultShader.java b/gdx/src/com/badlogic/gdx/graphics/g3d/shaders/DefaultShader.java
+index f40523d..474917a 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/shaders/DefaultShader.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/shaders/DefaultShader.java
+@@ -353,7 +353,6 @@ public class DefaultShader extends BaseShader {
+ 	protected int pointLightsLoc;
+ 	protected int pointLightsColorOffset;
+ 	protected int pointLightsPositionOffset;
+-	protected int pointLightsIntensityOffset;
+ 	protected int pointLightsSize;
+ 
+ 	protected final boolean lighting;
+@@ -459,7 +458,6 @@ public class DefaultShader extends BaseShader {
+ 		pointLightsLoc 				= loc(u_pointLights0color);
+ 		pointLightsColorOffset 		= loc(u_pointLights0color) - pointLightsLoc;
+ 		pointLightsPositionOffset 	= loc(u_pointLights0position) - pointLightsLoc;
+-		pointLightsIntensityOffset = loc(u_pointLights0intensity) - pointLightsLoc;
+ 		pointLightsSize 				= loc(u_pointLights1color) - pointLightsLoc;
+ 		if (pointLightsSize < 0)
+ 			pointLightsSize = 0;
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/shaders/default.fragment.glsl b/gdx/src/com/badlogic/gdx/graphics/g3d/shaders/default.fragment.glsl
+index d7d223b..8e0749c 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/shaders/default.fragment.glsl
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/shaders/default.fragment.glsl
+@@ -165,8 +165,8 @@ void main() {
+ 	#endif //lightingFlag
+ 
+ 	#ifdef fogFlag
+-    	gl_FragColor.rgb = mix(gl_FragColor.rgb, u_fogColor.rgb, v_fog);
+-    #endif // end fogFlag
++		gl_FragColor.rgb = mix(gl_FragColor.rgb, u_fogColor.rgb, v_fog);
++	#endif // end fogFlag
+ 
+ 	#ifdef blendedFlag
+ 		gl_FragColor.a = diffuse.a * v_opacity;
+@@ -174,6 +174,8 @@ void main() {
+ 			if (gl_FragColor.a <= v_alphaTest)
+ 				discard;
+ 		#endif
++	#else
++		gl_FragColor.a = 1.0;
+ 	#endif
+ 
+ }
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/shaders/default.vertex.glsl b/gdx/src/com/badlogic/gdx/graphics/g3d/shaders/default.vertex.glsl
+index 46849d0..c14953d 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/shaders/default.vertex.glsl
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/shaders/default.vertex.glsl
+@@ -299,7 +299,7 @@ void main() {
+ 				vec3 value = u_dirLights[i].color * NdotL;
+ 				v_lightDiffuse += value;
+ 				#ifdef specularFlag
+-					float halfDotView = max(0, dot(normal, normalize(lightDir + viewVec)));
++					float halfDotView = max(0.0, dot(normal, normalize(lightDir + viewVec)));
+ 					v_lightSpecular += value * pow(halfDotView, u_shininess);
+ 				#endif // specularFlag
+ 			}
+@@ -314,7 +314,7 @@ void main() {
+ 				vec3 value = u_pointLights[i].color * (NdotL / (1.0 + dist2));
+ 				v_lightDiffuse += value;
+ 				#ifdef specularFlag
+-					float halfDotView = max(0, dot(normal, normalize(lightDir + viewVec)));
++					float halfDotView = max(0.0, dot(normal, normalize(lightDir + viewVec)));
+ 					v_lightSpecular += value * pow(halfDotView, u_shininess);
+ 				#endif // specularFlag
+ 			}
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/AnimationController.java b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/AnimationController.java
+index 95ebe53..3c25f42 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/AnimationController.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/AnimationController.java
+@@ -12,243 +12,243 @@
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+- ******************************************************************************/
+-
+-package com.badlogic.gdx.graphics.g3d.utils;
+-
+-import com.badlogic.gdx.Gdx;
+-import com.badlogic.gdx.graphics.g3d.ModelInstance;
+-import com.badlogic.gdx.graphics.g3d.model.Animation;
+-import com.badlogic.gdx.graphics.g3d.model.Node;
+-import com.badlogic.gdx.graphics.g3d.model.NodeAnimation;
+-import com.badlogic.gdx.graphics.g3d.model.NodeKeyframe;
+-import com.badlogic.gdx.math.Matrix4;
+-import com.badlogic.gdx.math.Quaternion;
+-import com.badlogic.gdx.math.Vector3;
+-import com.badlogic.gdx.utils.GdxRuntimeException;
+-import com.badlogic.gdx.utils.ObjectMap;
+-import com.badlogic.gdx.utils.ObjectMap.Entry;
+-import com.badlogic.gdx.utils.Pool;
+-import com.badlogic.gdx.utils.Pool.Poolable;
+-
+-/** Class to control one or more {@link Animation}s on a {@link ModelInstance}.
+- * Use the {@link #setAnimation(String, int, float, AnimationListener)} method to change the current animation.
+- * Use the {@link #animate(String, int, float, AnimationListener, float)} method to start an animation, 
+- * optionally blending onto the current animation.
+- * Use the {@link #queue(String, int, float, AnimationListener, float)} method to queue an animation to be played
+- * when the current animation is finished.
+- * Use the {@link #action(String, int, float, AnimationListener, float)} method to play a (short) animation on top
+- * of the current animation.
+- * 
+- * You can use multiple AnimationControllers on the same ModelInstance, as long as they don't interfere with each
+- * other (don't affect the same {@link Node}s).
+- * 
+- * @author Xoppa */
+-public class AnimationController extends BaseAnimationController {
+-	
+-	/** Listener that will be informed when an animation is looped or completed.
+-	 * @author Xoppa */
+-	public interface AnimationListener {
+-		/** Gets called when an animation is completed.
+-		 * @param animation The animation which just completed. */
+-		void onEnd(final AnimationDesc animation);
+-		/** Gets called when an animation is looped. The {@link AnimationDesc#loopCount} is updated prior to this call
+-		 * and can be read or written to alter the number of remaining loops. 
+-		 * @param animation The animation which just looped. */
+-		void onLoop(final AnimationDesc animation);
+-	}
+-	
+-	/** Class describing how to play and {@link Animation}. You can read the values within this class to get the
+-	 * progress of the animation. Do not change the values. Only valid when the animation is currently played.
+-	 * @author Xoppa */
+-	public static class AnimationDesc {
+-		/** Listener which will be informed when the animation is looped or ended. */
+-		public AnimationListener listener;
+-		/** The animation to be applied. */
+-		public Animation animation;
+-		/** The speed at which to play the animation (can be negative), 1.0 for normal speed. */
+-		public float speed;
+-		/** The current animation time. */
++ ******************************************************************************/
++
++package com.badlogic.gdx.graphics.g3d.utils;
++
++import com.badlogic.gdx.Gdx;
++import com.badlogic.gdx.graphics.g3d.ModelInstance;
++import com.badlogic.gdx.graphics.g3d.model.Animation;
++import com.badlogic.gdx.graphics.g3d.model.Node;
++import com.badlogic.gdx.graphics.g3d.model.NodeAnimation;
++import com.badlogic.gdx.graphics.g3d.model.NodeKeyframe;
++import com.badlogic.gdx.math.Matrix4;
++import com.badlogic.gdx.math.Quaternion;
++import com.badlogic.gdx.math.Vector3;
++import com.badlogic.gdx.utils.GdxRuntimeException;
++import com.badlogic.gdx.utils.ObjectMap;
++import com.badlogic.gdx.utils.ObjectMap.Entry;
++import com.badlogic.gdx.utils.Pool;
++import com.badlogic.gdx.utils.Pool.Poolable;
++
++/** Class to control one or more {@link Animation}s on a {@link ModelInstance}.
++ * Use the {@link #setAnimation(String, int, float, AnimationListener)} method to change the current animation.
++ * Use the {@link #animate(String, int, float, AnimationListener, float)} method to start an animation, 
++ * optionally blending onto the current animation.
++ * Use the {@link #queue(String, int, float, AnimationListener, float)} method to queue an animation to be played
++ * when the current animation is finished.
++ * Use the {@link #action(String, int, float, AnimationListener, float)} method to play a (short) animation on top
++ * of the current animation.
++ * 
++ * You can use multiple AnimationControllers on the same ModelInstance, as long as they don't interfere with each
++ * other (don't affect the same {@link Node}s).
++ * 
++ * @author Xoppa */
++public class AnimationController extends BaseAnimationController {
++	
++	/** Listener that will be informed when an animation is looped or completed.
++	 * @author Xoppa */
++	public interface AnimationListener {
++		/** Gets called when an animation is completed.
++		 * @param animation The animation which just completed. */
++		void onEnd(final AnimationDesc animation);
++		/** Gets called when an animation is looped. The {@link AnimationDesc#loopCount} is updated prior to this call
++		 * and can be read or written to alter the number of remaining loops. 
++		 * @param animation The animation which just looped. */
++		void onLoop(final AnimationDesc animation);
++	}
++	
++	/** Class describing how to play and {@link Animation}. You can read the values within this class to get the
++	 * progress of the animation. Do not change the values. Only valid when the animation is currently played.
++	 * @author Xoppa */
++	public static class AnimationDesc {
++		/** Listener which will be informed when the animation is looped or ended. */
++		public AnimationListener listener;
++		/** The animation to be applied. */
++		public Animation animation;
++		/** The speed at which to play the animation (can be negative), 1.0 for normal speed. */
++		public float speed;
++		/** The current animation time. */
+ 		public float time;
+ 		/** The offset within the animation (animation time = offsetTime + time) */
+ 		public float offset;
+ 		/** The duration of the animation */
+-		public float duration;
+-		/** The number of remaining loops, negative for continuous, zero if stopped. */
+-		public int loopCount;
+-		protected AnimationDesc() { }
+-		/** @return the remaining time or 0 if still animating. */
+-		protected float update(float delta) {
+-			if (loopCount != 0 && animation != null) {
+-				final float diff = speed * delta; 
+-				time += diff;
+-				int loops = (int)Math.abs(time / duration);
+-				if (time < 0f) {
+-					loops++;
+-					while (time < 0f)
+-						time += duration;
+-				}
+-				time = Math.abs(time % duration);
+-				for (int i = 0; i < loops; i++) {
+-					if (loopCount > 0)
+-						loopCount--;
+-					if (loopCount != 0 && listener != null)
+-						listener.onLoop(this);
+-					if (loopCount == 0) {
+-						final float result = ((loops - 1) - i) * duration + (diff < 0f ? duration - time : time); 
+-						time = (diff < 0f) ? duration : 0f;
+-						if (listener != null)
+-							listener.onEnd(this);
+-						return result;
+-					}
+-				}
+-				return 0f;
+-			} else
+-				return delta;
+-		}
+-	}
+-	protected final Pool<AnimationDesc> animationPool = new Pool<AnimationDesc>() {
+-		@Override
+-		protected AnimationDesc newObject() {
+-			return new AnimationDesc();
+-		}
+-	};
+-	
+-	/** The animation currently playing. Do not alter this value. */
+-	public AnimationDesc current;
+-	/** The animation queued to be played when the {@link #current} animation is completed. Do not alter this value. */
+-	public AnimationDesc queued;
+-	/** The transition time which should be applied to the queued animation. Do not alter this value. */
+-	public float queuedTransitionTime;
+-	/** The animation which previously played. Do not alter this value. */
+-	public AnimationDesc previous;
+-	/** The current transition time. Do not alter this value. */
+-	public float transitionCurrentTime;
+-	/** The target transition time. Do not alter this value. */
+-	public float transitionTargetTime;
+-	/** Whether an action is being performed. Do not alter this value. */
+-	public boolean inAction;
+-	
+-	private boolean justChangedAnimation = false;
+-
+-	/** Construct a new AnimationController.
+-	 * @param target The {@link ModelInstance} on which the animations will be performed. */
+-	public AnimationController (final ModelInstance target) {
+-		super(target);
+-	}
+-	
+-	private AnimationDesc obtain(final Animation anim, float offset, float duration, int loopCount, float speed, final AnimationListener listener) {
+-		if (anim == null)
+-			return null;
+-		final AnimationDesc result = animationPool.obtain();
+-		result.animation = anim;
+-		result.listener = listener;
+-		result.loopCount = loopCount;
++		public float duration;
++		/** The number of remaining loops, negative for continuous, zero if stopped. */
++		public int loopCount;
++		protected AnimationDesc() { }
++		/** @return the remaining time or 0 if still animating. */
++		protected float update(float delta) {
++			if (loopCount != 0 && animation != null) {
++				final float diff = speed * delta; 
++				time += diff;
++				int loops = (int)Math.abs(time / duration);
++				if (time < 0f) {
++					loops++;
++					while (time < 0f)
++						time += duration;
++				}
++				time = Math.abs(time % duration);
++				for (int i = 0; i < loops; i++) {
++					if (loopCount > 0)
++						loopCount--;
++					if (loopCount != 0 && listener != null)
++						listener.onLoop(this);
++					if (loopCount == 0) {
++						final float result = ((loops - 1) - i) * duration + (diff < 0f ? duration - time : time); 
++						time = (diff < 0f) ? 0f : duration;
++						if (listener != null)
++							listener.onEnd(this);
++						return result;
++					}
++				}
++				return 0f;
++			} else
++				return delta;
++		}
++	}
++	protected final Pool<AnimationDesc> animationPool = new Pool<AnimationDesc>() {
++		@Override
++		protected AnimationDesc newObject() {
++			return new AnimationDesc();
++		}
++	};
++	
++	/** The animation currently playing. Do not alter this value. */
++	public AnimationDesc current;
++	/** The animation queued to be played when the {@link #current} animation is completed. Do not alter this value. */
++	public AnimationDesc queued;
++	/** The transition time which should be applied to the queued animation. Do not alter this value. */
++	public float queuedTransitionTime;
++	/** The animation which previously played. Do not alter this value. */
++	public AnimationDesc previous;
++	/** The current transition time. Do not alter this value. */
++	public float transitionCurrentTime;
++	/** The target transition time. Do not alter this value. */
++	public float transitionTargetTime;
++	/** Whether an action is being performed. Do not alter this value. */
++	public boolean inAction;
++	
++	private boolean justChangedAnimation = false;
++
++	/** Construct a new AnimationController.
++	 * @param target The {@link ModelInstance} on which the animations will be performed. */
++	public AnimationController (final ModelInstance target) {
++		super(target);
++	}
++	
++	private AnimationDesc obtain(final Animation anim, float offset, float duration, int loopCount, float speed, final AnimationListener listener) {
++		if (anim == null)
++			return null;
++		final AnimationDesc result = animationPool.obtain();
++		result.animation = anim;
++		result.listener = listener;
++		result.loopCount = loopCount;
+ 		result.speed = speed;
+ 		result.offset = offset;
+-		result.duration = duration < 0 ? (anim.duration - offset) : duration;
+-		result.time = speed < 0 ? result.duration : 0.f;
+-		return result;
+-	}
+-	
+-	private AnimationDesc obtain(final String id, float offset, float duration, int loopCount, float speed, final AnimationListener listener) {
+-		if (id == null)
+-			return null;
+-		final Animation anim = target.getAnimation(id);
+-		if (anim == null)
+-			throw new GdxRuntimeException("Unknown animation: "+id);
+-		return obtain(anim, offset, duration, loopCount, speed, listener);
+-	}
+-	
+-	private AnimationDesc obtain(final AnimationDesc anim) {
+-		return obtain(anim.animation, anim.offset, anim.duration, anim.loopCount, anim.speed, anim.listener);
+-	}
+-	
+-	private boolean updating; //FIXME
+-	/** Update any animations currently being played.
+-	 * @param delta The time elapsed since last update, change this to alter the overall speed (can be negative). */
+-	public void update(float delta) {
+-		if (previous != null && ((transitionCurrentTime += delta) >= transitionTargetTime)) {
+-			removeAnimation(previous.animation);
+-			justChangedAnimation = true;
+-			animationPool.free(previous);
+-			previous = null;
+-		}
+-		if (justChangedAnimation) {
+-			target.calculateTransforms();
+-			justChangedAnimation = false;
+-		}
+-		if (current == null || current.loopCount == 0 || current.animation == null)
+-			return;
+-		justChangedAnimation = false;
+-		updating = true;
+-		final float remain = current.update(delta);
+-		if (remain != 0f && queued != null) {
+-			inAction = false;
+-			animate(queued, queuedTransitionTime);
+-			queued = null;
+-			updating = false;
+-			update(remain);
+-			return;
+-		}
+-		if (previous != null)
+-			applyAnimations(previous.animation, previous.offset + previous.time, current.animation, current.offset + current.time, transitionCurrentTime / transitionTargetTime);
+-		else
+-			applyAnimation(current.animation, current.offset + current.time);
+-		updating = false;
+-	}
+-	
+-	/** Set the active animation, replacing any current animation.
+-	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
+-	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
+-	 * animation is completed. */
+-	public AnimationDesc setAnimation(final String id) {
+-		return setAnimation(id, 1, 1.0f, null);
+-	}
+-	
+-	/** Set the active animation, replacing any current animation.
+-	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
+-	 * @param loopCount The number of times to loop the animation, zero to play the animation only once, 
+-	 * negative to continuously loop the animation.
+-	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
+-	 * animation is completed. */
+-	public AnimationDesc setAnimation(final String id, int loopCount) {
+-		return setAnimation(id, loopCount, 1.0f, null);
+-	}
+-
+-	/** Set the active animation, replacing any current animation.
+-	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
+-	 * @param listener The {@link AnimationListener} which will be informed when the animation is looped or completed.
+-	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
+-	 * animation is completed. */
+-	public AnimationDesc setAnimation(final String id, final AnimationListener listener) {
+-		return setAnimation(id, 1, 1.0f, listener);
+-	}
+-	
+-	/** Set the active animation, replacing any current animation.
+-	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
+-	 * @param loopCount The number of times to loop the animation, zero to play the animation only once, 
+-	 * negative to continuously loop the animation. 
+-	 * @param listener The {@link AnimationListener} which will be informed when the animation is looped or completed.
+-	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
+-	 * animation is completed. */
+-	public AnimationDesc setAnimation(final String id, int loopCount, final AnimationListener listener) {
+-		return setAnimation(id, loopCount, 1.0f, listener);
+-	}
+-	
+-	/** Set the active animation, replacing any current animation.
+-	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
+-	 * @param loopCount The number of times to loop the animation, zero to play the animation only once, 
+-	 * negative to continuously loop the animation. 
+-	 * @param speed The speed at which the animation should be played. Default is 1.0f. A value of 2.0f will play
+-	 * the animation at twice the normal speed, a value of 0.5f will play the animation at half the normal speed, etc.
+-	 * This value can be negative, causing the animation to played in reverse.
+-	 * This value cannot be zero.
+-	 * @param listener The {@link AnimationListener} which will be informed when the animation is looped or completed.
+-	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
+-	 * animation is completed. */
+-	public AnimationDesc setAnimation(final String id, int loopCount, float speed, final AnimationListener listener) {
+-		return setAnimation(id, 0f, -1f, loopCount, speed, listener);
++		result.duration = duration < 0 ? (anim.duration - offset) : duration;
++		result.time = speed < 0 ? result.duration : 0.f;
++		return result;
++	}
++	
++	private AnimationDesc obtain(final String id, float offset, float duration, int loopCount, float speed, final AnimationListener listener) {
++		if (id == null)
++			return null;
++		final Animation anim = target.getAnimation(id);
++		if (anim == null)
++			throw new GdxRuntimeException("Unknown animation: "+id);
++		return obtain(anim, offset, duration, loopCount, speed, listener);
++	}
++	
++	private AnimationDesc obtain(final AnimationDesc anim) {
++		return obtain(anim.animation, anim.offset, anim.duration, anim.loopCount, anim.speed, anim.listener);
++	}
++	
++	private boolean updating; //FIXME
++	/** Update any animations currently being played.
++	 * @param delta The time elapsed since last update, change this to alter the overall speed (can be negative). */
++	public void update(float delta) {
++		if (previous != null && ((transitionCurrentTime += delta) >= transitionTargetTime)) {
++			removeAnimation(previous.animation);
++			justChangedAnimation = true;
++			animationPool.free(previous);
++			previous = null;
++		}
++		if (justChangedAnimation) {
++			target.calculateTransforms();
++			justChangedAnimation = false;
++		}
++		if (current == null || current.loopCount == 0 || current.animation == null)
++			return;
++		justChangedAnimation = false;
++		updating = true;
++		final float remain = current.update(delta);
++		if (remain != 0f && queued != null) {
++			inAction = false;
++			animate(queued, queuedTransitionTime);
++			queued = null;
++			updating = false;
++			update(remain);
++			return;
++		}
++		if (previous != null)
++			applyAnimations(previous.animation, previous.offset + previous.time, current.animation, current.offset + current.time, transitionCurrentTime / transitionTargetTime);
++		else
++			applyAnimation(current.animation, current.offset + current.time);
++		updating = false;
++	}
++	
++	/** Set the active animation, replacing any current animation.
++	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
++	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
++	 * animation is completed. */
++	public AnimationDesc setAnimation(final String id) {
++		return setAnimation(id, 1, 1.0f, null);
++	}
++	
++	/** Set the active animation, replacing any current animation.
++	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
++	 * @param loopCount The number of times to loop the animation, zero to play the animation only once, 
++	 * negative to continuously loop the animation.
++	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
++	 * animation is completed. */
++	public AnimationDesc setAnimation(final String id, int loopCount) {
++		return setAnimation(id, loopCount, 1.0f, null);
++	}
++
++	/** Set the active animation, replacing any current animation.
++	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
++	 * @param listener The {@link AnimationListener} which will be informed when the animation is looped or completed.
++	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
++	 * animation is completed. */
++	public AnimationDesc setAnimation(final String id, final AnimationListener listener) {
++		return setAnimation(id, 1, 1.0f, listener);
++	}
++	
++	/** Set the active animation, replacing any current animation.
++	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
++	 * @param loopCount The number of times to loop the animation, zero to play the animation only once, 
++	 * negative to continuously loop the animation. 
++	 * @param listener The {@link AnimationListener} which will be informed when the animation is looped or completed.
++	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
++	 * animation is completed. */
++	public AnimationDesc setAnimation(final String id, int loopCount, final AnimationListener listener) {
++		return setAnimation(id, loopCount, 1.0f, listener);
++	}
++	
++	/** Set the active animation, replacing any current animation.
++	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
++	 * @param loopCount The number of times to loop the animation, zero to play the animation only once, 
++	 * negative to continuously loop the animation. 
++	 * @param speed The speed at which the animation should be played. Default is 1.0f. A value of 2.0f will play
++	 * the animation at twice the normal speed, a value of 0.5f will play the animation at half the normal speed, etc.
++	 * This value can be negative, causing the animation to played in reverse.
++	 * This value cannot be zero.
++	 * @param listener The {@link AnimationListener} which will be informed when the animation is looped or completed.
++	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
++	 * animation is completed. */
++	public AnimationDesc setAnimation(final String id, int loopCount, float speed, final AnimationListener listener) {
++		return setAnimation(id, 0f, -1f, loopCount, speed, listener);
+ 	}
+ 	
+ 	/** Set the active animation, replacing any current animation.
+@@ -266,76 +266,76 @@ public class AnimationController extends BaseAnimationController {
+ 	 * animation is completed. */
+ 	public AnimationDesc setAnimation(final String id, float offset, float duration, int loopCount, float speed, final AnimationListener listener) {
+ 		return setAnimation(obtain(id, offset, duration, loopCount, speed, listener));
+-	}
+-	
+-	/** Set the active animation, replacing any current animation. */
+-	protected AnimationDesc setAnimation(final Animation anim, float offset, float duration, int loopCount, float speed, final AnimationListener listener) {
+-		return setAnimation(obtain(anim, offset, duration, loopCount, speed, listener));
+-	}
+-	
+-	/** Set the active animation, replacing any current animation. */
+-	protected AnimationDesc setAnimation(final AnimationDesc anim) {
+-		if (updating) // FIXME Remove this? Just intended for debugging
+-			throw new GdxRuntimeException("Cannot change animation during update");
+-		if (current == null)
+-			current = anim;
+-		else {
+-			if (anim != null && current.animation == anim.animation)
+-				anim.time = current.time;
+-			else
+-				removeAnimation(current.animation);
+-			animationPool.free(current);
+-			current = anim;
+-		}
+-		justChangedAnimation = true;
+-		return anim;
+-	}
+-	
+-	/** Changes the current animation by blending the new on top of the old during the transition time.
+-	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
+-	 * @param transitionTime The time to transition the new animation on top of the currently playing animation (if any).
+-	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
+-	 * animation is completed. */
+-	public AnimationDesc animate(final String id, float transitionTime) {
+-		return animate(id, 1, 1.0f, null, transitionTime);
+-	}
+-	
+-	/** Changes the current animation by blending the new on top of the old during the transition time.
+-	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
+-	 * @param listener The {@link AnimationListener} which will be informed when the animation is looped or completed.
+-	 * @param transitionTime The time to transition the new animation on top of the currently playing animation (if any).
+-	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
+-	 * animation is completed. */
+-	public AnimationDesc animate(final String id, final AnimationListener listener, float transitionTime) {
+-		return animate(id, 1, 1.0f, listener, transitionTime);
+-	}
+-	
+-	/** Changes the current animation by blending the new on top of the old during the transition time.
+-	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
+-	 * @param loopCount The number of times to loop the animation, zero to play the animation only once, 
+-	 * negative to continuously loop the animation. 
+-	 * @param listener The {@link AnimationListener} which will be informed when the animation is looped or completed.
+-	 * @param transitionTime The time to transition the new animation on top of the currently playing animation (if any).
+-	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
+-	 * animation is completed. */
+-	public AnimationDesc animate(final String id, int loopCount, final AnimationListener listener, float transitionTime) {
+-		return animate(id, loopCount, 1.0f, listener, transitionTime);
+-	}
+-	
+-	/** Changes the current animation by blending the new on top of the old during the transition time.
+-	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
+-	 * @param loopCount The number of times to loop the animation, zero to play the animation only once, 
+-	 * negative to continuously loop the animation. 
+-	 * @param speed The speed at which the animation should be played. Default is 1.0f. A value of 2.0f will play
+-	 * the animation at twice the normal speed, a value of 0.5f will play the animation at half the normal speed, etc.
+-	 * This value can be negative, causing the animation to played in reverse.
+-	 * This value cannot be zero.
+-	 * @param listener The {@link AnimationListener} which will be informed when the animation is looped or completed.
+-	 * @param transitionTime The time to transition the new animation on top of the currently playing animation (if any).
+-	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
+-	 * animation is completed. */
+-	public AnimationDesc animate(final String id, int loopCount, float speed, final AnimationListener listener, float transitionTime) {
+-		return animate(id, 0f, -1f, loopCount, speed, listener, transitionTime);
++	}
++	
++	/** Set the active animation, replacing any current animation. */
++	protected AnimationDesc setAnimation(final Animation anim, float offset, float duration, int loopCount, float speed, final AnimationListener listener) {
++		return setAnimation(obtain(anim, offset, duration, loopCount, speed, listener));
++	}
++	
++	/** Set the active animation, replacing any current animation. */
++	protected AnimationDesc setAnimation(final AnimationDesc anim) {
++		if (updating) // FIXME Remove this? Just intended for debugging
++			throw new GdxRuntimeException("Cannot change animation during update");
++		if (current == null)
++			current = anim;
++		else {
++			if (anim != null && current.animation == anim.animation)
++				anim.time = current.time;
++			else
++				removeAnimation(current.animation);
++			animationPool.free(current);
++			current = anim;
++		}
++		justChangedAnimation = true;
++		return anim;
++	}
++	
++	/** Changes the current animation by blending the new on top of the old during the transition time.
++	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
++	 * @param transitionTime The time to transition the new animation on top of the currently playing animation (if any).
++	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
++	 * animation is completed. */
++	public AnimationDesc animate(final String id, float transitionTime) {
++		return animate(id, 1, 1.0f, null, transitionTime);
++	}
++	
++	/** Changes the current animation by blending the new on top of the old during the transition time.
++	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
++	 * @param listener The {@link AnimationListener} which will be informed when the animation is looped or completed.
++	 * @param transitionTime The time to transition the new animation on top of the currently playing animation (if any).
++	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
++	 * animation is completed. */
++	public AnimationDesc animate(final String id, final AnimationListener listener, float transitionTime) {
++		return animate(id, 1, 1.0f, listener, transitionTime);
++	}
++	
++	/** Changes the current animation by blending the new on top of the old during the transition time.
++	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
++	 * @param loopCount The number of times to loop the animation, zero to play the animation only once, 
++	 * negative to continuously loop the animation. 
++	 * @param listener The {@link AnimationListener} which will be informed when the animation is looped or completed.
++	 * @param transitionTime The time to transition the new animation on top of the currently playing animation (if any).
++	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
++	 * animation is completed. */
++	public AnimationDesc animate(final String id, int loopCount, final AnimationListener listener, float transitionTime) {
++		return animate(id, loopCount, 1.0f, listener, transitionTime);
++	}
++	
++	/** Changes the current animation by blending the new on top of the old during the transition time.
++	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
++	 * @param loopCount The number of times to loop the animation, zero to play the animation only once, 
++	 * negative to continuously loop the animation. 
++	 * @param speed The speed at which the animation should be played. Default is 1.0f. A value of 2.0f will play
++	 * the animation at twice the normal speed, a value of 0.5f will play the animation at half the normal speed, etc.
++	 * This value can be negative, causing the animation to played in reverse.
++	 * This value cannot be zero.
++	 * @param listener The {@link AnimationListener} which will be informed when the animation is looped or completed.
++	 * @param transitionTime The time to transition the new animation on top of the currently playing animation (if any).
++	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
++	 * animation is completed. */
++	public AnimationDesc animate(final String id, int loopCount, float speed, final AnimationListener listener, float transitionTime) {
++		return animate(id, 0f, -1f, loopCount, speed, listener, transitionTime);
+ 	}
+ 	
+ 	/** Changes the current animation by blending the new on top of the old during the transition time.
+@@ -354,49 +354,49 @@ public class AnimationController extends BaseAnimationController {
+ 	 * animation is completed. */
+ 	public AnimationDesc animate(final String id, float offset, float duration, int loopCount, float speed, final AnimationListener listener, float transitionTime) {
+ 		return animate(obtain(id, offset, duration, loopCount, speed, listener), transitionTime);
+-	}
+-	
+-	/** Changes the current animation by blending the new on top of the old during the transition time. */
+-	protected AnimationDesc animate(final Animation anim, float offset, float duration, int loopCount, float speed, final AnimationListener listener, float transitionTime) {
+-		return animate(obtain(anim, offset, duration, loopCount, speed, listener), transitionTime);
+-	}
+-	
+-	/** Changes the current animation by blending the new on top of the old during the transition time. */ 
+-	protected AnimationDesc animate(final AnimationDesc anim, float transitionTime) {
+-		if (current == null)
+-			current = anim;
+-		else if (inAction)
+-			queue(anim, transitionTime);
+-		else if (anim != null && current.animation == anim.animation) {
+-			anim.time = current.time;
+-			animationPool.free(current);
+-			current = anim;
+-		} else {
+-			if (previous != null)
+-				animationPool.free(previous);
+-			previous = current;
+-			current = anim;
+-			transitionCurrentTime = 0f;
+-			transitionTargetTime = transitionTime;
+-		}
+-		return anim;
+-	}
+-	
+-	/** Queue an animation to be applied when the {@link #current} animation is finished. 
+-	 * If the current animation is continuously looping it will be synchronized on next loop.
+-	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
+-	 * @param loopCount The number of times to loop the animation, zero to play the animation only once, 
+-	 * negative to continuously loop the animation. 
+-	 * @param speed The speed at which the animation should be played. Default is 1.0f. A value of 2.0f will play
+-	 * the animation at twice the normal speed, a value of 0.5f will play the animation at half the normal speed, etc.
+-	 * This value can be negative, causing the animation to played in reverse.
+-	 * This value cannot be zero.
+-	 * @param listener The {@link AnimationListener} which will be informed when the animation is looped or completed.
+-	 * @param transitionTime The time to transition the new animation on top of the currently playing animation (if any).
+-	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
+-	 * animation is completed. */
+-	public AnimationDesc queue(final String id, int loopCount, float speed, final AnimationListener listener, float transitionTime) {
+-		return queue(id, 0f, -1f, loopCount, speed, listener, transitionTime);	
++	}
++	
++	/** Changes the current animation by blending the new on top of the old during the transition time. */
++	protected AnimationDesc animate(final Animation anim, float offset, float duration, int loopCount, float speed, final AnimationListener listener, float transitionTime) {
++		return animate(obtain(anim, offset, duration, loopCount, speed, listener), transitionTime);
++	}
++	
++	/** Changes the current animation by blending the new on top of the old during the transition time. */ 
++	protected AnimationDesc animate(final AnimationDesc anim, float transitionTime) {
++		if (current == null)
++			current = anim;
++		else if (inAction)
++			queue(anim, transitionTime);
++		else if (anim != null && current.animation == anim.animation) {
++			anim.time = current.time;
++			animationPool.free(current);
++			current = anim;
++		} else {
++			if (previous != null)
++				animationPool.free(previous);
++			previous = current;
++			current = anim;
++			transitionCurrentTime = 0f;
++			transitionTargetTime = transitionTime;
++		}
++		return anim;
++	}
++	
++	/** Queue an animation to be applied when the {@link #current} animation is finished. 
++	 * If the current animation is continuously looping it will be synchronized on next loop.
++	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
++	 * @param loopCount The number of times to loop the animation, zero to play the animation only once, 
++	 * negative to continuously loop the animation. 
++	 * @param speed The speed at which the animation should be played. Default is 1.0f. A value of 2.0f will play
++	 * the animation at twice the normal speed, a value of 0.5f will play the animation at half the normal speed, etc.
++	 * This value can be negative, causing the animation to played in reverse.
++	 * This value cannot be zero.
++	 * @param listener The {@link AnimationListener} which will be informed when the animation is looped or completed.
++	 * @param transitionTime The time to transition the new animation on top of the currently playing animation (if any).
++	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
++	 * animation is completed. */
++	public AnimationDesc queue(final String id, int loopCount, float speed, final AnimationListener listener, float transitionTime) {
++		return queue(id, 0f, -1f, loopCount, speed, listener, transitionTime);	
+ 	}
+ 	
+ 	/** Queue an animation to be applied when the {@link #current} animation is finished. 
+@@ -416,42 +416,42 @@ public class AnimationController extends BaseAnimationController {
+ 	 * animation is completed. */
+ 	public AnimationDesc queue(final String id, float offset, float duration, int loopCount, float speed, final AnimationListener listener, float transitionTime) {
+ 		return queue(obtain(id, offset, duration, loopCount, speed, listener), transitionTime);	
+-	}
+-	
+-	/** Queue an animation to be applied when the current is finished. If current is continuous it will be synced on next loop. */
+-	protected AnimationDesc queue(final Animation anim, float offset, float duration, int loopCount, float speed, final AnimationListener listener, float transitionTime) {
+-		return queue(obtain(anim, offset, duration, loopCount, speed, listener), transitionTime);
+-	}
+-	
+-	/** Queue an animation to be applied when the current is finished. If current is continuous it will be synced on next loop. */
+-	protected AnimationDesc queue(final AnimationDesc anim, float transitionTime) {
+-		if (current == null || current.loopCount == 0)
+-			animate(anim, transitionTime);
+-		else {
+-			if (queued != null)
+-				animationPool.free(queued);
+-			queued = anim;
+-			queuedTransitionTime = transitionTime;
+-			if (current.loopCount < 0)
+-				current.loopCount = 1;
+-		}
+-		return anim;
+-	}
+-	
+-	/** Apply an action animation on top of the current animation.
+-	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
+-	 * @param loopCount The number of times to loop the animation, zero to play the animation only once, 
+-	 * negative to continuously loop the animation. 
+-	 * @param speed The speed at which the animation should be played. Default is 1.0f. A value of 2.0f will play
+-	 * the animation at twice the normal speed, a value of 0.5f will play the animation at half the normal speed, etc.
+-	 * This value can be negative, causing the animation to played in reverse.
+-	 * This value cannot be zero.
+-	 * @param listener The {@link AnimationListener} which will be informed when the animation is looped or completed.
+-	 * @param transitionTime The time to transition the new animation on top of the currently playing animation (if any).
+-	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
+-	 * animation is completed. */
+-	public AnimationDesc action(final String id, int loopCount, float speed, final AnimationListener listener, float transitionTime) {
+-		return action(id, 0, -1f, loopCount, speed, listener, transitionTime);	
++	}
++	
++	/** Queue an animation to be applied when the current is finished. If current is continuous it will be synced on next loop. */
++	protected AnimationDesc queue(final Animation anim, float offset, float duration, int loopCount, float speed, final AnimationListener listener, float transitionTime) {
++		return queue(obtain(anim, offset, duration, loopCount, speed, listener), transitionTime);
++	}
++	
++	/** Queue an animation to be applied when the current is finished. If current is continuous it will be synced on next loop. */
++	protected AnimationDesc queue(final AnimationDesc anim, float transitionTime) {
++		if (current == null || current.loopCount == 0)
++			animate(anim, transitionTime);
++		else {
++			if (queued != null)
++				animationPool.free(queued);
++			queued = anim;
++			queuedTransitionTime = transitionTime;
++			if (current.loopCount < 0)
++				current.loopCount = 1;
++		}
++		return anim;
++	}
++	
++	/** Apply an action animation on top of the current animation.
++	 * @param id The ID of the {@link Animation} within the {@link ModelInstance}.
++	 * @param loopCount The number of times to loop the animation, zero to play the animation only once, 
++	 * negative to continuously loop the animation. 
++	 * @param speed The speed at which the animation should be played. Default is 1.0f. A value of 2.0f will play
++	 * the animation at twice the normal speed, a value of 0.5f will play the animation at half the normal speed, etc.
++	 * This value can be negative, causing the animation to played in reverse.
++	 * This value cannot be zero.
++	 * @param listener The {@link AnimationListener} which will be informed when the animation is looped or completed.
++	 * @param transitionTime The time to transition the new animation on top of the currently playing animation (if any).
++	 * @return The {@link AnimationDesc} which can be read to get the progress of the animation. Will be invalid when the
++	 * animation is completed. */
++	public AnimationDesc action(final String id, int loopCount, float speed, final AnimationListener listener, float transitionTime) {
++		return action(id, 0, -1f, loopCount, speed, listener, transitionTime);	
+ 	}
+ 	
+ 	/** Apply an action animation on top of the current animation.
+@@ -470,27 +470,27 @@ public class AnimationController extends BaseAnimationController {
+ 	 * animation is completed. */
+ 	public AnimationDesc action(final String id, float offset, float duration, int loopCount, float speed, final AnimationListener listener, float transitionTime) {
+ 		return action(obtain(id, offset, duration, loopCount, speed, listener), transitionTime);	
+-	}
+-	
+-	/** Apply an action animation on top of the current animation. */
+-	protected AnimationDesc action(final Animation anim, float offset, float duration, int loopCount, float speed, final AnimationListener listener, float transitionTime) {
+-		return action(obtain(anim, offset, duration, loopCount, speed, listener), transitionTime);
+-	}
+-	
+-	/** Apply an action animation on top of the current animation. */
+-	protected AnimationDesc action(final AnimationDesc anim, float transitionTime) {
+-		if (anim.loopCount < 0)
+-			throw new GdxRuntimeException("An action cannot be continuous");
+-		if (current == null || current.loopCount == 0)
+-			animate(anim, transitionTime);
+-		else {
+-			AnimationDesc toQueue = inAction ? null : obtain(current);
+-			inAction = false;
+-			animate(anim, transitionTime);
+-			inAction = true;
+-			if (toQueue != null)
+-				queue(toQueue, transitionTime);
+-		}
+-		return anim;
+-	}
+-}
+\ No newline at end of file
++	}
++	
++	/** Apply an action animation on top of the current animation. */
++	protected AnimationDesc action(final Animation anim, float offset, float duration, int loopCount, float speed, final AnimationListener listener, float transitionTime) {
++		return action(obtain(anim, offset, duration, loopCount, speed, listener), transitionTime);
++	}
++	
++	/** Apply an action animation on top of the current animation. */
++	protected AnimationDesc action(final AnimationDesc anim, float transitionTime) {
++		if (anim.loopCount < 0)
++			throw new GdxRuntimeException("An action cannot be continuous");
++		if (current == null || current.loopCount == 0)
++			animate(anim, transitionTime);
++		else {
++			AnimationDesc toQueue = inAction ? null : obtain(current);
++			inAction = false;
++			animate(anim, transitionTime);
++			inAction = true;
++			if (toQueue != null)
++				queue(toQueue, transitionTime);
++		}
++		return anim;
++	}
++}
+diff --git a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/MeshBuilder.java b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/MeshBuilder.java
+index 122ac16..1f4b1e3 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/g3d/utils/MeshBuilder.java
++++ b/gdx/src/com/badlogic/gdx/graphics/g3d/utils/MeshBuilder.java
+@@ -100,7 +100,7 @@ public class MeshBuilder implements MeshPartBuilder {
+ 	private boolean colorSet;
+ 	/** The current primitiveType */
+ 	private int primitiveType;
+-	// FIXME makes this configurable
++	/** The UV range used when building */
+ 	private float uMin = 0, uMax = 1, vMin = 0, vMax = 1;
+ 	private float[] vertex;
+ 	
+@@ -356,6 +356,17 @@ public class MeshBuilder implements MeshPartBuilder {
+ 		ensureRectangles(4 * numRectangles, numRectangles);
+ 	}
+ 	
++	private short lastIndex = -1;
++	@Override
++	public short lastIndex() {
++		return lastIndex;
++	}
++
++	private final void addVertex(final float[] values, final int offset) {
++		vertices.addAll(values, offset, stride);
++		lastIndex = (short)(vindex++);
++	}
++	
+ 	@Override
+ 	public short vertex(Vector3 pos, Vector3 nor, Color col, Vector2 uv) {
+ 		if (vindex >= Short.MAX_VALUE)
+@@ -399,20 +410,16 @@ public class MeshBuilder implements MeshPartBuilder {
+ 			vertex[uvOffset  ] = uv.x;
+ 			vertex[uvOffset+1] = uv.y;
+ 		}
+-		vertices.addAll(vertex);
+-		return (short)(vindex++);
++		addVertex(vertex, 0);
++		return lastIndex;
+ 	}
+ 	
+ 	@Override
+-	public short lastIndex() {
+-		return (short)(vindex-1);
+-	}
+-
+-	@Override
+ 	public short vertex(final float... values) {
+-		vertices.addAll(values);
+-		vindex += values.length / stride;
+-		return (short)(vindex-1);
++		final int n = values.length - stride;
++		for (int i = 0; i <= n; i += stride)
++			addVertex(values, i);
++		return lastIndex;
+ 	}
+ 	
+ 	@Override
+@@ -612,7 +619,7 @@ public class MeshBuilder implements MeshPartBuilder {
+ 			rect(i000, i100, i110, i010);
+ 			rect(i101, i001, i011, i111);
+ 			index(i000, i001, i010, i011, i110, i111, i100, i101);
+-		} else if (primitiveType != GL10.GL_POINTS) {
++		} else if (primitiveType == GL10.GL_POINTS) {
+ 			ensureRectangleIndices(2);
+ 			rect(i000, i100, i110, i010);
+ 			rect(i101, i001, i011, i111);
+@@ -801,29 +808,35 @@ public class MeshBuilder implements MeshPartBuilder {
+ 		float angle = 0f;
+ 		final float us = 0.5f * (innerWidth / width);
+ 		final float vs = 0.5f * (innerHeight / height);
++		short i1, i2 = 0, i3 = 0, i4 = 0;
+ 		for (int i = 0; i <= divisions; i++) {
+ 			angle = ao + step * i;
+ 			final float x = MathUtils.cos(angle);
+ 			final float y = MathUtils.sin(angle);
+ 			currEx.position.set(centerX, centerY, centerZ).add(sxEx.x*x+syEx.x*y, sxEx.y*x+syEx.y*y, sxEx.z*x+syEx.z*y);
+ 			currEx.uv.set(.5f + .5f * x, .5f + .5f * y);				
+-			vertex(currEx);
++			i1 = vertex(currEx);
+ 			
+ 			if(innerWidth <= 0f || innerHeight <= 0f)	{					
+ 				if (i != 0)
+-					triangle((short)(vindex - 1), (short)(vindex - 2), center);
++					triangle(i1, i2, center);
++				i2 = i1;
+ 			}
+ 			else if (innerWidth == width && innerHeight == height){
+ 				if (i != 0)
+-					line((short)(vindex - 1), (short)(vindex - 2));
++					line(i1, i2);
++				i2 = i1;
+ 			}
+ 			else {
+ 				currIn.position.set(centerX, centerY, centerZ).add(sxIn.x*x+syIn.x*y, sxIn.y*x+syIn.y*y, sxIn.z*x+syIn.z*y);
+-				currIn.uv.set(.5f + us * x, .5f + vs * y);				
+-				vertex(currIn);
++				currIn.uv.set(.5f + us * x, .5f + vs * y);
++				i2 = i1;
++				i1 = vertex(currIn);
+ 				
+ 				if( i != 0)
+-					rect((short)(vindex - 1), (short)(vindex - 2),(short)(vindex - 4), (short)(vindex - 3));
++					rect(i1, i2, i4, i3);
++				i4 = i2;
++				i3 = i1;
+ 			}
+ 		}
+ 	}
+@@ -853,6 +866,7 @@ public class MeshBuilder implements MeshPartBuilder {
+ 		curr1.hasUV = curr1.hasPosition = curr1.hasNormal = true;
+ 		VertexInfo curr2 = vertTmp4.set(null, null, null, null);
+ 		curr2.hasUV = curr2.hasPosition = curr2.hasNormal = true;
++		short i1, i2, i3 = 0, i4 = 0;
+ 		
+ 		ensureRectangles(2 * (divisions + 1), divisions);
+ 		for (int i = 0; i <= divisions; i++) {
+@@ -866,10 +880,12 @@ public class MeshBuilder implements MeshPartBuilder {
+ 			curr2.normal.set(curr1.normal);
+ 			curr2.position.y = hh;
+ 			curr2.uv.set(u, 0);
+-			vertex(curr1);
+-			vertex(curr2);
++			i2 = vertex(curr1);
++			i1 = vertex(curr2);
+ 			if (i != 0)
+-				rect((short)(vindex-3), (short)(vindex-1), (short)(vindex-2), (short)(vindex-4)); // FIXME don't duplicate lines and points
++				rect(i3, i1, i2, i4); // FIXME don't duplicate lines and points
++			i4 = i2;
++			i3 = i1;
+ 		}
+ 		if (close) {
+ 			ellipse(width, depth, 0, 0, divisions, 0, hh, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, angleFrom, angleTo);
+@@ -898,7 +914,8 @@ public class MeshBuilder implements MeshPartBuilder {
+ 		VertexInfo curr1 = vertTmp3.set(null, null, null, null);
+ 		curr1.hasUV = curr1.hasPosition = curr1.hasNormal = true;
+ 		VertexInfo curr2 = vertTmp4.set(null, null, null, null).setPos(0,hh,0).setNor(0,1,0).setUV(0.5f, 0);
+-		final int base = vertex(curr2);
++		final short base = vertex(curr2);
++		short i1, i2 = 0;
+ 		for (int i = 0; i <= divisions; i++) {
+ 			angle = ao + step * i;
+ 			u = 1f - us * i;
+@@ -906,10 +923,10 @@ public class MeshBuilder implements MeshPartBuilder {
+ 			curr1.normal.set(curr1.position).nor();
+ 			curr1.position.y = -hh;
+ 			curr1.uv.set(u, 1);
+-			vertex(curr1);
+-			if (i == 0)
+-				continue;
+-			triangle((short)base, (short)(vindex-1), (short)(vindex-2)); // FIXME don't duplicate lines and points
++			i1 = vertex(curr1);
++			if (i != 0)
++				triangle(base, i1, i2); // FIXME don't duplicate lines and points
++			i2 = i1;
+ 		}
+ 		ellipse(width, depth, 0, 0, divisions, 0, -hh, 0, 0, -1, 0, -1, 0, 0, 0, 0, 1, 180f-angleTo, 180f-angleFrom);
+ 	}
+@@ -929,6 +946,7 @@ public class MeshBuilder implements MeshPartBuilder {
+ 		sphere(matTmp1.idt(), width, height, depth, divisionsU, divisionsV, angleUFrom, angleUTo, angleVFrom, angleVTo);
+ 	}
+ 
++	private static ShortArray tmpIndices;
+ 	@Override
+ 	public void sphere(final Matrix4 transform, float width, float height, float depth, int divisionsU, int divisionsV, float angleUFrom, float angleUTo, float angleVFrom, float angleVTo) {
+ 		// FIXME create better sphere method (- only one vertex for each pole, - position)
+@@ -948,6 +966,16 @@ public class MeshBuilder implements MeshPartBuilder {
+ 		VertexInfo curr1 = vertTmp3.set(null, null, null, null);
+ 		curr1.hasUV = curr1.hasPosition = curr1.hasNormal = true;
+ 		
++		if (tmpIndices == null)
++			tmpIndices = new ShortArray(divisionsU * 2);
++		final int s = divisionsU+3;
++		tmpIndices.ensureCapacity(s);
++		while (tmpIndices.size > s)
++			tmpIndices.pop();
++		while (tmpIndices.size < s)
++			tmpIndices.add(-1);
++		int tempOffset = 0;
++		
+ 		ensureRectangles((divisionsV + 1) * (divisionsU + 1), divisionsV * divisionsU);
+ 		for (int iv = 0; iv <= divisionsV; iv++) {
+ 			angleV = avo + stepV * iv;
+@@ -960,9 +988,11 @@ public class MeshBuilder implements MeshPartBuilder {
+ 				curr1.position.set(MathUtils.cos(angleU) * hw * t, h, MathUtils.sin(angleU) * hd * t).mul(transform);
+ 				curr1.normal.set(curr1.position).nor();
+ 				curr1.uv.set(u, v);
+-				vertex(curr1);
++				tmpIndices.set(tempOffset, vertex(curr1));
++				final int o = tempOffset+s;
+ 				if ((iv > 0) && (iu > 0)) // FIXME don't duplicate lines and points
+-					rect((short)(vindex-1), (short)(vindex-2), (short)(vindex-(divisionsU+3)), (short)(vindex-(divisionsU+2))); 
++					rect(tmpIndices.get(tempOffset), tmpIndices.get((o-1)%s), tmpIndices.get((o-(divisionsU+2))%s), tmpIndices.get((o-(divisionsU+1))%s));
++				tempOffset = (tempOffset + 1) % tmpIndices.size;
+ 			}
+ 		}
+ 	}
+diff --git a/gdx/src/com/badlogic/gdx/graphics/glutils/ShapeRenderer.java b/gdx/src/com/badlogic/gdx/graphics/glutils/ShapeRenderer.java
+index 3cfa2f8..4c602b6 100644
+--- a/gdx/src/com/badlogic/gdx/graphics/glutils/ShapeRenderer.java
++++ b/gdx/src/com/badlogic/gdx/graphics/glutils/ShapeRenderer.java
+@@ -431,54 +431,6 @@ public class ShapeRenderer {
+ 		}
+ 	}
+ 
+-	public void rectLine (float x1, float y1, float x2, float y2, float width) {
+-		if (currType != ShapeType.Filled && currType != ShapeType.Line)
+-			throw new GdxRuntimeException("Must call begin(ShapeType.Filled) or begin(ShapeType.Line)");
+-
+-		checkDirty();
+-		checkFlush(8);
+-
+-		Vector2 t = tmp.set(y2 - y1, x1 - x2).nor();
+-		width *= 0.5f;
+-		float tx = t.x * width;
+-		float ty = t.y * width;
+-		if (currType == ShapeType.Line) {
+-			renderer.color(color.r, color.g, color.b, color.a);
+-			renderer.vertex(x1 + tx, y1 + ty, 0);
+-			renderer.color(color.r, color.g, color.b, color.a);
+-			renderer.vertex(x1 - tx, y1 - ty, 0);
+-
+-			renderer.color(color.r, color.g, color.b, color.a);
+-			renderer.vertex(x2 + tx, y2 + ty, 0);
+-			renderer.color(color.r, color.g, color.b, color.a);
+-			renderer.vertex(x2 - tx, y2 - ty, 0);
+-
+-			renderer.color(color.r, color.g, color.b, color.a);
+-			renderer.vertex(x2 + tx, y2 + ty, 0);
+-			renderer.color(color.r, color.g, color.b, color.a);
+-			renderer.vertex(x1 + tx, y1 + ty, 0);
+-
+-			renderer.color(color.r, color.g, color.b, color.a);
+-			renderer.vertex(x2 - tx, y2 - ty, 0);
+-			renderer.color(color.r, color.g, color.b, color.a);
+-			renderer.vertex(x1 - tx, y1 - ty, 0);
+-		} else {
+-			renderer.color(color.r, color.g, color.b, color.a);
+-			renderer.vertex(x1 + tx, y1 + ty, 0);
+-			renderer.color(color.r, color.g, color.b, color.a);
+-			renderer.vertex(x1 - tx, y1 - ty, 0);
+-			renderer.color(color.r, color.g, color.b, color.a);
+-			renderer.vertex(x2 + tx, y2 + ty, 0);
+-
+-			renderer.color(color.r, color.g, color.b, color.a);
+-			renderer.vertex(x2 - tx, y2 - ty, 0);
+-			renderer.color(color.r, color.g, color.b, color.a);
+-			renderer.vertex(x2 + tx, y2 + ty, 0);
+-			renderer.color(color.r, color.g, color.b, color.a);
+-			renderer.vertex(x1 - tx, y1 - ty, 0);
+-		}
+-	}
+-
+ 	/** Draws a rectangle in the x/y plane. The x and y coordinate specify the bottom left corner of the rectangle. The
+ 	 * {@link ShapeType} passed to begin has to be {@link ShapeType#Filled} or {@link ShapeType#Line}.
+ 	 * @param col1 The color at (x, y)
+@@ -607,7 +559,61 @@ public class ShapeRenderer {
+ 
+ 	}
+ 
+-	/** Draws a box. The x, y and z coordinate specify the bottom left front corner of the rectangle. The {@link ShapeType} passed
++	/** @see #rectLine(float, float, float, float, float) */
++	public void rectLine (Vector2 p1, Vector2 p2, float width) {
++		rectLine(p1.x, p1.y, p2.x, p2.y, width);
++	}
++
++	/** Draws a rectangle with one edge centered at x1, y1 and the opposite edge centered at x2, y2. */
++	public void rectLine (float x1, float y1, float x2, float y2, float width) {
++		if (currType != ShapeType.Filled && currType != ShapeType.Line)
++			throw new GdxRuntimeException("Must call begin(ShapeType.Filled) or begin(ShapeType.Line)");
++
++		checkDirty();
++		checkFlush(8);
++
++		Vector2 t = tmp.set(y2 - y1, x1 - x2).nor();
++		width *= 0.5f;
++		float tx = t.x * width;
++		float ty = t.y * width;
++		if (currType == ShapeType.Line) {
++			renderer.color(color.r, color.g, color.b, color.a);
++			renderer.vertex(x1 + tx, y1 + ty, 0);
++			renderer.color(color.r, color.g, color.b, color.a);
++			renderer.vertex(x1 - tx, y1 - ty, 0);
++
++			renderer.color(color.r, color.g, color.b, color.a);
++			renderer.vertex(x2 + tx, y2 + ty, 0);
++			renderer.color(color.r, color.g, color.b, color.a);
++			renderer.vertex(x2 - tx, y2 - ty, 0);
++
++			renderer.color(color.r, color.g, color.b, color.a);
++			renderer.vertex(x2 + tx, y2 + ty, 0);
++			renderer.color(color.r, color.g, color.b, color.a);
++			renderer.vertex(x1 + tx, y1 + ty, 0);
++
++			renderer.color(color.r, color.g, color.b, color.a);
++			renderer.vertex(x2 - tx, y2 - ty, 0);
++			renderer.color(color.r, color.g, color.b, color.a);
++			renderer.vertex(x1 - tx, y1 - ty, 0);
++		} else {
++			renderer.color(color.r, color.g, color.b, color.a);
++			renderer.vertex(x1 + tx, y1 + ty, 0);
++			renderer.color(color.r, color.g, color.b, color.a);
++			renderer.vertex(x1 - tx, y1 - ty, 0);
++			renderer.color(color.r, color.g, color.b, color.a);
++			renderer.vertex(x2 + tx, y2 + ty, 0);
++
++			renderer.color(color.r, color.g, color.b, color.a);
++			renderer.vertex(x2 - tx, y2 - ty, 0);
++			renderer.color(color.r, color.g, color.b, color.a);
++			renderer.vertex(x2 + tx, y2 + ty, 0);
++			renderer.color(color.r, color.g, color.b, color.a);
++			renderer.vertex(x1 - tx, y1 - ty, 0);
++		}
++	}
++
++	/** Draws a cube. The x, y and z coordinate specify the bottom left front corner of the rectangle. The {@link ShapeType} passed
+ 	 * to begin has to be {@link ShapeType#Line}. */
+ 	public void box (float x, float y, float z, float width, float height, float depth) {
+ 		if (currType != ShapeType.Filled && currType != ShapeType.Line)
+diff --git a/gdx/src/com/badlogic/gdx/math/GeometryUtils.java b/gdx/src/com/badlogic/gdx/math/GeometryUtils.java
+index 10df971..fb4214b 100644
+--- a/gdx/src/com/badlogic/gdx/math/GeometryUtils.java
++++ b/gdx/src/com/badlogic/gdx/math/GeometryUtils.java
+@@ -62,6 +62,14 @@ public class GeometryUtils {
+ 		return interpolatedOut;
+ 	}
+ 
++	/** Returns interpolated values given the barycentric coordinates of a point in a triangle and the values at each vertex.
++	 * @return interpolatedOut */
++	static public Vector2 fromBarycoord (Vector2 barycentric, float a, float b, float c, Vector2 interpolatedOut) {
++		float u = 1 - barycentric.x - barycentric.y;
++		interpolatedOut.x = u * a + barycentric.x * b + barycentric.y * c;
++		return interpolatedOut;
++	}
++
+ 	/** Returns the lowest positive root of the quadric equation given by a* x * x + b * x + c = 0. If no solution is given
+ 	 * Float.Nan is returned.
+ 	 * @param a the first coefficient of the quadric equation
+diff --git a/gdx/src/com/badlogic/gdx/math/Matrix3.java b/gdx/src/com/badlogic/gdx/math/Matrix3.java
+index 57bbcd8..421e852 100644
+--- a/gdx/src/com/badlogic/gdx/math/Matrix3.java
++++ b/gdx/src/com/badlogic/gdx/math/Matrix3.java
+@@ -46,6 +46,14 @@ public class Matrix3 implements Serializable {
+ 		set(matrix);
+ 	}
+ 
++    /** Constructs a matrix from the given float array. The array must have at least 9 elements; the first 9 will be copied.
++     * @param values The float array to copy. Remember that this matrix is in
++     * <a href="http://en.wikipedia.org/wiki/Row-major_order#Column-major_order">column major</a> order.
++     * (The float array is not modified.) */
++    public Matrix3 (float[] values) {
++        this.set(values);
++    }
++
+ 	/** Sets this matrix to the identity matrix
+ 	 * @return This matrix for the purpose of chaining operations. */
+ 	public Matrix3 idt () {
+@@ -241,6 +249,17 @@ public class Matrix3 implements Serializable {
+ 		return this;
+ 	}
+ 
++    /** Sets the matrix to the given matrix as a float array. The float array must have at least 9 elements; the first 9 will be
++     * copied.
++     *
++     * @param values The matrix, in float form, that is to be copied. Remember that this matrix is in <a
++     *           href="http://en.wikipedia.org/wiki/Row-major_order#Column-major_order">column major</a> order.
++     * @return This matrix for the purpose of chaining methods together. */
++    public Matrix3 set (float[] values) {
++        System.arraycopy(values, 0, val, 0, val.length);
++        return this;
++    }
++
+ 	/** Adds a translational component to the matrix in the 3rd column. The other columns are untouched.
+ 	 * @param vector The translation vector.
+ 	 * @return This matrix for the purpose of chaining. */
+diff --git a/gdx/src/com/badlogic/gdx/math/Vector2.java b/gdx/src/com/badlogic/gdx/math/Vector2.java
+index eadff89..66c5d5b 100644
+--- a/gdx/src/com/badlogic/gdx/math/Vector2.java
++++ b/gdx/src/com/badlogic/gdx/math/Vector2.java
+@@ -139,7 +139,7 @@ public class Vector2 implements Serializable, Vector<Vector2> {
+ 		y *= scalar;
+ 		return this;
+ 	}
+-	
++
+ 	/** @deprecated Use {@link #scl(float)} instead. */
+ 	public Vector2 mul (float scalar) {
+ 		return scl(scalar);
+@@ -152,12 +152,12 @@ public class Vector2 implements Serializable, Vector<Vector2> {
+ 		this.y *= y;
+ 		return this;
+ 	}
+-	
++
+ 	/** @deprecated Use {@link #scl(float, float)} instead. */
+ 	public Vector2 mul (float x, float y) {
+-		return scl(x,y);
++		return scl(x, y);
+ 	}
+-	
++
+ 	/** Multiplies this vector by a vector
+ 	 * @return This vector for chaining */
+ 	public Vector2 scl (Vector2 v) {
+@@ -165,7 +165,7 @@ public class Vector2 implements Serializable, Vector<Vector2> {
+ 		this.y *= v.y;
+ 		return this;
+ 	}
+-	
++
+ 	/** @deprecated Use {@link #scl(Vector2)} instead. */
+ 	public Vector2 mul (Vector2 v) {
+ 		return scl(v);
+@@ -216,7 +216,7 @@ public class Vector2 implements Serializable, Vector<Vector2> {
+ 		final float y_d = y - this.y;
+ 		return x_d * x_d + y_d * y_d;
+ 	}
+-	
++
+ 	/** Limits this vector's length to given value
+ 	 * @param limit Max length
+ 	 * @return This vector for chaining */
+@@ -227,19 +227,16 @@ public class Vector2 implements Serializable, Vector<Vector2> {
+ 		}
+ 		return this;
+ 	}
+-	
++
+ 	/** Clamps this vector's length to given value
+ 	 * @param min Min length
+ 	 * @param max Max length
+ 	 * @return This vector for chaining */
+ 	public Vector2 clamp (float min, float max) {
+ 		final float l2 = len2();
+-		if (l2 == 0f)
+-			return this;
+-		if (l2 > max * max)
+-			return nor().scl(max);
+-		if (l2 < min * min)
+-			return nor().scl(min);
++		if (l2 == 0f) return this;
++		if (l2 > max * max) return nor().scl(max);
++		if (l2 < min * min) return nor().scl(min);
+ 		return this;
+ 	}
+ 
+@@ -283,8 +280,8 @@ public class Vector2 implements Serializable, Vector<Vector2> {
+ 		return this.x * y - this.y * x;
+ 	}
+ 
+-	/** @return the angle in degrees of this vector (point) relative to the x-axis.
+-	 * Angles are towards the positive y-axis (typically counter-clockwise) and between 0 and 360. */
++	/** @return the angle in degrees of this vector (point) relative to the x-axis. Angles are towards the positive y-axis (typically
++	 *         counter-clockwise) and between 0 and 360. */
+ 	public float angle () {
+ 		float angle = (float)Math.atan2(y, x) * MathUtils.radiansToDegrees;
+ 		if (angle < 0) angle += 360;
+@@ -316,6 +313,19 @@ public class Vector2 implements Serializable, Vector<Vector2> {
+ 		return this;
+ 	}
+ 
++	/** Rotates the Vector2 by 90 degrees in the specified direction, where >= 0 is counter-clockwise and < 0 is clockwise. */
++	public Vector2 rotate90 (int dir) {
++		float x = this.x;
++		if (dir >= 0) {
++			this.x = -y;
++			y = x;
++		} else {
++			this.x = y;
++			y = -x;
++		}
++		return this;
++	}
++
+ 	/** Linearly interpolates between this vector and the target vector by alpha which is in the range [0,1]. The result is stored
+ 	 * in this vector.
+ 	 * 
+@@ -359,7 +369,7 @@ public class Vector2 implements Serializable, Vector<Vector2> {
+ 		if (Math.abs(obj.y - y) > epsilon) return false;
+ 		return true;
+ 	}
+-	
++
+ 	/** Compares this vector with the other vector, using the supplied epsilon for fuzzy equality testing.
+ 	 * @param x
+ 	 * @param y
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/Actor.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/Actor.java
+index 24f1ac1..55e7510 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/Actor.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/Actor.java
+@@ -63,6 +63,7 @@ public class Actor {
+ 	float scaleX = 1, scaleY = 1;
+ 	float rotation;
+ 	final Color color = new Color(1, 1, 1, 1);
++	private Object userObject;
+ 
+ 	/** Draws the actor. The Batch is configured to draw in the parent's coordinate system.
+ 	 * {@link Batch#draw(com.badlogic.gdx.graphics.g2d.TextureRegion, float, float, float, float, float, float, float, float, float)
+@@ -334,6 +335,15 @@ public class Actor {
+ 		this.visible = visible;
+ 	}
+ 
++	public Object getUserObject () {
++		return userObject;
++	}
++
++	/** Sets an application specific object for convenience. */
++	public void setUserObject (Object userObject) {
++		this.userObject = userObject;
++	}
++
+ 	public float getX () {
+ 		return x;
+ 	}
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Label.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Label.java
+index bfa4aa6..ec09438 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Label.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Label.java
+@@ -126,8 +126,10 @@ public class Label extends Widget {
+ 			bounds.set(cache.getFont().getWrappedBounds(text, width));
+ 		} else
+ 			bounds.set(cache.getFont().getMultiLineBounds(text));
+-		bounds.width *= fontScaleX;
+-		bounds.height *= fontScaleY;
++		if (!wrap) {
++			bounds.width *= fontScaleX;
++			bounds.height *= fontScaleY;
++		}
+ 	}
+ 
+ 	public void layout () {
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java
+index 628e89b..c9650bc 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/SelectBox.java
+@@ -163,7 +163,7 @@ public class SelectBox extends Widget implements Disableable {
+ 	@Override
+ 	public void draw (Batch batch, float parentAlpha) {
+ 		Drawable background;
+-		if (disabled)
++		if (disabled && style.backgroundDisabled != null)
+ 			background = style.backgroundDisabled;
+ 		else if (list != null && list.getParent() != null && style.backgroundOpen != null)
+ 			background = style.backgroundOpen;
+@@ -196,6 +196,7 @@ public class SelectBox extends Widget implements Disableable {
+ 	/** Sets the selected item via it's index
+ 	 * @param selection the selection index */
+ 	public void setSelection (int selection) {
++		if (selection < 0) throw new IllegalArgumentException("selection cannot be < 0.");
+ 		this.selectedIndex = selection;
+ 	}
+ 
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Skin.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Skin.java
+index b80d568..a41ddbf 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Skin.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Skin.java
+@@ -442,7 +442,7 @@ public class Skin implements Disposable {
+ 		json.setSerializer(BitmapFont.class, new ReadOnlySerializer<BitmapFont>() {
+ 			public BitmapFont read (Json json, JsonValue jsonData, Class type) {
+ 				String path = json.readValue("file", String.class, jsonData);
+-				int size = json.readValue("size", int.class, -1, jsonData);
++				Boolean flip = json.readValue("flip", Boolean.class, false, jsonData);
+ 
+ 				FileHandle fontFile = skinFile.parent().child(path);
+ 				if (!fontFile.exists()) fontFile = Gdx.files.internal(path);
+@@ -451,22 +451,16 @@ public class Skin implements Disposable {
+ 				// Use a region with the same name as the font, else use a PNG file in the same directory as the FNT file.
+ 				String regionName = fontFile.nameWithoutExtension();
+ 				try {
+-					BitmapFont font;
+ 					TextureRegion region = skin.optional(regionName, TextureRegion.class);
+ 					if (region != null)
+-						font = new BitmapFont(fontFile, region, false);
++						return new BitmapFont(fontFile, region, flip);
+ 					else {
+ 						FileHandle imageFile = fontFile.parent().child(regionName + ".png");
+ 						if (imageFile.exists())
+-							font = new BitmapFont(fontFile, imageFile, false);
++							return new BitmapFont(fontFile, imageFile, flip);
+ 						else
+-							font = new BitmapFont(fontFile, false);
++							return new BitmapFont(fontFile, flip);
+ 					}
+-					if (size != -1) {
+-						// Use scale factor based on lineHeight (as font size) to scale the font
+-						font.setScale(size / font.getData().lineHeight);
+-					}
+-					return font;
+ 				} catch (RuntimeException ex) {
+ 					throw new SerializationException("Error loading bitmap font: " + fontFile, ex);
+ 				}
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/TextField.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/TextField.java
+index 63323bd..5c5c56e 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/TextField.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/TextField.java
+@@ -22,8 +22,7 @@ import com.badlogic.gdx.Input.Keys;
+ import com.badlogic.gdx.graphics.Color;
+ import com.badlogic.gdx.graphics.g2d.Batch;
+ import com.badlogic.gdx.graphics.g2d.BitmapFont;
+-import com.badlogic.gdx.graphics.g2d.BitmapFont.TextBounds;
+-import com.badlogic.gdx.math.Rectangle;
++import com.badlogic.gdx.math.MathUtils;
+ import com.badlogic.gdx.math.Vector2;
+ import com.badlogic.gdx.scenes.scene2d.Actor;
+ import com.badlogic.gdx.scenes.scene2d.Group;
+@@ -57,6 +56,8 @@ import com.badlogic.gdx.utils.Timer.Task;
+  * @author mzechner
+  * @author Nathan Sweet */
+ public class TextField extends Widget implements Disableable {
++	static boolean isMac = System.getProperty("os.name").contains("Mac");
++
+ 	static private final char BACKSPACE = 8;
+ 	static private final char ENTER_DESKTOP = '\r';
+ 	static private final char ENTER_ANDROID = '\n';
+@@ -68,48 +69,38 @@ public class TextField extends Widget implements Disableable {
+ 	static private final Vector2 tmp2 = new Vector2();
+ 	static private final Vector2 tmp3 = new Vector2();
+ 
+-	static boolean isMac = System.getProperty("os.name").contains("Mac");
++	protected String text;
++	protected int cursor, selectionStart;
++	protected boolean hasSelection;
++	protected final FloatArray glyphAdvances = new FloatArray(), glyphPositions = new FloatArray();
+ 
+ 	TextFieldStyle style;
+-	String text, messageText;
++	private String messageText;
+ 	private CharSequence displayText;
+-	int cursor;
+ 	private Clipboard clipboard;
++	InputListener inputListener;
+ 	TextFieldListener listener;
+ 	TextFieldFilter filter;
+ 	OnscreenKeyboard keyboard = new DefaultOnscreenKeyboard();
+-	boolean focusTraversal = true;
+-	boolean disabled;
+-	boolean onlyFontChars = true;
++	boolean focusTraversal = true, onlyFontChars = true, disabled, rightAligned;
++	private float selectionX, selectionWidth;
+ 
+-	private boolean passwordMode;
++	boolean passwordMode;
+ 	private StringBuilder passwordBuffer;
++	private char passwordCharacter = BULLET;
+ 
+-	private final Rectangle fieldBounds = new Rectangle();
+-	private final TextBounds textBounds = new TextBounds();
+-	private final Rectangle scissor = new Rectangle();
+-	float renderOffset, textOffset;
++	private float textHeight, textOffset;
++	float renderOffset;
+ 	private int visibleTextStart, visibleTextEnd;
+-	private final FloatArray glyphAdvances = new FloatArray();
+-	final FloatArray glyphPositions = new FloatArray();
++	private int maxLength = 0;
+ 
+-	boolean cursorOn = true;
+ 	private float blinkTime = 0.32f;
++	boolean cursorOn = true;
+ 	long lastBlink;
+ 
+-	boolean hasSelection;
+-	int selectionStart;
+-	private float selectionX, selectionWidth;
+-
+-	private char passwordCharacter = BULLET;
+-
+-	InputListener inputListener;
+ 	KeyRepeatTask keyRepeatTask = new KeyRepeatTask();
+ 	float keyRepeatInitialTime = 0.4f;
+ 	float keyRepeatTime = 0.1f;
+-	boolean rightAligned;
+-
+-	int maxLength = 0;
+ 
+ 	public TextField (String text, Skin skin) {
+ 		this(text, skin.get(TextFieldStyle.class));
+@@ -121,7 +112,7 @@ public class TextField extends Widget implements Disableable {
+ 
+ 	public TextField (String text, TextFieldStyle style) {
+ 		setStyle(style);
+-		this.clipboard = Gdx.app.getClipboard();
++		clipboard = Gdx.app.getClipboard();
+ 		setText(text);
+ 		setWidth(getPrefWidth());
+ 		setHeight(getPrefHeight());
+@@ -131,41 +122,42 @@ public class TextField extends Widget implements Disableable {
+ 	private void initialize () {
+ 		addListener(inputListener = new ClickListener() {
+ 			public void clicked (InputEvent event, float x, float y) {
+-				if (getTapCount() > 1) setSelection(0, text.length());
++				int count = getTapCount() % 4;
++				if (count == 0) clearSelection();
++				if (count == 2) {
++					int[] array = wordUnderCursor(x);
++					setSelection(array[0], array[1]);
++				}
++				if (count == 3) selectAll();
+ 			}
+ 
+ 			public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+ 				if (!super.touchDown(event, x, y, pointer, button)) return false;
+ 				if (pointer == 0 && button != 0) return false;
+ 				if (disabled) return true;
+-				clearSelection();
+ 				setCursorPosition(x);
+ 				selectionStart = cursor;
+ 				Stage stage = getStage();
+ 				if (stage != null) stage.setKeyboardFocus(TextField.this);
+ 				keyboard.show(true);
++				hasSelection = true;
+ 				return true;
+ 			}
+ 
+ 			public void touchDragged (InputEvent event, float x, float y, int pointer) {
+ 				super.touchDragged(event, x, y, pointer);
+-				lastBlink = 0;
+-				cursorOn = false;
+ 				setCursorPosition(x);
+-				hasSelection = true;
++			}
++
++			public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
++				if (selectionStart == cursor) hasSelection = false;
++				super.touchUp(event, x, y, pointer, button);
+ 			}
+ 
+ 			private void setCursorPosition (float x) {
+ 				lastBlink = 0;
+ 				cursorOn = false;
+-				x -= renderOffset + textOffset;
+-				for (int i = 0; i < glyphPositions.size; i++) {
+-					if (glyphPositions.items[i] > x) {
+-						cursor = Math.max(0, i - 1);
+-						return;
+-					}
+-				}
+-				cursor = Math.max(0, glyphPositions.size - 1);
++				cursor = letterUnderCursor(x);
+ 			}
+ 
+ 			public boolean keyDown (InputEvent event, int keycode) {
+@@ -175,137 +167,112 @@ public class TextField extends Widget implements Disableable {
+ 				cursorOn = false;
+ 
+ 				Stage stage = getStage();
+-				if (stage != null && stage.getKeyboardFocus() == TextField.this) {
+-					boolean repeat = false;
+-					boolean ctrl;
+-					if (isMac)
+-						ctrl = Gdx.input.isKeyPressed(Keys.SYM);
+-					else
+-						ctrl = Gdx.input.isKeyPressed(Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Keys.CONTROL_RIGHT);
+-					if (ctrl) {
+-						// paste
+-						if (keycode == Keys.V) {
+-							paste();
+-							return true;
+-						}
+-						// copy
+-						if (keycode == Keys.C || keycode == Keys.INSERT) {
+-							copy();
+-							return true;
+-						}
+-						// cut
+-						if (keycode == Keys.X || keycode == Keys.DEL) {
+-							cut();
+-							return true;
+-						}
+-						// select all
+-						if (keycode == Keys.A) {
+-							selectAll();
+-							return true;
+-						}
++				if (stage == null || stage.getKeyboardFocus() != TextField.this) return false;
++
++				boolean repeat = false;
++				boolean ctrl;
++				if (isMac)
++					ctrl = Gdx.input.isKeyPressed(Keys.SYM);
++				else
++					ctrl = Gdx.input.isKeyPressed(Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Keys.CONTROL_RIGHT);
++				boolean jump = ctrl && !passwordMode;
++
++				if (ctrl) {
++					if (keycode == Keys.V) {
++						paste();
++						return true;
+ 					}
+-					if (Gdx.input.isKeyPressed(Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Keys.SHIFT_RIGHT)) {
+-						// paste
+-						if (keycode == Keys.INSERT) paste();
+-						// cut
+-						if (keycode == Keys.FORWARD_DEL) {
+-							if (hasSelection) {
+-								copy();
+-								delete();
+-							}
+-						}
+-						// selection
+-						if (keycode == Keys.LEFT) {
+-							if (!hasSelection) {
+-								selectionStart = cursor;
+-								hasSelection = true;
+-							}
+-							while (--cursor > 0 && ctrl) {
+-								char c = text.charAt(cursor);
+-								if (c >= 'A' && c <= 'Z') continue;
+-								if (c >= 'a' && c <= 'z') continue;
+-								if (c >= '0' && c <= '9') continue;
+-								break;
+-							}
+-							repeat = true;
+-						}
+-						if (keycode == Keys.RIGHT) {
+-							if (!hasSelection) {
+-								selectionStart = cursor;
+-								hasSelection = true;
+-							}
+-							int length = text.length();
+-							while (++cursor < length && ctrl) {
+-								char c = text.charAt(cursor - 1);
+-								if (c >= 'A' && c <= 'Z') continue;
+-								if (c >= 'a' && c <= 'z') continue;
+-								if (c >= '0' && c <= '9') continue;
+-								break;
++					if (keycode == Keys.C || keycode == Keys.INSERT) {
++						copy();
++						return true;
++					}
++					if (keycode == Keys.X || keycode == Keys.DEL) {
++						cut();
++						return true;
++					}
++					if (keycode == Keys.A) {
++						selectAll();
++						return true;
++					}
++				}
++
++				if (Gdx.input.isKeyPressed(Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Keys.SHIFT_RIGHT)) {
++					if (keycode == Keys.INSERT) paste();
++					if (keycode == Keys.FORWARD_DEL && hasSelection) {
++						copy();
++						delete(); // cut
++					}
++					selection:
++					{
++						int temp = cursor;
++						keys:
++						{
++							if (keycode == Keys.LEFT) {
++								while (--cursor > 0 && jump) {
++									if (isWordCharacter(text.charAt(cursor))) continue;
++									break;
++								}
++								repeat = true;
++								break keys;
+ 							}
+-							repeat = true;
+-						}
+-						if (keycode == Keys.HOME) {
+-							if (!hasSelection) {
+-								selectionStart = cursor;
+-								hasSelection = true;
++							if (keycode == Keys.RIGHT) {
++								while (++cursor < text.length() && jump) {
++									if (isWordCharacter(text.charAt(cursor - 1))) continue;
++									break;
++								}
++								repeat = true;
++								break keys;
+ 							}
+-							cursor = 0;
+-						}
+-						if (keycode == Keys.END) {
+-							if (!hasSelection) {
+-								selectionStart = cursor;
+-								hasSelection = true;
++							if (keycode == Keys.HOME) {
++								cursor = 0;
++								break keys;
+ 							}
+-							cursor = text.length();
+-						}
+-
+-						cursor = Math.max(0, cursor);
+-						cursor = Math.min(text.length(), cursor);
+-					} else {
+-						// cursor movement or other keys (kill selection)
+-						if (keycode == Keys.LEFT) {
+-							while (cursor-- > 1 && ctrl) {
+-								char c = text.charAt(cursor - 1);
+-								if (c >= 'A' && c <= 'Z') continue;
+-								if (c >= 'a' && c <= 'z') continue;
+-								if (c >= '0' && c <= '9') continue;
+-								break;
++							if (keycode == Keys.END) {
++								cursor = text.length();
++								break keys;
+ 							}
+-							clearSelection();
+-							repeat = true;
++							break selection;
+ 						}
+-						if (keycode == Keys.RIGHT) {
+-							int length = text.length();
+-							while (++cursor < length && ctrl) {
+-								char c = text.charAt(cursor - 1);
+-								if (c >= 'A' && c <= 'Z') continue;
+-								if (c >= 'a' && c <= 'z') continue;
+-								if (c >= '0' && c <= '9') continue;
+-								break;
+-							}
+-							clearSelection();
+-							repeat = true;
++						if (!hasSelection) {
++							selectionStart = temp;
++							hasSelection = true;
+ 						}
+-						if (keycode == Keys.HOME) {
+-							cursor = 0;
+-							clearSelection();
++					}
++				} else {
++					// Cursor movement or other keys (kills selection).
++					if (keycode == Keys.LEFT) {
++						while (cursor-- > 1 && jump) {
++							if (isWordCharacter(text.charAt(cursor - 1))) continue;
++							break;
+ 						}
+-						if (keycode == Keys.END) {
+-							cursor = text.length();
+-							clearSelection();
++						clearSelection();
++						repeat = true;
++					}
++					if (keycode == Keys.RIGHT) {
++						while (++cursor < text.length() && jump) {
++							if (isWordCharacter(text.charAt(cursor - 1))) continue;
++							break;
+ 						}
+-
+-						cursor = Math.max(0, cursor);
+-						cursor = Math.min(text.length(), cursor);
++						clearSelection();
++						repeat = true;
++					}
++					if (keycode == Keys.HOME) {
++						cursor = 0;
++						clearSelection();
+ 					}
+-					if (repeat && (!keyRepeatTask.isScheduled() || keyRepeatTask.keycode != keycode)) {
+-						keyRepeatTask.keycode = keycode;
+-						keyRepeatTask.cancel();
+-						Timer.schedule(keyRepeatTask, keyRepeatInitialTime, keyRepeatTime);
++					if (keycode == Keys.END) {
++						cursor = text.length();
++						clearSelection();
+ 					}
+-					return true;
+ 				}
+-				return false;
++				cursor = MathUtils.clamp(cursor, 0, text.length());
++
++				if (repeat && (!keyRepeatTask.isScheduled() || keyRepeatTask.keycode != keycode)) {
++					keyRepeatTask.keycode = keycode;
++					keyRepeatTask.cancel();
++					Timer.schedule(keyRepeatTask, keyRepeatInitialTime, keyRepeatTime);
++				}
++				return true;
+ 			}
+ 
+ 			public boolean keyUp (InputEvent event, int keycode) {
+@@ -317,63 +284,88 @@ public class TextField extends Widget implements Disableable {
+ 			public boolean keyTyped (InputEvent event, char character) {
+ 				if (disabled) return false;
+ 
+-				final BitmapFont font = style.font;
+-
+ 				Stage stage = getStage();
+-				if (stage != null && stage.getKeyboardFocus() == TextField.this) {
+-					if (character == BACKSPACE) {
+-						if (cursor > 0 || hasSelection) {
+-							if (!hasSelection) {
+-								text = text.substring(0, cursor - 1) + text.substring(cursor);
+-								updateDisplayText();
+-								cursor--;
++				if (stage == null || stage.getKeyboardFocus() != TextField.this) return false;
++
++				if ((character == TAB || character == ENTER_ANDROID) && focusTraversal) {
++					next(Gdx.input.isKeyPressed(Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Keys.SHIFT_RIGHT));
++				} else {
++					boolean delete = character == DELETE;
++					boolean backspace = character == BACKSPACE;
++					boolean add = style.font.containsCharacter(character);
++					boolean remove = backspace || delete;
++					if (add || remove) {
++						if (hasSelection)
++							cursor = delete(false);
++						else {
++							if (backspace && cursor > 0) {
++								text = text.substring(0, cursor - 1) + text.substring(cursor--);
+ 								renderOffset = 0;
+-							} else {
+-								delete();
+ 							}
+-						}
+-					} else if (character == DELETE) {
+-						if (cursor < text.length() || hasSelection) {
+-							if (!hasSelection) {
++							if (delete && cursor < text.length()) {
+ 								text = text.substring(0, cursor) + text.substring(cursor + 1);
+-								updateDisplayText();
+-							} else {
+-								delete();
+ 							}
+ 						}
+-					} else if ((character == TAB || character == ENTER_ANDROID) && focusTraversal) {
+-						next(Gdx.input.isKeyPressed(Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Keys.SHIFT_RIGHT));
+-					} else if (font.containsCharacter(character)) {
+-						// Character may be added to the text.
+-						if (character != ENTER_DESKTOP && character != ENTER_ANDROID) {
+-							if (filter != null && !filter.acceptChar(TextField.this, character)) return true;
+-						}
+-						if (maxLength > 0 && text.length() + 1 > maxLength) return true;
+-						if (!hasSelection) {
+-							text = text.substring(0, cursor) + character + text.substring(cursor, text.length());
+-							updateDisplayText();
+-							cursor++;
+-						} else {
+-							int minIndex = Math.min(cursor, selectionStart);
+-							int maxIndex = Math.max(cursor, selectionStart);
+-
+-							text = (minIndex > 0 ? text.substring(0, minIndex) : "")
+-								+ (maxIndex < text.length() ? text.substring(maxIndex, text.length()) : "");
+-							cursor = minIndex;
+-							text = text.substring(0, cursor) + character + text.substring(cursor, text.length());
+-							updateDisplayText();
+-							cursor++;
+-							clearSelection();
++						if (add && !remove) {
++							// Character may be added to the text.
++							if (character != ENTER_DESKTOP && character != ENTER_ANDROID) {
++								if (filter != null && !filter.acceptChar(TextField.this, character)) return true;
++							}
++							if (!withinMaxLength(text.length())) return true;
++							text = insert(cursor++, String.valueOf(character), text);
+ 						}
++						updateDisplayText();
+ 					}
+-					if (listener != null) listener.keyTyped(TextField.this, character);
+-					return true;
+-				} else
+-					return false;
++				}
++				if (listener != null) listener.keyTyped(TextField.this, character);
++				return true;
+ 			}
+ 		});
+ 	}
+ 
++	int letterUnderCursor (float x) {
++		x -= renderOffset + textOffset;
++		int index = glyphPositions.size - 1;
++		float[] glyphPositions = this.glyphPositions.items;
++		for (int i = 0, n = this.glyphPositions.size; i < n; i++) {
++			if (glyphPositions[i] > x) {
++				index = i - 1;
++				break;
++			}
++		}
++		return Math.max(0, index);
++	}
++
++	protected boolean isWordCharacter (char c) {
++		return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9');
++	}
++
++	protected int[] wordUnderCursor (int at) {
++		String text = this.text;
++		int start = at, right = text.length(), left = 0, index = start;
++		for (; index < right; index++) {
++			if (!isWordCharacter(text.charAt(index))) {
++				right = index;
++				break;
++			}
++		}
++		for (index = start - 1; index > -1; index--) {
++			if (!isWordCharacter(text.charAt(index))) {
++				left = index + 1;
++				break;
++			}
++		}
++		return new int[] {left, right};
++	}
++
++	int[] wordUnderCursor (float x) {
++		return wordUnderCursor(letterUnderCursor(x));
++	}
++
++	boolean withinMaxLength (int size) {
++		return maxLength <= 0 || size < maxLength;
++	}
++
+ 	public void setMaxLength (int maxLength) {
+ 		this.maxLength = maxLength;
+ 	}
+@@ -392,15 +384,10 @@ public class TextField extends Widget implements Disableable {
+ 	public void setStyle (TextFieldStyle style) {
+ 		if (style == null) throw new IllegalArgumentException("style cannot be null.");
+ 		this.style = style;
++		textHeight = style.font.getCapHeight() - style.font.getDescent() * 2;
+ 		invalidateHierarchy();
+ 	}
+ 
+-	/** Sets the password character for the text field. The character must be present in the {@link BitmapFont} */
+-	public void setPasswordCharacter (char passwordCharacter) {
+-		this.passwordCharacter = passwordCharacter;
+-		if (passwordMode) updateDisplayText();
+-	}
+-
+ 	/** Returns the text field's style. Modifying the returned style may not have an effect until {@link #setStyle(TextFieldStyle)}
+ 	 * is called. */
+ 	public TextFieldStyle getStyle () {
+@@ -427,12 +414,13 @@ public class TextField extends Widget implements Disableable {
+ 		visibleTextStart = 0;
+ 		textOffset = 0;
+ 		float start = Math.abs(renderOffset);
+-		int len = glyphPositions.size;
++		int glyphCount = glyphPositions.size;
++		float[] glyphPositions = this.glyphPositions.items;
+ 		float startPos = 0;
+-		for (int i = 0; i < len; i++) {
+-			if (glyphPositions.items[i] >= start) {
++		for (int i = 0; i < glyphCount; i++) {
++			if (glyphPositions[i] >= start) {
+ 				visibleTextStart = i;
+-				startPos = glyphPositions.items[i];
++				startPos = glyphPositions[i];
+ 				textOffset = startPos - start;
+ 				break;
+ 			}
+@@ -441,7 +429,7 @@ public class TextField extends Widget implements Disableable {
+ 		// calculate last visible char based on visible width and render offset
+ 		visibleTextEnd = Math.min(displayText.length(), cursor + 1);
+ 		for (; visibleTextEnd <= displayText.length(); visibleTextEnd++) {
+-			if (glyphPositions.items[visibleTextEnd] - startPos > visibleWidth) break;
++			if (glyphPositions[visibleTextEnd] - startPos > visibleWidth) break;
+ 		}
+ 		visibleTextEnd = Math.max(0, visibleTextEnd - 1);
+ 
+@@ -449,21 +437,20 @@ public class TextField extends Widget implements Disableable {
+ 		if (hasSelection) {
+ 			int minIndex = Math.min(cursor, selectionStart);
+ 			int maxIndex = Math.max(cursor, selectionStart);
+-			float minX = Math.max(glyphPositions.get(minIndex), startPos);
+-			float maxX = Math.min(glyphPositions.get(maxIndex), glyphPositions.get(visibleTextEnd));
++			float minX = Math.max(glyphPositions[minIndex], startPos);
++			float maxX = Math.min(glyphPositions[maxIndex], glyphPositions[visibleTextEnd]);
+ 			selectionX = minX;
+ 			selectionWidth = maxX - minX;
+ 		}
+ 
+ 		if (rightAligned) {
+-			textOffset = visibleWidth - (glyphPositions.items[visibleTextEnd] - startPos);
++			textOffset = visibleWidth - (glyphPositions[visibleTextEnd] - startPos);
+ 			if (hasSelection) selectionX += textOffset;
+ 		}
+ 	}
+ 
+ 	@Override
+ 	public void draw (Batch batch, float parentAlpha) {
+-
+ 		Stage stage = getStage();
+ 		boolean focused = stage != null && stage.getKeyboardFocus() == this;
+ 
+@@ -480,7 +467,8 @@ public class TextField extends Widget implements Disableable {
+ 		float y = getY();
+ 		float width = getWidth();
+ 		float height = getHeight();
+-		float textY = textBounds.height / 2 + font.getDescent();
++		float descent = font.getDescent();
++		float textY = textHeight / 2 + descent;
+ 
+ 		batch.setColor(color.r, color.g, color.b, color.a * parentAlpha);
+ 		float bgLeftWidth = 0;
+@@ -495,11 +483,11 @@ public class TextField extends Widget implements Disableable {
+ 		calculateOffsets();
+ 
+ 		if (focused && hasSelection && selection != null) {
+-			selection.draw(batch, x + selectionX + bgLeftWidth + renderOffset, y + textY - textBounds.height - font.getDescent(),
+-				selectionWidth, textBounds.height + font.getDescent() / 2);
++			selection.draw(batch, x + selectionX + bgLeftWidth + renderOffset, y + textY - textHeight - descent, selectionWidth,
++				textHeight + descent / 2);
+ 		}
+ 
+-		float yOffset = font.isFlipped() ? -textBounds.height : 0;
++		float yOffset = font.isFlipped() ? -textHeight : 0;
+ 		if (displayText.length() == 0) {
+ 			if (!focused && messageText != null) {
+ 				if (style.messageFontColor != null) {
+@@ -517,34 +505,38 @@ public class TextField extends Widget implements Disableable {
+ 		if (focused && !disabled) {
+ 			blink();
+ 			if (cursorOn && cursorPatch != null) {
+-				cursorPatch.draw(batch, x + bgLeftWidth + textOffset + glyphPositions.get(cursor)
+-					- glyphPositions.items[visibleTextStart] - 1, y + textY - textBounds.height - font.getDescent(),
+-					cursorPatch.getMinWidth(), textBounds.height + font.getDescent() / 2);
++				cursorPatch.draw(batch, x + bgLeftWidth + textOffset + glyphPositions.items[cursor]
++					- glyphPositions.items[visibleTextStart] - 1, y + textY - textHeight - descent, cursorPatch.getMinWidth(),
++					textHeight + descent / 2);
+ 			}
+ 		}
+ 	}
+ 
+ 	void updateDisplayText () {
++		BitmapFont font = style.font;
++		String text = this.text;
++		int textLength = text.length();
++
+ 		StringBuilder buffer = new StringBuilder();
+-		for (int i = 0; i < text.length(); i++) {
++		for (int i = 0; i < textLength; i++) {
+ 			char c = text.charAt(i);
+-			buffer.append(style.font.containsCharacter(c) ? c : ' ');
++			buffer.append(font.containsCharacter(c) ? c : ' ');
+ 		}
+-		String text = buffer.toString();
++		String newDisplayText = buffer.toString();
+ 
+-		if (passwordMode && style.font.containsCharacter(passwordCharacter)) {
+-			if (passwordBuffer == null) passwordBuffer = new StringBuilder(text.length());
+-			if (passwordBuffer.length() > text.length()) //
+-				passwordBuffer.setLength(text.length());
++		if (passwordMode && font.containsCharacter(passwordCharacter)) {
++			if (passwordBuffer == null) passwordBuffer = new StringBuilder(newDisplayText.length());
++			if (passwordBuffer.length() > textLength) //
++				passwordBuffer.setLength(textLength);
+ 			else {
+-				for (int i = passwordBuffer.length(), n = text.length(); i < n; i++)
++				for (int i = passwordBuffer.length(); i < textLength; i++)
+ 					passwordBuffer.append(passwordCharacter);
+ 			}
+ 			displayText = passwordBuffer;
+ 		} else
+-			displayText = text;
+-		style.font.computeGlyphAdvancesAndPositions(displayText, glyphAdvances, glyphPositions);
+-		if (selectionStart > text.length()) selectionStart = text.length();
++			displayText = newDisplayText;
++		font.computeGlyphAdvancesAndPositions(displayText, glyphAdvances, glyphPositions);
++		if (selectionStart > newDisplayText.length()) selectionStart = textLength;
+ 	}
+ 
+ 	private void blink () {
+@@ -558,9 +550,7 @@ public class TextField extends Widget implements Disableable {
+ 	/** Copies the contents of this TextField to the {@link Clipboard} implementation set on this TextField. */
+ 	public void copy () {
+ 		if (hasSelection && !passwordMode) {
+-			int minIndex = Math.min(cursor, selectionStart);
+-			int maxIndex = Math.max(cursor, selectionStart);
+-			clipboard.setContents(text.substring(minIndex, maxIndex));
++			clipboard.setContents(text.substring(Math.min(cursor, selectionStart), Math.max(cursor, selectionStart)));
+ 		}
+ 	}
+ 
+@@ -569,52 +559,55 @@ public class TextField extends Widget implements Disableable {
+ 	public void cut () {
+ 		if (hasSelection && !passwordMode) {
+ 			copy();
+-			delete();
++			cursor = delete();
+ 		}
+ 	}
+ 
+ 	/** Pastes the content of the {@link Clipboard} implementation set on this Textfield to this TextField. */
+ 	void paste () {
+-		String content = clipboard.getContents();
+-		if (content != null) {
+-			StringBuilder buffer = new StringBuilder();
+-			for (int i = 0; i < content.length(); i++) {
+-				if (maxLength > 0 && text.length() + buffer.length() + 1 > maxLength) break;
+-				char c = content.charAt(i);
+-				if (!style.font.containsCharacter(c)) continue;
+-				if (filter != null && !filter.acceptChar(this, c)) continue;
+-				buffer.append(c);
+-			}
+-			content = buffer.toString();
+-
+-			if (!hasSelection) {
+-				text = text.substring(0, cursor) + content + text.substring(cursor, text.length());
+-				updateDisplayText();
+-				cursor += content.length();
+-			} else {
+-				int minIndex = Math.min(cursor, selectionStart);
+-				int maxIndex = Math.max(cursor, selectionStart);
+-
+-				text = (minIndex > 0 ? text.substring(0, minIndex) : "")
+-					+ (maxIndex < text.length() ? text.substring(maxIndex, text.length()) : "");
+-				cursor = minIndex;
+-				text = text.substring(0, cursor) + content + text.substring(cursor, text.length());
+-				updateDisplayText();
+-				cursor = minIndex + content.length();
+-				clearSelection();
+-			}
++		paste(clipboard.getContents(), true);
++	}
+ 
++	void paste (String content, boolean onlyFontChars) {
++		if (content == null) return;
++		StringBuilder buffer = new StringBuilder();
++		int textLength = text.length();
++		for (int i = 0, n = content.length(); i < n; i++) {
++			if (!withinMaxLength(textLength + buffer.length())) break;
++			char c = content.charAt(i);
++			if (onlyFontChars && !style.font.containsCharacter(c)) continue;
++			if (filter != null && !filter.acceptChar(this, c)) continue;
++			buffer.append(c);
+ 		}
++		content = buffer.toString();
++
++		if (hasSelection) cursor = delete(false);
++		text = insert(cursor, content, text);
++		updateDisplayText();
++		cursor += content.length();
++	}
++
++	String insert (int position, CharSequence text, String to) {
++		if (to.length() == 0) return text.toString();
++		return to.substring(0, position) + text + to.substring(position, to.length());
+ 	}
+ 
+-	void delete () {
+-		int minIndex = Math.min(cursor, selectionStart);
+-		int maxIndex = Math.max(cursor, selectionStart);
++	int delete () {
++		return delete(true);
++	}
++
++	int delete (boolean updateText) {
++		return delete(selectionStart, cursor, updateText);
++	}
++
++	int delete (int from, int to, boolean updateText) {
++		int minIndex = Math.min(from, to);
++		int maxIndex = Math.max(from, to);
+ 		text = (minIndex > 0 ? text.substring(0, minIndex) : "")
+ 			+ (maxIndex < text.length() ? text.substring(maxIndex, text.length()) : "");
+-		updateDisplayText();
+-		cursor = minIndex;
++		if (updateText) updateDisplayText();
+ 		clearSelection();
++		return minIndex;
+ 	}
+ 
+ 	/** Focuses the next TextField. If none is found, the keyboard is hidden. Does nothing if the text field is not in a stage.
+@@ -658,6 +651,10 @@ public class TextField extends Widget implements Disableable {
+ 		return best;
+ 	}
+ 
++	public InputListener getDefaultInputListener () {
++		return inputListener;
++	}
++
+ 	/** @param listener May be null. */
+ 	public void setTextFieldListener (TextFieldListener listener) {
+ 		this.listener = listener;
+@@ -668,6 +665,10 @@ public class TextField extends Widget implements Disableable {
+ 		this.filter = filter;
+ 	}
+ 
++	public TextFieldFilter getTextFieldFilter () {
++		return filter;
++	}
++
+ 	/** If true (the default), tab/shift+tab will move to the next text field. */
+ 	public void setFocusTraversal (boolean focusTraversal) {
+ 		this.focusTraversal = focusTraversal;
+@@ -684,28 +685,14 @@ public class TextField extends Widget implements Disableable {
+ 		this.messageText = messageText;
+ 	}
+ 
+-	public void setText (String text) {
+-		if (text == null) throw new IllegalArgumentException("text cannot be null.");
++	public void setText (String str) {
++		if (str == null) throw new IllegalArgumentException("text cannot be null.");
+ 
+ 		BitmapFont font = style.font;
+-
+-		StringBuilder buffer = new StringBuilder();
+-		for (int i = 0; i < text.length(); i++) {
+-			if (maxLength > 0 && buffer.length() + 1 > maxLength) break;
+-			char c = text.charAt(i);
+-			if (onlyFontChars && !style.font.containsCharacter(c)) continue;
+-			if (filter != null && !filter.acceptChar(this, c)) continue;
+-			buffer.append(c);
+-		}
+-
+-		this.text = buffer.toString();
+-		updateDisplayText();
+-		cursor = 0;
+ 		clearSelection();
+-
+-		textBounds.set(font.getBounds(displayText));
+-		textBounds.height -= font.getDescent() * 2;
+-		font.computeGlyphAdvancesAndPositions(displayText, glyphAdvances, glyphPositions);
++		text = "";
++		paste(str, onlyFontChars);
++		cursor = 0;
+ 	}
+ 
+ 	/** @return Never null, might be an empty string. */
+@@ -713,6 +700,14 @@ public class TextField extends Widget implements Disableable {
+ 		return text;
+ 	}
+ 
++	public int getSelectionStart () {
++		return selectionStart;
++	}
++
++	public String getSelection () {
++		return text.substring(selectionStart, cursor);
++	}
++
+ 	/** Sets the selected text. */
+ 	public void setSelection (int selectionStart, int selectionEnd) {
+ 		if (selectionStart < 0) throw new IllegalArgumentException("selectionStart must be >= 0");
+@@ -771,7 +766,7 @@ public class TextField extends Widget implements Disableable {
+ 	}
+ 
+ 	public float getPrefHeight () {
+-		float prefHeight = textBounds.height;
++		float prefHeight = textHeight;
+ 		if (style.background != null) {
+ 			prefHeight = Math.max(prefHeight + style.background.getBottomHeight() + style.background.getTopHeight(),
+ 				style.background.getMinHeight());
+@@ -783,13 +778,24 @@ public class TextField extends Widget implements Disableable {
+ 		this.rightAligned = rightAligned;
+ 	}
+ 
+-	/** If true, the text in this text field will be shown as bullet characters. The font must have character 149 or this will have
+-	 * no affect. */
++	/** If true, the text in this text field will be shown as bullet characters.
++	 * @see #setPasswordCharacter(char) */
+ 	public void setPasswordMode (boolean passwordMode) {
+ 		this.passwordMode = passwordMode;
+ 		updateDisplayText();
+ 	}
+ 
++	public boolean isPasswordMode () {
++		return passwordMode;
++	}
++
++	/** Sets the password character for the text field. The character must be present in the {@link BitmapFont}. Default is 149
++	 * (bullet). */
++	public void setPasswordCharacter (char passwordCharacter) {
++		this.passwordCharacter = passwordCharacter;
++		if (passwordMode) updateDisplayText();
++	}
++
+ 	public void setBlinkTime (float blinkTime) {
+ 		this.blinkTime = blinkTime;
+ 	}
+@@ -802,14 +808,6 @@ public class TextField extends Widget implements Disableable {
+ 		return disabled;
+ 	}
+ 
+-	public boolean isPasswordMode () {
+-		return passwordMode;
+-	}
+-
+-	public TextFieldFilter getTextFieldFilter () {
+-		return filter;
+-	}
+-
+ 	class KeyRepeatTask extends Task {
+ 		int keycode;
+ 
+diff --git a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Window.java b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Window.java
+index 49d0eb0..ee5e6f6 100644
+--- a/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Window.java
++++ b/gdx/src/com/badlogic/gdx/scenes/scene2d/ui/Window.java
+@@ -32,7 +32,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+ 
+ /** A table that can be dragged and act as a modal window. The top padding is used as the window's title height.
+  * <p>
+- * The preferred size of a window is the preferred size of the title text and the children as layed out by the table. After adding
++ * The preferred size of a window is the preferred size of the title text and the children as laid out by the table. After adding
+  * children to the window, it can be convenient to call {@link #pack()} to size the window to the size of the children.
+  * @author Nathan Sweet */
+ public class Window extends Table {
+@@ -316,8 +316,12 @@ public class Window extends Table {
+ 		return dragging;
+ 	}
+ 
++	public float getTitleWidth () {
++		return titleCache.getBounds().width;
++	}
++
+ 	public float getPrefWidth () {
+-		return Math.max(super.getPrefWidth(), titleCache.getBounds().width + getPadLeft() + getPadRight());
++		return Math.max(super.getPrefWidth(), getTitleWidth() + getPadLeft() + getPadRight());
+ 	}
+ 
+ 	public Table getButtonTable () {
+diff --git a/gdx/src/com/badlogic/gdx/utils/Array.java b/gdx/src/com/badlogic/gdx/utils/Array.java
+index 087a9d9..7fd6871 100644
+--- a/gdx/src/com/badlogic/gdx/utils/Array.java
++++ b/gdx/src/com/badlogic/gdx/utils/Array.java
+@@ -336,6 +336,7 @@ public class Array<T> implements Iterable<T> {
+ 	}
+ 
+ 	/** Selects the nth-lowest element from the Array according to Comparator ranking. This might partially sort the Array.
++	 * The array must have a size greater than 0, or a {@link com.badlogic.gdx.utils.GdxRuntimeException} will be thrown.
+ 	 * @see Select
+ 	 * @param comparator used for comparison
+ 	 * @param kthLowest rank of desired object according to comparison, n is based on ordinal numbers, not array indices. for min
+diff --git a/gdx/src/com/badlogic/gdx/utils/Predicate.java b/gdx/src/com/badlogic/gdx/utils/Predicate.java
+index ef795d6..c38cd01 100644
+--- a/gdx/src/com/badlogic/gdx/utils/Predicate.java
++++ b/gdx/src/com/badlogic/gdx/utils/Predicate.java
+@@ -24,6 +24,8 @@ import com.badlogic.gdx.utils.Array.ArrayIterator;
+  * @author Xoppa
+  */
+ public interface Predicate<T> {
++
++	/** @return true if the item matches the criteria and should be included in the iterator's items */
+ 	boolean evaluate(T arg0);
+ 	
+ 	public class PredicateIterator<T> implements Iterator<T> {
+diff --git a/gdx/src/com/badlogic/gdx/utils/UBJsonReader.java b/gdx/src/com/badlogic/gdx/utils/UBJsonReader.java
+index 8c36a4c..110635a 100644
+--- a/gdx/src/com/badlogic/gdx/utils/UBJsonReader.java
++++ b/gdx/src/com/badlogic/gdx/utils/UBJsonReader.java
+@@ -28,10 +28,16 @@ import com.badlogic.gdx.utils.JsonWriter.OutputType;
+  * <br>
+  * The default behavior is to parse the JSON into a DOM containing {@link JsonValue} objects. Extend this class and override
+  * methods to perform event driven parsing. When this is done, the parse methods will return null.
++ * <br>
+  * @author Xoppa */
+ public class UBJsonReader implements BaseJsonReader {
+ 	public boolean oldFormat = true;
+-	
++
++	/**
++	 * Parses the UBJSON from the given stream.
++	 * <br>
++	 * For best performance you should provide buffered streams to this method!
++	 */
+ 	@Override
+ 	public JsonValue parse (InputStream input) {
+ 		DataInputStream din = null;
+@@ -48,7 +54,7 @@ public class UBJsonReader implements BaseJsonReader {
+ 	@Override
+ 	public JsonValue parse (FileHandle file) {
+ 		try {
+-			return parse(file.read());
++			return parse(file.read(8192));
+ 		} catch (Exception ex) {
+ 			throw new SerializationException("Error parsing file: " + file, ex);
+ 		}
+diff --git a/pom.xml b/pom.xml
+index 5ac8ecc..307ad5a 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -16,7 +16,7 @@
+   <description>Android/desktop game development framework.</description>
+   <url>http://libgdx.badlogicgames.com</url>
+   <issueManagement>
+-    <url>https://code.google.com/p/libgdx/issues/list</url>
++    <url>https://github.com/libgdx/libgdx/issues</url>
+   </issueManagement>
+ 
+   <licenses>
+@@ -42,7 +42,7 @@
+ 
+   <properties>
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+-    <android.version>4.2</android.version>
++    <android.version>4.4</android.version>
+     <gwt.version>2.5.0</gwt.version>
+     <lwjgl.version>2.9.0</lwjgl.version>
+     <robovm.version>0.0.6</robovm.version>
+diff --git a/tests/gdx-tests-android/assets/data/g3d/shaders/lighttest.fragment.glsl b/tests/gdx-tests-android/assets/data/g3d/shaders/lighttest.fragment.glsl
+deleted file mode 100644
+index d7d223b..0000000
+--- a/tests/gdx-tests-android/assets/data/g3d/shaders/lighttest.fragment.glsl
++++ /dev/null
+@@ -1,179 +0,0 @@
+-#ifdef GL_ES 
+-#define LOWP lowp
+-#define MED mediump
+-#define HIGH highp
+-precision mediump float;
+-#else
+-#define MED
+-#define LOWP
+-#define HIGH
+-#endif
+-
+-#if defined(specularTextureFlag) || defined(specularColorFlag)
+-#define specularFlag
+-#endif
+-
+-#ifdef normalFlag
+-varying vec3 v_normal;
+-#endif //normalFlag
+-
+-#if defined(colorFlag)
+-varying vec4 v_color;
+-#endif
+-
+-#ifdef blendedFlag
+-varying float v_opacity;
+-#ifdef alphaTestFlag
+-varying float v_alphaTest;
+-#endif //alphaTestFlag
+-#endif //blendedFlag
+-
+-#if defined(diffuseTextureFlag) || defined(specularTextureFlag)
+-#define textureFlag
+-varying MED vec2 v_texCoords0;
+-#endif
+-
+-#ifdef diffuseColorFlag
+-uniform vec4 u_diffuseColor;
+-#endif
+-
+-#ifdef diffuseTextureFlag
+-uniform sampler2D u_diffuseTexture;
+-#endif
+-
+-#ifdef specularColorFlag
+-uniform vec4 u_specularColor;
+-#endif
+-
+-#ifdef specularTextureFlag
+-uniform sampler2D u_specularTexture;
+-#endif
+-
+-#ifdef normalTextureFlag
+-uniform sampler2D u_normalTexture;
+-#endif
+-
+-#ifdef lightingFlag
+-varying vec3 v_lightDiffuse;
+-
+-#if	defined(ambientLightFlag) || defined(ambientCubemapFlag) || defined(sphericalHarmonicsFlag)
+-#define ambientFlag
+-#endif //ambientFlag
+-
+-#ifdef specularFlag
+-varying vec3 v_lightSpecular;
+-#endif //specularFlag
+-
+-#ifdef shadowMapFlag
+-uniform sampler2D u_shadowTexture;
+-uniform float u_shadowPCFOffset;
+-varying vec3 v_shadowMapUv;
+-#define separateAmbientFlag
+-
+-float getShadowness(vec2 offset)
+-{
+-    const vec4 bitShifts = vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 160581375.0);
+-    return step(v_shadowMapUv.z, dot(texture2D(u_shadowTexture, v_shadowMapUv.xy + offset), bitShifts));//+(1.0/255.0));	
+-}
+-
+-float getShadow() 
+-{
+-	return (//getShadowness(vec2(0,0)) + 
+-			getShadowness(vec2(u_shadowPCFOffset, u_shadowPCFOffset)) +
+-			getShadowness(vec2(-u_shadowPCFOffset, u_shadowPCFOffset)) +
+-			getShadowness(vec2(u_shadowPCFOffset, -u_shadowPCFOffset)) +
+-			getShadowness(vec2(-u_shadowPCFOffset, -u_shadowPCFOffset))) * 0.20;
+-}
+-#endif //shadowMapFlag
+-
+-#if defined(ambientFlag) && defined(separateAmbientFlag)
+-varying vec3 v_ambientLight;
+-#endif //separateAmbientFlag
+-
+-#endif //lightingFlag
+-
+-#ifdef fogFlag
+-uniform vec4 u_fogColor;
+-varying float v_fog;
+-#endif // fogFlag
+-
+-void main() {
+-	#if defined(normalFlag) 
+-		vec3 normal = v_normal;
+-	#endif // normalFlag
+-		
+-	#if defined(diffuseTextureFlag) && defined(diffuseColorFlag) && defined(colorFlag)
+-		vec4 diffuse = texture2D(u_diffuseTexture, v_texCoords0) * u_diffuseColor * v_color;
+-	#elif defined(diffuseTextureFlag) && defined(diffuseColorFlag)
+-		vec4 diffuse = texture2D(u_diffuseTexture, v_texCoords0) * u_diffuseColor;
+-	#elif defined(diffuseTextureFlag) && defined(colorFlag)
+-		vec4 diffuse = texture2D(u_diffuseTexture, v_texCoords0) * v_color;
+-	#elif defined(diffuseTextureFlag)
+-		vec4 diffuse = texture2D(u_diffuseTexture, v_texCoords0);
+-	#elif defined(diffuseColorFlag) && defined(colorFlag)
+-		vec4 diffuse = u_diffuseColor * v_color;
+-	#elif defined(diffuseColorFlag)
+-		vec4 diffuse = u_diffuseColor;
+-	#elif defined(colorFlag)
+-		vec4 diffuse = v_color;
+-	#else
+-		vec4 diffuse = vec4(1.0);
+-	#endif
+-
+-	#if (!defined(lightingFlag))  
+-		gl_FragColor.rgb = diffuse.rgb;
+-	#elif (!defined(specularFlag))
+-		#if defined(ambientFlag) && defined(separateAmbientFlag)
+-			#ifdef shadowMapFlag
+-				gl_FragColor.rgb = (diffuse.rgb * (v_ambientLight + getShadow() * v_lightDiffuse));
+-				//gl_FragColor.rgb = texture2D(u_shadowTexture, v_shadowMapUv.xy);
+-			#else
+-				gl_FragColor.rgb = (diffuse.rgb * (v_ambientLight + v_lightDiffuse));
+-			#endif //shadowMapFlag
+-		#else
+-			#ifdef shadowMapFlag
+-				gl_FragColor.rgb = getShadow() * (diffuse.rgb * v_lightDiffuse);
+-			#else
+-				gl_FragColor.rgb = (diffuse.rgb * v_lightDiffuse);
+-			#endif //shadowMapFlag
+-		#endif
+-	#else
+-		#if defined(specularTextureFlag) && defined(specularColorFlag)
+-			vec3 specular = texture2D(u_specularTexture, v_texCoords0).rgb * u_specularColor.rgb * v_lightSpecular;
+-		#elif defined(specularTextureFlag)
+-			vec3 specular = texture2D(u_specularTexture, v_texCoords0).rgb * v_lightSpecular;
+-		#elif defined(specularColorFlag)
+-			vec3 specular = u_specularColor.rgb * v_lightSpecular;
+-		#else
+-			vec3 specular = v_lightSpecular;
+-		#endif
+-			
+-		#if defined(ambientFlag) && defined(separateAmbientFlag)
+-			#ifdef shadowMapFlag
+-			gl_FragColor.rgb = (diffuse.rgb * (getShadow() * v_lightDiffuse + v_ambientLight)) + specular;
+-				//gl_FragColor.rgb = texture2D(u_shadowTexture, v_shadowMapUv.xy);
+-			#else
+-				gl_FragColor.rgb = (diffuse.rgb * (v_lightDiffuse + v_ambientLight)) + specular;
+-			#endif //shadowMapFlag
+-		#else
+-			#ifdef shadowMapFlag
+-				gl_FragColor.rgb = getShadow() * ((diffuse.rgb * v_lightDiffuse) + specular);
+-			#else
+-				gl_FragColor.rgb = (diffuse.rgb * v_lightDiffuse) + specular;
+-			#endif //shadowMapFlag
+-		#endif
+-	#endif //lightingFlag
+-
+-	#ifdef fogFlag
+-    	gl_FragColor.rgb = mix(gl_FragColor.rgb, u_fogColor.rgb, v_fog);
+-    #endif // end fogFlag
+-
+-	#ifdef blendedFlag
+-		gl_FragColor.a = diffuse.a * v_opacity;
+-		#ifdef alphaTestFlag
+-			if (gl_FragColor.a <= v_alphaTest)
+-				discard;
+-		#endif
+-	#endif
+-
+-}
+diff --git a/tests/gdx-tests-android/assets/data/g3d/shaders/lighttest.vertex.glsl b/tests/gdx-tests-android/assets/data/g3d/shaders/lighttest.vertex.glsl
+deleted file mode 100644
+index 86142a9..0000000
+--- a/tests/gdx-tests-android/assets/data/g3d/shaders/lighttest.vertex.glsl
++++ /dev/null
+@@ -1,326 +0,0 @@
+-#if defined(diffuseTextureFlag) || defined(specularTextureFlag)
+-#define textureFlag
+-#endif
+-
+-#if defined(specularTextureFlag) || defined(specularColorFlag)
+-#define specularFlag
+-#endif
+-
+-#if defined(specularFlag) || defined(fogFlag)
+-#define cameraPositionFlag
+-#endif
+-
+-attribute vec3 a_position;
+-uniform mat4 u_projViewTrans;
+-
+-#if defined(colorFlag)
+-varying vec4 v_color;
+-attribute vec4 a_color;
+-#endif // colorFlag
+-
+-#ifdef normalFlag
+-attribute vec3 a_normal;
+-uniform mat3 u_normalMatrix;
+-varying vec3 v_normal;
+-#endif // normalFlag
+-
+-#ifdef textureFlag
+-attribute vec2 a_texCoord0;
+-varying vec2 v_texCoords0;
+-#endif // textureFlag
+-
+-#ifdef boneWeight0Flag
+-#define boneWeightsFlag
+-attribute vec2 a_boneWeight0;
+-#endif //boneWeight0Flag
+-
+-#ifdef boneWeight1Flag
+-#ifndef boneWeightsFlag
+-#define boneWeightsFlag
+-#endif
+-attribute vec2 a_boneWeight1;
+-#endif //boneWeight1Flag
+-
+-#ifdef boneWeight2Flag
+-#ifndef boneWeightsFlag
+-#define boneWeightsFlag
+-#endif
+-attribute vec2 a_boneWeight2;
+-#endif //boneWeight2Flag
+-
+-#ifdef boneWeight3Flag
+-#ifndef boneWeightsFlag
+-#define boneWeightsFlag
+-#endif
+-attribute vec2 a_boneWeight3;
+-#endif //boneWeight3Flag
+-
+-#ifdef boneWeight4Flag
+-#ifndef boneWeightsFlag
+-#define boneWeightsFlag
+-#endif
+-attribute vec2 a_boneWeight4;
+-#endif //boneWeight4Flag
+-
+-#ifdef boneWeight5Flag
+-#ifndef boneWeightsFlag
+-#define boneWeightsFlag
+-#endif
+-attribute vec2 a_boneWeight5;
+-#endif //boneWeight5Flag
+-
+-#ifdef boneWeight6Flag
+-#ifndef boneWeightsFlag
+-#define boneWeightsFlag
+-#endif
+-attribute vec2 a_boneWeight6;
+-#endif //boneWeight6Flag
+-
+-#ifdef boneWeight7Flag
+-#ifndef boneWeightsFlag
+-#define boneWeightsFlag
+-#endif
+-attribute vec2 a_boneWeight7;
+-#endif //boneWeight7Flag
+-
+-#if defined(numBones) && defined(boneWeightsFlag)
+-#if (numBones > 0) 
+-#define skinningFlag
+-#endif
+-#endif
+-
+-uniform mat4 u_worldTrans;
+-
+-#if defined(numBones)
+-#if numBones > 0
+-uniform mat4 u_bones[numBones];
+-#endif //numBones
+-#endif
+-
+-#ifdef shininessFlag
+-uniform float u_shininess;
+-#else
+-const float u_shininess = 20.0;
+-#endif // shininessFlag
+-
+-#ifdef blendedFlag
+-uniform float u_opacity;
+-varying float v_opacity;
+-
+-#ifdef alphaTestFlag
+-uniform float u_alphaTest;
+-varying float v_alphaTest;
+-#endif //alphaTestFlag
+-#endif // blendedFlag
+-
+-#ifdef lightingFlag
+-varying vec3 v_lightDiffuse;
+-
+-#ifdef ambientLightFlag
+-uniform vec3 u_ambientLight;
+-#endif // ambientLightFlag
+-
+-#ifdef ambientCubemapFlag
+-uniform vec3 u_ambientCubemap[6];
+-#endif // ambientCubemapFlag 
+-
+-#ifdef sphericalHarmonicsFlag
+-uniform vec3 u_sphericalHarmonics[9];
+-#endif //sphericalHarmonicsFlag
+-
+-#ifdef specularFlag
+-varying vec3 v_lightSpecular;
+-#endif // specularFlag
+-
+-#ifdef cameraPositionFlag
+-uniform vec4 u_cameraPosition;
+-#endif // cameraPositionFlag
+-
+-#ifdef fogFlag
+-varying float v_fog;
+-#endif // fogFlag
+-
+-
+-#if defined(numDirectionalLights) && (numDirectionalLights > 0)
+-struct DirectionalLight
+-{
+-	vec3 color;
+-	vec3 direction;
+-};
+-uniform DirectionalLight u_dirLights[numDirectionalLights];
+-#endif // numDirectionalLights
+-
+-#if defined(numPointLights) && (numPointLights > 0)
+-struct PointLight
+-{
+-	vec4 color;
+-	vec4 position;
+-	//float intensity;
+-};
+-uniform PointLight u_pointLights[numPointLights];
+-//uniform vec3 u_pointLightPosition;
+-//uniform vec3 u_pointLightColor;
+-uniform float u_pointLightIntensity;
+-#endif // numPointLights
+-
+-#if	defined(ambientLightFlag) || defined(ambientCubemapFlag) || defined(sphericalHarmonicsFlag)
+-#define ambientFlag
+-#endif //ambientFlag
+-
+-#ifdef shadowMapFlag
+-uniform mat4 u_shadowMapProjViewTrans;
+-varying vec3 v_shadowMapUv;
+-#define separateAmbientFlag
+-#endif //shadowMapFlag
+-
+-#if defined(ambientFlag) && defined(separateAmbientFlag)
+-varying vec3 v_ambientLight;
+-#endif //separateAmbientFlag
+-
+-#endif // lightingFlag
+-
+-void main() {
+-	#ifdef textureFlag
+-		v_texCoords0 = a_texCoord0;
+-	#endif // textureFlag
+-	
+-	#if defined(colorFlag)
+-		v_color = a_color;
+-	#endif // colorFlag
+-		
+-	#ifdef blendedFlag
+-		v_opacity = u_opacity;
+-		#ifdef alphaTestFlag
+-			v_alphaTest = u_alphaTest;
+-		#endif //alphaTestFlag
+-	#endif // blendedFlag
+-	
+-	#ifdef skinningFlag
+-		mat4 skinning = mat4(0.0);
+-		#ifdef boneWeight0Flag
+-			skinning += (a_boneWeight0.y) * u_bones[int(a_boneWeight0.x)];
+-		#endif //boneWeight0Flag
+-		#ifdef boneWeight1Flag				
+-			skinning += (a_boneWeight1.y) * u_bones[int(a_boneWeight1.x)];
+-		#endif //boneWeight1Flag
+-		#ifdef boneWeight2Flag		
+-			skinning += (a_boneWeight2.y) * u_bones[int(a_boneWeight2.x)];
+-		#endif //boneWeight2Flag
+-		#ifdef boneWeight3Flag
+-			skinning += (a_boneWeight3.y) * u_bones[int(a_boneWeight3.x)];
+-		#endif //boneWeight3Flag
+-		#ifdef boneWeight4Flag
+-			skinning += (a_boneWeight4.y) * u_bones[int(a_boneWeight4.x)];
+-		#endif //boneWeight4Flag
+-		#ifdef boneWeight5Flag
+-			skinning += (a_boneWeight5.y) * u_bones[int(a_boneWeight5.x)];
+-		#endif //boneWeight5Flag
+-		#ifdef boneWeight6Flag
+-			skinning += (a_boneWeight6.y) * u_bones[int(a_boneWeight6.x)];
+-		#endif //boneWeight6Flag
+-		#ifdef boneWeight7Flag
+-			skinning += (a_boneWeight7.y) * u_bones[int(a_boneWeight7.x)];
+-		#endif //boneWeight7Flag
+-	#endif //skinningFlag
+-
+-	#ifdef skinningFlag
+-		vec4 pos = u_worldTrans * skinning * vec4(a_position, 1.0);
+-	#else
+-		vec4 pos = u_worldTrans * vec4(a_position, 1.0);
+-	#endif
+-		
+-	gl_Position = u_projViewTrans * pos;
+-		
+-	#ifdef shadowMapFlag
+-		vec4 spos = u_shadowMapProjViewTrans * pos;
+-		v_shadowMapUv.xy = (spos.xy / spos.w) * 0.5 + 0.5;
+-		v_shadowMapUv.z = min(spos.z * 0.5 + 0.5, 0.998);
+-	#endif //shadowMapFlag
+-	
+-	#if defined(normalFlag)
+-		#if defined(skinningFlag)
+-			vec3 normal = normalize((u_worldTrans * skinning * vec4(a_normal, 0.0)).xyz);
+-		#else
+-			vec3 normal = normalize(u_normalMatrix * a_normal);
+-		#endif
+-		v_normal = normal;
+-	#endif // normalFlag
+-
+-    #ifdef fogFlag
+-        vec3 flen = u_cameraPosition.xyz - pos.xyz;
+-        float fog = dot(flen, flen) * u_cameraPosition.w;
+-        v_fog = min(fog, 1.0);
+-    #endif
+-
+-	#ifdef lightingFlag
+-		#if	defined(ambientLightFlag)
+-        	vec3 ambientLight = u_ambientLight;
+-		#elif defined(ambientFlag)
+-        	vec3 ambientLight = vec3(0.0);
+-		#endif
+-			
+-		#ifdef ambientCubemapFlag 		
+-			vec3 squaredNormal = normal * normal;
+-			vec3 isPositive  = step(0.0, normal);
+-			ambientLight += squaredNormal.x * mix(u_ambientCubemap[0], u_ambientCubemap[1], isPositive.x) +
+-					squaredNormal.y * mix(u_ambientCubemap[2], u_ambientCubemap[3], isPositive.y) +
+-					squaredNormal.z * mix(u_ambientCubemap[4], u_ambientCubemap[5], isPositive.z);
+-		#endif // ambientCubemapFlag
+-
+-		#ifdef sphericalHarmonicsFlag
+-			ambientLight += u_sphericalHarmonics[0];
+-			ambientLight += u_sphericalHarmonics[1] * normal.x;
+-			ambientLight += u_sphericalHarmonics[2] * normal.y;
+-			ambientLight += u_sphericalHarmonics[3] * normal.z;
+-			ambientLight += u_sphericalHarmonics[4] * (normal.x * normal.z);
+-			ambientLight += u_sphericalHarmonics[5] * (normal.z * normal.y);
+-			ambientLight += u_sphericalHarmonics[6] * (normal.y * normal.x);
+-			ambientLight += u_sphericalHarmonics[7] * (3.0 * normal.z * normal.z - 1.0);
+-			ambientLight += u_sphericalHarmonics[8] * (normal.x * normal.x - normal.y * normal.y);			
+-		#endif // sphericalHarmonicsFlag
+-
+-		#ifdef ambientFlag
+-			#ifdef separateAmbientFlag
+-				v_ambientLight = ambientLight;
+-				v_lightDiffuse = vec3(0.0);
+-			#else
+-				v_lightDiffuse = ambientLight;
+-			#endif //separateAmbientFlag
+-		#else
+-	        v_lightDiffuse = vec3(0.0);
+-		#endif //ambientFlag
+-
+-			
+-		#ifdef specularFlag
+-			v_lightSpecular = vec3(0.0);
+-			vec3 viewVec = normalize(u_cameraPosition.xyz - pos.xyz);
+-		#endif // specularFlag
+-			
+-		#if defined(numDirectionalLights) && (numDirectionalLights > 0) && defined(normalFlag)
+-			for (int i = 0; i < numDirectionalLights; i++) {
+-				vec3 lightDir = -u_dirLights[i].direction;
+-				float NdotL = clamp(dot(normal, lightDir), 0.0, 1.0);
+-				v_lightDiffuse += u_dirLights[i].color * NdotL;
+-				#ifdef specularFlag
+-					float halfDotView = clamp(dot(normal, normalize(lightDir + viewVec)), 0.0, 2.0);
+-					v_lightSpecular += u_dirLights[i].color * clamp(NdotL * pow(halfDotView, u_shininess), 0.0, 1.0);
+-				#endif // specularFlag
+-			}
+-		#endif // numDirectionalLights
+-
+-		#if defined(numPointLights) && (numPointLights > 0) && defined(normalFlag)
+-			for (int i = 0; i < numPointLights; i++) {
+-				vec3 lightDir = u_pointLights[i].position.xyz - pos.xyz;
+-				float dist2 = dot(lightDir, lightDir);
+-				lightDir *= inversesqrt(dist2);
+-				float NdotL = clamp(dot(normal, lightDir), 0.0, 2.0);
+-				float falloff = clamp(u_pointLightIntensity / (1.0 + dist2), 0.0, 2.0); // FIXME mul intensity on cpu
+-				v_lightDiffuse += u_pointLights[i].color.xyz * (NdotL * falloff);
+-				#ifdef specularFlag
+-					float halfDotView = clamp(dot(normal, normalize(lightDir + viewVec)), 0.0, 2.0);
+-					v_lightSpecular += u_pointLights[i].color * clamp(NdotL * pow(halfDotView, u_shininess) * falloff, 0.0, 2.0);
+-				#endif // specularFlag
+-			}
+-		#endif // numPointLights
+-	#endif // lightingFlag
+-}
+diff --git a/tests/gdx-tests-android/src/com/badlogic/gdx/tests/android/GdxTestActivity.java b/tests/gdx-tests-android/src/com/badlogic/gdx/tests/android/GdxTestActivity.java
+index 25fe864..46b5ad9 100644
+--- a/tests/gdx-tests-android/src/com/badlogic/gdx/tests/android/GdxTestActivity.java
++++ b/tests/gdx-tests-android/src/com/badlogic/gdx/tests/android/GdxTestActivity.java
+@@ -34,6 +34,7 @@ public class GdxTestActivity extends AndroidApplication {
+ 		GdxTest test = GdxTests.newTest(testName);
+ 		AndroidApplicationConfiguration config = new AndroidApplicationConfiguration();
+ 		config.useGL20 = test.needsGL20();
++		config.useImmersiveMode = true;
+ 		initialize(test, config);
+ 	}
+ }
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/LabelScaleTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/LabelScaleTest.java
+index f2ade00..b24b051 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/LabelScaleTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/LabelScaleTest.java
+@@ -50,13 +50,14 @@ public class LabelScaleTest extends GdxTest {
+ 
+ 		Label label1 = new Label("This text is scaled 2x.", skin);
+ 		label1.setFontScale(2);
+-		Label label2 = new Label("This text is scaled 1x,3x.", skin);
+-		label2.setFontScale(1, 3);
++		Label label2 = new Label("This text is scaled. This text is scaled. This text is scaled. This text is scaled. This text is scaled. ", skin);
++		label2.setWrap(true);
++		label2.setFontScale(0.75f, 0.75f);
+ 
+ 		table.debug();
+ 		table.add(label1);
+ 		table.row();
+-		table.add(label2);
++		table.add(label2).fill();
+ 		table.pack();
+ 	}
+ 
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/PixmapPackerTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/PixmapPackerTest.java
+index d8e0451..9fe476b 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/PixmapPackerTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/PixmapPackerTest.java
+@@ -12,60 +12,64 @@
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+- ******************************************************************************/
+-
+-package com.badlogic.gdx.tests;
+-
+-import com.badlogic.gdx.Gdx;
+-import com.badlogic.gdx.graphics.GL10;
+-import com.badlogic.gdx.graphics.OrthographicCamera;
+-import com.badlogic.gdx.graphics.Pixmap;
+-import com.badlogic.gdx.graphics.Pixmap.Format;
+-import com.badlogic.gdx.graphics.PixmapIO;
+-import com.badlogic.gdx.graphics.Texture;
+-import com.badlogic.gdx.graphics.Texture.TextureFilter;
+-import com.badlogic.gdx.graphics.g2d.PixmapPacker;
+-import com.badlogic.gdx.graphics.g2d.PixmapPacker.Page;
+-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+-import com.badlogic.gdx.tests.utils.GdxTest;
+-
+-public class PixmapPackerTest extends GdxTest {
+-	
+-	OrthographicCamera camera;
+-	SpriteBatch batch;
+-	
+-	Texture texture;
+-	TextureAtlas atlas;
+-	
+-	@Override
+-	public void create () {
+-		batch = new SpriteBatch();
+-		
+-		camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+-		camera.position.set(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, 0);
+-		camera.update();
+-		
+-		Pixmap pixmap1 = new Pixmap(Gdx.files.internal("data/badlogic.jpg"));
+-		Pixmap pixmap2 = new Pixmap(Gdx.files.internal("data/wheel.png"));
+-		Pixmap pixmap3 = new Pixmap(Gdx.files.internal("data/egg.png"));
+-		
+-		PixmapPacker packer =  new PixmapPacker(1024, 1024, Format.RGBA8888, 2, true);
+-		packer.pack("badlogic", pixmap1);
+-		packer.pack("wheel", pixmap1);
+-		packer.pack("egg", pixmap1);		
+-		
+-		atlas = packer.generateTextureAtlas(TextureFilter.Nearest, TextureFilter.Nearest, false);
+-		Gdx.app.log("PixmaPackerTest", "Number of textures: " + atlas.getTextures().size());
+-	}
+-
+-	@Override
+-	public void render () {
+-		
+-	}
+-
+-	@Override
+-	public void dispose () {
+-		
+-	}
+-}
+\ No newline at end of file
++ ******************************************************************************/
++
++package com.badlogic.gdx.tests;
++
++import com.badlogic.gdx.Gdx;
++import com.badlogic.gdx.graphics.GL10;
++import com.badlogic.gdx.graphics.OrthographicCamera;
++import com.badlogic.gdx.graphics.Pixmap;
++import com.badlogic.gdx.graphics.Pixmap.Format;
++import com.badlogic.gdx.graphics.PixmapIO;
++import com.badlogic.gdx.graphics.Texture;
++import com.badlogic.gdx.graphics.Texture.TextureFilter;
++import com.badlogic.gdx.graphics.g2d.PixmapPacker;
++import com.badlogic.gdx.graphics.g2d.PixmapPacker.Page;
++import com.badlogic.gdx.graphics.g2d.SpriteBatch;
++import com.badlogic.gdx.graphics.g2d.TextureAtlas;
++import com.badlogic.gdx.tests.utils.GdxTest;
++
++public class PixmapPackerTest extends GdxTest {
++
++	OrthographicCamera camera;
++	SpriteBatch batch;
++
++	Texture texture;
++	TextureAtlas atlas;
++
++	@Override
++	public void create () {
++		batch = new SpriteBatch();
++
++		camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
++		camera.position.set(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, 0);
++		camera.update();
++
++		Pixmap pixmap1 = new Pixmap(Gdx.files.internal("data/badlogic.jpg"));
++		Pixmap pixmap2 = new Pixmap(Gdx.files.internal("data/wheel.png"));
++		Pixmap pixmap3 = new Pixmap(Gdx.files.internal("data/egg.png"));
++
++		PixmapPacker packer = new PixmapPacker(1024, 1024, Format.RGBA8888, 2, true);
++		packer.pack("badlogic", pixmap1);
++		packer.pack("wheel", pixmap1);
++		packer.pack("egg", pixmap1);
++
++		pixmap1.dispose();
++		pixmap2.dispose();
++		pixmap3.dispose();
++
++		atlas = packer.generateTextureAtlas(TextureFilter.Nearest, TextureFilter.Nearest, false);
++		Gdx.app.log("PixmaPackerTest", "Number of textures: " + atlas.getTextures().size());
++	}
++
++	@Override
++	public void render () {
++
++	}
++
++	@Override
++	public void dispose () {
++		atlas.dispose();
++	}
++}
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/UBJsonTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/UBJsonTest.java
+index cb9c8a2..84a8fe2 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/UBJsonTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/UBJsonTest.java
+@@ -1,27 +1,32 @@
++
+ package com.badlogic.gdx.tests;
+ 
+ import com.badlogic.gdx.Gdx;
+ import com.badlogic.gdx.tests.utils.GdxTest;
+-import com.badlogic.gdx.utils.JsonReader;
+ import com.badlogic.gdx.utils.JsonValue;
+-import com.badlogic.gdx.utils.JsonWriter;
+ import com.badlogic.gdx.utils.UBJsonReader;
+ import com.badlogic.gdx.utils.UBJsonWriter;
+ 
+ public class UBJsonTest extends GdxTest {
++	static final String fn = "test.ubjson";
++	static final String longString;
++	static {
++		StringBuilder sb = new StringBuilder();
++		for (int i = 0; i < 300; i++)
++			sb.append((char)((i % 26) + 'a'));
++		longString = sb.toString();
++	}
++
+ 	@Override
+ 	public void create () {
+ 		try {
+-			final String fn = "test.ubjson";
+-			StringBuilder sb = new StringBuilder();
+-			for (int i = 0; i < 300; i++)
+-				sb.append((char)((i%26)+'a'));
++
+ 			UBJsonWriter uw = new UBJsonWriter(Gdx.files.external(fn).write(false));
+ 			uw.object();
+-			uw.set(sb.toString(), sb.toString());
+-			uw.set("0floats", new float[]{});
+-			uw.set("3floats", new float[]{1,2,3.456789f});
+-			uw.set("xfloats", new float[]{Float.MIN_VALUE, Float.MAX_VALUE, Float.NaN, Float.NEGATIVE_INFINITY});
++			uw.set(longString, longString);
++			uw.set("0floats", new float[] {});
++			uw.set("3floats", new float[] {1, 2, 3.456789f});
++			uw.set("xfloats", new float[] {Float.MIN_VALUE, Float.MAX_VALUE, Float.NaN, Float.NEGATIVE_INFINITY});
+ 			uw.set("double", 0.000000000000000000001);
+ 			uw.set("long", Long.MAX_VALUE);
+ 			uw.array("arr");
+@@ -31,17 +36,52 @@ public class UBJsonTest extends GdxTest {
+ 			uw.value((byte)(-2));
+ 			uw.value((short)-32000);
+ 			uw.value((int)-123456);
+-			uw.value((long)(-((1<<63)-1)));
++			uw.value((long)(-((1 << 63) - 1)));
+ 			uw.pop();
+ 			uw.pop();
+ 			uw.close();
+ 			UBJsonReader ur = new UBJsonReader();
+ 			ur.oldFormat = false;
+ 			JsonValue v = ur.parse(Gdx.files.external(fn));
+-			Gdx.app.log("UBJsonTest", "result = \n"+v.toString());
+-			Gdx.app.debug("UBJsonTest", "Test succeeded");
++			Gdx.app.log("UBJsonTest", "result = \n" + v.toString());
++			performanceTest();
++			Gdx.app.log("UBJsonTest", "Test succeeded");
+ 		} catch (Throwable t) {
+ 			Gdx.app.error("UBJsonTest", "Test failed", t);
+ 		}
+ 	}
++
++	private void performanceTest () throws Exception {
++		Gdx.app.log("UBJsonTest", "--- performanceTest ---");
++		long start = System.currentTimeMillis();
++		UBJsonWriter uw = new UBJsonWriter(Gdx.files.external(fn).write(false, 8192));
++		uw.object();
++		uw.set("0floats", new float[] {});
++		uw.set("3floats", new float[] {1, 2, 3.456789f});
++		uw.set("xfloats", new float[] {Float.MIN_VALUE, Float.MAX_VALUE, Float.NaN, Float.NEGATIVE_INFINITY});
++		uw.set("double", 0.000000000000000000001);
++		uw.set("long", Long.MAX_VALUE);
++		uw.array("arr");
++		uw.object().pop();
++		for (int i = 0; i < 50000; i++) {
++			uw.value(true).value(false).value(true);
++			uw.value((byte)254);
++			uw.value((byte)(-2));
++			uw.value((short)-32000);
++			uw.value((int)-123456);
++			uw.value((long)(-((1 << 63) - 1)));
++			uw.value(longString);
++		}
++		uw.pop();
++		uw.pop();
++		uw.close();
++
++		Gdx.app.log("UBJsonTest", "Writing the test file took " + (System.currentTimeMillis() - start) + "ms");
++		Gdx.app.log("UBJsonTest", "File size is " + Gdx.files.external(fn).length());
++		UBJsonReader ur = new UBJsonReader();
++		ur.oldFormat = false;
++		start = System.currentTimeMillis();
++		ur.parse(Gdx.files.external(fn));
++		Gdx.app.log("UBJsonTest", "Parsing the test file took " + (System.currentTimeMillis() - start) + "ms");
++	}
+ }
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/VehicleTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/VehicleTest.java
+index 0006d97..c4ed274 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/VehicleTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/bullet/VehicleTest.java
+@@ -19,17 +19,20 @@ package com.badlogic.gdx.tests.bullet;
+ import com.badlogic.gdx.Gdx;
+ import com.badlogic.gdx.Input.Keys;
+ import com.badlogic.gdx.graphics.Color;
++import com.badlogic.gdx.graphics.Texture;
+ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
+ import com.badlogic.gdx.graphics.g3d.Material;
+ import com.badlogic.gdx.graphics.g3d.Model;
+ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+ import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
++import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+ import com.badlogic.gdx.math.MathUtils;
+ import com.badlogic.gdx.math.Vector3;
+ import com.badlogic.gdx.math.collision.BoundingBox;
+ import com.badlogic.gdx.physics.bullet.collision.Collision;
+ import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
+ import com.badlogic.gdx.physics.bullet.dynamics.btDefaultVehicleRaycaster;
++import com.badlogic.gdx.physics.bullet.dynamics.btDiscreteDynamicsWorld;
+ import com.badlogic.gdx.physics.bullet.dynamics.btDynamicsWorld;
+ import com.badlogic.gdx.physics.bullet.dynamics.btRaycastVehicle;
+ import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
+@@ -65,6 +68,13 @@ public class VehicleTest extends BaseBulletTest {
+ 		wheelModel.materials.get(0).clear();
+ 		wheelModel.materials.get(0).set(ColorAttribute.createDiffuse(Color.BLACK), 
+ 			ColorAttribute.createSpecular(Color.WHITE), FloatAttribute.createShininess(128));
++		Texture checkboard = new Texture(Gdx.files.internal("data/g3d/checkboard.png"));
++		final Model largeGroundModel = modelBuilder.createBox(1000f, 2f, 1000f, 
++			new Material(TextureAttribute.createDiffuse(checkboard), ColorAttribute.createSpecular(Color.WHITE), FloatAttribute.createShininess(16f)),
++			Usage.Position | Usage.Normal | Usage.TextureCoordinates);
++		largeGroundModel.manageDisposable(checkboard);
++		disposables.add(largeGroundModel);
++		world.addConstructor("largeground", new BulletConstructor(largeGroundModel, 0f));
+ 
+ 		BoundingBox bounds = new BoundingBox();
+ 		Vector3 chassisHalfExtents = new Vector3(chassisModel.calculateBoundingBox(bounds).getDimensions()).scl(0.5f);
+@@ -73,15 +83,9 @@ public class VehicleTest extends BaseBulletTest {
+ 		world.addConstructor("chassis", new BulletConstructor(chassisModel, 5f, new btBoxShape(chassisHalfExtents)));
+ 		world.addConstructor("wheel", new BulletConstructor(wheelModel, 0, null));
+ 
+-		// Create the entities
+-		for (float x = -500; x <= 500; x+= 40) {
+-			for (float z = -500; z <= 500; z+= 40) {
+-				world.add("ground", x, 0f, z)
+-				.setColor(0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 0.25f + 0.5f * (float)Math.random(), 1f);				
+-			}
+-		}
++		world.add("largeground", 0, -1f, 0f);
+ 
+-		chassis = world.add("chassis", 0, 5f, 0);
++		chassis = world.add("chassis", 0, 3f, 0);
+ 		wheels[0] = world.add("wheel", 0, 0, 0);
+ 		wheels[1] = world.add("wheel", 0, 0, 0);
+ 		wheels[2] = world.add("wheel", 0, 0, 0);
+@@ -92,6 +96,8 @@ public class VehicleTest extends BaseBulletTest {
+ 		tuning = new btVehicleTuning();
+ 		vehicle = new btRaycastVehicle(tuning, (btRigidBody)chassis.body, raycaster);
+ 		chassis.body.setActivationState(Collision.DISABLE_DEACTIVATION);
++		((btDynamicsWorld)world.collisionWorld).addVehicle(vehicle);
++		
+ 		vehicle.setCoordinateSystem(0, 1, 2);
+ 
+ 		btWheelInfo wheelInfo;
+@@ -102,7 +108,6 @@ public class VehicleTest extends BaseBulletTest {
+ 		wheelInfo = vehicle.addWheel(point.set(chassisHalfExtents).scl(-0.9f,-0.8f,0.7f), direction, axis, wheelHalfExtents.z*0.3f, wheelHalfExtents.z, tuning, true);
+ 		wheelInfo = vehicle.addWheel(point.set(chassisHalfExtents).scl(0.9f,-0.8f,-0.5f), direction, axis, wheelHalfExtents.z*0.3f, wheelHalfExtents.z, tuning, false);
+ 		wheelInfo = vehicle.addWheel(point.set(chassisHalfExtents).scl(-0.9f,-0.8f,-0.5f), direction, axis, wheelHalfExtents.z*0.3f, wheelHalfExtents.z, tuning, false);
+-		((btDynamicsWorld)world.collisionWorld).addVehicle(vehicle);
+ 	}
+ 	
+ 	float maxForce = 100f;
+diff --git a/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/LightsTest.java b/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/LightsTest.java
+index 0100ec3..aae115d 100644
+--- a/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/LightsTest.java
++++ b/tests/gdx-tests/src/com/badlogic/gdx/tests/g3d/LightsTest.java
+@@ -1,213 +1,76 @@
+ package com.badlogic.gdx.tests.g3d;
+ 
+ import com.badlogic.gdx.Gdx;
+-import com.badlogic.gdx.InputMultiplexer;
+-import com.badlogic.gdx.graphics.Camera;
+-import com.badlogic.gdx.graphics.GL10;
+-import com.badlogic.gdx.graphics.PerspectiveCamera;
+-import com.badlogic.gdx.graphics.Texture;
+ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
+-import com.badlogic.gdx.graphics.g3d.Attributes;
+-import com.badlogic.gdx.graphics.g3d.Environment;
+ import com.badlogic.gdx.graphics.g3d.Material;
+ import com.badlogic.gdx.graphics.g3d.Model;
+ import com.badlogic.gdx.graphics.g3d.ModelBatch;
+ import com.badlogic.gdx.graphics.g3d.ModelInstance;
+ import com.badlogic.gdx.graphics.g3d.Renderable;
+-import com.badlogic.gdx.graphics.g3d.Shader;
+ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+-import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
+ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+ import com.badlogic.gdx.graphics.g3d.environment.PointLight;
+-import com.badlogic.gdx.graphics.g3d.shaders.BaseShader;
+-import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
+-import com.badlogic.gdx.graphics.g3d.shaders.BaseShader.Uniform;
+-import com.badlogic.gdx.graphics.g3d.utils.AnimationController;
+-import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
+-import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder;
+ import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
+-import com.badlogic.gdx.graphics.g3d.utils.RenderContext;
+ import com.badlogic.gdx.math.Vector3;
+ import com.badlogic.gdx.math.collision.BoundingBox;
+-import com.badlogic.gdx.tests.utils.GdxTest;
+ import com.badlogic.gdx.utils.Array;
+-import com.badlogic.gdx.utils.ObjectMap;
+ 
+-public class LightsTest extends GdxTest {
+-	PerspectiveCamera cam;
+-	CameraInputController inputController;
+-	ModelBatch modelBatch;
+-	Model model;
+-	Renderable renderable;
+-	Environment environment;
++public class LightsTest extends ModelTest {
++	DirectionalLight dirLight;
+ 	PointLight pointLight;
+-	Vector3 tmpV = new Vector3();
+-	Shader shader;
++	Model lightModel;
++	Renderable pLight;
++	Vector3 center = new Vector3(), transformedCenter = new Vector3(), tmpV = new Vector3();
++	float radius = 1f;
+ 	
+ 	@Override
+ 	public void create () {
+-		modelBatch = new ModelBatch();
+-		environment = new Environment();
++		super.create();
++		environment.clear();
+ 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.2f, 0.2f, 0.2f, 1.0f));
++		environment.add(dirLight = new DirectionalLight().set(0.8f, 0.2f, 0.2f, -1f, -2f, -0.5f));
+ 		environment.add(pointLight = new PointLight().set(0.2f, 0.8f, 0.2f, 0f, 0f, 0f, 100f));
+ 		
+-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+-		cam.position.set(0f, 0f, 5f);
+-		cam.lookAt(0,0,0);
+-		cam.near = 1f;
+-		cam.far = 300f;
+-		cam.update();		
+-		
+-		ModelBuilder modelBuilder = new ModelBuilder();
+-		model = modelBuilder.createSphere(2f, 3f, 2f, 10, 10, GL10.GL_TRIANGLES, new Material(ColorAttribute.createDiffuse(1, 1, 1, 1)), Usage.Position | Usage.Normal);
+-		renderable = model.nodes.get(0).parts.get(0).setRenderable(new Renderable());
+-		renderable.environment = environment;
+-		if (true) {
+-			DefaultShader.Config config = new DefaultShader.Config();
+-			config.numPointLights = 2;
+-			renderable.shader = shader = new DefaultShader(renderable, config);
+-		} else {
+-			DefaultShader.Config config = new DefaultShader.Config(Gdx.files.internal("data/g3d/shaders/lighttest.vertex.glsl").readString(), Gdx.files.internal("data/g3d/shaders/lighttest.fragment.glsl").readString());
+-			config.numPointLights = 2;
+-			renderable.shader = shader = new DefaultShader(renderable, config) {
+-				protected final int u_pointLightPosition	= register(new Uniform("u_pointLightPosition"), new Setter() {
+-					@Override public boolean isGlobal (BaseShader shader, int inputID) { return false; }
+-					@Override public void set (BaseShader shader, int inputID, Renderable renderable, Attributes combinedAttributes) {
+-						shader.set(inputID, pointLight.position);
+-					}
+-				});
+-				protected final int u_pointLightIntensity	= register(new Uniform("u_pointLightIntensity"), new Setter() {
+-					@Override public boolean isGlobal (BaseShader shader, int inputID) { return false; }
+-					@Override public void set (BaseShader shader, int inputID, Renderable renderable, Attributes combinedAttributes) {
+-						shader.set(inputID, pointLight.intensity);
+-					}
+-				});
+-				protected final int u_pointLightColor		= register(new Uniform("u_pointLightColor"), new Setter() {
+-					@Override public boolean isGlobal (BaseShader shader, int inputID) { return false; }
+-					@Override public void set (BaseShader shader, int inputID, Renderable renderable, Attributes combinedAttributes) {
+-						shader.set(inputID, pointLight.color.g, pointLight.color.r, pointLight.color.b);
+-					}
+-				});
+-				
+-				@Override
+-				public void init () {
+-					super.init();
+-	//				if (!has(u_pointLightPosition))
+-	//					Gdx.app.error("LightsTest", "No uniform called: u_pointLightPosition");
+-	//				if (!has(u_pointLightColor))
+-	//					Gdx.app.error("LightsTest", "No uniform called: u_pointLightColor");
+-					if (!has(u_pointLightIntensity))
+-						Gdx.app.error("LightsTest", "No uniform called: u_pointLightIntensity");
+-					Gdx.app.log("LightsTest", "Shader log: "+program.getLog());
+-					Gdx.app.log("LightsTest", "pointLightsLoc = "+pointLightsLoc);
+-					Gdx.app.log("LightsTest", "pointLightsColorOffset = "+pointLightsColorOffset);
+-					Gdx.app.log("LightsTest", "pointLightsPositionOffset = "+pointLightsPositionOffset);
+-					Gdx.app.log("LightsTest", "pointLightsIntensityOffset = "+pointLightsIntensityOffset);
+-					Gdx.app.log("LightsTest", "pointLightsSize = "+pointLightsSize);
+-					for (String uniform : program.getUniforms())
+-						Gdx.app.log("LightsTest", "Uniform: name="+uniform+", size="+program.getUniformSize(uniform)+", type="+program.getUniformType(uniform)+", location="+program.getUniformLocation(uniform));
+-				}
+-				
+-				boolean lightsSet;
+-				@Override
+-				public void begin (Camera camera, RenderContext context) {
+-					lightsSet = false;
+-					super.begin(camera, context);
+-				}
+-				
+-				@Override
+-				protected final void bindLights(final Renderable renderable) {
+-					final Environment lights = renderable.environment;
+-					final Array<DirectionalLight> dirs = lights.directionalLights; 
+-					final Array<PointLight> points = lights.pointLights;
+-					
+-					if (dirLightsLoc >= 0) {
+-						for (int i = 0; i < directionalLights.length; i++) {
+-							if (dirs == null || i >= dirs.size) {
+-								if (lightsSet && directionalLights[i].color.r == 0f && directionalLights[i].color.g == 0f && directionalLights[i].color.b == 0f)
+-									continue;
+-								directionalLights[i].color.set(0,0,0,1);
+-							} else if (lightsSet && directionalLights[i].equals(dirs.get(i)))
+-								continue;
+-							else
+-								directionalLights[i].set(dirs.get(i));
+-							
+-							int idx = dirLightsLoc + i * dirLightsSize; 
+-							program.setUniformf(idx+dirLightsColorOffset, directionalLights[i].color.r, directionalLights[i].color.g, directionalLights[i].color.b);
+-							program.setUniformf(idx+dirLightsDirectionOffset, directionalLights[i].direction);
+-							if (dirLightsSize <= 0)
+-								break;
+-						}
+-					}
+-					
+-					if (pointLightsLoc >= 0) {
+-						for (int i = 0; i < pointLights.length; i++) {
+-							if (points == null || i >= points.size) {
+-								if (lightsSet && pointLights[i].intensity == 0f)
+-									continue;
+-								pointLights[i].intensity = 0f;
+-							} else if (lightsSet && pointLights[i].equals(points.get(i)))
+-								continue;
+-							else
+-								pointLights[i].set(points.get(i));
+-
+-							int idx = pointLightsLoc + i * pointLightsSize;
+-							program.setUniformf(idx+pointLightsColorOffset, pointLights[i].color.r, pointLights[i].color.g, pointLights[i].color.b, 1f);
+-							program.setUniformf(idx+pointLightsPositionOffset, pointLights[i].position.x, pointLights[i].position.y, pointLights[i].position.z, 0f);
+-							if (pointLightsIntensityOffset >= 0)
+-								program.setUniformf(idx+pointLightsIntensityOffset, pointLights[i].intensity);
+-							if (pointLightsSize <= 0)
+-								break;
+-						}
+-					}
+-
+-					if (lights.has(ColorAttribute.Fog)) {
+-						set(u_fogColor, ((ColorAttribute)lights.get(ColorAttribute.Fog)).color);
+-					}
+-					
+-					if (lights.shadowMap != null) {
+-						set(u_shadowMapProjViewTrans, lights.shadowMap.getProjViewTrans());
+-						set(u_shadowTexture, lights.shadowMap.getDepthMap());
+-						set(u_shadowPCFOffset, 1.f / (float)(2f * lights.shadowMap.getDepthMap().texture.getWidth()));
+-					}
+-					
+-					lightsSet = true;
+-				}
+-			};
+-		}
+-		shader.init();
+-      pointLight.position.set(0,3f,0);
+-      pointLight.intensity = 9f;
+-		
+-		Gdx.input.setInputProcessor(inputController = new CameraInputController(cam));
++		ModelBuilder mb = new ModelBuilder();
++		lightModel = mb.createSphere(1, 1, 1, 10, 10, new Material(ColorAttribute.createDiffuse(1, 1, 1, 1)), Usage.Position);
++		lightModel.nodes.get(0).parts.get(0).setRenderable(pLight = new Renderable());
++	}
++	
++	@Override
++	protected void onLoaded () {
++		super.onLoaded();
++		BoundingBox bounds = instances.get(0).calculateBoundingBox(new BoundingBox());
++		center.set(bounds.getCenter());
++		radius = bounds.getDimensions().len() * .5f;
++		pointLight.position.set(0,radius,0).add(transformedCenter.set(center).mul(transform));
++		pointLight.intensity = radius * radius;
++		((ColorAttribute)pLight.material.get(ColorAttribute.Diffuse)).color.set(pointLight.color);
++		final float s = 0.2f * radius;
++		pLight.worldTransform.setToScaling(s, s, s);
+ 	}
+ 
+ 	@Override
+-	public void render () {
+-      final float delta = Gdx.graphics.getDeltaTime();
+-      
+-      pointLight.position.rotate(Vector3.X, delta * 50f);
+-      pointLight.position.rotate(Vector3.Y, delta * 13f);
+-      pointLight.position.rotate(Vector3.Z, delta * 3f);
++	protected void render (ModelBatch batch, Array<ModelInstance> instances) {
++		final float delta = Gdx.graphics.getDeltaTime();
++		dirLight.direction.rotate(Vector3.X, delta * 45f);
++		dirLight.direction.rotate(Vector3.Y, delta * 25f);
++		dirLight.direction.rotate(Vector3.Z, delta * 33f);
+ 		
+-		inputController.update();
++		pointLight.position.sub(transformedCenter);
++		pointLight.position.rotate(Vector3.X, delta * 50f);
++		pointLight.position.rotate(Vector3.Y, delta * 13f);
++		pointLight.position.rotate(Vector3.Z, delta * 3f);
++		pointLight.position.add(transformedCenter.set(center).mul(transform));
+ 		
+-		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+-		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
+-
+-		modelBatch.begin(cam);
+-		modelBatch.render(renderable);
+-		modelBatch.end();
++		pLight.worldTransform.setTranslation(pointLight.position);
++		batch.render(pLight);
++		
++		super.render(batch, instances);
+ 	}
+ 	
+ 	@Override
+ 	public void dispose () {
+-		modelBatch.dispose();
+-		model.dispose();
+-		shader.dispose();
+-	}
+-	
+-	public boolean needsGL20 () {
+-		return true;
++		lightModel.dispose();
++		super.dispose();
+ 	}
+-}
++}
+\ No newline at end of file

@@ -1,0 +1,97 @@
+diff --git a/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/scenes/scene2d/ui/Skin.java b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/scenes/scene2d/ui/Skin.java
+index ed1e7de..731a684 100644
+--- a/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/scenes/scene2d/ui/Skin.java
++++ b/backends/gdx-backends-gwt/src/com/badlogic/gdx/backends/gwt/emu/com/badlogic/gdx/scenes/scene2d/ui/Skin.java
+@@ -36,12 +36,12 @@ import com.badlogic.gdx.utils.Array;
+ import com.badlogic.gdx.utils.Disposable;
+ import com.badlogic.gdx.utils.GdxRuntimeException;
+ import com.badlogic.gdx.utils.Json;
+-import com.badlogic.gdx.utils.JsonValue;
+ import com.badlogic.gdx.utils.Json.ReadOnlySerializer;
+ import com.badlogic.gdx.utils.ObjectMap;
+ import com.badlogic.gdx.utils.ObjectMap.Entry;
+ import com.badlogic.gdx.utils.SerializationException;
+ import com.badlogic.gwtref.client.ReflectionCache;
++import com.badlogic.gdx.utils.JsonValue;
+ 
+ /** A skin has a {@link TextureAtlas} and stores resources for UI widgets to use (texture regions, ninepatches, fonts, colors,
+  * etc). Resources are named and can be looked up by name and type. Skin provides useful conversions, such as allowing access to
+@@ -366,7 +366,7 @@ public class Skin implements Disposable {
+ 				// If the JSON is a string but the type is not, look up the actual value by name.
+ 				if (jsonData.isString()
+ 					&& !ReflectionCache.getType(type).isAssignableFrom(ReflectionCache.getType(CharSequence.class)))
+-					return get(jsonData.asString(), type);
++					return get((String)jsonData.asString(), type);
+ 				return super.readValue(type, elementType, jsonData);
+ 			}
+ 		};
+@@ -374,10 +374,13 @@ public class Skin implements Disposable {
+ 		json.setUsePrototypes(false);
+ 
+ 		json.setSerializer(Skin.class, new ReadOnlySerializer<Skin>() {
+-			public Skin read (Json json, JsonValue typeToValueMap, Class ignored) {
+-				for (JsonValue valueMap = typeToValueMap.child(); valueMap != null; valueMap = valueMap.next()) {
++			public Skin read (Json json, JsonValue jsonData, Class ignored) {
++				ObjectMap<String, ObjectMap> typeToValueMap = (ObjectMap)jsonData;
++				for (Entry<String, ObjectMap> typeEntry : typeToValueMap.entries()) {
++					String className = typeEntry.key;
++					ObjectMap<String, ObjectMap> valueMap = (ObjectMap)typeEntry.value;
+ 					try {
+-						readNamedObjects(json, ReflectionCache.forName(valueMap.name()).getClassOfType(), valueMap);
++						readNamedObjects(json, ReflectionCache.forName(className).getClassOfType(), valueMap);
+ 					} catch (ClassNotFoundException ex) {
+ 						throw new SerializationException(ex);
+ 					}
+@@ -385,21 +388,23 @@ public class Skin implements Disposable {
+ 				return skin;
+ 			}
+ 
+-			private void readNamedObjects (Json json, Class type, JsonValue valueMap) {
++			private void readNamedObjects (Json json, Class type, ObjectMap<String, ObjectMap> valueMap) {
+ 				Class addType = type == TintedDrawable.class ? Drawable.class : type;
+-				for (JsonValue valueEntry = valueMap.child(); valueEntry != null; valueEntry = valueEntry.next()) {
+-					Object object = json.readValue(type, valueEntry);
++				for (Entry<String, ObjectMap> valueEntry : valueMap.entries()) {
++					String name = valueEntry.key;
++					Object object = json.readValue(type, valueEntry.value);
+ 					if (object == null) continue;
+ 					try {
+-						add(valueEntry.name(), object, addType);
++						add(name, object, addType);
+ 					} catch (Exception ex) {
+-						throw new SerializationException("Error reading " + type.getSimpleName() + ": " + valueEntry.name(), ex);
++						throw new SerializationException("Error reading " + type.getName() + ": " + valueEntry.key, ex);
+ 					}
+ 				}
+ 			}
+ 		});
+ 
+ 		json.setSerializer(BitmapFont.class, new ReadOnlySerializer<BitmapFont>() {
++			@Override
+ 			public BitmapFont read (Json json, JsonValue jsonData, Class type) {
+ 				String path = json.readValue("file", String.class, jsonData);
+ 
+@@ -428,9 +433,8 @@ public class Skin implements Disposable {
+ 
+ 		json.setSerializer(Color.class, new ReadOnlySerializer<Color>() {
+ 			public Color read (Json json, JsonValue jsonData, Class type) {
+-				if (jsonData.isString()) return get(jsonData.asString(), Color.class);
+-				String hex = json.readValue("hex", String.class, (String)null, jsonData);
+-				if (hex != null) return Color.valueOf(hex);
++				if (jsonData instanceof String) return get((String)jsonData, Color.class);
++				ObjectMap map = (ObjectMap)jsonData;
+ 				float r = json.readValue("r", float.class, 0f, jsonData);
+ 				float g = json.readValue("g", float.class, 0f, jsonData);
+ 				float b = json.readValue("b", float.class, 0f, jsonData);
+diff --git a/gdx/src/com/badlogic/gdx.gwt.xml b/gdx/src/com/badlogic/gdx.gwt.xml
+index d18892d..54dc0bc 100644
+--- a/gdx/src/com/badlogic/gdx.gwt.xml
++++ b/gdx/src/com/badlogic/gdx.gwt.xml
+@@ -77,6 +77,7 @@
+ 		<include name="math/Intersector.java"/>
+ 		<include name="utils/JsonReader.java"/>
+ 		<include name="utils/JsonWriter.java"/>
++		<include name="utils/JsonValue.java"/>
+ 		<include name="utils/DataInput.java"/>
+ 		<include name="utils/DataOutput.java"/>
+ 		<include name="graphics/g3d/keyframed/Keyframe.java"/>
