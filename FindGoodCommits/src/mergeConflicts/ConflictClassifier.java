@@ -15,7 +15,7 @@ public class ConflictClassifier {
 		
 		checkClass(ModifierListChecker.class, left, common, right, classifiers);
 		checkClass(ExtendsListChecker.class, left, common, right, classifiers);
-		
+		checkClass(SameSignatureCMChecker.class, left, common, right, classifiers);
 		return classifiers;
 	}
 	

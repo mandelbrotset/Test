@@ -31,7 +31,7 @@ public class Main {
 	
 	public static void main(String args[]) {
 		args = new String[1];
-		args[0] = createConflictFileTree;
+		args[0] = conflictAnalyzer;
 		
 		machine = Machine.getInstance();
 		
