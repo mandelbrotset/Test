@@ -1,11 +1,9 @@
 package mergeConflicts;
 
 import java.util.ArrayList;
-import java.util.regex.PatternSyntaxException;
 
 public class ConflictClassifier {
 	
-
 	private final String[] fieldModifiers = { "public", "protected", "private", "transient", "volatile", "static", "final" };
 
 	public enum Classifier {
@@ -16,7 +14,8 @@ public class ConflictClassifier {
 		ArrayList<Classifier> classifiers = new ArrayList<Classifier>();
 		
 		checkClass(ModifierListChecker.class, left, common, right, classifiers);
-
+		checkClass(ExtendsListChecker.class, left, common, right, classifiers);
+		
 		return classifiers;
 	}
 	

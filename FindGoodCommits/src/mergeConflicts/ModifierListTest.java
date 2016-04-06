@@ -27,6 +27,11 @@ public class ModifierListTest {
 		common = "interface Case {\n \n int x;";
 		right = "abstract interface Case {\n \n int x;";
 		assertTrue(mlc.checkClass(left, common, right));
+		
+		left = "public class Hej {\n \n int x;";
+		common = "class Hej {\n \n int x;";
+		right = "abstract class Hejsan {\n \n int x;";
+		assertFalse(mlc.checkClass(left, common, right));
 	}
 	
 	

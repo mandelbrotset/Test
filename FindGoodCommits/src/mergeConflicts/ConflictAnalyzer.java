@@ -65,8 +65,14 @@ public class ConflictAnalyzer {
 		String commitSHA = InformationGatherer.getCommitSHA(javaFilePath);
 		String commitMessage = InformationGatherer.getCommitMessage(repoPath, commitSHA);
 		boolean isPullRequest = InformationGatherer.isPullRequest(repoPath, commitSHA);
-		
-		return Conflict.getConflicts(left, anc, right, commitSHA, commitMessage, fileName, isPullRequest);
+		ArrayList<Conflict> newConflicts;
+		try {
+			newConflicts = Conflict.getConflicts(left, anc, right, commitSHA, commitMessage, fileName, isPullRequest);
+		} catch (OldConflictFoundException e) {
+			System.out.println("oldConflictFound: " + e.getMessage());
+			newConflicts = new ArrayList<Conflict>();
+		}
+		return newConflicts;
 	}
 	
 	private String extractTheName(String path) {
