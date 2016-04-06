@@ -7,6 +7,7 @@ public class TypeDeclaration {
 	public String identifier;
 	public String modifiers;
 	public boolean hasExtends;
+	public boolean hasImplements;
 	private String declarationLine;
 	public static final String[] typeModifiers = { "public", "protected", "private", "abstract", "static", "final",
 			"strictfp" };
@@ -28,7 +29,8 @@ public class TypeDeclaration {
 				this.identifier = identifier;
 				this.type = type;
 				this.hasExtends = hasExtends(line);
-				extractTypeModifiers(lines);
+				this.hasImplements = hasImplements(line);
+				extractTypeModifiers(line);
 				return true;
 			}
 		}
@@ -37,6 +39,10 @@ public class TypeDeclaration {
 
 	private boolean hasExtends(String line) {
 		return line.contains(" extends ");
+	}
+	
+	private boolean hasImplements(String line) {
+		return line.contains(" implements ");
 	}
 
 	private String contains(String line, String[] words) {
@@ -60,6 +66,14 @@ public class TypeDeclaration {
 	private void extractTypeModifiers(String line) throws NullPointerException, IndexOutOfBoundsException {
 		if (line.contains(this.identifier) && line.contains(this.type)) {
 			this.modifiers = line.split(this.type)[0].trim();
+		}
+	}
+	
+	public String parseInterfaces() {
+		try {
+			return declarationLine.split(" implements ")[1].trim().split("\\{")[0].trim();
+		} catch (ArrayIndexOutOfBoundsException e) {
+			return null;
 		}
 	}
 	
