@@ -31,7 +31,7 @@ public class Main {
 	
 	public static void main(String args[]) {
 		args = new String[1];
-		args[0] = conflictAnalyzer;
+		args[0] = createConflictFileTree;
 		
 		machine = Machine.getInstance();
 		
@@ -43,7 +43,7 @@ public class Main {
 			analyzeRepos();
 		} else if(args[0].equals(createConflictFileTree)) {
 			ConflictFileTree cft = new ConflictFileTree(machine.getRepoPath());
-			cft.createTree();
+			cft.createTree("libgdx");
 		} else if(args[0].equals(getVariantParameter)) {
 			String pathToRepo = "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/elasticsearch";
 			VariantParameter vp = new VariantParameter();
