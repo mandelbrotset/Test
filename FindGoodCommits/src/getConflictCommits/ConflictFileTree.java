@@ -27,27 +27,28 @@ public class ConflictFileTree {
 		reposToReposPath.remove("test");
 	}
 
-	public void createTree() {
+	public void createTree(String repoName) {
 		MergeConflicter cm = new MergeConflicter();
 		// for(String repo : reposToReposPath.keySet()) {
-		String repo = "elasticsearch";
 		try {
 			System.out.println("Cleaning repository...");
-			Utils.readScriptOutput("gitClean " + reposToReposPath.get(repo), false);
-			Utils.readScriptOutput("gitUpdate " + reposToReposPath.get(repo), false);
+			Utils.readScriptOutput("gitClean " + reposToReposPath.get(repoName), false);
+			Utils.readScriptOutput("gitUpdate " + reposToReposPath.get(repoName), false);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		System.out.println("Building tree...");
-		for (String commit : reposToCommits.get(repo)) {
-			System.out.println("checking commit " + commit);
-			if (cm.doMerge(commit, reposToReposPath.get(repo))) {
+		int commitCounter = 0;
+		int totalCommits = reposToCommits.get(repoName).size();
+		for (String commit : reposToCommits.get(repoName)) {
+			System.out.println("Checking commit " + commit + " (" + ++commitCounter + "/" + totalCommits + ")");
+			if (cm.doMerge(commit, reposToReposPath.get(repoName))) {
 				System.out.println("Conflict found!");
 				Conflict conflict = null;
 				for (int i = 0; i < cm.getConflicts().size(); i++) {
 					conflict = cm.getConflicts().get(i);
-					String location = "CFT/" + repo + "/" + commit + "/" + conflict.getFileName() + "/";
+					String location = "CFT/" + repoName + "/" + commit + "/" + conflict.getFileName() + "/";
 					File dir = new File(location);
 					File leftConflict = new File(location + "left_" + conflict.getFileName());
 					File rightConflict = new File(location + "right_" + conflict.getFileName());
@@ -71,15 +72,15 @@ public class ConflictFileTree {
 
 				}
 				// }
-				String outputLocation = Machine.getInstance().getCftFolderPath() + "/" + repo + "/" + commit + "/" + "diff.txt";
+				String outputLocation = Machine.getInstance().getCftFolderPath() + "/" + repoName + "/" + commit + "/" + "diff.txt";
 				if (conflict != null) {
-					writeDiffFile(reposToReposPath.get(repo), conflict.getLeftAncestorCommit(),
+					writeDiffFile(reposToReposPath.get(repoName), conflict.getLeftAncestorCommit(),
 							conflict.getRightAncestorCommit(), outputLocation);
 				}
 			}
 			try {
 				// Clean and reset git repository
-				Utils.readScriptOutput("gitClean " + reposToReposPath.get(repo), false);
+				Utils.readScriptOutput("gitClean " + reposToReposPath.get(repoName), false);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
