@@ -2,28 +2,31 @@ package mergeConflicts;
 
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
-
 import org.junit.Test;
 
 public class ModifierListTest {
 
 	@Test
 	public void test() {
+		ModifierListChecker mlc = new ModifierListChecker();
+		String left = "";
+		String common = "";
+		String right = "";
 		
+		left = "public class Case {\n \n int x;";
+		common = "class Case {\n \n int x;";
+		right = "abstract class Case {\n \n int x;";
+		assertTrue(mlc.checkClass(left, common, right));
 		
-		ConflictClassifier classifier = new ConflictClassifier();
+		left = "public class. Case {\n \n int x;";
+		common = "class. Case {\n \n int x;";
+		right = "abstract class. Case {\n \n int x;";
+		assertFalse(mlc.checkClass(left, common, right));
 		
-		String left = "public class Case {\n \n int x;";
-		String common = "class Case {\n \n int x;";
-		String right = "abstract class Case {\n \n int x;";
-		
-		ArrayList<ConflictClassifier.Classifier> classifiers = classifier.classify(left, common, right);
-		
-		assertEquals(1, classifiers.size());
-		assertEquals(ConflictClassifier.Classifier.MODIFIER_LIST, classifiers.get(0));
-		
-		
+		left = "public interface Case {\n \n int x;";
+		common = "interface Case {\n \n int x;";
+		right = "abstract interface Case {\n \n int x;";
+		assertTrue(mlc.checkClass(left, common, right));
 	}
 	
 	
