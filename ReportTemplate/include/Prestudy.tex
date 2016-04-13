@@ -66,3 +66,21 @@ To get the commit message for a giver SHA-1, this command was used:
 git log --format=\%B -n 1 <SHA-1>
 \paragraph*{}
 Pull request. When changes on a branch in a fork of a project is to be merged into the original project, pull-requests are used. It is interesting to know whether or not the commit was a pull request. Finding out if variant related code is more or less likely in pull requests would be interesting for the study. To know whether a given merge commit was a pull request, the commit message was parsed to see if it contains Merge pull request \# .
+\paragraph*{}
+We print the parsed information in the excel document using the following format:\\
+table..
+\subsection{Extend tool to recreate merges and extract the conflicting files}
+Originally, the idea was to find merge-conflict resolution patterns in Git merges. To begin searching for such patterns, we first had to figure out what patterns exist. When looking at the git merge log, using the command git log --merges, it lists the merge commits with the commit messages which could contain a list of conflicting files. However, this approach is not reliable as the commit message could be altered by the commitér who can remove the list of conflicting files. Because of this, we extended the tool to recreate all of the historical merges in the repository to see which conflicts arises. To do this, we first needed to find the two ancestral commits of a merge commit, that is, the to commits that were merged. The following command prints the two commits:
+git --no-pager log --merges --format=%p <SHA-1> | head -n1
+where <SHA-1> is the merge commit SHA-1. We then parse the two commits and performs the merge using the following sequence of commands. The two commits are hereby referred to as C1 and C2:\\
+table..\\
+In 1, we set HEAD to commit C1 and changes the working copy to the state of that commit. In 2,  the working copy is cleaned to be ready for the merge. In 3, a new branch is created which points at commit C1. In 4, we checkout commit C2. In 5, we merge the two commits by merging the newly created branch into commit C2. Git will now print out the conflicting files, which we then can parse. Afterwards, we abort the merge and delete the branch.
+\paragraph*{}
+Fast forward. When merging two branches, Git first attempts to perform a so-called fast forward merge. It is a way of simplifying merges in cases where at least one of the branches points to the common ancestor of the commits pointed to by the two branches. In such a case, all that has to be done, is to change both branches to point at the latest commit. For example:\\
+image
+paragraph*{}
+Three-way merge. If fast forward fails, that is, when commits has been made to both branches that are to be merged, Git has to merge all files that the commits contains. This consists of merging the two versions of every file separately, and to be able to know what has changed in the two branches, Git considers both the two versions and their common ancestor. If the files have not been changed at the same places in both branches, Git is able to do this automatically.
+\paragraph*{}
+
+
+
