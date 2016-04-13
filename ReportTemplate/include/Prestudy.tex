@@ -35,14 +35,14 @@ Zxing & 3203 & 3 & 4730
 When studying the code of Elasticsearch, we noticed that parameters were introduced and loaded from an external configuration file. These parameters were then used to set boolean variables that usually indicates whether to use a certain block of code or not. In Elasticsearch, the function use to set these boolean variables was called “getAsBoolean” and takes a string parameter name, and a boolean default value.\\
 \lstset{language=Java}
 \begin{lstlisting}[frame=single]
-boolean example = getAsBoolean(“example_parameter”, true);
+boolean example = getAsBoolean("example_parameter", true);
 \end{lstlisting}
 \paragraph*{}
-The example\_parameter could be set by the user in the external configuration file and if it has not been set, a default value, in this example true, will be used. The boolean variable would in some cases be used to indicate which block of code to use, as in this example taken from a snippet of Elasticsearch code:\\
+The "example\_parameter" could be set by the user in the external configuration file and if it has not been set, a default value, in this example true, will be used. The boolean variable would in some cases be used to indicate which block of code to use, as in this example taken from a snippet of Elasticsearch code:\\
 \lstset{language=Java}
 \begin{lstlisting}[frame=single]
 this.autoThrottle = indexSettings.getAsBoolean(AUTO_THROTTLE, true);
-\\
+
 if (autoThrottle) {
    concurrentMergeScheduler.enableAutoIOThrottle();
 } else {
@@ -103,8 +103,6 @@ Three-way merge. If fast forward fails, that is, when commits has been made to b
 Git conflicts. If the two commits, that are to be merged, have made changes to the same place in a file, Git will not be able to merge the two versions automatically. This is called a Git conflict. When a Git conflict occurs, Git will output the conflicting file paths in the commit message, which the tool parses.
 \paragraph*{}
 When resolving conflicts, it is usually done by manually merging the conflicting lines of the local file (the file in the current checked out branch) with the file of the remote file (the file of the branch which is being merged into the current checked out branch) and the common ancestor file (the original file before it was changed in the local- and remote branches). These files, along with the resulting resolution file in the merge commit, are copied and saved in a Conflict file tree. The Conflict file tree consist of folders and the versions of the conflicting files, structured according to the figure below.
-\\image...\\
-Having all the conflicting file versions in a structured manner will make it easier to analyse them further.
 
 
 
