@@ -129,7 +129,15 @@ After the prestudy, we determined that the direction of this study will be to id
 When two branches are to be merged, there are two different options: merge or rebase. When merging, git takes the two commits that are to be merged and creates a new commit which, unlike other commits, has two ancestral commits, being the two commits that were merged. This makes it possible to distinguish merge commits from other forks and thus makes it possible to analyze them separately. Sometimes, rebase is used instead of merging. This means that instead of creating a merge commit, an ordinary commit is created. That commit consists of a snapshot, in which the changes introduced in the branch that is to be merged in, are applied on top of the commit that the branch which was rebased into points at. Then, both branches that were to be rebased are then changed to point at the new commit, which has only one parent, being the commit that the branch which was to be rebased into was pointing at. The other commit is left as it was. Thus, there is no nifty way of find those rebased commits.
 \paragraph*{}
 To be able to understand what happened historically in a git-hosted project, one must have a basic knowledge about how Git works. To analyze historical branches and merges is more difficult than one might expect. A question that one might ask is “In what branch was this commit made?”. A Git branch is only a reference that points to the latest commit, and does not “contain” commits. There is also a reference called HEAD, which points to the currently checked out branch. When a branch is merged, the branch will point at the same commit as the branch it was merged into. Therefore, a more correct way to ask this is “At what branch did HEAD point during the creation of this commit?”. That information is not stored in Git and therefore, that question is not possible to answer. There is no nifty way to tell which branch was merged into which. However, clues may be found in commit messages but, as they are often edited, they are not reliable.
-% EY LILLEBÖRST, PLEASE WILL THAU INSERT YOUR DICK-PICKS HERE
+\begin{figure}[htp]
+  \begin{center}
+    \subfigure[The branches Branch A and Branch B both points at their respective tip commit.]{\label{fig:edge-a}\includegraphics[scale=0.75]{figure/}}
+    \subfigure[When merged, both branches points at the merge commit.]{\label{fig:edge-b}\includegraphics[scale=0.75]{laplace_toucan.eps}} \\
+    \subfigure[If Branch A is checked out and then committed to, Branch B will still point at the merge commit.]{\label{fig:edge-c}\includegraphics[scale=0.75]{sobel_toucan.eps}}
+  \end{center}
+  \caption{Various edge detection algorithms}
+  \label{fig:edge}
+\end{figure}
 \paragraph*{}
 Moreover, using the command “git branch --contains <SHA-1>” will show the “branches whose tip commits are descendants of the named commit”¹. Therefore it is impossible to know, using this information alone, which branch was merged into which and also which branch a commit was created on. Common practice amongst developers is to delete a branch after it has been merged, and once that happens, all information about that branch is lost from the Git history.
 \paragraph*{}
