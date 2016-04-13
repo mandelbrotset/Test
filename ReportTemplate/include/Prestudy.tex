@@ -46,6 +46,8 @@ this.autoThrottle = indexSettings.getAsBoolean(AUTO_THROTTLE, true);
 if (autoThrottle) {
    concurrentMergeScheduler.enableAutoIOThrottle();
 } else {
+   concurrentMergeScheduler.disableAutoIOThrottle();
+}
 \end{lstlisting}
 \paragraph*{}
 To be able to identify the parameters, and collect data about them, a tool was developed in Java which would gather the data automatically. All data that is stored in Git is hashed using SHA-1. If not stated otherwise, in this document, the hash will be referred to by SHA-1. The data to be gathered includes:
@@ -91,18 +93,6 @@ image
 paragraph*{}
 Three-way merge. If fast forward fails, that is, when commits has been made to both branches that are to be merged, Git has to merge all files that the commits contains. This consists of merging the two versions of every file separately, and to be able to know what has changed in the two branches, Git considers both the two versions and their common ancestor. If the files have not been changed at the same places in both branches, Git is able to do this automatically.
 \paragraph*{}
-
-
-\lstset{language=Java}
-\begin{lstlisting}[frame=single]
-this.autoThrottle = indexSettings.getAsBoolean(AUTO_THROTTLE, true);
-\\
-if (autoThrottle) {
-   concurrentMergeScheduler.enableAutoIOThrottle();
-} else {
-   concurrentMergeScheduler.disableAutoIOThrottle();
-}
-\end{lstlisting}
 
 \lstset{language=Bash}
 \begin{lstlisting}[frame=single]
