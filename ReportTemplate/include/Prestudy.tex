@@ -134,9 +134,9 @@ When two branches are to be merged, there are two different options: merge or re
 To be able to understand what happened historically in a git-hosted project, one must have a basic knowledge about how Git works. To analyze historical branches and merges is more difficult than one might expect. A question that one might ask is “In what branch was this commit made?”. A Git branch is only a reference that points to the latest commit, and does not “contain” commits. There is also a reference called HEAD, which points to the currently checked out branch. When a branch is merged, the branch will point at the same commit as the branch it was merged into. Therefore, a more correct way to ask this is “At what branch did HEAD point during the creation of this commit?”. That information is not stored in Git and therefore, that question is not possible to answer. There is no nifty way to tell which branch was merged into which. However, clues may be found in commit messages but, as they are often edited, they are not reliable.
 \begin{figure}[htp]
   \begin{center}
-    \subfigure[The branches Branch A and Branch B both points at their respective tip commit.]{\label{fig:branch1}\includegraphics[scale=0.75]{figure/branch1.png}}
-    \subfigure[When merged, both branches points at the merge commit.]{\label{fig:branch2}\includegraphics[scale=0.75]{figure/branch2.png}} \\
-    \subfigure[If Branch A is checked out and then committed to, Branch B will still point at the merge commit.]{\label{fig:branch3}\includegraphics[scale=0.75]{figure/branch3.png}}
+    \subfigure[The branches Branch A and Branch B both points at their respective tip commit.]{\label{fig:branch1}\includegraphics[width=200]{figure/branch1.png}}
+    \subfigure[When merged, both branches points at the merge commit.]{\label{fig:branch2}\includegraphics[width=200]{figure/branch1.png}} \\
+    \subfigure[If Branch A is checked out and then committed to, Branch B will still point at the merge commit.]{\label{fig:branch3}\includegraphics[width=200]{figure/branch1.png}}
   \end{center}
   \caption{Various edge detection algorithms}
   \label{fig:edge}
