@@ -102,8 +102,8 @@ Three-way merge. If fast forward fails, that is, when commits has been made to b
 \paragraph*{}
 Git conflicts. If the two commits, that are to be merged, have made changes to the same place in a file, Git will not be able to merge the two versions automatically. This is called a Git conflict. When a Git conflict occurs, Git will output the conflicting file paths in the commit message, which the tool parses.
 \paragraph*{}
-When resolving conflicts, it is usually done by manually merging the conflicting lines of the local file (the file in the current checked out branch) with the file of the remote file (the file of the branch which is being merged into the current checked out branch) and the common ancestor file (the original file before it was changed in the local- and remote branches). These files, along with the resulting resolution file in the merge commit, are copied and saved in a Conflict file tree. The Conflict file tree consist of folders and the versions of the conflicting files, structured according to the figure below.
-
+When resolving conflicts, it is usually done by manually merging the conflicting lines of the local file (the file in the current checked out branch) with the file of the remote file (the file of the branch which is being merged into the current checked out branch) and the common ancestor file (the original file before it was changed in the local- and remote branches). These files, along with the resulting resolution file in the merge commit, are copied and saved in a Conflict file tree. The Conflict file tree consist of folders and the versions of the conflicting files, structured according to the figure below.\\
+Having all the conflicting file versions in a structured manner will make it easier to analyse them further.
 
 
 
