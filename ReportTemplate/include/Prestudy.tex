@@ -91,6 +91,7 @@ image
 paragraph*{}
 Three-way merge. If fast forward fails, that is, when commits has been made to both branches that are to be merged, Git has to merge all files that the commits contains. This consists of merging the two versions of every file separately, and to be able to know what has changed in the two branches, Git considers both the two versions and their common ancestor. If the files have not been changed at the same places in both branches, Git is able to do this automatically.
 \paragraph*{}
+Git conflicts. If the two commits, that are to be merged, have made changes to the same place in a file, Git will not be able to merge the two versions automatically. This is called a Git conflict. When a Git conflict occurs, Git will output the conflicting file paths in the commit message, which the tool parses.
 
 
 \lstset{language=Java}
