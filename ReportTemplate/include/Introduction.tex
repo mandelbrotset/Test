@@ -3,7 +3,6 @@
 When developing software products using a version-control system, branching is often used, both to support variability [1] and when developing new features, which we, in this document, call feature branching. Feature branching will be the main focus in this study. It is of vital importance that the merging of these branches works smoothly, even if a conflict occurs. As of today, there do not exist many tools for automatically solving conflicts during merging. It is up to the programmers themselves to manually resolving the conflicts in the code. Understanding which patterns are used for resolving merge conflicts allows for future development of an autonomous merge-conflict tool.
 \paragraph*{}
 The goal of this work is to conduct a feasibility study that aims at investigating to what extent and how it is feasible to analyze merge-conflict resolution patterns in large codebases comprising many open-source projects, such as those being hosted on GitHub or BitBucket.
-
 \paragraph*{}
 Our long-term goal is to create an automated merge-resolution tool. Towards this end, this study aims at answering the following research questions:
 \begin{itemize}
@@ -13,10 +12,3 @@ Our long-term goal is to create an automated merge-resolution tool. Towards this
 \end{itemize}
 \paragraph*{}
 Our main working hypothesis is that it is in fact feasible to automatically recognize and analyze patterns from all the metadata available about projects and from statically analyzing code. By studying examples of popular projects with many branches or forks, by developing a mining infrastructure, and by investigating to what extent static code-analysis tools can be utilized for recognizing any patterns, we will work towards testing this hypothesis.
-
-\section{Section} \label{Section_ref}
-\subsection{Subsection}
-\subsubsection{Subsubsection}
-\paragraph{Paragraph}
-\subparagraph{Subparagraph}
-
