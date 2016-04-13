@@ -85,7 +85,14 @@ table..
 Originally, the idea was to find merge-conflict resolution patterns in Git merges. To begin searching for such patterns, we first had to figure out what patterns exist. When looking at the git merge log, using the command git log --merges, it lists the merge commits with the commit messages which could contain a list of conflicting files. However, this approach is not reliable as the commit message could be altered by the commitér who can remove the list of conflicting files. Because of this, we extended the tool to recreate all of the historical merges in the repository to see which conflicts arises. To do this, we first needed to find the two ancestral commits of a merge commit, that is, the to commits that were merged. The following command prints the two commits:
 git --no-pager log --merges --format=%p <SHA-1> | head -n1
 where <SHA-1> is the merge commit SHA-1. We then parse the two commits and performs the merge using the following sequence of commands. The two commits are hereby referred to as C1 and C2:\\
-table..\\
+\lstset{language=Bash}
+\begin{lstlisting}[frame=single]
+git reset --hard <SHA-1 of C1>
+git clean -f
+git branch <temp branch name>
+git checkout <SHA-1 of C2>
+git merge <temp branch name>
+\end{lstlisting}
 In 1, we set HEAD to commit C1 and changes the working copy to the state of that commit. In 2,  the working copy is cleaned to be ready for the merge. In 3, a new branch is created which points at commit C1. In 4, we checkout commit C2. In 5, we merge the two commits by merging the newly created branch into commit C2. Git will now print out the conflicting files, which we then can parse. Afterwards, we abort the merge and delete the branch.
 \paragraph*{}
 Fast forward. When merging two branches, Git first attempts to perform a so-called fast forward merge. It is a way of simplifying merges in cases where at least one of the branches points to the common ancestor of the commits pointed to by the two branches. In such a case, all that has to be done, is to change both branches to point at the latest commit. For example:\\
@@ -97,13 +104,6 @@ Git conflicts. If the two commits, that are to be merged, have made changes to t
 \paragraph*{}
 When resolving conflicts, it is usually done by manually merging the conflicting lines of the local file (the file in the current checked out branch) with the file of the remote file (the file of the branch which is being merged into the current checked out branch) and the common ancestor file (the original file before it was changed in the local- and remote branches). These files, along with the resulting resolution file in the merge commit, are copied and saved in a Conflict file tree. The Conflict file tree consist of folders and the versions of the conflicting files, structured according to the figure below.
 
-\lstset{language=Bash}
-\begin{lstlisting}[frame=single]
-git reset --hard <SHA-1 of C1>
-git clean -f
-git branch <temp branch name>
-git checkout <SHA-1 of C2>
-git merge <temp branch name>
-\end{lstlisting}
+
 
 

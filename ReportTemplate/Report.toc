@@ -19,6 +19,7 @@
 \contentsline {chapter}{\numberline {3}Prestudy}{7}{chapter.3}
 \contentsline {section}{\numberline {3.1}Repositories to analyze}{7}{section.3.1}
 \contentsline {subsection}{\numberline {3.1.1}Gathering parameter data}{8}{subsection.3.1.1}
+\contentsline {subsection}{\numberline {3.1.2}Extend tool to recreate merges and extract the conflicting files}{9}{subsection.3.1.2}
 \contentsline {chapter}{\numberline {4}Methods}{11}{chapter.4}
 \contentsline {chapter}{\numberline {5}Results}{13}{chapter.5}
 \contentsline {chapter}{\numberline {6}Conclusion}{15}{chapter.6}

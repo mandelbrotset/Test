@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2016.2.23)  13 APR 2016 14:19
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2016.2.23)  13 APR 2016 14:33
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1432,13 +1432,87 @@ Package hyperref Info: bookmark level for unknown todo defaults to 0 on input l
 ine 90.
 ) (./include/Prestudy.tex [6]
 Chapter 3.
+(/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
+File: lstlang1.sty 2015/06/04 1.6 listings language file
+)
+Underfull \hbox (badness 10000) in paragraph at lines 35--37
+
+ []
+
 [7
 
-] [8]) (./include/Methods.tex [9] [10
-
 ]
+
+! Package inputenc Error: Unicode char \u8:‚\lst@FillFixed@\lst@ECÄ not set up 
+for use with LaTeX.
+
+See the inputenc package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.38 ...le = getAsBoolean(‚Äúexample_parameter‚Äù,
+                                                   true);
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
+
+! Package inputenc Error: Keyboard character used is undefined
+(inputenc)                in inputencoding `utf8'.
+
+See the inputenc package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.38 ...le = getAsBoolean(‚Äúexample_parameter‚Äù,
+                                                   true);
+You need to provide a definition with \DeclareInputText 
+or \DeclareInputMath before using this key.
+
+
+! Package inputenc Error: Unicode char \u8:‚\lst@ECÄ\lst@ECù not set up for use
+ with LaTeX.
+
+See the inputenc package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.38 ...le = getAsBoolean(‚Äúexample_parameter‚Äù,
+                                                   true);
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
+
+Overfull \hbox (10.306pt too wide) in paragraph at lines 38--39
+[][][][][][][][][][][][][][][][] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 41--43
+
+ []
+
+
+Overfull \hbox (52.60574pt too wide) in paragraph at lines 44--45
+[][][][][][][][][][][][][][][][][][] 
+ []
+
+[8] (/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
+File: lstlang1.sty 2015/06/04 1.6 listings language file
+)
+(/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
+File: lstlang1.sty 2015/06/04 1.6 listings language file
+)
+Underfull \hbox (badness 10000) in paragraph at lines 85--89
+
+ []
+
+[9]) (./include/Methods.tex [10]
 Chapter 4.
-) (./include/Results.tex [11] [12
+) (./include/Results.tex [11
+
+] [12
 
 ]
 Chapter 5.
@@ -1463,18 +1537,25 @@ Package atveryend Info: Empty hook `AfterLastShipout' on input line 75.
  (./Report.aux)
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 75.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 75.
-Package rerunfilecheck Info: File `Report.out' has not changed.
-(rerunfilecheck)             Checksum: D88C2F7EBB1BFF2532AE2C4D44CB292D;1403.
+
+
+Package rerunfilecheck Warning: File `Report.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+Package rerunfilecheck Info: Checksums for `Report.out':
+(rerunfilecheck)             Before: D88C2F7EBB1BFF2532AE2C4D44CB292D;1403
+(rerunfilecheck)             After:  B78B5A57FB7F51282828677BC24EADD7;1521.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 75.
  ) 
 Here is how much of TeX's memory you used:
- 22508 strings out of 494957
- 396945 string characters out of 6180028
- 465778 words of memory out of 5000000
- 25174 multiletter control sequences out of 15000+600000
+ 22750 strings out of 494957
+ 400041 string characters out of 6180028
+ 485321 words of memory out of 5000000
+ 25391 multiletter control sequences out of 15000+600000
  78831 words of font info for 58 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 64i,13n,77p,1335b,1079s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 64i,13n,91p,1335b,1157s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texmf/fonts/enc/dvips/lm/lm-ec.enc}{/usr/share/texmf/fonts/enc/dv
 ips/lm/lm-mathsy.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm-rm.enc}{/usr/share
 /texmf/fonts/enc/dvips/lm/lm-mathex.enc}{/usr/share/texmf/fonts/enc/dvips/lm/lm
@@ -1489,10 +1570,10 @@ ublic/lm/lmri12.pfb></usr/share/texmf/fonts/type1/public/lm/lmsy10.pfb></usr/sh
 are/texmf/fonts/type1/public/lm/lmtt12.pfb></usr/share/texlive/texmf-dist/fonts
 /type1/urw/helvetic/uhvb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/h
 elvetic/uhvr8a.pfb>
-Output written on Report.pdf (33 pages, 480447 bytes).
+Output written on Report.pdf (33 pages, 486111 bytes).
 PDF statistics:
- 406 PDF objects out of 1000 (max. 8388607)
- 349 compressed objects within 4 object streams
- 83 named destinations out of 1000 (max. 500000)
+ 426 PDF objects out of 1000 (max. 8388607)
+ 369 compressed objects within 4 object streams
+ 100 named destinations out of 1000 (max. 500000)
  233 words of extra memory for PDF output out of 10000 (max. 10000000)
 
