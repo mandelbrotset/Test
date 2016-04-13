@@ -18,8 +18,9 @@
 \contentsline {section}{\numberline {2.7}To-do note}{6}{section.2.7}
 \contentsline {chapter}{\numberline {3}Prestudy}{7}{chapter.3}
 \contentsline {section}{\numberline {3.1}Repositories to analyze}{7}{section.3.1}
-\contentsline {chapter}{\numberline {4}Methods}{9}{chapter.4}
-\contentsline {chapter}{\numberline {5}Results}{11}{chapter.5}
-\contentsline {chapter}{\numberline {6}Conclusion}{13}{chapter.6}
-\contentsline {chapter}{Bibliography}{15}{chapter.6}
+\contentsline {subsection}{\numberline {3.1.1}Gathering parameter data}{8}{subsection.3.1.1}
+\contentsline {chapter}{\numberline {4}Methods}{11}{chapter.4}
+\contentsline {chapter}{\numberline {5}Results}{13}{chapter.5}
+\contentsline {chapter}{\numberline {6}Conclusion}{15}{chapter.6}
+\contentsline {chapter}{Bibliography}{17}{chapter.6}
 \contentsline {chapter}{\numberline {A}Appendix 1}{I}{appendix.A}
