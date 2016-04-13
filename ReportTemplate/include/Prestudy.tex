@@ -33,10 +33,20 @@ Zxing & 3203 & 3 & 4730
 \end{tabular}
 \subsection{Gathering parameter data}
 When studying the code of Elasticsearch, we noticed that parameters were introduced and loaded from an external configuration file. These parameters were then used to set boolean variables that usually indicates whether to use a certain block of code or not. In Elasticsearch, the function use to set these boolean variables was called “getAsBoolean” and takes a string parameter name, and a boolean default value.\\
-code:adadadawdefgeda
+\lstset{language=Java}
+\begin{lstlisting}[frame=single]
+boolean example = getAsBoolean(“example_parameter”, true);
+\end{lstlisting}
 \paragraph*{}
 The example\_parameter could be set by the user in the external configuration file and if it has not been set, a default value, in this example true, will be used. The boolean variable would in some cases be used to indicate which block of code to use, as in this example taken from a snippet of Elasticsearch code:\\
-code:awdkuahwd
+\lstset{language=Java}
+\begin{lstlisting}[frame=single]
+this.autoThrottle = indexSettings.getAsBoolean(AUTO_THROTTLE, true);
+\\
+if (autoThrottle) {
+   concurrentMergeScheduler.enableAutoIOThrottle();
+} else {
+\end{lstlisting}
 \paragraph*{}
 To be able to identify the parameters, and collect data about them, a tool was developed in Java which would gather the data automatically. All data that is stored in Git is hashed using SHA-1. If not stated otherwise, in this document, the hash will be referred to by SHA-1. The data to be gathered includes:
 \begin{itemize}
@@ -83,4 +93,11 @@ Three-way merge. If fast forward fails, that is, when commits has been made to b
 \paragraph*{}
 
 
-
+\lstset{language=Java}
+\begin{lstlisting}[frame=single]
+this.autoThrottle = indexSettings.getAsBoolean(AUTO_THROTTLE, true);
+\\
+if (autoThrottle) {
+   concurrentMergeScheduler.enableAutoIOThrottle();
+} else {
+\end{lstlisting}
