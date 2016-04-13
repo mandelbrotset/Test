@@ -66,3 +66,17 @@ To get the commit message for a giver SHA-1, this command was used:
 git log --format=\%B -n 1 <SHA-1>
 \paragraph*{}
 Pull request. When changes on a branch in a fork of a project is to be merged into the original project, pull-requests are used. It is interesting to know whether or not the commit was a pull request. Finding out if variant related code is more or less likely in pull requests would be interesting for the study. To know whether a given merge commit was a pull request, the commit message was parsed to see if it contains Merge pull request \# .
+
+\lstset{language=Java}
+\begin{lstlisting}[frame=single]
+boolean example = getAsBoolean(“example_parameter”, true);
+\end{lstlisting}
+
+\lstset{language=Java}
+\begin{lstlisting}[frame=single]
+this.autoThrottle = indexSettings.getAsBoolean(AUTO_THROTTLE, true);
+\\
+if (autoThrottle) {
+   concurrentMergeScheduler.enableAutoIOThrottle();
+} else {
+\end{lstlisting}
