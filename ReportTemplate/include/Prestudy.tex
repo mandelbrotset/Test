@@ -79,4 +79,8 @@ this.autoThrottle = indexSettings.getAsBoolean(AUTO_THROTTLE, true);
 if (autoThrottle) {
    concurrentMergeScheduler.enableAutoIOThrottle();
 } else {
+   concurrentMergeScheduler.disableAutoIOThrottle();
+}
 \end{lstlisting}
+
+
