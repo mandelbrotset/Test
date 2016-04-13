@@ -31,7 +31,7 @@ Spring-framework & 11825 & 10 & 6860\\
 Storm & 1764 & 44 & 1760\\
 Zxing & 3203 & 3 & 4730
 \end{tabular}
-\subsection{Gathering parameter data}
+\section{Gathering parameter data}
 When studying the code of Elasticsearch, we noticed that parameters were introduced and loaded from an external configuration file. These parameters were then used to set boolean variables that usually indicates whether to use a certain block of code or not. In Elasticsearch, the function use to set these boolean variables was called “getAsBoolean” and takes a string parameter name, and a boolean default value.\\
 \lstset{language=Java}
 \begin{lstlisting}[frame=single]
@@ -81,7 +81,7 @@ Pull request. When changes on a branch in a fork of a project is to be merged in
 \paragraph*{}
 We print the parsed information in the excel document using the following format:\\
 table..
-\subsection{Extend tool to recreate merges and extract the conflicting files}
+\section{Extract the conflicting files}
 Originally, the idea was to find merge-conflict resolution patterns in Git merges. To begin searching for such patterns, we first had to figure out what patterns exist. When looking at the git merge log, using the command git log --merges, it lists the merge commits with the commit messages which could contain a list of conflicting files. However, this approach is not reliable as the commit message could be altered by the commitér who can remove the list of conflicting files. Because of this, we extended the tool to recreate all of the historical merges in the repository to see which conflicts arises. To do this, we first needed to find the two ancestral commits of a merge commit, that is, the to commits that were merged. The following command prints the two commits:
 git --no-pager log --merges --format=%p <SHA-1> | head -n1
 where <SHA-1> is the merge commit SHA-1. We then parse the two commits and performs the merge using the following sequence of commands. The two commits are hereby referred to as C1 and C2:\\
@@ -111,6 +111,26 @@ When resolving conflicts, it is usually done by manually merging the conflicting
 \end{figure}
 
 Having all the conflicting file versions in a structured manner will make it easier to analyse them further.
-
-
-
+\section{Details about an introduced parameter}
+Branches consist of one or more commits and often when new functionality is added or changed to software, good practice is to branch out, therefore developers tend to do just that. When new parameters are added that decides which variant of code to use, we believe this most often happens in a new branch, and it will be interesting for the study to know at which point in life of the branch this happens.
+\paragraph*{}
+To analyse when in the branch a parameter was introduced, we extended our tool to calculate when a given parameter was introduced in a branch, given the merge commit where the branch was merged back into the original branch and the parameter name. By recursively step backwards from the merge commit, through the commits of the branch, searching for the given parameter, finding the commit where it was introduced would be a nifty, we thought. Due to limitations in the Git history regarding branches, we soon found out that analysing commits with regards to branches is very limited, if not impossible in some cases.
+\paragraph*{}
+Another question one might ask is “How many branches does this project have?”. That can be answered using the git command “git branch -a”. However, as it is common practice to delete branches after they have been merged, the command is of little use as it only lists the currently existing branches. Information about old branches may be found in commit messages but, again, as they are often edited, they are not reliable.
+\section{Other ways of recognizing variants in code}
+Another way to find variant related events in the history of a Git-hosted project is to search for code clones. Something that would indicate variance is if a clone of some code block are changed in a branch and after the branch has been merged, both clones still exist. This would indicate that there were two variants in different branches and that the developers chose to keep both when merging. Cases like this would be interesting to study qualitatively to try to find patterns that could be used in an automatic analysis tool.
+\paragraph*{}
+In yet another attempt to find variant-related merges, we sought to find merge-commits where a new parameter was introduced to solve conflicts. In Elasticsearch, the parameters we looked for was fetched using “getAsBoolean”. It turned out that there was not a single example of such a case where “getAsBoolean” was introduced in a merge-commit in the history of Elasticsearch.
+\section{Outcome of the prestudy}
+After the prestudy, we determined that the direction of this study will be to identify and classify merge-conflict resolution patterns.
+\paragraph*{}
+\textbf{Possibilities and limitations of Git.} As git is a fully distributed version control system, one has almost instant access to the complete history of a cloned project. Once a project is cloned, no request limits on project hosting sites are a problem anymore. This makes analyzing a Git-hosted project nifty.
+\paragraph*{}
+When two branches are to be merged, there are two different options: merge or rebase. When merging, git takes the two commits that are to be merged and creates a new commit which, unlike other commits, has two ancestral commits, being the two commits that were merged. This makes it possible to distinguish merge commits from other forks and thus makes it possible to analyze them separately. Sometimes, rebase is used instead of merging. This means that instead of creating a merge commit, an ordinary commit is created. That commit consists of a snapshot, in which the changes introduced in the branch that is to be merged in, are applied on top of the commit that the branch which was rebased into points at. Then, both branches that were to be rebased are then changed to point at the new commit, which has only one parent, being the commit that the branch which was to be rebased into was pointing at. The other commit is left as it was. Thus, there is no nifty way of find those rebased commits.
+\paragraph*{}
+To be able to understand what happened historically in a git-hosted project, one must have a basic knowledge about how Git works. To analyze historical branches and merges is more difficult than one might expect. A question that one might ask is “In what branch was this commit made?”. A Git branch is only a reference that points to the latest commit, and does not “contain” commits. There is also a reference called HEAD, which points to the currently checked out branch. When a branch is merged, the branch will point at the same commit as the branch it was merged into. Therefore, a more correct way to ask this is “At what branch did HEAD point during the creation of this commit?”. That information is not stored in Git and therefore, that question is not possible to answer. There is no nifty way to tell which branch was merged into which. However, clues may be found in commit messages but, as they are often edited, they are not reliable.
+% EY LILLEBÖRST, PLEASE WILL THAU INSERT YOUR DICK-PICKS HERE
+\paragraph*{}
+Moreover, using the command “git branch --contains <SHA-1>” will show the “branches whose tip commits are descendants of the named commit”¹. Therefore it is impossible to know, using this information alone, which branch was merged into which and also which branch a commit was created on. Common practice amongst developers is to delete a branch after it has been merged, and once that happens, all information about that branch is lost from the Git history.
+\paragraph*{}
+\textbf{Tool.} The tool created during the prestudy will be used when analyzing merge-conflict resolution patterns. It will be used to parse information about commits in GitHub repositories and also be extended with new functionality to automatically be able to identify the patterns.
