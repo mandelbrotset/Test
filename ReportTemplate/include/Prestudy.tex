@@ -61,23 +61,23 @@ To be able to identify the parameters, and collect data about them, a tool was d
 \end{itemize}
 The data was gathered by developing a Java program which uses Linux bash scripts that executes Git commands to get the desired data.
 \paragraph*{}
-Git diff. As Git saves the data as snapshots and not as changes, one needs to compare two commits in order to see which changes that were introduced in a commit. To do this, we use the built in diff command in the following way: 
+\textbf{Git diff.} As Git saves the data as snapshots and not as changes, one needs to compare two commits in order to see which changes that were introduced in a commit. To do this, we use the built in diff command in the following way: 
 git --no-pager diff <SHA-1>\^ <SHA-1>
 where \^ is a git shortcut to get the parent commit of a commit SHA-1.
 \paragraph*{}
-Parameter name. The parameter name was extracted from the line where the boolean is set by the getAsBoolean function. It is useful to include it in the data so that it can be used when manually looking through the code to understand what the parameter was used for.
+\textbf{Parameter name.} The parameter name was extracted from the line where the boolean is set by the getAsBoolean function. It is useful to include it in the data so that it can be used when manually looking through the code to understand what the parameter was used for.
 \paragraph*{}
-Commit SHA-1. For every commit that is checked out, we search for parameters and if there exist at least one, the commit SHA-1 is saved so that we know which commits to check out when we want to look manually at the code.
+\textbf{Commit SHA-1.} For every commit that is checked out, we search for parameters and if there exist at least one, the commit SHA-1 is saved so that we know which commits to check out when we want to look manually at the code.
 \paragraph*{}
-If-statement the boolean is used in. In the beginning of developing the tool, we extracted the newly introduced boolean variables that was later used in if-statements. This proved to be not useful since the boolean variable names was not always the same as the parameter names used in the configuration file.
+\textbf{If-statement the boolean is used in.} In the beginning of developing the tool, we extracted the newly introduced boolean variables that was later used in if-statements. This proved to be not useful since the boolean variable names was not always the same as the parameter names used in the configuration file.
 \paragraph*{}
-getAsBoolean line. While extracting the name of the parameter in the getAsBoolean function, we also save the line itself to be able to quickly see the name of the boolean variable as well as the default value the boolean will be assigned to if the parameter is not set. This data is printed to the excel document.
+\textbf{getAsBoolean line.} While extracting the name of the parameter in the getAsBoolean function, we also save the line itself to be able to quickly see the name of the boolean variable as well as the default value the boolean will be assigned to if the parameter is not set. This data is printed to the excel document.
 \paragraph*{}
-Commit message. The commit message is also extracted and printed in the excel document. In case the commit message contains important information which could indicate that the commit contains variant related code, it is vital to look at it to find which commits are good to analyse manually.
+\textbf{Commit message.} The commit message is also extracted and printed in the excel document. In case the commit message contains important information which could indicate that the commit contains variant related code, it is vital to look at it to find which commits are good to analyse manually.
 To get the commit message for a giver SHA-1, this command was used:
 git log --format=\%B -n 1 <SHA-1>
 \paragraph*{}
-Pull request. When changes on a branch in a fork of a project is to be merged into the original project, pull-requests are used. It is interesting to know whether or not the commit was a pull request. Finding out if variant related code is more or less likely in pull requests would be interesting for the study. To know whether a given merge commit was a pull request, the commit message was parsed to see if it contains Merge pull request \# .
+\textbf{Pull request.} When changes on a branch in a fork of a project is to be merged into the original project, pull-requests are used. It is interesting to know whether or not the commit was a pull request. Finding out if variant related code is more or less likely in pull requests would be interesting for the study. To know whether a given merge commit was a pull request, the commit message was parsed to see if it contains Merge pull request \# .
 \paragraph*{}
 We print the parsed information in the excel document using the following format:\\
 table..
@@ -95,12 +95,12 @@ git merge <temp branch name>
 \end{lstlisting}
 In 1, we set HEAD to commit C1 and changes the working copy to the state of that commit. In 2,  the working copy is cleaned to be ready for the merge. In 3, a new branch is created which points at commit C1. In 4, we checkout commit C2. In 5, we merge the two commits by merging the newly created branch into commit C2. Git will now print out the conflicting files, which we then can parse. Afterwards, we abort the merge and delete the branch.
 \paragraph*{}
-Fast forward. When merging two branches, Git first attempts to perform a so-called fast forward merge. It is a way of simplifying merges in cases where at least one of the branches points to the common ancestor of the commits pointed to by the two branches. In such a case, all that has to be done, is to change both branches to point at the latest commit. For example:\\
+\textbf{Fast forward.} When merging two branches, Git first attempts to perform a so-called fast forward merge. It is a way of simplifying merges in cases where at least one of the branches points to the common ancestor of the commits pointed to by the two branches. In such a case, all that has to be done, is to change both branches to point at the latest commit. For example:\\
 image
 paragraph*{}
-Three-way merge. If fast forward fails, that is, when commits has been made to both branches that are to be merged, Git has to merge all files that the commits contains. This consists of merging the two versions of every file separately, and to be able to know what has changed in the two branches, Git considers both the two versions and their common ancestor. If the files have not been changed at the same places in both branches, Git is able to do this automatically.
+\textbf{Three-way merge.} If fast forward fails, that is, when commits has been made to both branches that are to be merged, Git has to merge all files that the commits contains. This consists of merging the two versions of every file separately, and to be able to know what has changed in the two branches, Git considers both the two versions and their common ancestor. If the files have not been changed at the same places in both branches, Git is able to do this automatically.
 \paragraph*{}
-Git conflicts. If the two commits, that are to be merged, have made changes to the same place in a file, Git will not be able to merge the two versions automatically. This is called a Git conflict. When a Git conflict occurs, Git will output the conflicting file paths in the commit message, which the tool parses.
+\textbf{Git conflicts.} If the two commits, that are to be merged, have made changes to the same place in a file, Git will not be able to merge the two versions automatically. This is called a Git conflict. When a Git conflict occurs, Git will output the conflicting file paths in the commit message, which the tool parses.
 \paragraph*{}
 When resolving conflicts, it is usually done by manually merging the conflicting lines of the local file (the file in the current checked out branch) with the file of the remote file (the file of the branch which is being merged into the current checked out branch) and the common ancestor file (the original file before it was changed in the local- and remote branches). These files, along with the resulting resolution file in the merge commit, are copied and saved in a Conflict file tree. The Conflict file tree consist of folders and the versions of the conflicting files, structured according to the figure below.\\
 \begin{figure}[H]
