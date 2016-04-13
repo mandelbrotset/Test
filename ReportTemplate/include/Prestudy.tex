@@ -83,4 +83,13 @@ if (autoThrottle) {
 }
 \end{lstlisting}
 
+\lstset{language=Bash}
+\begin{lstlisting}[frame=single]
+git reset --hard <SHA-1 of C1>
+git clean -f
+git branch <temp branch name>
+git checkout <SHA-1 of C2>
+git merge <temp branch name>
+\end{lstlisting}
+
 
