@@ -31,3 +31,38 @@ Spring-framework & 11825 & 10 & 6860\\
 Storm & 1764 & 44 & 1760\\
 Zxing & 3203 & 3 & 4730
 \end{tabular}
+\subsection{Gathering parameter data}
+When studying the code of Elasticsearch, we noticed that parameters were introduced and loaded from an external configuration file. These parameters were then used to set boolean variables that usually indicates whether to use a certain block of code or not. In Elasticsearch, the function use to set these boolean variables was called “getAsBoolean” and takes a string parameter name, and a boolean default value.\\
+code:adadadawdefgeda
+\paragraph*{}
+The “example_parameter” could be set by the user in the external configuration file and if it has not been set, a default value, in this example true, will be used. The boolean variable would in some cases be used to indicate which block of code to use, as in this example taken from a snippet of Elasticsearch code:\\
+code:awdkuahwd
+\paragraph*{}
+To be able to identify the parameters, and collect data about them, a tool was developed in Java which would gather the data automatically. All data that is stored in Git is hashed using SHA-1. If not stated otherwise, in this document, the hash will be referred to by SHA-1. The data to be gathered includes:
+\begin{itemize}
+\item The parameter name that was introduced
+\item The commit SHA
+\item The if-statement that the boolean is used in
+\item The code where the boolean variable is set by the function that takes the parameter name as one of its parameters.
+\item The commit message
+\item Whether or not the commit was a pull request \ldots
+\end{itemize}
+The data was gathered by developing a Java program which uses Linux bash scripts that executes Git commands to get the desired data.
+\paragraph*{}
+Git diff. As Git saves the data as snapshots and not as changes, one needs to compare two commits in order to see which changes that were introduced in a commit. To do this, we use the built in diff command in the following way: 
+git --no-pager diff <SHA-1>^ <SHA-1>
+where ^ is a git shortcut to get the parent commit of a commit SHA-1.
+\paragraph*{}
+Parameter name. The parameter name was extracted from the line where the boolean is set by the getAsBoolean function. It is useful to include it in the data so that it can be used when manually looking through the code to understand what the parameter was used for.
+\paragraph*{}
+Commit SHA-1. For every commit that is checked out, we search for parameters and if there exist at least one, the commit SHA-1 is saved so that we know which commits to check out when we want to look manually at the code.
+\paragraph*{}
+If-statement the boolean is used in. In the beginning of developing the tool, we extracted the newly introduced boolean variables that was later used in if-statements. This proved to be not useful since the boolean variable names was not always the same as the parameter names used in the configuration file.
+\paragraph*{}
+getAsBoolean line. While extracting the name of the parameter in the getAsBoolean function, we also save the line itself to be able to quickly see the name of the boolean variable as well as the default value the boolean will be assigned to if the parameter is not set. This data is printed to the excel document.
+\paragraph*{}
+Commit message. The commit message is also extracted and printed in the excel document. In case the commit message contains important information which could indicate that the commit contains variant related code, it is vital to look at it to find which commits are good to analyse manually.
+To get the commit message for a giver SHA-1, this command was used:
+git log --format=%B -n 1 <SHA-1>
+\paragraph*{}
+Pull request. When changes on a branch in a fork of a project is to be merged into the original project, pull-requests are used. It is interesting to know whether or not the commit was a pull request. Finding out if variant related code is more or less likely in pull requests would be interesting for the study. To know whether a given merge commit was a pull request, the commit message was parsed to see if it contains Merge pull request # .
