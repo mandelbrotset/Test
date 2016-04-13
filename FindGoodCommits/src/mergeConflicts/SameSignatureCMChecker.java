@@ -58,7 +58,11 @@ public class SameSignatureCMChecker implements ClassChecker {
 		return name;
 	}
 
-	private HashMap<String, String> extractFunctionBody(ArrayList<String> conflictLines) {
+	private HashMap<String, String> extractFunctionBody(String lines) {
+		ArrayList<String> conflictLines = new ArrayList<String>();
+		for (String line : lines.split("\n")) {
+			conflictLines.add(line);
+		}
 		HashMap<String, String> functionToFunctionBody = new HashMap<String, String>();
 		for(int i = 0; i < conflictLines.size(); i++) {
 			String line = conflictLines.get(i);
