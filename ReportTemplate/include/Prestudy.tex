@@ -64,7 +64,7 @@ The data was gathered by developing a Java program which uses Linux bash scripts
 \textbf{Git diff.} As Git saves the data as snapshots and not as changes, one needs to compare two commits in order to see which changes that were introduced in a commit. To do this, we use the built in diff command in the following way:
 \lstset{language=Bash}
 \begin{lstlisting}[frame=single]
-git --no-pager diff <SHA-1>\^ <SHA-1>
+git --no-pager diff <SHA-1>^ <SHA-1>
 \end{lstlisting}
 where \^ is a git shortcut to get the parent commit of a commit SHA-1.
 \paragraph*{}
@@ -119,7 +119,7 @@ When resolving conflicts, it is usually done by manually merging the conflicting
 \centering
 %\includegraphics[width=0.45\linewidth, trim=3cm 11cm 3cm 11cm]{figure/conflicts.png}
 \includegraphics[width=400pt]{figure/conflicts.png}
-\caption{Surface and contour plots showing $z(x,y)=\sin(x+y)\cos(2x)$.}
+\caption{Showing the structure of a Conflict File Tree}
 \end{figure}
 
 Having all the conflicting file versions in a structured manner will make it easier to analyse them further.
@@ -162,7 +162,7 @@ To be able to understand what happened historically in a git-hosted project, one
         \caption{If Branch A is checked out and then committed to, Branch B will still point at the merge commit.}
         \label{fig:branch3}
     \end{subfigure}
-    \caption{Branchawdadawdawd}\label{fig:branches}
+    \caption{Branches}\label{fig:branches}
 \end{figure}
 \paragraph*{}
 Moreover, using the command
