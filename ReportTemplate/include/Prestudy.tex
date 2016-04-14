@@ -134,7 +134,12 @@ Another way to find variant related events in the history of a Git-hosted projec
 \paragraph*{}
 In yet another attempt to find variant-related merges, we sought to find merge-commits where a new parameter was introduced to solve conflicts. In Elasticsearch, the parameters we looked for was fetched using “getAsBoolean”. It turned out that there was not a single example of such a case where “getAsBoolean” was introduced in a merge-commit in the history of Elasticsearch.
 \section{Conflict patterns}
+In her study, Accioly list conflict patterns that describes types of conflicts that might arise during a merge. The study uses a semi-structured merge tool, called FSTMerge, which semantically and syntactically can solve conflicts in programs written in Java. The conflict patterns are derived from the conflicts that FSTMerge can detect.
 
+The table below lists the patterns from Accioly’s study:
+%TABLE
+
+A tool, called ConflictAnalyzer, exists for analyzing the conflict patterns that exists in a given GitHub repository. ConflictAnalyzer can be used in combination with our tool to get the information about which conflict patterns exist in the aforementioned projects that we want to analyze.
 \section{Outcome of the prestudy}
 The prestudy has shown that it is difficult to analyze git conflicts that arises from variants, thus we decided that the direction of this study will be to identify and classify merge-conflict resolution patterns. The list of conflict patterns by Accioly will be used to map the conflicting pattern to it’s corresponding resolution pattern.
 \paragraph*{}
