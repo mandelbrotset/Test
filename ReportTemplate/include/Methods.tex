@@ -5,7 +5,7 @@ To create the catalog of merge-conflict resolution patterns the following method
 \item Select Merge Commits
 \item Classify the merge conflicts
 \item Manually identify the corresponding resolution patterns for each classified conflict pattern
-\item Autonomously classify each resolution into patterns \ldots
+\item Autonomously classify each resolution into patterns
 \end{enumerate}
 \section{Selection of Merge Commits}
 To get a good sample of merge commits, we will clone each project and list all historical merges using the command “git --no-pager log --merges”. This command lists all merge commits in a project and allows for specification of exactly what information we are interested in. This includes the commit SHA-1, parent commits, commit message etc. For each merge commit, we will reproduce the merge using SSMerge and use all conflicts that it encounters. That is, the conflicts that even a semantical and syntactical merge tool is unable to solve automatically.
@@ -26,4 +26,4 @@ ModifiedList &
 \end{itemize}
 \end{tabular}
 \section{Autonomously classify each resolution}
-Using the catalog of identified merge-conflict resolution patterns, we will create an infrastructure which autonomously classifies all selected merge conflicts.
+Using the catalog of identified merge-conflict resolution patterns, we will create an infrastructure which autonomously classifies all selected merge conflicts. The infrastructure will mine GitHub projects, starting with the top 20 starred projects listed in table (no). Using the data acquired we will conduct a statistical analysis of the frequency of the resolution patterns.
