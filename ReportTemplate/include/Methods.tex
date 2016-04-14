@@ -14,9 +14,16 @@ To classify conflicts, we aim to use the tool Conflicts Analyzer developed by Ac
 \section{Identify resolution patterns}
 For each conflict pattern, we will strive to identify the different corresponding resolution patterns. We will try to identify patterns that cover all ways of resolving each type of conflict. For example, the ModifierList conflict pattern requires the resolution to choose which modifiers to use. Let's assume a case where the common ancestor has the modifier “protected”, one revision has changed it to “private” and one has changed it to “public”. One pattern here may be to always choose the least restrictive one, namely the “public”, to reduce the chance of introducing an error. On the other hand, one pattern could be that the “private” modifier is chosen to increase information hiding, which is often desired in object oriented programming.
 \paragraph*{}
-A conflict pattern can have one or many resolution patterns. Likewise, a resolution pattern might solve one or more conflict patterns. We will create a catalog of these resolution patterns and map them to their corresponding conflict pattern/s. Below is an example of how the catalog could be formated:
+A conflict pattern can have one or many resolution patterns. Likewise, a resolution pattern might solve one or more conflict patterns. We will create a catalog of these resolution patterns and map them to their corresponding conflict patterns. Below is an example of how the catalog could be formated:\\
+\begin{tabular}{ p{8cm} p{6cm} }
+\hline
+\multicolumn{1}{c}{\textbf{Pattern}} & \multicolumn{1}{c}{\textbf{Description}}\\
+ModifiedList &
+\begin{itemize}
+\item Resolution Pattern \#1
+\item Resolution Pattern \#2
+\item Resolution Pattern \#3
+\end{itemize}
+\end{tabular}
 \section{Autonomously classify each resolution}
-Using the catalog of identified merge-conflict resolution patterns, we will create a tool which autonomously classifies all selected merge conflicts. 
-\section{}
-
-We strive to identify resolution patterns for each conflict pattern manually and thereafter extend our tool to be able to detect how frequent each resolution pattern occurs.
+Using the catalog of identified merge-conflict resolution patterns, we will create an infrastructure which autonomously classifies all selected merge conflicts.
