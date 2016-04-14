@@ -141,7 +141,12 @@ Branches consist of one or more commits and often when new functionality is adde
 \paragraph*{}
 To analyse when in the branch a parameter was introduced, we extended our tool to calculate when a given parameter was introduced in a branch, given the merge commit where the branch was merged back into the original branch and the parameter name. By recursively step backwards from the merge commit, through the commits of the branch, searching for the given parameter, finding the commit where it was introduced would be a nifty, we thought. Due to limitations in the Git history regarding branches, we soon found out that analysing commits with regards to branches is very limited, if not impossible in some cases.
 \paragraph*{}
-Another question one might ask is “How many branches does this project have?”. That can be answered using the git command “git branch -a”. However, as it is common practice to delete branches after they have been merged, the command is of little use as it only lists the currently existing branches. Information about old branches may be found in commit messages but, again, as they are often edited, they are not reliable.
+Another question one might ask is “How many branches does this project have?”. That can be answered using the git command:
+\lstset{language=Bash}
+\begin{lstlisting}[frame=single]
+git branch -a
+\end{lstlisting}
+However, as it is common practice to delete branches after they have been merged, the command is of little use as it only lists the currently existing branches. Information about old branches may be found in commit messages but, again, as they are often edited, they are not reliable.
 \section{Other ways of recognizing variants in code}
 Another way to find variant related events in the history of a Git-hosted project is to search for code clones. Something that would indicate variance is if a clone of some code block are changed in a branch and after the branch has been merged, both clones still exist. This would indicate that there were two variants in different branches and that the developers chose to keep both when merging. Cases like this would be interesting to study qualitatively to try to find patterns that could be used in an automatic analysis tool.
 \paragraph*{}
