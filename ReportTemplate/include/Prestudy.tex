@@ -107,8 +107,8 @@ git merge <temp branch name>
 \end{lstlisting}
 In 1, we set HEAD to commit C1 and changes the working copy to the state of that commit. In 2,  the working copy is cleaned to be ready for the merge. In 3, a new branch is created which points at commit C1. In 4, we checkout commit C2. In 5, we merge the two commits by merging the newly created branch into commit C2. Git will now print out the conflicting files, which we then can parse. Afterwards, we abort the merge and delete the branch.
 \paragraph*{}
-\textbf{Fast forward.} When merging two branches, Git first attempts to perform a so-called fast forward merge. It is a way of simplifying merges in cases where at least one of the branches points to the common ancestor of the commits pointed to by the two branches. In such a case, all that has to be done, is to change both branches to point at the latest commit. For example:\\
-\begin{figure}
+\textbf{Fast forward.} When merging two branches, Git first attempts to perform a so-called fast forward merge. It is a way of simplifying merges in cases where at least one of the branches points to the common ancestor of the commits pointed to by the two branches. In such a case, all that has to be done, is to change both branches to point at the latest commit, see figure 3.1.
+\begin{figure}[h]
     \centering
     \begin{subfigure}[b]{0.3\textwidth}
         \includegraphics[width=200pt]{figure/ff1.png}
@@ -120,7 +120,7 @@ In 1, we set HEAD to commit C1 and changes the working copy to the state of that
         \caption{After merge}
         \label{fig:branch3}
     \end{subfigure}
-    \caption{Fast Forward Merge}\label{fig:branches}
+    \caption{Fast Forward Merge}\label{fig:fastforward}
 \end{figure}
 \paragraph*{}
 \textbf{Three-way merge.} If fast forward fails, that is, when commits has been made to both branches that are to be merged, Git has to merge all files that the commits contains. This consists of merging the two versions of every file separately, and to be able to know what has changed in the two branches, Git considers both the two versions and their common ancestor. If the files have not been changed at the same places in both branches, Git is able to do this automatically.
