@@ -133,8 +133,10 @@ Another question one might ask is “How many branches does this project have?�
 Another way to find variant related events in the history of a Git-hosted project is to search for code clones. Something that would indicate variance is if a clone of some code block are changed in a branch and after the branch has been merged, both clones still exist. This would indicate that there were two variants in different branches and that the developers chose to keep both when merging. Cases like this would be interesting to study qualitatively to try to find patterns that could be used in an automatic analysis tool.
 \paragraph*{}
 In yet another attempt to find variant-related merges, we sought to find merge-commits where a new parameter was introduced to solve conflicts. In Elasticsearch, the parameters we looked for was fetched using “getAsBoolean”. It turned out that there was not a single example of such a case where “getAsBoolean” was introduced in a merge-commit in the history of Elasticsearch.
+\section{Conflict patterns}
+
 \section{Outcome of the prestudy}
-After the prestudy, we determined that the direction of this study will be to identify and classify merge-conflict resolution patterns.
+The prestudy has shown that it is difficult to analyze git conflicts that arises from variants, thus we decided that the direction of this study will be to identify and classify merge-conflict resolution patterns. The list of conflict patterns by Accioly will be used to map the conflicting pattern to it’s corresponding resolution pattern.
 \paragraph*{}
 \textbf{Possibilities and limitations of Git.} As git is a fully distributed version control system, one has almost instant access to the complete history of a cloned project. Once a project is cloned, no request limits on project hosting sites are a problem anymore. This makes analyzing a Git-hosted project nifty.
 \paragraph*{}
