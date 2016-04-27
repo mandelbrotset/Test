@@ -8,10 +8,21 @@
 #$5 file to analyze
 
 function resetGit {
+	echo "resetting gitfan"
+	sleep 1
+	echo "så här ser 1an ut:"$1
 	back=$(pwd)
 	cd $1
+	git rm .gitattributes
+	git add -A
+	git reset --hard 
+	git clean -xdf
+	git reset --hard HEAD
+	sleep 1
 	git checkout master
 	cd $back
+	sleep 1
+	echo "resetting gitfan slut"
 }
 
 function fetchLog {
@@ -78,10 +89,10 @@ getShas $1 $2 $3
 anc=$(bash getCommonAncestor $1 $sha1 $sha2)
 echo "anc:"$anc
 getMergeSha $1 $2 $3
-
 fetchFile $1 $sha1 $5 $4/left.java
 leftFile=$ok
 echo $leftFile
+resetGit $1
 fetchFile $1 $sha2 $5 $4/right.java
 rightFile=$ok
 echo $rightFile
@@ -92,4 +103,5 @@ fetchFile $1 $result $5 $4/result.java
 resultFile=$ok
 echo $resultFile
 resetGit $1
+echo "sha1:"$sha1"\nsha2:"$sha2"\nanc:"$anc"\nresult:"$result"\n" > $4/info
 printFound

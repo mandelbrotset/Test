@@ -1,0 +1,1706 @@
+=========================================================
+Revision: /tmp/downloads/zxing/revisions/rev_d1f56_42cfa/rev_d1f56-42cfa.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_1cdde_e432d/rev_1cdde-e432d.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_50378_b8fc4/rev_50378-b8fc4.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_78a6d_09eaf/rev_78a6d-09eaf.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_670e2_39780/rev_670e2-39780.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_e45d1_3faef/rev_e45d1-3faef.revisions
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 525774a9539b4f05edf04b65416ada100cf5b236
+Parent1 SHA-1: e45d17582963ae8f2b5a41291c4efbbaa43d5bac
+Parent2 SHA-1: 3faef2804cd6f8b70c052ff5b7b8dd6a049a1748
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+public
+File path: /tmp/downloads/zxing/revisions/rev_e45d1_3faef/rev_e45d1-3faef/core/src/test/java/com/google/zxing/oned/Code128WriterTestCase.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 525774a9539b4f05edf04b65416ada100cf5b236
+Parent1 SHA-1: e45d17582963ae8f2b5a41291c4efbbaa43d5bac
+Parent2 SHA-1: 3faef2804cd6f8b70c052ff5b7b8dd6a049a1748
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Before
+	public void setup() {
+		writer = new Code128Writer();
+	}
+File path: /tmp/downloads/zxing/revisions/rev_e45d1_3faef/rev_e45d1-3faef/core/src/test/java/com/google/zxing/oned/Code128WriterTestCase.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 525774a9539b4f05edf04b65416ada100cf5b236
+Parent1 SHA-1: e45d17582963ae8f2b5a41291c4efbbaa43d5bac
+Parent2 SHA-1: 3faef2804cd6f8b70c052ff5b7b8dd6a049a1748
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Test
+	public void testEncodeWithFunc3() throws WriterException {
+		String toEncode = "\u00f3" + "123";
+		//                                                       "1"            "2"             "3"          check digit 51
+		String expected = QUIET_SPACE + START_CODE_B + FNC3 + "10011100110" + "11001110010" + "11001011100" + "11101000110" + STOP + QUIET_SPACE;
+		
+		BitMatrix result = writer.encode(toEncode, BarcodeFormat.CODE_128, 0, 0);
+		
+		String actual = matrixToString(result);
+		assertEquals(expected, actual);
+	}
+File path: /tmp/downloads/zxing/revisions/rev_e45d1_3faef/rev_e45d1-3faef/core/src/test/java/com/google/zxing/oned/Code128WriterTestCase.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 525774a9539b4f05edf04b65416ada100cf5b236
+Parent1 SHA-1: e45d17582963ae8f2b5a41291c4efbbaa43d5bac
+Parent2 SHA-1: 3faef2804cd6f8b70c052ff5b7b8dd6a049a1748
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Test
+	public void testEncodeWithFunc2() throws WriterException {
+		String toEncode = "\u00f2" + "123";
+		//                                                       "1"            "2"             "3"          check digit 56
+		String expected = QUIET_SPACE + START_CODE_B + FNC2 + "10011100110" + "11001110010" + "11001011100" + "11100010110" + STOP + QUIET_SPACE;
+		
+		BitMatrix result = writer.encode(toEncode, BarcodeFormat.CODE_128, 0, 0);
+		
+		String actual = matrixToString(result);
+		assertEquals(expected, actual);
+	}
+File path: /tmp/downloads/zxing/revisions/rev_e45d1_3faef/rev_e45d1-3faef/core/src/test/java/com/google/zxing/oned/Code128WriterTestCase.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 525774a9539b4f05edf04b65416ada100cf5b236
+Parent1 SHA-1: e45d17582963ae8f2b5a41291c4efbbaa43d5bac
+Parent2 SHA-1: 3faef2804cd6f8b70c052ff5b7b8dd6a049a1748
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Test
+	public void testEncodeWithFunc1() throws WriterException {
+		String toEncode = "\u00f1" + "123";
+		//                                                       "1"            "2"             "3"          check digit 61
+		String expected = QUIET_SPACE + START_CODE_B + FNC1 + "10011100110" + "11001110010" + "11001011100" + "11001000010" + STOP + QUIET_SPACE;
+		
+		BitMatrix result = writer.encode(toEncode, BarcodeFormat.CODE_128, 0, 0);
+		
+		String actual = matrixToString(result);
+		assertEquals(expected, actual);
+	}
+File path: /tmp/downloads/zxing/revisions/rev_e45d1_3faef/rev_e45d1-3faef/core/src/test/java/com/google/zxing/oned/Code128WriterTestCase.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 525774a9539b4f05edf04b65416ada100cf5b236
+Parent1 SHA-1: e45d17582963ae8f2b5a41291c4efbbaa43d5bac
+Parent2 SHA-1: 3faef2804cd6f8b70c052ff5b7b8dd6a049a1748
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Test
+	public void testEncodeWithFunc4() throws WriterException {
+		String toEncode = "\u00f4" + "123";
+		//                                                       "1"            "2"             "3"          check digit 59
+		String expected = QUIET_SPACE + START_CODE_B + FNC4 + "10011100110" + "11001110010" + "11001011100" + "11100011010" + STOP + QUIET_SPACE;
+		
+		BitMatrix result = writer.encode(toEncode, BarcodeFormat.CODE_128, 0, 0);
+		
+		String actual = matrixToString(result);
+		assertEquals(expected, actual);
+	}
+File path: /tmp/downloads/zxing/revisions/rev_e45d1_3faef/rev_e45d1-3faef/core/src/test/java/com/google/zxing/oned/Code128WriterTestCase.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 525774a9539b4f05edf04b65416ada100cf5b236
+Parent1 SHA-1: e45d17582963ae8f2b5a41291c4efbbaa43d5bac
+Parent2 SHA-1: 3faef2804cd6f8b70c052ff5b7b8dd6a049a1748
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+private String matrixToString(BitMatrix result) {
+		StringBuilder builder = new StringBuilder(result.getWidth());
+		for (int i = 0; i < result.getWidth(); i++) {
+			builder.append(result.get(i, 0) ? '1' : '0');
+		}
+		return builder.toString();
+	}
+File path: /tmp/downloads/zxing/revisions/rev_e45d1_3faef/rev_e45d1-3faef/core/src/test/java/com/google/zxing/oned/Code128WriterTestCase.java
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_1baa8_9d4b8/rev_1baa8-9d4b8.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_a4a98_c77b7/rev_a4a98-c77b7.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_8d93c_182fc/rev_8d93c-182fc.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_1cf19_b94a9/rev_1cf19-b94a9.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_08e73_d62e3/rev_08e73-d62e3.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_32a42_b4868/rev_32a42-b4868.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_6619c_151ad/rev_6619c-151ad.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_b19a9_c103e/rev_b19a9-c103e.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_a9a41_b8913/rev_a9a41-b8913.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_cf35e_08137/rev_cf35e-08137.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_28b53_90cc0/rev_28b53-90cc0.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_c1fb4_e8671/rev_c1fb4-e8671.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_af455_40b48/rev_af455-40b48.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33.revisions
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+public final
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/glass/src/com/google/zxing/client/glass/CaptureActivity.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+extends Activity
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/glass/src/com/google/zxing/client/glass/CaptureActivity.java
+############## CONFLICT ##############
+Conflict type: ImplementList
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+implements SurfaceHolder.Callback
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/glass/src/com/google/zxing/client/glass/CaptureActivity.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Override
+  public void onCreate(Bundle icicle) {
+    super.onCreate(icicle);
+
+    // returnResult should be true if activity was started using 
+    // startActivityForResult() with SCAN_ACTION intent
+    Intent intent = getIntent();
+    returnResult = intent != null && SCAN_ACTION.equals(intent.getAction());
+
+    Window window = getWindow();
+    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    setContentView(R.layout.capture);
+  }
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/glass/src/com/google/zxing/client/glass/CaptureActivity.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Override
+  public synchronized void onResume() {
+    super.onResume();
+    SurfaceView surfaceView = (SurfaceView) findViewById(R.id.preview_view);
+    SurfaceHolder surfaceHolder = surfaceView.getHolder();
+    if (surfaceHolder == null) {
+      throw new IllegalStateException("No SurfaceHolder?");
+    }
+    if (hasSurface) {
+      initCamera(surfaceHolder);
+    } else {
+      surfaceHolder.addCallback(this);
+      holderWithCallback = surfaceHolder;
+    }
+  }
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/glass/src/com/google/zxing/client/glass/CaptureActivity.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Override
+  public synchronized void onPause() {
+    result = null;
+    if (decodeRunnable != null) {
+      decodeRunnable.stop();
+      decodeRunnable = null;
+    }
+    if (camera != null) {
+      camera.stopPreview();
+      camera.release();
+      camera = null;
+    }
+    if (holderWithCallback != null) {
+      holderWithCallback.removeCallback(this);
+      holderWithCallback = null;
+    }
+    super.onPause();
+  }
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/glass/src/com/google/zxing/client/glass/CaptureActivity.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Override
+  public synchronized void surfaceCreated(SurfaceHolder holder) {
+    Log.i(TAG, "Surface created");
+    holderWithCallback = null;
+    if (!hasSurface) {
+      hasSurface = true;
+      initCamera(holder);
+    }
+  }
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/glass/src/com/google/zxing/client/glass/CaptureActivity.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Override
+  public synchronized void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+    // do nothing
+  }
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/glass/src/com/google/zxing/client/glass/CaptureActivity.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Override
+  public synchronized void surfaceDestroyed(SurfaceHolder holder) {
+    Log.i(TAG, "Surface destroyed");
+    holderWithCallback = null;
+    hasSurface = false;
+  }
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/glass/src/com/google/zxing/client/glass/CaptureActivity.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Override
+  public boolean onKeyDown(int keyCode, KeyEvent event) {
+    if (result != null) {
+      switch (keyCode) {
+        case KeyEvent.KEYCODE_DPAD_CENTER:
+          handleResult(result);
+          return true;
+        case KeyEvent.KEYCODE_BACK:
+          reset();
+          return true;
+      }
+    }
+    return super.onKeyDown(keyCode, event);
+  }
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/glass/src/com/google/zxing/client/glass/CaptureActivity.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+private void initCamera(SurfaceHolder holder) {
+    if (camera != null) {
+      throw new IllegalStateException("Camera not null on initialization");
+    }
+    camera = Camera.open();
+    if (camera == null) {
+      throw new IllegalStateException("Camera is null");
+    }
+
+    CameraConfigurationManager.configure(camera);
+
+    try {
+      camera.setPreviewDisplay(holder);
+      camera.startPreview();
+    } catch (IOException e) {
+      Log.e(TAG, "Cannot start preview", e);
+    }
+
+    decodeRunnable = new DecodeRunnable(this, camera);
+    new Thread(decodeRunnable).start();
+    reset();
+  }
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/glass/src/com/google/zxing/client/glass/CaptureActivity.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+void setResult(Result result) {
+    if (returnResult) {
+      Intent scanResult = new Intent("com.google.zxing.client.android.SCAN");
+      scanResult.putExtra("SCAN_RESULT", result.getText());
+      setResult(RESULT_OK, scanResult);
+      finish();
+    } else {
+      TextView statusView = (TextView) findViewById(R.id.status_view);
+      String text = result.getText();
+      statusView.setText(text);
+      statusView.setTextSize(TypedValue.COMPLEX_UNIT_SP, Math.max(14, 56 - text.length() / 4));
+      statusView.setVisibility(View.VISIBLE);
+      this.result = result;
+    }
+  }
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/glass/src/com/google/zxing/client/glass/CaptureActivity.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+private void handleResult(Result result) {
+    ParsedResult parsed = ResultParser.parseResult(result);
+    Intent intent;
+    if (parsed.getType() == ParsedResultType.URI) {
+      intent = new Intent(Intent.ACTION_VIEW, Uri.parse(((URIParsedResult) parsed).getURI()));
+    } else {
+      intent = new Intent(Intent.ACTION_WEB_SEARCH);
+      intent.putExtra("query", ((TextParsedResult) parsed).getText());
+    }
+    startActivity(intent);
+  }
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/glass/src/com/google/zxing/client/glass/CaptureActivity.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+private synchronized void reset() {
+    TextView statusView = (TextView) findViewById(R.id.status_view);
+    statusView.setVisibility(View.GONE);
+    result = null;
+    decodeRunnable.startScanning();
+  }
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/glass/src/com/google/zxing/client/glass/CaptureActivity.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+final
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/glass/src/com/google/zxing/client/glass/CameraConfigurationManager.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+private CameraConfigurationManager() {
+  }
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/glass/src/com/google/zxing/client/glass/CameraConfigurationManager.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+static void configure(Camera camera) {
+    Camera.Parameters parameters = camera.getParameters();
+    parameters.setPreviewSize(1280, 720);
+    //parameters.setPreviewSize(1920, 1080);
+    configureAdvanced(parameters);
+    camera.setParameters(parameters);
+    //logAllParameters(parameters);
+  }
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/glass/src/com/google/zxing/client/glass/CameraConfigurationManager.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+private static void configureAdvanced(Camera.Parameters parameters) {
+    CameraConfigurationUtils.setBestPreviewFPS(parameters);
+    CameraConfigurationUtils.setBarcodeSceneMode(parameters);
+    CameraConfigurationUtils.setVideoStabilization(parameters);
+    CameraConfigurationUtils.setMetering(parameters);
+    CameraConfigurationUtils.setZoom(parameters, ZOOM);
+  }
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/glass/src/com/google/zxing/client/glass/CameraConfigurationManager.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+private static void logAllParameters(Camera.Parameters parameters) {
+    if (Log.isLoggable(TAG, Log.INFO)) {
+      for (String line : CameraConfigurationUtils.collectStats(parameters).split("\n")) {
+        Log.i(TAG, line);
+      }
+    }
+  }
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/glass/src/com/google/zxing/client/glass/CameraConfigurationManager.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+public final
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/core/src/test/java/com/google/zxing/common/detector/MathUtilsTestCase.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+extends Assert
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/core/src/test/java/com/google/zxing/common/detector/MathUtilsTestCase.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 6c522f127a0ac40b2e14518528c9547018e044b2
+Parent1 SHA-1: 5480adba3e14efc6bc13492baa449c1e5cad0fe3
+Parent2 SHA-1: 1fc337bb08c4bb9587f9819c52a8f9df76434723
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Test
+  public void testRound() {
+    assertEquals(-1, MathUtils.round(-1.0f));
+    assertEquals(0, MathUtils.round(0.0f));
+    assertEquals(1, MathUtils.round(1.0f));
+
+    assertEquals(2, MathUtils.round(1.9f));
+    assertEquals(2, MathUtils.round(2.1f));
+
+    assertEquals(3, MathUtils.round(2.5f));
+
+    assertEquals(-2, MathUtils.round(-1.9f));
+    assertEquals(-2, MathUtils.round(-2.1f));
+
+    assertEquals(-3, MathUtils.round(-2.5f)); // This differs from Math.round()
+
+    assertEquals(Integer.MAX_VALUE, MathUtils.round(Integer.MAX_VALUE));
+    assertEquals(Integer.MIN_VALUE, MathUtils.round(Integer.MIN_VALUE));
+
+    assertEquals(Integer.MAX_VALUE, MathUtils.round(Float.POSITIVE_INFINITY));
+    assertEquals(Integer.MIN_VALUE, MathUtils.round(Float.NEGATIVE_INFINITY));
+
+    assertEquals(0, MathUtils.round(Float.NaN));
+  }
+File path: /tmp/downloads/zxing/revisions/rev_5480a_1fc33/rev_5480a-1fc33/core/src/test/java/com/google/zxing/common/detector/MathUtilsTestCase.java
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_81589_e715f/rev_81589-e715f.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_7036a_7d35b/rev_7036a-7d35b.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_e0612_1992b/rev_e0612-1992b.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_cd212_17735/rev_cd212-17735.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_b04ed_b8baf/rev_b04ed-b8baf.revisions
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 261e829ba5db0a176cf15224c09222e435cf7eae
+Parent1 SHA-1: b04edfec6864423d95e94d2d90880be6798d3242
+Parent2 SHA-1: b8bafbe5c95310ed81e42e51f4b86d9f6b427c92
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+public
+File path: /tmp/downloads/zxing/revisions/rev_b04ed_b8baf/rev_b04ed-b8baf/core/src/test/java/com/google/zxing/aztec/decoder/DecoderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 261e829ba5db0a176cf15224c09222e435cf7eae
+Parent1 SHA-1: b04edfec6864423d95e94d2d90880be6798d3242
+Parent2 SHA-1: b8bafbe5c95310ed81e42e51f4b86d9f6b427c92
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Test
+  public void testDecodeTooManyErrors() {
+    BitMatrix matrix = BitMatrix.parse(""
+        + "X X . X . . . X X . . . X . . X X X . X . X X X X X . \n"
+        + "X X . . X X . . . . . X X . . . X X . . . X . X . . X \n"
+        + "X . . . X X . . X X X . X X . X X X X . X X . . X . . \n"
+        + ". . . . X . X X . . X X . X X . X . X X X X . X . . X \n"
+        + "X X X . . X X X X X . . . . . X X . . . X . X . X . X \n"
+        + "X X . . . . . . . . X . . . X . X X X . X . . X . . . \n"
+        + "X X . . X . . . . . X X . . . . . X . . . . X . . X X \n"
+        + ". . . X . X . X . . . . . X X X X X X . . . . . . X X \n"
+        + "X . . . X . X X X X X X . . X X X . X . X X X X X X . \n"
+        + "X . . X X X . X X X X X X X X X X X X X . . . X . X X \n"
+        + ". . . . X X . . . X . . . . . . . X X . . . X X . X . \n"
+        + ". . . X X X . . X X . X X X X X . X . . X . . . . . . \n"
+        + "X . . . . X . X . X . X . . . X . X . X X . X X . X X \n"
+        + "X . X . . X . X . X . X . X . X . X . . . . . X . X X \n"
+        + "X . X X X . . X . X . X . . . X . X . X X X . . . X X \n"
+        + "X X X X X X X X . X . X X X X X . X . X . X . X X X . \n"
+        + ". . . . . . . X . X . . . . . . . X X X X . . . X X X \n"
+        + "X X . . X . . X . X X X X X X X X X X X X X . . X . X \n"
+        + "X X X . X X X X . . X X X X . . X . . . . X . . X X X \n"
+        + ". . . . X . X X X . . . . X X X X . . X X X X . . . . \n"
+        + ". . X . . X . X . . . X . X X . X X . X . . . X . X . \n"
+        + "X X . . X . . X X X X X X X . . X . X X X X X X X . . \n"
+        + "X . X X . . X X . . . . . X . . . . . . X X . X X X . \n"
+        + "X . . X X . . X X . X . X . . . . X . X . . X . . X . \n"
+        + "X . X . X . . X . X X X X X X X X . X X X X . . X X . \n"
+        + "X X X X . . . X . . X X X . X X . . X . . . . X X X . \n"
+        + "X X . X . X . . . X . X . . . . X X . X . . X X . . . \n",
+        "X ", ". ");
+    AztecDetectorResult r = new AztecDetectorResult(matrix, NO_POINTS, true, 16, 4);
+    try {
+      DecoderResult res = new Decoder().decode(r);
+      fail();
+    } catch (FormatException ex) {
+    }
+  }
+File path: /tmp/downloads/zxing/revisions/rev_b04ed_b8baf/rev_b04ed-b8baf/core/src/test/java/com/google/zxing/aztec/decoder/DecoderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 261e829ba5db0a176cf15224c09222e435cf7eae
+Parent1 SHA-1: b04edfec6864423d95e94d2d90880be6798d3242
+Parent2 SHA-1: b8bafbe5c95310ed81e42e51f4b86d9f6b427c92
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Test
+  public void testDecodeTooManyErrors2() {
+    BitMatrix matrix = BitMatrix.parse(""
+        + ". X X . . X . X X . . . X . . X X X . . . X X . X X . \n"
+        + "X X . X X . . X . . . X X . . . X X . X X X . X . X X \n"
+        + ". . . . X . . . X X X . X X . X X X X . X X . . X . . \n"
+        + "X . X X . . X . . . X X . X X . X . X X . . . . . X . \n"
+        + "X X . X . . X . X X . . . . . X X . . . . . X . . . X \n"
+        + "X . . X . . . . . . X . . . X . X X X X X X X . . . X \n"
+        + "X . . X X . . X . . X X . . . . . X . . . . . X X X . \n"
+        + ". . X X X X . X . . . . . X X X X X X . . . . . . X X \n"
+        + "X . . . X . X X X X X X . . X X X . X . X X X X X X . \n"
+        + "X . . X X X . X X X X X X X X X X X X X . . . X . X X \n"
+        + ". . . . X X . . . X . . . . . . . X X . . . X X . X . \n"
+        + ". . . X X X . . X X . X X X X X . X . . X . . . . . . \n"
+        + "X . . . . X . X . X . X . . . X . X . X X . X X . X X \n"
+        + "X . X . . X . X . X . X . X . X . X . . . . . X . X X \n"
+        + "X . X X X . . X . X . X . . . X . X . X X X . . . X X \n"
+        + "X X X X X X X X . X . X X X X X . X . X . X . X X X . \n"
+        + ". . . . . . . X . X . . . . . . . X X X X . . . X X X \n"
+        + "X X . . X . . X . X X X X X X X X X X X X X . . X . X \n"
+        + "X X X . X X X X . . X X X X . . X . . . . X . . X X X \n"
+        + ". . X X X X X . X . . . . X X X X . . X X X . X . X . \n"
+        + ". . X X . X . X . . . X . X X . X X . . . . X X . . . \n"
+        + "X . . . X . X . X X X X X X . . X . X X X X X . X . . \n"
+        + ". X . . . X X X . . . . . X . . . . . X X X X X . X . \n"
+        + "X . . X . X X X X . X . X . . . . X . X X . X . . X . \n"
+        + "X . . . X X . X . X X X X X X X X . X X X X . . X X . \n"
+        + ". X X X X . . X . . X X X . X X . . X . . . . X X X . \n"
+        + "X X . . . X X . . X . X . . . . X X . X . . X . X . X \n",
+        "X ", ". ");
+    AztecDetectorResult r = new AztecDetectorResult(matrix, NO_POINTS, true, 16, 4);
+    try {
+      DecoderResult res = new Decoder().decode(r);
+      fail();
+    } catch (FormatException ex) {
+    }
+  }
+File path: /tmp/downloads/zxing/revisions/rev_b04ed_b8baf/rev_b04ed-b8baf/core/src/test/java/com/google/zxing/aztec/decoder/DecoderTest.java
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_1a889_0d81a/rev_1a889-0d81a.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_ea00f_ce1fb/rev_ea00f-ce1fb.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_dee54_51bee/rev_dee54-51bee.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_9ff5d_fc87d/rev_9ff5d-fc87d.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_c4f5e_f67a0/rev_c4f5e-f67a0.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_88468_c676b/rev_88468-c676b.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_cfeb6_bb8f6/rev_cfeb6-bb8f6.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_f244a_71d83/rev_f244a-71d83.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_ef74b_6a411/rev_ef74b-6a411.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_625d9_2c3e0/rev_625d9-2c3e0.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_82861_18388/rev_82861-18388.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_2399d_8dc99/rev_2399d-8dc99.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_5ac94_2399d/rev_5ac94-2399d.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_a577f_e4bb4/rev_a577f-e4bb4.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_a1b44_914de/rev_a1b44-914de.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_5b665_8475b/rev_5b665-8475b.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41.revisions
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public final ##FSTMerge## public final
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/zxingorg/src/main/java/com/google/zxing/web/LegacyJavadocRedirectServlet.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## extends HttpServlet ##FSTMerge## extends HttpServlet
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/zxingorg/src/main/java/com/google/zxing/web/LegacyJavadocRedirectServlet.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private static final String PREFIX = "/w/docs/javadoc/"; ##FSTMerge## private static final String PREFIX = "/w/docs/javadoc/";
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/zxingorg/src/main/java/com/google/zxing/web/LegacyJavadocRedirectServlet.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+  protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+    String requestURI = request.getRequestURI();
+    Preconditions.checkArgument(requestURI.startsWith(PREFIX));
+    String redirectURI = "http://zxing.github.io/zxing/apidocs/" + requestURI.substring(PREFIX.length());
+    response.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
+    response.setHeader(HttpHeaders.LOCATION, redirectURI);
+  } ##FSTMerge## @Override
+  protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+    String requestURI = request.getRequestURI();
+    Preconditions.checkArgument(requestURI.startsWith(PREFIX));
+    String redirectURI = "http://zxing.github.io/zxing/apidocs/" + requestURI.substring(PREFIX.length());
+    response.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
+    response.setHeader(HttpHeaders.LOCATION, redirectURI);
+  }
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/zxingorg/src/main/java/com/google/zxing/web/LegacyJavadocRedirectServlet.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@WebFilter("/*")
+public final
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/zxingorg/src/main/java/com/google/zxing/web/RedirectFilter.java
+############## CONFLICT ##############
+Conflict type: ImplementList
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+implements Filter
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/zxingorg/src/main/java/com/google/zxing/web/RedirectFilter.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Override
+  public void init(FilterConfig filterConfig) {
+    // do nothing
+  }
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/zxingorg/src/main/java/com/google/zxing/web/RedirectFilter.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Override
+  public void doFilter(ServletRequest servletRequest,
+                       ServletResponse servletResponse,
+                       FilterChain filterChain) throws IOException, ServletException {
+    HttpServletRequest request = (HttpServletRequest) servletRequest;
+    String requestURI = request.getRequestURI();
+    if ("/".equals(requestURI) || "/index.jspx".equals(requestURI) ||
+        "/w/".equals(requestURI) || "/w/index.jspx".equals(requestURI)) {
+      redirect(servletResponse, "/w/decode.jspx");
+    } else if (requestURI.startsWith(OLD_JAVADOC_PREFIX)) {
+      String withoutPrefix = requestURI.substring(OLD_JAVADOC_PREFIX.length());
+      redirect(servletResponse, "http://zxing.github.io/zxing/apidocs" + withoutPrefix);
+    } else {
+      filterChain.doFilter(servletRequest, servletResponse);
+    }
+  }
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/zxingorg/src/main/java/com/google/zxing/web/RedirectFilter.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+private static void redirect(ServletResponse servletResponse, String location) {
+    HttpServletResponse response = (HttpServletResponse) servletResponse;
+    response.setStatus(HttpServletResponse.SC_MOVED_PERMANENTLY);
+    response.setHeader(HttpHeaders.LOCATION, location);
+  }
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/zxingorg/src/main/java/com/google/zxing/web/RedirectFilter.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Override
+  public void destroy() {
+    // do nothing
+  }
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/zxingorg/src/main/java/com/google/zxing/web/RedirectFilter.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+public final
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/core/src/test/java/com/google/zxing/PlanarYUVLuminanceSourceTestCase.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+extends Assert
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/core/src/test/java/com/google/zxing/PlanarYUVLuminanceSourceTestCase.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Test
+  public void testNoCrop() {
+    PlanarYUVLuminanceSource source =
+        new PlanarYUVLuminanceSource(YUV, COLS, ROWS, 0, 0, COLS, ROWS, false);
+    assertEquals(Y, 0, source.getMatrix(), 0, Y.length);
+    for (int r = 0; r < ROWS; r++) {
+      assertEquals(Y, r * COLS, source.getRow(r, null), 0, COLS);
+    }
+  }
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/core/src/test/java/com/google/zxing/PlanarYUVLuminanceSourceTestCase.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Test
+  public void testCrop() {
+    PlanarYUVLuminanceSource source =
+        new PlanarYUVLuminanceSource(YUV, COLS, ROWS, 1, 1, COLS-2, ROWS-2, false);
+    for (int r = 0; r < ROWS-2; r++) {
+      assertEquals(Y, (r + 1) * COLS + 1, source.getRow(r, null), 0, COLS-2);
+    }
+  }
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/core/src/test/java/com/google/zxing/PlanarYUVLuminanceSourceTestCase.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+private static void assertEquals(byte[] expected, int expectedFrom,
+                                   byte[] actual, int actualFrom,
+                                   int length) {
+    for (int i = 0; i < length; i++) {
+      assertEquals(expected[expectedFrom + i], actual[actualFrom + i]);
+    }
+  }
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/core/src/test/java/com/google/zxing/PlanarYUVLuminanceSourceTestCase.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+public final
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/core/src/test/java/com/google/zxing/pdf417/encoder/PDF417EncoderTestCase.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+extends Assert
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/core/src/test/java/com/google/zxing/pdf417/encoder/PDF417EncoderTestCase.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Test
+  public void testEncodeAuto() throws Exception {
+    String encoded = PDF417HighLevelEncoder.encodeHighLevel(
+        "ABCD", Compaction.AUTO, StandardCharsets.UTF_8);
+    assertEquals("\u039f\u001A\u0385ABCD", encoded);
+  }
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/core/src/test/java/com/google/zxing/pdf417/encoder/PDF417EncoderTestCase.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Test
+  public void testEncodeText() throws Exception {
+    String encoded = PDF417HighLevelEncoder.encodeHighLevel(
+        "ABCD", Compaction.TEXT, StandardCharsets.UTF_8);
+    assertEquals("Ο\u001A\u0001?", encoded);
+  }
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/core/src/test/java/com/google/zxing/pdf417/encoder/PDF417EncoderTestCase.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Test
+  public void testEncodeNumeric() throws Exception {
+    String encoded = PDF417HighLevelEncoder.encodeHighLevel(
+        "1234", Compaction.NUMERIC, StandardCharsets.UTF_8);
+    assertEquals("\u039f\u001A\u0386\f\u01b2", encoded);
+  }
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/core/src/test/java/com/google/zxing/pdf417/encoder/PDF417EncoderTestCase.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Test
+  public void testEncodeByte() throws Exception {
+    String encoded = PDF417HighLevelEncoder.encodeHighLevel(
+        "abcd", Compaction.BYTE, StandardCharsets.UTF_8);
+    assertEquals("\u039f\u001A\u0385abcd", encoded);
+  }
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/core/src/test/java/com/google/zxing/pdf417/encoder/PDF417EncoderTestCase.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+public final
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/core/src/test/java/com/google/zxing/aztec/decoder/DecoderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Test(expected = FormatException.class)
+  public void testDecodeTooManyErrors() throws FormatException {
+    BitMatrix matrix = BitMatrix.parse(""
+        + "X X . X . . . X X . . . X . . X X X . X . X X X X X . \n"
+        + "X X . . X X . . . . . X X . . . X X . . . X . X . . X \n"
+        + "X . . . X X . . X X X . X X . X X X X . X X . . X . . \n"
+        + ". . . . X . X X . . X X . X X . X . X X X X . X . . X \n"
+        + "X X X . . X X X X X . . . . . X X . . . X . X . X . X \n"
+        + "X X . . . . . . . . X . . . X . X X X . X . . X . . . \n"
+        + "X X . . X . . . . . X X . . . . . X . . . . X . . X X \n"
+        + ". . . X . X . X . . . . . X X X X X X . . . . . . X X \n"
+        + "X . . . X . X X X X X X . . X X X . X . X X X X X X . \n"
+        + "X . . X X X . X X X X X X X X X X X X X . . . X . X X \n"
+        + ". . . . X X . . . X . . . . . . . X X . . . X X . X . \n"
+        + ". . . X X X . . X X . X X X X X . X . . X . . . . . . \n"
+        + "X . . . . X . X . X . X . . . X . X . X X . X X . X X \n"
+        + "X . X . . X . X . X . X . X . X . X . . . . . X . X X \n"
+        + "X . X X X . . X . X . X . . . X . X . X X X . . . X X \n"
+        + "X X X X X X X X . X . X X X X X . X . X . X . X X X . \n"
+        + ". . . . . . . X . X . . . . . . . X X X X . . . X X X \n"
+        + "X X . . X . . X . X X X X X X X X X X X X X . . X . X \n"
+        + "X X X . X X X X . . X X X X . . X . . . . X . . X X X \n"
+        + ". . . . X . X X X . . . . X X X X . . X X X X . . . . \n"
+        + ". . X . . X . X . . . X . X X . X X . X . . . X . X . \n"
+        + "X X . . X . . X X X X X X X . . X . X X X X X X X . . \n"
+        + "X . X X . . X X . . . . . X . . . . . . X X . X X X . \n"
+        + "X . . X X . . X X . X . X . . . . X . X . . X . . X . \n"
+        + "X . X . X . . X . X X X X X X X X . X X X X . . X X . \n"
+        + "X X X X . . . X . . X X X . X X . . X . . . . X X X . \n"
+        + "X X . X . X . . . X . X . . . . X X . X . . X X . . . \n",
+        "X ", ". ");
+    AztecDetectorResult r = new AztecDetectorResult(matrix, NO_POINTS, true, 16, 4);
+    new Decoder().decode(r);
+  }
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/core/src/test/java/com/google/zxing/aztec/decoder/DecoderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: deb288bb9442f9c91f633b868370d095ccb28674
+Parent1 SHA-1: a6e466e419ed8c8b36dfd4e479a0b6b7dd614613
+Parent2 SHA-1: a9a417636f53ae1367eb35fc0ef581a1336d27f0
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Test(expected = FormatException.class)
+  public void testDecodeTooManyErrors2() throws FormatException {
+    BitMatrix matrix = BitMatrix.parse(""
+        + ". X X . . X . X X . . . X . . X X X . . . X X . X X . \n"
+        + "X X . X X . . X . . . X X . . . X X . X X X . X . X X \n"
+        + ". . . . X . . . X X X . X X . X X X X . X X . . X . . \n"
+        + "X . X X . . X . . . X X . X X . X . X X . . . . . X . \n"
+        + "X X . X . . X . X X . . . . . X X . . . . . X . . . X \n"
+        + "X . . X . . . . . . X . . . X . X X X X X X X . . . X \n"
+        + "X . . X X . . X . . X X . . . . . X . . . . . X X X . \n"
+        + ". . X X X X . X . . . . . X X X X X X . . . . . . X X \n"
+        + "X . . . X . X X X X X X . . X X X . X . X X X X X X . \n"
+        + "X . . X X X . X X X X X X X X X X X X X . . . X . X X \n"
+        + ". . . . X X . . . X . . . . . . . X X . . . X X . X . \n"
+        + ". . . X X X . . X X . X X X X X . X . . X . . . . . . \n"
+        + "X . . . . X . X . X . X . . . X . X . X X . X X . X X \n"
+        + "X . X . . X . X . X . X . X . X . X . . . . . X . X X \n"
+        + "X . X X X . . X . X . X . . . X . X . X X X . . . X X \n"
+        + "X X X X X X X X . X . X X X X X . X . X . X . X X X . \n"
+        + ". . . . . . . X . X . . . . . . . X X X X . . . X X X \n"
+        + "X X . . X . . X . X X X X X X X X X X X X X . . X . X \n"
+        + "X X X . X X X X . . X X X X . . X . . . . X . . X X X \n"
+        + ". . X X X X X . X . . . . X X X X . . X X X . X . X . \n"
+        + ". . X X . X . X . . . X . X X . X X . . . . X X . . . \n"
+        + "X . . . X . X . X X X X X X . . X . X X X X X . X . . \n"
+        + ". X . . . X X X . . . . . X . . . . . X X X X X . X . \n"
+        + "X . . X . X X X X . X . X . . . . X . X X . X . . X . \n"
+        + "X . . . X X . X . X X X X X X X X . X X X X . . X X . \n"
+        + ". X X X X . . X . . X X X . X X . . X . . . . X X X . \n"
+        + "X X . . . X X . . X . X . . . . X X . X . . X . X . X \n",
+        "X ", ". ");
+    AztecDetectorResult r = new AztecDetectorResult(matrix, NO_POINTS, true, 16, 4);
+    new Decoder().decode(r);
+  }
+File path: /tmp/downloads/zxing/revisions/rev_a6e46_a9a41/rev_a6e46-a9a41/core/src/test/java/com/google/zxing/aztec/decoder/DecoderTest.java
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_943be_a6e46/rev_943be-a6e46.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_cec4b_43180/rev_cec4b-43180.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_13b0b_bc3c8/rev_13b0b-bc3c8.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_72172_295ca/rev_72172-295ca.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_f4e00_a126e/rev_f4e00-a126e.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_849f8_8bae2/rev_849f8-8bae2.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_955a9_faee6/rev_955a9-faee6.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_b5d41_02d36/rev_b5d41-02d36.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_18a72_dc5e8/rev_18a72-dc5e8.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_cc1a7_43295/rev_cc1a7-43295.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_6b15a_b4bd7/rev_6b15a-b4bd7.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_483d8_840f0/rev_483d8-840f0.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_53875_d3c09/rev_53875-d3c09.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_825a3_58566/rev_825a3-58566.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_17676_c44ee/rev_17676-c44ee.revisions
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 4d70b65c636011fbcdf13458ce8fccd99c848454
+Parent1 SHA-1: 17676d064acbac2208e52e463454ed427fe6b228
+Parent2 SHA-1: c44ee5e5875fefbb0b753eb1932e15404d5702cb
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+public final
+File path: /tmp/downloads/zxing/revisions/rev_17676_c44ee/rev_17676-c44ee/core/src/main/java/com/google/zxing/oned/UPCEWriter.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: 4d70b65c636011fbcdf13458ce8fccd99c848454
+Parent1 SHA-1: 17676d064acbac2208e52e463454ed427fe6b228
+Parent2 SHA-1: c44ee5e5875fefbb0b753eb1932e15404d5702cb
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+extends UPCEANWriter
+File path: /tmp/downloads/zxing/revisions/rev_17676_c44ee/rev_17676-c44ee/core/src/main/java/com/google/zxing/oned/UPCEWriter.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4d70b65c636011fbcdf13458ce8fccd99c848454
+Parent1 SHA-1: 17676d064acbac2208e52e463454ed427fe6b228
+Parent2 SHA-1: c44ee5e5875fefbb0b753eb1932e15404d5702cb
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Override
+  public BitMatrix encode(String contents,
+                          BarcodeFormat format,
+                          int width,
+                          int height,
+                          Map<EncodeHintType, ?> hints) throws WriterException {
+    if (format != BarcodeFormat.UPC_E) {
+      throw new IllegalArgumentException("Can only encode UPC_E, but got " + format);
+    }
+
+    return super.encode(contents, format, width, height, hints);
+  }
+File path: /tmp/downloads/zxing/revisions/rev_17676_c44ee/rev_17676-c44ee/core/src/main/java/com/google/zxing/oned/UPCEWriter.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4d70b65c636011fbcdf13458ce8fccd99c848454
+Parent1 SHA-1: 17676d064acbac2208e52e463454ed427fe6b228
+Parent2 SHA-1: c44ee5e5875fefbb0b753eb1932e15404d5702cb
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Override
+  public boolean[] encode(String contents) {
+    if (contents.length() != 8) {
+      throw new IllegalArgumentException(
+        "Requested contents should be 8 digits long, but got " + contents.length());
+    }
+      
+    int checkDigit = Integer.parseInt(contents.substring(7, 8));
+    int parities = UPCEReader.CHECK_DIGIT_ENCODINGS[checkDigit];
+    boolean[] result = new boolean[CODE_WIDTH];
+    int pos = 0;
+
+    pos += appendPattern(result, pos, UPCEANReader.START_END_PATTERN, true);
+
+    for (int i = 1; i <= 6; i++) {
+      int digit = Integer.parseInt(contents.substring(i, i + 1));
+      if ((parities >> (6 - i) & 1) == 1) {
+        digit += 10;
+      }
+      pos += appendPattern(result, pos, UPCEANReader.L_AND_G_PATTERNS[digit], false);
+    }
+
+    appendPattern(result, pos, UPCEANReader.END_PATTERN, false);
+
+    return result;
+  }
+File path: /tmp/downloads/zxing/revisions/rev_17676_c44ee/rev_17676-c44ee/core/src/main/java/com/google/zxing/oned/UPCEWriter.java
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_dd241_c884b/rev_dd241-c884b.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_249d0_6d619/rev_249d0-6d619.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_be573_a6707/rev_be573-a6707.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_9cf93_2e5e2/rev_9cf93-2e5e2.revisions
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: ff5198e639fe530d58e2bc37ded8b6f1a486279d
+Parent1 SHA-1: 9cf93792d429ab397e5d52a9482b9f3308dd1de7
+Parent2 SHA-1: 2e5e2ea898b4bae36a042deb2168cbfeda51f40a
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+public
+File path: /tmp/downloads/zxing/revisions/rev_9cf93_2e5e2/rev_9cf93-2e5e2/core/src/main/java/com/google/zxing/oned/Code93Writer.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: ff5198e639fe530d58e2bc37ded8b6f1a486279d
+Parent1 SHA-1: 9cf93792d429ab397e5d52a9482b9f3308dd1de7
+Parent2 SHA-1: 2e5e2ea898b4bae36a042deb2168cbfeda51f40a
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+extends OneDimensionalCodeWriter
+File path: /tmp/downloads/zxing/revisions/rev_9cf93_2e5e2/rev_9cf93-2e5e2/core/src/main/java/com/google/zxing/oned/Code93Writer.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: ff5198e639fe530d58e2bc37ded8b6f1a486279d
+Parent1 SHA-1: 9cf93792d429ab397e5d52a9482b9f3308dd1de7
+Parent2 SHA-1: 2e5e2ea898b4bae36a042deb2168cbfeda51f40a
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Override
+  public BitMatrix encode(String contents,
+                          BarcodeFormat format,
+                          int width,
+                          int height,
+                          Map<EncodeHintType,?> hints) throws WriterException {
+    if (format != BarcodeFormat.CODE_93) {
+      throw new IllegalArgumentException("Can only encode CODE_93, but got " + format);
+    }
+    return super.encode(contents, format, width, height, hints);
+  }
+File path: /tmp/downloads/zxing/revisions/rev_9cf93_2e5e2/rev_9cf93-2e5e2/core/src/main/java/com/google/zxing/oned/Code93Writer.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: ff5198e639fe530d58e2bc37ded8b6f1a486279d
+Parent1 SHA-1: 9cf93792d429ab397e5d52a9482b9f3308dd1de7
+Parent2 SHA-1: 2e5e2ea898b4bae36a042deb2168cbfeda51f40a
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+@Override
+  public boolean[] encode(String contents) {
+    int length = contents.length();
+    if (length > 80) {
+      throw new IllegalArgumentException(
+        "Requested contents should be less than 80 digits long, but got " + length);
+    }
+    //each character is encoded by 9 of 0/1's
+    int[] widths = new int[9];
+
+    //lenght of code + 2 start/stop characters + 2 checksums, each of 9 bits, plus a termination bar
+    int codeWidth = (contents.length() + 2 + 2) * 9 + 1;
+
+    boolean[] result = new boolean[codeWidth];
+
+    //start character (*)
+    toIntArray(Code93Reader.CHARACTER_ENCODINGS[47], widths);
+    int pos = appendPattern(result, 0, widths, true);
+
+    for (int i = 0; i < length; i++) {
+      int indexInString = Code93Reader.ALPHABET_STRING.indexOf(contents.charAt(i));
+      toIntArray(Code93Reader.CHARACTER_ENCODINGS[indexInString], widths);
+      pos += appendPattern(result, pos, widths, true);
+    }
+
+    //add two checksums
+    int check1 = computeChecksumIndex(contents, 20);
+    toIntArray(Code93Reader.CHARACTER_ENCODINGS[check1], widths);
+    pos += appendPattern(result, pos, widths, true);
+
+    //append the contents to reflect the first checksum added
+    contents += Code93Reader.ALPHABET_STRING.charAt(check1);
+
+    int check2 = computeChecksumIndex(contents, 15);
+    toIntArray(Code93Reader.CHARACTER_ENCODINGS[check2], widths);
+    pos += appendPattern(result, pos, widths, true);
+
+    //end character (*)
+    toIntArray(Code93Reader.CHARACTER_ENCODINGS[47], widths);
+    pos += appendPattern(result, pos, widths, true);
+
+    //termination bar (single black bar)
+    result[pos] = true;
+
+    return result;
+  }
+File path: /tmp/downloads/zxing/revisions/rev_9cf93_2e5e2/rev_9cf93-2e5e2/core/src/main/java/com/google/zxing/oned/Code93Writer.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: ff5198e639fe530d58e2bc37ded8b6f1a486279d
+Parent1 SHA-1: 9cf93792d429ab397e5d52a9482b9f3308dd1de7
+Parent2 SHA-1: 2e5e2ea898b4bae36a042deb2168cbfeda51f40a
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+private static void toIntArray(int a, int[] toReturn) {
+    for (int i = 0; i < 9; i++) {
+      int temp = a & (1 << (8 - i));
+      toReturn[i] = temp == 0 ? 0 : 1;
+    }
+  }
+File path: /tmp/downloads/zxing/revisions/rev_9cf93_2e5e2/rev_9cf93-2e5e2/core/src/main/java/com/google/zxing/oned/Code93Writer.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: ff5198e639fe530d58e2bc37ded8b6f1a486279d
+Parent1 SHA-1: 9cf93792d429ab397e5d52a9482b9f3308dd1de7
+Parent2 SHA-1: 2e5e2ea898b4bae36a042deb2168cbfeda51f40a
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+protected static int appendPattern(boolean[] target, int pos, int[] pattern, boolean startColor) {
+    for (int bit : pattern) {
+      target[pos++] = bit != 0;
+    }
+    return 9;
+  }
+File path: /tmp/downloads/zxing/revisions/rev_9cf93_2e5e2/rev_9cf93-2e5e2/core/src/main/java/com/google/zxing/oned/Code93Writer.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: ff5198e639fe530d58e2bc37ded8b6f1a486279d
+Parent1 SHA-1: 9cf93792d429ab397e5d52a9482b9f3308dd1de7
+Parent2 SHA-1: 2e5e2ea898b4bae36a042deb2168cbfeda51f40a
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+private static int computeChecksumIndex(String contents, int maxWeight) {
+    int weight = 1;
+    int total = 0;
+
+    for (int i = contents.length() - 1; i >= 0; i--) {
+      int indexInString = Code93Reader.ALPHABET_STRING.indexOf(contents.charAt(i));
+      total += indexInString * weight;
+      if (++weight > maxWeight) {
+        weight = 1;
+      }
+    }
+    return total % 47;
+  }
+File path: /tmp/downloads/zxing/revisions/rev_9cf93_2e5e2/rev_9cf93-2e5e2/core/src/main/java/com/google/zxing/oned/Code93Writer.java
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_e5ad6_f8757/rev_e5ad6-f8757.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_585f7_9910f/rev_585f7-9910f.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_79b84_2b0ab/rev_79b84-2b0ab.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_60302_b7868/rev_60302-b7868.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_02e4c_b7868/rev_02e4c-b7868.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_1732b_02e4c/rev_1732b-02e4c.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_685a1_05b9f/rev_685a1-05b9f.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_70ee6_715be/rev_70ee6-715be.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_ea240_08cd6/rev_ea240-08cd6.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_312d2_87802/rev_312d2-87802.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_59541_b189f/rev_59541-b189f.revisions
+
+==================================================================================================================
+Revision: /tmp/downloads/zxing/revisions/rev_8b53e_d5058/rev_8b53e-d5058.revisions
+
+=========================================================
