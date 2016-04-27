@@ -13,6 +13,7 @@ import findParametersInMerge.ParameterFinder;
 import getConflictCommits.ConflictFileTree;
 import getVariantParameter.VariantParameter;
 import mergeConflicts.ConflictAnalyzer;
+import paola.CSVExtractor;
 
 
 public class Main {
@@ -24,6 +25,7 @@ public class Main {
 	private static final String getVariantParameter = "getVariantParameter";
 	private static final String findParameterInMergeCommit = "findParameterInMergeCommit";
 	private static final String conflictAnalyzer = "conflictAnalyzer";
+	private static final String extractFromCA = "extractFromCA";
 	
 	
 	private static Machine machine;
