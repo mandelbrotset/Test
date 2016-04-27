@@ -65,6 +65,7 @@ public class ConflictFileTree {
 						writeToFile(rightConflict, conflict.getRightConflict());
 						writeToFile(commonAncestor, conflict.getCommonAncestor());
 						writeToFile(resolution, conflict.getResolution());
+						writeDiff3File(location, leftConflict.getName(), commonAncestor.getName(), rightConflict.getName());
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -72,11 +73,11 @@ public class ConflictFileTree {
 
 				}
 				// }
-				String outputLocation = Machine.getInstance().getCftFolderPath() + "/" + repoName + "/" + commit + "/" + "diff.txt";
-				if (conflict != null) {
+				/*if (conflict != null) {
+					String outputLocation = Machine.getInstance().getCftFolderPath() + "/" + repoName + "/" + commit + "/" + "diff3.txt";
 					writeDiffFile(reposToReposPath.get(repoName), conflict.getLeftAncestorCommit(),
 							conflict.getRightAncestorCommit(), outputLocation);
-				}
+				}*/
 			}
 			try {
 				// Clean and reset git repository
@@ -88,9 +89,9 @@ public class ConflictFileTree {
 		}
 	}
 
-	private void writeDiffFile(String pathToRepo, String leftCommit, String rightCommit, String pathToOutput) {
+	private void writeDiff3File(String pathToCFTFiles, String left, String common, String right) {
 		try {
-			Utils.readScriptOutput("createDiffFile " + pathToRepo + " " + leftCommit + " " + rightCommit + " " + pathToOutput, false);
+			Utils.readScriptOutput("createDiff3File " + pathToCFTFiles + " " + left + " " + common + " " + right + " " + "diff3", false);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

@@ -13,6 +13,7 @@ import findParametersInMerge.ParameterFinder;
 import getConflictCommits.ConflictFileTree;
 import getVariantParameter.VariantParameter;
 import mergeConflicts.ConflictAnalyzer;
+import paola.CSVExtractor;
 
 
 public class Main {
@@ -24,6 +25,7 @@ public class Main {
 	private static final String getVariantParameter = "getVariantParameter";
 	private static final String findParameterInMergeCommit = "findParameterInMergeCommit";
 	private static final String conflictAnalyzer = "conflictAnalyzer";
+	private static final String extractFromCA = "extractFromCA";
 	
 	
 	private static Machine machine;
@@ -31,7 +33,7 @@ public class Main {
 	
 	public static void main(String args[]) {
 		args = new String[1];
-		args[0] = conflictAnalyzer;
+		args[0] = createConflictFileTree;
 		
 		machine = Machine.getInstance();
 		
@@ -43,7 +45,7 @@ public class Main {
 			analyzeRepos();
 		} else if(args[0].equals(createConflictFileTree)) {
 			ConflictFileTree cft = new ConflictFileTree(machine.getRepoPath());
-			cft.createTree("libgdx");
+			cft.createTree("curator");
 		} else if(args[0].equals(getVariantParameter)) {
 			String pathToRepo = "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/elasticsearch";
 			VariantParameter vp = new VariantParameter();
@@ -54,6 +56,9 @@ public class Main {
 		} else if(args[0].equals(conflictAnalyzer)) {
 			ConflictAnalyzer conflictAnalyzer = new ConflictAnalyzer();
 			conflictAnalyzer.produceAnalyzement(machine.getCftFolderPath() + "/libgdx", machine.getRepoPath() + "/libgdx");
+		} else if(args[0].equals(extractFromCA)) {
+			CSVExtractor csvExtractor = new CSVExtractor();
+			csvExtractor.extractResult();
 		} else {
 			System.out.println("Please enter a valid command!");
 		}
