@@ -6,7 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Random;
 
 import utils.Machine;
 import utils.Utils;
@@ -68,7 +67,7 @@ public class MergeConflicter{
 		}
 		
 		if(conflictingFilePaths.size() > 0) {
-			createConflicts();
+			//createConflicts();
 			return true;
 		}
 		

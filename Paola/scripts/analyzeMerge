@@ -1,0 +1,95 @@
+#!/bin/bash
+#gets common ancestor, checkouts left, right, ancestor and result, copies the files to output folder and checkout master again
+
+#$1 path to repo
+#$2 left
+#$3 right
+#$4 output folder
+#$5 file to analyze
+
+function resetGit {
+	back=$(pwd)
+	cd $1
+	git checkout master
+	cd $back
+}
+
+function fetchLog {
+	back=$(pwd)
+	cd $1
+	git --no-pager log --merges > /tmp/git
+	cd $back
+}
+
+function getShas {
+	local shaLine=$(cat /tmp/git | grep "\($2.*$3.*\)\|\($3.*$2.*\)")
+	local shas=${shaLine:7:22}
+	sha1=${shas:0:7}
+	echo "sha1:"$sha1
+	sha2=${shas:8:14}
+	echo "sha2:"$sha2
+}
+
+function getMergeSha {
+	local merge=$(cat /tmp/git | grep -n "\($sha1 $sha2\)\|\($sha2 $sha1\)")
+	local length=${#merge}
+	local end=$(($length-23))
+	local merge=${merge:0:end}
+	local merge=$((merge-1))
+	local sha=$(awk -v var="$merge" 'NR==var' /tmp/git)
+	result=${sha:7:40}
+	echo "result:"$result
+}
+
+function fetchFile {
+	#$1 path to repo
+	#$2 sha
+	#$3 file to fetch
+	#$4 output file
+	back=$(pwd)
+	cd $1
+	git checkout $2
+	cp $3 $4
+	ok=$?
+	cd $back
+}
+
+function printFound {
+	found="Found:"
+	if [ "$leftFile" -eq 0 ] ; then
+		found="$found left "
+	fi
+	if [ "$rightFile" -eq 0 ] ; then
+		found="$found right "
+	fi
+	if [ "$ancFile" -eq 0 ] ; then
+		found="$found anc "
+	fi
+	if [ "$resultFile" -eq 0 ] ; then
+		found="$found result "
+	fi
+	echo $found
+}
+
+resetGit $1
+
+fetchLog $1
+getShas $1 $2 $3
+anc=$(bash getCommonAncestor $1 $sha1 $sha2)
+echo "anc:"$anc
+getMergeSha $1 $2 $3
+
+fetchFile $1 $sha1 $5 $4/left.java
+leftFile=$ok
+echo $leftFile
+fetchFile $1 $sha2 $5 $4/right.java
+rightFile=$ok
+echo $rightFile
+fetchFile $1 $anc $5 $4/anc.java
+ancFile=$ok
+echo $ancFile
+fetchFile $1 $result $5 $4/result.java
+resultFile=$ok
+echo $resultFile
+resetGit $1
+printFound

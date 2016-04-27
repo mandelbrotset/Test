@@ -45,7 +45,7 @@ public class Main {
 			analyzeRepos();
 		} else if(args[0].equals(createConflictFileTree)) {
 			ConflictFileTree cft = new ConflictFileTree(machine.getRepoPath());
-			cft.createTree("curator");
+			cft.createTree("TGM");
 		} else if(args[0].equals(getVariantParameter)) {
 			String pathToRepo = "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/elasticsearch";
 			VariantParameter vp = new VariantParameter();

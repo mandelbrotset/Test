@@ -28,7 +28,7 @@ public class ConflictFileTree {
 	}
 
 	public void createTree(String repoName) {
-		MergeConflicter cm = new MergeConflicter();
+		MergeConflicter mc = new MergeConflicter();
 		// for(String repo : reposToReposPath.keySet()) {
 		try {
 			System.out.println("Cleaning repository...");
@@ -43,11 +43,11 @@ public class ConflictFileTree {
 		int totalCommits = reposToCommits.get(repoName).size();
 		for (String commit : reposToCommits.get(repoName)) {
 			System.out.println("Checking commit " + commit + " (" + ++commitCounter + "/" + totalCommits + ")");
-			if (cm.doMerge(commit, reposToReposPath.get(repoName))) {
+			if (mc.doMerge(commit, reposToReposPath.get(repoName))) {
 				System.out.println("Conflict found!");
 				Conflict conflict = null;
-				for (int i = 0; i < cm.getConflicts().size(); i++) {
-					conflict = cm.getConflicts().get(i);
+				for (int i = 0; i < mc.getConflicts().size(); i++) {
+					conflict = mc.getConflicts().get(i);
 					String location = "CFT/" + repoName + "/" + commit + "/" + conflict.getFileName() + "/";
 					File dir = new File(location);
 					File leftConflict = new File(location + "left_" + conflict.getFileName());
