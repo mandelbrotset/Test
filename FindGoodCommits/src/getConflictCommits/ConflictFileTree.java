@@ -28,7 +28,7 @@ public class ConflictFileTree {
 	}
 
 	public void createTree(String repoName) {
-		MergeConflicter cm = new MergeConflicter();
+		MergeConflicter mc = new MergeConflicter();
 		// for(String repo : reposToReposPath.keySet()) {
 		try {
 			System.out.println("Cleaning repository...");
@@ -43,11 +43,11 @@ public class ConflictFileTree {
 		int totalCommits = reposToCommits.get(repoName).size();
 		for (String commit : reposToCommits.get(repoName)) {
 			System.out.println("Checking commit " + commit + " (" + ++commitCounter + "/" + totalCommits + ")");
-			if (cm.doMerge(commit, reposToReposPath.get(repoName))) {
+			if (mc.doMerge(commit, reposToReposPath.get(repoName))) {
 				System.out.println("Conflict found!");
 				Conflict conflict = null;
-				for (int i = 0; i < cm.getConflicts().size(); i++) {
-					conflict = cm.getConflicts().get(i);
+				for (int i = 0; i < mc.getConflicts().size(); i++) {
+					conflict = mc.getConflicts().get(i);
 					String location = "CFT/" + repoName + "/" + commit + "/" + conflict.getFileName() + "/";
 					File dir = new File(location);
 					File leftConflict = new File(location + "left_" + conflict.getFileName());
@@ -65,6 +65,7 @@ public class ConflictFileTree {
 						writeToFile(rightConflict, conflict.getRightConflict());
 						writeToFile(commonAncestor, conflict.getCommonAncestor());
 						writeToFile(resolution, conflict.getResolution());
+						writeDiff3File(location, leftConflict.getName(), commonAncestor.getName(), rightConflict.getName());
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -72,11 +73,11 @@ public class ConflictFileTree {
 
 				}
 				// }
-				String outputLocation = Machine.getInstance().getCftFolderPath() + "/" + repoName + "/" + commit + "/" + "diff.txt";
-				if (conflict != null) {
+				/*if (conflict != null) {
+					String outputLocation = Machine.getInstance().getCftFolderPath() + "/" + repoName + "/" + commit + "/" + "diff3.txt";
 					writeDiffFile(reposToReposPath.get(repoName), conflict.getLeftAncestorCommit(),
 							conflict.getRightAncestorCommit(), outputLocation);
-				}
+				}*/
 			}
 			try {
 				// Clean and reset git repository
@@ -88,9 +89,9 @@ public class ConflictFileTree {
 		}
 	}
 
-	private void writeDiffFile(String pathToRepo, String leftCommit, String rightCommit, String pathToOutput) {
+	private void writeDiff3File(String pathToCFTFiles, String left, String common, String right) {
 		try {
-			Utils.readScriptOutput("createDiffFile " + pathToRepo + " " + leftCommit + " " + rightCommit + " " + pathToOutput, false);
+			Utils.readScriptOutput("createDiff3File " + pathToCFTFiles + " " + left + " " + common + " " + right + " " + "diff3", false);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

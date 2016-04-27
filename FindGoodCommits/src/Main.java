@@ -31,7 +31,7 @@ public class Main {
 	
 	public static void main(String args[]) {
 		args = new String[1];
-		args[0] = createConflictFileTree;
+		args[0] = conflictAnalyzer;
 		
 		machine = Machine.getInstance();
 		
@@ -43,7 +43,7 @@ public class Main {
 			analyzeRepos();
 		} else if(args[0].equals(createConflictFileTree)) {
 			ConflictFileTree cft = new ConflictFileTree(machine.getRepoPath());
-			cft.createTree("okhttp");
+			cft.createTree("libgdx");
 		} else if(args[0].equals(getVariantParameter)) {
 			String pathToRepo = "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/elasticsearch";
 			VariantParameter vp = new VariantParameter();
@@ -54,6 +54,9 @@ public class Main {
 		} else if(args[0].equals(conflictAnalyzer)) {
 			ConflictAnalyzer conflictAnalyzer = new ConflictAnalyzer();
 			conflictAnalyzer.produceAnalyzement(machine.getCftFolderPath() + "/libgdx", machine.getRepoPath() + "/libgdx");
+		} else if(args[0].equals(extractFromCA)) {
+			CSVExtractor csvExtractor = new CSVExtractor();
+			csvExtractor.extractResult();
 		} else {
 			System.out.println("Please enter a valid command!");
 		}
