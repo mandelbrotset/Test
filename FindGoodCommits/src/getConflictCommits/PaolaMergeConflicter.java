@@ -32,6 +32,7 @@ public class PaolaMergeConflicter {
 	 * @return true if there were conflicting files, false otherwise
 	 */
 	public ArrayList<MergeCommit> doMerge(String repoPath) {
+		System.out.println("FINDING CONFLICTS IN MERGES...");
 		REPO = repoPath;
 		ArrayList<MergeCommit> mergeCommits = new ArrayList<MergeCommit>();
 		ArrayList<String> conflictShas = new ArrayList<String>();

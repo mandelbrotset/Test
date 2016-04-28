@@ -6,6 +6,8 @@
 #$3 right
 #$4 output folder
 #$5 file to analyze
+#$6 temp folder
+temp=$6/git
 
 function resetGit {
 	echo "resetting gitfan"
@@ -20,6 +22,8 @@ function resetGit {
 	git reset --hard HEAD
 	sleep 1
 	git checkout master
+	sleep 1
+	git pull origin master
 	cd $back
 	sleep 1
 	echo "resetting gitfan slut"
@@ -28,12 +32,12 @@ function resetGit {
 function fetchLog {
 	back=$(pwd)
 	cd $1
-	git --no-pager log --merges > /tmp/git
+	git --no-pager log --merges > $temp
 	cd $back
 }
 
 function getShas {
-	local shaLine=$(cat /tmp/git | grep "\($2.*$3.*\)\|\($3.*$2.*\)")
+	local shaLine=$(cat $temp | grep "\($2.*$3.*\)\|\($3.*$2.*\)")
 	local shas=${shaLine:7:22}
 	sha1=${shas:0:7}
 	echo "sha1:"$sha1
@@ -42,12 +46,12 @@ function getShas {
 }
 
 function getMergeSha {
-	local merge=$(cat /tmp/git | grep -n "\($sha1 $sha2\)\|\($sha2 $sha1\)")
+	local merge=$(cat $temp | grep -n "\($sha1 $sha2\)\|\($sha2 $sha1\)")
 	local length=${#merge}
 	local end=$(($length-23))
 	local merge=${merge:0:end}
 	local merge=$((merge-1))
-	local sha=$(awk -v var="$merge" 'NR==var' /tmp/git)
+	local sha=$(awk -v var="$merge" 'NR==var' $temp)
 	result=${sha:7:40}
 	echo "result:"$result
 }
