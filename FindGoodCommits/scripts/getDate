@@ -1,0 +1,8 @@
+#!/bin/bash
+#Returns the date of a given commit
+#$1 Path to repo
+#$2 Commit SHA-1
+
+cd $1
+git show $2 --format=%ci
+
