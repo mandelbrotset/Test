@@ -37,7 +37,7 @@
 \cleardoublepage
 \setcounter{page}{1}
 \pagenumbering{arabic}			% Arabic numbering starting from 1 (one)
-%\setlength{\parskip}{0pt}
+\setlength{\parskip}{0pt}
 
 % INTRODUCTION
 \input{include/Introduction}

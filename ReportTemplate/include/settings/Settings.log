@@ -1,11 +1,11 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2016.4.23)  10 MAY 2016 13:23
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Arch Linux) (preloaded format=pdflatex 2015.11.15)  12 MAY 2016 18:00
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
 **Settings.tex
 (./Settings.tex
-LaTeX2e <2016/02/01>
-Babel <3.9q> and hyphenation patterns for 5 language(s) loaded.
+LaTeX2e <2015/10/01> patch level 2
+Babel <3.9m> and hyphenation patterns for 79 languages loaded.
 
 ! LaTeX Error: \usepackage before \documentclass.
 
@@ -440,6 +440,11 @@ Missing character: There is no a in font nullfont!
 Missing character: There is no c in font nullfont!
 Missing character: There is no k in font nullfont!
 
+Overfull \hbox (20.0pt too wide) in paragraph at lines 51--54
+[]
+ []
+
+
 ! LaTeX Error: \usepackage before \documentclass.
 
 See the LaTeX manual or LaTeX Companion for explanation.
@@ -528,6 +533,11 @@ Missing character: There is no e in font nullfont!
 Missing character: There is no x in font nullfont!
 Missing character: There is no [ in font nullfont!
 Missing character: There is no ] in font nullfont!
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 63--66
+[]
+ []
+
 
 ! LaTeX Error: \usepackage before \documentclass.
 
@@ -695,6 +705,11 @@ spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
 
+Overfull \hbox (20.0pt too wide) in paragraph at lines 79--90
+[]
+ []
+
+
 ! LaTeX Error: \usepackage before \documentclass.
 
 See the LaTeX manual or LaTeX Companion for explanation.
@@ -715,11 +730,11 @@ between \documentclass and \begin{document}.
 
  
 Here is how much of TeX's memory you used:
- 21 strings out of 494910
- 297 string characters out of 6179836
- 45430 words of memory out of 5000000
- 3411 multiletter control sequences out of 15000+600000
+ 19 strings out of 493054
+ 286 string characters out of 6140585
+ 53374 words of memory out of 5000000
+ 3640 multiletter control sequences out of 15000+600000
  4247 words of font info for 16 fonts, out of 8000000 for 9000
- 36 hyphenation exceptions out of 8191
+ 1141 hyphenation exceptions out of 8191
  14i,1n,9p,119b,78s stack positions out of 5000i,500n,10000p,200000b,80000s
 !  ==> Fatal error occurred, no output PDF file produced!
