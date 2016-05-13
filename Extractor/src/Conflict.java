@@ -11,6 +11,8 @@ public class Conflict {
 	private String filePath;
 	private Date leftDate;
 	private Date rightDate;
+	private String functionName;
+	private String[] parameterTypes;
 	
 	public Conflict(String conflict) {
 		parseValues(conflict);
