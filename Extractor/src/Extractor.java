@@ -34,7 +34,7 @@ public class Extractor {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private ArrayList<Conflict> createConflicts(ArrayList<String> conflictStrings) {
 		ArrayList<Conflict> conflicts = new ArrayList<Conflict>();
 		for (String conflict : conflictStrings) { 
@@ -52,6 +52,7 @@ public class Extractor {
 	private void analyzeConflict(Conflict conflict, String pathToRepo) {
 		try {
 			Utils.readScriptOutput("analyzeResolution " + pathToRepo + " " + conflict.getMergeCommitSha() + " " + TEMP_FOLDER + "result.java " + pathToRepo + conflict.getFilePath(), false);
+			ArrayList<String> resultFile = (ArrayList<String>)Files.readAllLines(Paths.get(TEMP_FOLDER + "result.java"));
 			
 		} catch (IOException e) {
 			e.printStackTrace();
