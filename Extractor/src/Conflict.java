@@ -1,3 +1,5 @@
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.Date;
 
 public class Conflict {
@@ -9,12 +11,15 @@ public class Conflict {
 	private String rightBody;
 	private String ancestorBody;
 	private String filePath;
-	private Date leftDate;
-	private Date rightDate;
+	private String leftDate;
+	private String rightDate;
 	private String functionName;
 	private String[] parameterTypes;
+	private String resultBody;
+	private String repoPath;
 	
-	public Conflict(String conflict) {
+	public Conflict(String conflict, String repoPath) {
+		this.repoPath = repoPath;
 		parseValues(conflict);
 	}
 	
@@ -26,6 +31,8 @@ public class Conflict {
 		parseFunction(leftBody);
 		filePath = parseValue(conflict, "File path:");
 		filePath = filePath.split("rev_....._.....\\/rev_.....\\-.....\\/")[1];
+		leftDate = getDate(leftSha);
+		rightDate = getDate(rightSha);
 	}
 	
 	private String parseValue(String conflict, String parameterName) {
@@ -91,6 +98,19 @@ public class Conflict {
 		ancestorBody = anc;
 	}
 
+
+	private String getDate(String sha) {
+		try {
+			BufferedReader br = Utils.readScriptOutput("getDate " + repoPath + " " + sha, true);
+			String date = br.readLine();
+			while((br.readLine()) != null) {}
+			return date;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return "";
+	}
+	
 	public String getLeftSha() {
 		return leftSha;
 	}
