@@ -89,6 +89,7 @@ public class Conflict {
 	}
 	
 	private boolean containsFunction(String line) {
+		line = line.trim();
 		if ((line.startsWith("private") || line.startsWith("public")) && !line.contains("class") && line.endsWith("{"))
 			return true;
 
