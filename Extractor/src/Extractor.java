@@ -20,7 +20,7 @@ public class Extractor {
 	
 	public Extractor() {
 		//analyzeConflictReport(CONFLICT_REPORT_PATH, "/home/isak/Documents/Master/projects/hej");
-		analyzeConflictReport("/home/isak/Documents/Master/Test/the/Paola/elasticsearch/ResultData/elasticsearch/ConflictsReport.csv", "/home/isak/Documents/Master/projects/elasticsearch");
+	analyzeConflictReport("/home/isak/Documents/Master/braresults/paolaboarba/EventBus/ResultData/EventBus/ConflictsReport.csv", "/home/isak/Documents/Master/projects/EventBus");
 		wbc = new WorkBookCreator("ExtractorHactorResult.xls");
 		wbc.createSheet("Result", "Merge Commit SHA", "Result Body", "Left SHA", "Left Body", "Left Date", "Right SHA", "Right Body", "Right Date");
 	}
@@ -118,10 +118,12 @@ public class Extractor {
 		//TODO: fix
 		//~~FSTMerge~~ ##FSTMerge## ##FSTMerge## 
 		conflicts.removeIf(s -> !s.contains("Conflict type: SameSignatureCM"));
-		conflicts.removeIf(s -> !s.contains("##FSTMerge## ##FSTMerge## "));//den ska inte finnas i anc
-		if (conflicts.removeIf(s -> s.contains("~~FSTMerge~~ ##FSTMerge##"))) {//den ska finnas i left
-			System.out.println("What the fucc???");
-		}
+		conflicts.removeIf(s -> s.contains("##FSTMerge##"));
+		conflicts.removeIf(s -> !s.contains("<<<<<"));
+		//if (conflicts.removeIf(s -> s.contains("~~FSTMerge~~ ##FSTMerge##"))) {//den ska finnas i left
+			
+		//System.out.println("What the fucc???");
+		//}
 		
 	}
 	
