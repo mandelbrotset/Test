@@ -19,13 +19,14 @@ public class Extractor {
 	private WorkBookCreator wbc;
 	
 	public Extractor() {
-		analyzeConflictReport(CONFLICT_REPORT_PATH, "/home/isak/Documents/Master/projects/hej");
+		//analyzeConflictReport(CONFLICT_REPORT_PATH, "/home/isak/Documents/Master/projects/hej");
+		analyzeConflictReport("/home/isak/Documents/Master/Test/the/Paola/elasticsearch/ResultData/elasticsearch/ConflictsReport.csv", "/home/isak/Documents/Master/projects/elasticsearch");
 		wbc = new WorkBookCreator("ExtractorHactorResult.xls");
 		wbc.createSheet("Result", "Merge Commit SHA", "Result Body", "Left SHA", "Left Body", "Left Date", "Right SHA", "Right Body", "Right Date");
 	}
 	
 	private void analyzeConflictReport(String conflictReportPath, String pathToRepo) {
-		Path path = Paths.get(CONFLICT_REPORT_PATH);
+		Path path = Paths.get(conflictReportPath);
 		ArrayList<String> conflictReportLines;
 		try {
 			conflictReportLines = (ArrayList<String>) Files.readAllLines(path);
