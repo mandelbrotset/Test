@@ -27,7 +27,7 @@ public class Extractor {
 			makeString(conflictReportLines);
 			ArrayList<String> conflictStrings = splitConflicts();
 			filterConflicts(conflictStrings);
-			ArrayList<Conflict> conflicts = createConflicts(conflictStrings);
+			ArrayList<Conflict> conflicts = createConflicts(conflictStrings, pathToRepo);
 			analyzeConflicts(conflicts, pathToRepo);
 			//writeFile();
 		} catch (IOException e) {
@@ -35,10 +35,10 @@ public class Extractor {
 		}
 	}
 
-	private ArrayList<Conflict> createConflicts(ArrayList<String> conflictStrings) {
+	private ArrayList<Conflict> createConflicts(ArrayList<String> conflictStrings, String pathToRepo) {
 		ArrayList<Conflict> conflicts = new ArrayList<Conflict>();
 		for (String conflict : conflictStrings) { 
-			conflicts.add(new Conflict(conflict));
+			conflicts.add(new Conflict(conflict, pathToRepo));
 		}
 		return conflicts;
 	}
