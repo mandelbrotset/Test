@@ -1,6 +1,3 @@
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,11 +12,13 @@ public class Extractor {
 	
 	
 	public Extractor() {
-		analyzeConflictReport(CONFLICT_REPORT_PATH, "/home/isak/Documents/Master/projects/hej");
+		//analyzeConflictReport(CONFLICT_REPORT_PATH, "/home/isak/Documents/Master/projects/hej");
+		//analyzeConflictReport("/home/isak/Documents/Master/Test/the/Paola/EventBus/ResultData/EventBus/ConflictsReport.csv", "/home/isak/Documents/Master/projects/EventBus");
+		analyzeConflictReport("/home/isak/Documents/Master/Test/the/Paola/elasticsearch/ResultData/elasticsearch/ConflictsReport.csv", "/home/isak/Documents/Master/projects/elasticsearch");
 	}
 	
 	private void analyzeConflictReport(String conflictReportPath, String pathToRepo) {
-		Path path = Paths.get(CONFLICT_REPORT_PATH);
+		Path path = Paths.get(conflictReportPath);
 		ArrayList<String> conflictReportLines;
 		try {
 			conflictReportLines = (ArrayList<String>) Files.readAllLines(path);
