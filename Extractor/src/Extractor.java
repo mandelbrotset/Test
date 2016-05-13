@@ -53,6 +53,8 @@ public class Extractor {
 		try {
 			Utils.readScriptOutput("analyzeResolution " + pathToRepo + " " + conflict.getMergeCommitSha() + " " + TEMP_FOLDER + "result.java " + pathToRepo + conflict.getFilePath(), false);
 			ArrayList<String> resultFile = (ArrayList<String>)Files.readAllLines(Paths.get(TEMP_FOLDER + "result.java"));
+			ArrayList<String> resultFunction = FunctionParser.extractFunction(resultFile, conflict., params)
+			
 			
 		} catch (IOException e) {
 			e.printStackTrace();
