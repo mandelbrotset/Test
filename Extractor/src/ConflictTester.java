@@ -60,7 +60,7 @@ public class ConflictTester {
 +">>>>>>> /tmp/paola/paolaboarba/elasticsearch/fstmerge_tmp1462368288471/fstmerge_var2_2444428870676219269"+"\n"
 +""+"\n"
 +"File path: /tmp/downloads/elasticsearch/revisions/rev_04681_bbeb0/rev_04681-bbeb0/core/src/main/java/org/elasticsearch/search/suggest/term/TermSuggestParser.java";		
-		Conflict c = new Conflict(conflict);
+		//Conflict c = new Conflict(conflict);
 						
 	}
 }

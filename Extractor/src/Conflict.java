@@ -100,13 +100,11 @@ public class Conflict {
 		return filePath;
 	}
 
-	public Date getLeftDate() {
+	public String getLeftDate() {
 		return leftDate;
 	}
 
-	public Date getRightDate() {
+	public String getRightDate() {
 		return rightDate;
 	}
-
-	
 }
