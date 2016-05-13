@@ -54,6 +54,14 @@ public class Conflict {
 		}
 	}
 	
+	public String getFunctionName() {
+		return functionName;
+	}
+
+	public String[] getParameterTypes() {
+		return parameterTypes;
+	}
+
 	private String[] extractFunctionParameters(String line, String functionName) {
 		String[] paramList = new String[1];
 		String params = line.split(functionName)[1].split("\\(")[1].split("\\)")[0];
