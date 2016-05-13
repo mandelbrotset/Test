@@ -20,10 +20,14 @@ public class Extractor {
 	
 	public Extractor() {
 		//analyzeConflictReport(CONFLICT_REPORT_PATH, "/home/isak/Documents/Master/projects/hej");
-	
+<<<<<<< HEAD
+		analyzeConflictReport("/home/isak/Documents/Master/braresults/paolaboarba/EventBus/ResultData/EventBus/ConflictsReport.csv", "/home/isak/Documents/Master/projects/EventBus");
+		//analyzeConflictReport("/home/isak/Documents/Master/Test/the/Paola/elasticsearch/ResultData/elasticsearch/ConflictsReport.csv", "/home/isak/Documents/Master/projects/elasticsearch");
+=======
+		analyzeConflictReport("/home/isak/Documents/Master/Test/the/Paola/elasticsearch/ResultData/elasticsearch/ConflictsReport.csv", "/home/isak/Documents/Master/projects/elasticsearch");
 		wbc = new WorkBookCreator("ExtractorHactorResult.xls");
 		wbc.createSheet("Result", "Merge Commit SHA", "Result Body", "Left SHA", "Left Body", "Left Date", "Right SHA", "Right Body", "Right Date");
-		analyzeConflictReport("/home/isak/Documents/Master/braresults/paolaboarba/EventBus/ResultData/EventBus/ConflictsReport.csv", "/home/isak/Documents/Master/projects/EventBus");
+>>>>>>> 25e01f2505145004b67b5ff54e7e2b85c96b2c8e
 	}
 	
 	private void analyzeConflictReport(String conflictReportPath, String pathToRepo) {
@@ -60,7 +64,7 @@ public class Extractor {
 	
 	private void analyzeConflict(Conflict conflict, String pathToRepo) {
 		try {
-			Utils.readScriptOutput("analyzeResolution " + pathToRepo + " " + conflict.getMergeCommitSha() + " " + TEMP_FOLDER + "result.java " + pathToRepo + "/" + conflict.getFilePath(), false);
+			Utils.readScriptOutput("analyzeResolution " + pathToRepo + " " + conflict.getMergeCommitSha() + " " + TEMP_FOLDER + "result.java " + pathToRepo + conflict.getFilePath(), false);
 			ArrayList<String> resultFile = (ArrayList<String>)Files.readAllLines(Paths.get(TEMP_FOLDER + "result.java"));
 			ArrayList<String> resultFunction = FunctionParser.extractFunction(resultFile, conflict.getFunctionName(), conflict.getParameterTypes());
 			StringBuilder sb = new StringBuilder();
@@ -83,7 +87,7 @@ public class Extractor {
 
 	/*private void writeFile() {
 		File file = new File("bra.csv");
-		try {analyzeConflictReport("/home/isak/Documents/Master/braresults/paolaboarba/EventBus/ResultData/EventBus/ConflictsReport.csv", "/home/isak/Documents/Master/projects/EventBus");
+		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 			StringBuilder sb = new StringBuilder();
 			for (String conflict : conflicts) {
