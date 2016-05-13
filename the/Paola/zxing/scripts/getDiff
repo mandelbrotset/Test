@@ -1,0 +1,8 @@
+#!/bin/bash
+#Outputs the gitt diff for a commit and its ancestor
+#$1:path to repo
+#$2:commit SHA
+
+cd $1
+
+git --no-pager diff ${2}^ ${2}

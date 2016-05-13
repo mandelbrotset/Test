@@ -1,0 +1,21 @@
+#!/bin/bash
+
+cd $1
+
+
+
+#count=0
+#declare -g commitdiff
+git --no-pager log --merges --pretty=oneline | while read -r line ; do
+    commit=${line:0:40}
+    #echo ${commit}awd
+    #outputfile=${commit}
+#    commitdiff[$count]=$(git --no-pager diff ${commit}^ ${commit})
+ #   count=$count+1
+    #hej=367ecceef629bd3b15c69ece4b5b615cd1a4462b
+    #git --no-pager diff $^  $hej
+    echo $commit
+done
+#echo ${commitdiff[0]}
+#echo "heh"
+#echo ${commitdiff[1]}

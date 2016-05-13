@@ -1,0 +1,8 @@
+#!/bin/bash
+#Outputs the best common ancestor of two commits
+#$1: path to repo
+#$2: left commit
+#$3: right commit
+
+cd $1
+git merge-base $2 $3

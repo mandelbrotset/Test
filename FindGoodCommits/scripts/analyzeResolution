@@ -1,0 +1,41 @@
+#!/bin/bash
+#gets common ancestor, checkouts left, right, ancestor and result, copies the files to output folder and checkout master again
+
+#$1 path to repo
+#$2 merge commit sha-1
+#$3 output file
+#$4 file to analyze
+
+function resetGit {
+	back=$(pwd)
+	cd $1
+	git rm .gitattributes
+	git add -A
+	git reset --hard 
+	git clean -xdf
+	git reset --hard HEAD
+	sleep 1
+	git pull origin master
+	cd $back
+	sleep 1
+	echo "resetting gitfan slut"
+}
+
+function fetchFile {
+	#$1 path to repo
+	#$2 sha
+	#$3 file to fetch
+	#$4 output file
+	back=$(pwd)
+	cd $1
+	git checkout $2
+	cp $3 $4
+	cd $back
+}
+
+resetGit $1
+#checkout result
+fetchFile $1 $2 $4 $3
+resetGit $1
+
+

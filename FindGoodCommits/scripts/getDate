@@ -4,5 +4,5 @@
 #$2 Commit SHA-1
 
 cd $1
-git show $2 --format=%ci
+git log -1 $2 --format=%ci
 

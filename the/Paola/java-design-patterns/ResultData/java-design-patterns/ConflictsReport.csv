@@ -1,0 +1,909 @@
+=========================================================
+Revision: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e.revisions
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/poison-pill/src/main/java/com/iluwatar/poison/pill/MQSubscribePoint.java
+############## CONFLICT ##############
+Conflict type: SameSignatureCM
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: copiedFile
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public Message take() throws InterruptedException; ##FSTMerge## public Message take() throws InterruptedException;
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/poison-pill/src/main/java/com/iluwatar/poison/pill/MQSubscribePoint.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/poison-pill/src/main/java/com/iluwatar/poison/pill/MQPublishPoint.java
+############## CONFLICT ##############
+Conflict type: SameSignatureCM
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: copiedFile
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public void put(Message msg) throws InterruptedException; ##FSTMerge## public void put(Message msg) throws InterruptedException;
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/poison-pill/src/main/java/com/iluwatar/poison/pill/MQPublishPoint.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## String userID; ##FSTMerge## String userID;
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## UserAccount userAccount; ##FSTMerge## UserAccount userAccount;
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## Node previous; ##FSTMerge## Node previous;
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## Node next; ##FSTMerge## Node next;
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public Node(String userID, UserAccount userAccount) {
+      this.userID = userID;
+      this.userAccount = userAccount;
+    } ##FSTMerge## public Node(String userID, UserAccount userAccount) {
+      this.userID = userID;
+      this.userAccount = userAccount;
+    }
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## int capacity; ##FSTMerge## int capacity;
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## HashMap<String, Node> cache = new HashMap<String, Node>(); ##FSTMerge## HashMap<String, Node> cache = new HashMap<String, Node>();
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## Node head = null; ##FSTMerge## Node head = null;
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## Node end = null; ##FSTMerge## Node end = null;
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public LRUCache(int capacity) {
+    this.capacity = capacity;
+  } ##FSTMerge## public LRUCache(int capacity) {
+    this.capacity = capacity;
+  }
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public UserAccount get(String userID) {
+    if (cache.containsKey(userID)) {
+      Node node = cache.get(userID);
+      remove(node);
+      setHead(node);
+      return node.userAccount;
+    }
+    return null;
+  } ##FSTMerge## public UserAccount get(String userID) {
+    if (cache.containsKey(userID)) {
+      Node node = cache.get(userID);
+      remove(node);
+      setHead(node);
+      return node.userAccount;
+    }
+    return null;
+  }
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public void remove(Node node) {
+    if (node.previous != null) {
+      node.previous.next = node.next;
+    } else {
+      head = node.next;
+    }
+    if (node.next != null) {
+      node.next.previous = node.previous;
+    } else {
+      end = node.previous;
+    }
+  } ##FSTMerge## public void remove(Node node) {
+    if (node.previous != null) {
+      node.previous.next = node.next;
+    } else {
+      head = node.next;
+    }
+    if (node.next != null) {
+      node.next.previous = node.previous;
+    } else {
+      end = node.previous;
+    }
+  }
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public void setHead(Node node) {
+    node.next = head;
+    node.previous = null;
+    if (head != null)
+      head.previous = node;
+    head = node;
+    if (end == null)
+      end = head;
+  } ##FSTMerge## public void setHead(Node node) {
+    node.next = head;
+    node.previous = null;
+    if (head != null)
+      head.previous = node;
+    head = node;
+    if (end == null)
+      end = head;
+  }
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public void set(String userID, UserAccount userAccount) {
+    if (cache.containsKey(userID)) {
+      Node old = cache.get(userID);
+      old.userAccount = userAccount;
+      remove(old);
+      setHead(old);
+    } else {
+      Node newNode = new Node(userID, userAccount);
+      if (cache.size() >= capacity) {
+        System.out.println("# Cache is FULL! Removing " + end.userID + " from cache...");
+        cache.remove(end.userID); // remove LRU data from cache.
+        remove(end);
+        setHead(newNode);
+      } else {
+        setHead(newNode);
+      }
+      cache.put(userID, newNode);
+    }
+  } ##FSTMerge## public void set(String userID, UserAccount userAccount) {
+    if (cache.containsKey(userID)) {
+      Node old = cache.get(userID);
+      old.userAccount = userAccount;
+      remove(old);
+      setHead(old);
+    } else {
+      Node newNode = new Node(userID, userAccount);
+      if (cache.size() >= capacity) {
+        System.out.println("# Cache is FULL! Removing " + end.userID + " from cache...");
+        cache.remove(end.userID); // remove LRU data from cache.
+        remove(end);
+        setHead(newNode);
+      } else {
+        setHead(newNode);
+      }
+      cache.put(userID, newNode);
+    }
+  }
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public boolean contains(String userID) {
+    return cache.containsKey(userID);
+  } ##FSTMerge## public boolean contains(String userID) {
+    return cache.containsKey(userID);
+  }
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public void invalidate(String userID) {
+    System.out.println("# " + userID + " has been updated! Removing older version from cache...");
+    Node toBeRemoved = cache.get(userID);
+    remove(toBeRemoved);
+    cache.remove(userID);
+  } ##FSTMerge## public void invalidate(String userID) {
+    System.out.println("# " + userID + " has been updated! Removing older version from cache...");
+    Node toBeRemoved = cache.get(userID);
+    remove(toBeRemoved);
+    cache.remove(userID);
+  }
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public boolean isFull() {
+    return cache.size() >= capacity;
+  } ##FSTMerge## public boolean isFull() {
+    return cache.size() >= capacity;
+  }
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public UserAccount getLRUData() {
+    return end.userAccount;
+  } ##FSTMerge## public UserAccount getLRUData() {
+    return end.userAccount;
+  }
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public void clear() {
+    head = null;
+    end = null;
+    cache.clear();
+  } ##FSTMerge## public void clear() {
+    head = null;
+    end = null;
+    cache.clear();
+  }
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ArrayList<UserAccount> getCacheDataInListForm() {
+    ArrayList<UserAccount> listOfCacheData = new ArrayList<UserAccount>();
+    Node temp = head;
+    while (temp != null) {
+      listOfCacheData.add(temp.userAccount);
+      temp = temp.next;
+    }
+    return listOfCacheData;
+  } ##FSTMerge## public ArrayList<UserAccount> getCacheDataInListForm() {
+    ArrayList<UserAccount> listOfCacheData = new ArrayList<UserAccount>();
+    Node temp = head;
+    while (temp != null) {
+      listOfCacheData.add(temp.userAccount);
+      temp = temp.next;
+    }
+    return listOfCacheData;
+  }
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public void setCapacity(int newCapacity) {
+    if (capacity > newCapacity) {
+      clear(); // Behavior can be modified to accommodate for decrease in cache size. For now, we'll
+               // just clear the cache.
+    } else {
+      this.capacity = newCapacity;
+    }
+  } ##FSTMerge## public void setCapacity(int newCapacity) {
+    if (capacity > newCapacity) {
+      clear(); // Behavior can be modified to accommodate for decrease in cache size. For now, we'll
+               // just clear the cache.
+    } else {
+      this.capacity = newCapacity;
+    }
+  }
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/LRUCache.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/DBManager.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private static MongoClient mongoClient; ##FSTMerge## private static MongoClient mongoClient;
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/DBManager.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private static MongoDatabase db; ##FSTMerge## private static MongoDatabase db;
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/DBManager.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private static boolean useMongoDB; ##FSTMerge## private static boolean useMongoDB;
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/DBManager.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private static HashMap<String, UserAccount> virtualDB; ##FSTMerge## private static HashMap<String, UserAccount> virtualDB;
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/DBManager.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public static void createVirtualDB() {
+    useMongoDB = false;
+    virtualDB = new HashMap<String, UserAccount>();
+  } ##FSTMerge## public static void createVirtualDB() {
+    useMongoDB = false;
+    virtualDB = new HashMap<String, UserAccount>();
+  }
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/DBManager.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public static void connect() throws ParseException {
+    useMongoDB = true;
+    mongoClient = new MongoClient();
+    db = mongoClient.getDatabase("test");
+  } ##FSTMerge## public static void connect() throws ParseException {
+    useMongoDB = true;
+    mongoClient = new MongoClient();
+    db = mongoClient.getDatabase("test");
+  }
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/DBManager.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public static UserAccount readFromDB(String userID) {
+    if (!useMongoDB) {
+      if (virtualDB.containsKey(userID))
+        return virtualDB.get(userID);
+      return null;
+    }
+    if (null == db) {
+      try {
+        connect();
+      } catch (ParseException e) {
+        e.printStackTrace();
+      }
+    }
+    FindIterable<Document> iterable =
+        db.getCollection("user_accounts").find(new Document("userID", userID));
+    if (iterable == null)
+      return null;
+    Document doc = iterable.first();
+    UserAccount userAccount =
+        new UserAccount(userID, doc.getString("userName"), doc.getString("additionalInfo"));
+    return userAccount;
+  } ##FSTMerge## public static UserAccount readFromDB(String userID) {
+    if (!useMongoDB) {
+      if (virtualDB.containsKey(userID))
+        return virtualDB.get(userID);
+      return null;
+    }
+    if (null == db) {
+      try {
+        connect();
+      } catch (ParseException e) {
+        e.printStackTrace();
+      }
+    }
+    FindIterable<Document> iterable =
+        db.getCollection("user_accounts").find(new Document("userID", userID));
+    if (iterable == null)
+      return null;
+    Document doc = iterable.first();
+    UserAccount userAccount =
+        new UserAccount(userID, doc.getString("userName"), doc.getString("additionalInfo"));
+    return userAccount;
+  }
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/DBManager.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public static void writeToDB(UserAccount userAccount) {
+    if (!useMongoDB) {
+      virtualDB.put(userAccount.getUserID(), userAccount);
+      return;
+    }
+    if (null == db) {
+      try {
+        connect();
+      } catch (ParseException e) {
+        e.printStackTrace();
+      }
+    }
+    db.getCollection("user_accounts").insertOne(
+        new Document("userID", userAccount.getUserID()).append("userName",
+            userAccount.getUserName()).append("additionalInfo", userAccount.getAdditionalInfo()));
+  } ##FSTMerge## public static void writeToDB(UserAccount userAccount) {
+    if (!useMongoDB) {
+      virtualDB.put(userAccount.getUserID(), userAccount);
+      return;
+    }
+    if (null == db) {
+      try {
+        connect();
+      } catch (ParseException e) {
+        e.printStackTrace();
+      }
+    }
+    db.getCollection("user_accounts").insertOne(
+        new Document("userID", userAccount.getUserID()).append("userName",
+            userAccount.getUserName()).append("additionalInfo", userAccount.getAdditionalInfo()));
+  }
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/DBManager.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public static void updateDB(UserAccount userAccount) {
+    if (!useMongoDB) {
+      virtualDB.put(userAccount.getUserID(), userAccount);
+      return;
+    }
+    if (null == db) {
+      try {
+        connect();
+      } catch (ParseException e) {
+        e.printStackTrace();
+      }
+    }
+    db.getCollection("user_accounts").updateOne(
+        new Document("userID", userAccount.getUserID()),
+        new Document("$set", new Document("userName", userAccount.getUserName()).append(
+            "additionalInfo", userAccount.getAdditionalInfo())));
+  } ##FSTMerge## public static void updateDB(UserAccount userAccount) {
+    if (!useMongoDB) {
+      virtualDB.put(userAccount.getUserID(), userAccount);
+      return;
+    }
+    if (null == db) {
+      try {
+        connect();
+      } catch (ParseException e) {
+        e.printStackTrace();
+      }
+    }
+    db.getCollection("user_accounts").updateOne(
+        new Document("userID", userAccount.getUserID()),
+        new Document("$set", new Document("userName", userAccount.getUserName()).append(
+            "additionalInfo", userAccount.getAdditionalInfo())));
+  }
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/DBManager.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 30bc25b5bf2c4d86607c558c22e56d0304c63293
+Parent1 SHA-1: 6b1356a1602a603c09e65a6a1807ab679dda0dea
+Parent2 SHA-1: e3e0e32e92b97590088a9f47a88b222c1b5a384e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public static void upsertDB(UserAccount userAccount) {
+    if (!useMongoDB) {
+      virtualDB.put(userAccount.getUserID(), userAccount);
+      return;
+    }
+    if (null == db) {
+      try {
+        connect();
+      } catch (ParseException e) {
+        e.printStackTrace();
+      }
+    }
+    db.getCollection("user_accounts").updateOne(
+        new Document("userID", userAccount.getUserID()),
+        new Document("$set", new Document("userID", userAccount.getUserID()).append("userName",
+            userAccount.getUserName()).append("additionalInfo", userAccount.getAdditionalInfo())),
+        new UpdateOptions().upsert(true));
+  } ##FSTMerge## public static void upsertDB(UserAccount userAccount) {
+    if (!useMongoDB) {
+      virtualDB.put(userAccount.getUserID(), userAccount);
+      return;
+    }
+    if (null == db) {
+      try {
+        connect();
+      } catch (ParseException e) {
+        e.printStackTrace();
+      }
+    }
+    db.getCollection("user_accounts").updateOne(
+        new Document("userID", userAccount.getUserID()),
+        new Document("$set", new Document("userID", userAccount.getUserID()).append("userName",
+            userAccount.getUserName()).append("additionalInfo", userAccount.getAdditionalInfo())),
+        new UpdateOptions().upsert(true));
+  }
+File path: /tmp/downloads/java-design-patterns/revisions/rev_6b135_e3e0e/rev_6b135-e3e0e/caching/src/main/java/com/iluwatar/caching/DBManager.java
+
+==================================================================================================================
+Revision: /tmp/downloads/java-design-patterns/revisions/rev_3e42a_c06c0/rev_3e42a-c06c0.revisions
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5646937d528b7801f45433632d66d0f43b969dce
+Parent1 SHA-1: 3e42a100601015e1d6dd4a6b356e92e532d92230
+Parent2 SHA-1: c06c05757e0f01a0100d5b04d2d5b4cb5cba5b82
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public static void main(String[] args) {
+
+		// eagerly initialized singleton
+		IvoryTower ivoryTower1 = IvoryTower.getInstance();
+		IvoryTower ivoryTower2 = IvoryTower.getInstance();
+		System.out.println("ivoryTower1=" + ivoryTower1);
+		System.out.println("ivoryTower2=" + ivoryTower2);
+
+		// lazily initialized singleton
+		ThreadSafeLazyLoadedIvoryTower threadSafeIvoryTower1 = ThreadSafeLazyLoadedIvoryTower
+				.getInstance();
+		ThreadSafeLazyLoadedIvoryTower threadSafeIvoryTower2 = ThreadSafeLazyLoadedIvoryTower
+				.getInstance();
+		System.out.println("threadSafeIvoryTower1=" + threadSafeIvoryTower1);
+		System.out.println("threadSafeIvoryTower2=" + threadSafeIvoryTower2);
+
+		// enum singleton
+		EnumIvoryTower enumIvoryTower1 = EnumIvoryTower.INSTANCE;
+		EnumIvoryTower enumIvoryTower2 = EnumIvoryTower.INSTANCE;
+		System.out.println("enumIvoryTower1=" + enumIvoryTower1);
+		System.out.println("enumIvoryTower2=" + enumIvoryTower2);
+	} ##FSTMerge## public static void main(String[] args) {
+
+		IvoryTower ivoryTower1 = IvoryTower.getInstance();
+		IvoryTower ivoryTower2 = IvoryTower.getInstance();
+		System.out.println("ivoryTower1=" + ivoryTower1);
+		System.out.println("ivoryTower2=" + ivoryTower2);
+
+		ThreadSafeLazyLoadedIvoryTower threadSafeIvoryTower1 = ThreadSafeLazyLoadedIvoryTower
+				.getInstance();
+		ThreadSafeLazyLoadedIvoryTower threadSafeIvoryTower2 = ThreadSafeLazyLoadedIvoryTower
+				.getInstance();
+		System.out.println("threadSafeIvoryTower1=" + threadSafeIvoryTower1);
+		System.out.println("threadSafeIvoryTower2=" + threadSafeIvoryTower2);
+
+	} ##FSTMerge## public static void main(String[] args) {
+
+		IvoryTower ivoryTower1 = IvoryTower.getInstance();
+		IvoryTower ivoryTower2 = IvoryTower.getInstance();
+		System.out.println("ivoryTower1=" + ivoryTower1);
+		System.out.println("ivoryTower2=" + ivoryTower2);
+
+		ThreadSafeLazyLoadedIvoryTower threadSafeIvoryTower1 = ThreadSafeLazyLoadedIvoryTower
+				.getInstance();
+		ThreadSafeLazyLoadedIvoryTower threadSafeIvoryTower2 = ThreadSafeLazyLoadedIvoryTower
+				.getInstance();
+		System.out.println("threadSafeIvoryTower1=" + threadSafeIvoryTower1);
+		System.out.println("threadSafeIvoryTower2=" + threadSafeIvoryTower2);
+		
+		InitializingOnDemandHolderIdiom demandHolderIdiom = InitializingOnDemandHolderIdiom.getInstance();
+		System.out.println(demandHolderIdiom);
+		InitializingOnDemandHolderIdiom demandHolderIdiom2 = InitializingOnDemandHolderIdiom.getInstance();
+		System.out.println(demandHolderIdiom2);
+		
+		ThreadSafeDoubleCheckLocking dcl1 = ThreadSafeDoubleCheckLocking.getInstance();
+		System.out.println(dcl1);
+		ThreadSafeDoubleCheckLocking dcl2 = ThreadSafeDoubleCheckLocking.getInstance();
+		System.out.println(dcl2);
+	}
+File path: /tmp/downloads/java-design-patterns/revisions/rev_3e42a_c06c0/rev_3e42a-c06c0/singleton/src/main/java/com/iluwatar/App.java
+
+=========================================================

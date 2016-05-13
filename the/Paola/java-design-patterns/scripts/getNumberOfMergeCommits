@@ -1,0 +1,9 @@
+#!/bin/bash
+#Outputs the number of merge commits
+#$1:path to repo
+
+cd $1
+
+lines=$(git --no-pager log --merges --pretty=oneline | wc)
+
+echo $lines

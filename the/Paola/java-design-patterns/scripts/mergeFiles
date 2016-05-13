@@ -1,0 +1,7 @@
+#!/bin/bash
+#Merges files and outputs results
+#$1 left file
+#$2 common ancestor
+#$3 right file
+
+git merge-file -p --diff3 $1 $2 $3

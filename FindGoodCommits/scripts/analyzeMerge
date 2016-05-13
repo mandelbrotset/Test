@@ -7,6 +7,8 @@
 #$4 output folder
 #$5 file to analyze
 #$6 temp folder
+#$7 behöver vi getta jean
+mkdir $4
 temp=$6/git
 
 function resetGit {
@@ -37,11 +39,16 @@ function fetchLog {
 }
 
 function getShas {
-	local shaLine=$(cat $temp | grep "\($2.*$3.*\)\|\($3.*$2.*\)")
-	local shas=${shaLine:7:22}
-	sha1=${shas:0:7}
+	if [ "$4" -eq 1 ] ; then
+		local shaLine=$(cat $temp | grep "\($2.*$3.*\)\|\($3.*$2.*\)")
+		local shas=${shaLine:7:22}
+		sha1=${shas:0:7}
+		sha2=${shas:8:14}
+	else
+		sha1=$2
+		sha2=$3
+	fi
 	echo "sha1:"$sha1
-	sha2=${shas:8:14}
 	echo "sha2:"$sha2
 }
 
@@ -89,7 +96,7 @@ function printFound {
 resetGit $1
 
 fetchLog $1
-getShas $1 $2 $3
+getShas $1 $2 $3 $7
 anc=$(bash getCommonAncestor $1 $sha1 $sha2)
 echo "anc:"$anc
 getMergeSha $1 $2 $3
@@ -107,5 +114,13 @@ fetchFile $1 $result $5 $4/result.java
 resultFile=$ok
 echo $resultFile
 resetGit $1
-echo "sha1:"$sha1"\nsha2:"$sha2"\nanc:"$anc"\nresult:"$result"\n" > $4/info
+cd /home/isak/Documents/Master/Test/FindGoodCommits/scripts
+echo "sha1:"$sha1 >> $4/info
+echo "sha2:"$sha2 >> $4/info
+echo "anc:"$anc >> $4/info
+echo "result:"$result"\n" >> $4/info
+parent1Date=$(./getDate $1 $sha1) 
+parent2Date=$(./getDate $1 $sha2)
+echo "parent1Date:"$parent1Date >> $4/info
+echo "parent2Date:"$parent2Date >> $4/info
 printFound

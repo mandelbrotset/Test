@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cd $1
+
+
+
+git --no-pager diff ${2}^ ${2}

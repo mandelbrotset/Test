@@ -1,0 +1,3910 @@
+=========================================================
+Revision: /tmp/downloads/retrofit/revisions/rev_adb88_9097b/rev_adb88-9097b.revisions
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: d77d4c40f7a03b5fe9abca9f297ef49e43f13481
+Parent1 SHA-1: adb88516676814593e2cc11b3baf5a6b3dcc24b0
+Parent2 SHA-1: 9097b294fb8859be75af8697971d9c93cea21fa6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Test public void logRequestResponseBasic() throws Exception {
+    final List<String> logMessages = new ArrayList<String>();
+    RestAdapter.Log log = new RestAdapter.Log() {
+      public void log(String message) {
+        logMessages.add(message);
+      }
+    };
+
+    Example example = new RestAdapter.Builder() //
+        .setClient(mockClient)
+        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setEndpoint("http://example.com")
+        .setProfiler(mockProfiler)
+        .setLog(log)
+        .setLogLevel(BASIC)
+        .build()
+        .create(Example.class);
+
+    when(mockClient.execute(any(Request.class))) //
+        .thenReturn(
+            new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("{}")));
+
+    example.something();
+    assertThat(logMessages).hasSize(2);
+    assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
+    assertThat(logMessages.get(1)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
+  } ##FSTMerge## @Test public void logRequestResponseBasic() throws Exception {
+    final List<String> logMessages = new ArrayList<String>();
+    RestAdapter.Log log = new RestAdapter.Log() {
+      public void log(String message) {
+        logMessages.add(message);
+      }
+    };
+
+    Example example = new RestAdapter.Builder() //
+        .setClient(mockClient)
+        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setEndpoint("http://example.com")
+        .setProfiler(mockProfiler)
+        .setLog(log)
+        .setLogLevel(BASIC)
+        .build()
+        .create(Example.class);
+
+    when(mockClient.execute(any(Request.class))) //
+        .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("{}")));
+
+    example.something();
+    assertThat(logMessages).hasSize(2);
+    assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
+    assertThat(logMessages.get(1)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
+  } ##FSTMerge## @Test public void logRequestResponseBasic() throws Exception {
+    final List<String> logMessages = new ArrayList<String>();
+    RestAdapter.Log log = new RestAdapter.Log() {
+      public void log(String message) {
+        logMessages.add(message);
+      }
+    };
+
+    Example example = new RestAdapter.Builder() //
+        .setClient(mockClient)
+        .setExecutors(mockRequestExecutor, mockCallbackExecutor)
+        .setEndpoint("http://example.com")
+        .setProfiler(mockProfiler)
+        .setLog(log)
+        .setLogLevel(BASIC)
+        .build()
+        .create(Example.class);
+
+    when(mockClient.execute(any(Request.class))) //
+        .thenReturn(new Response("http://example.com/", 200, "OK", TWO_HEADERS, new TypedString("Hi")));
+
+    example.something();
+    assertThat(logMessages).hasSize(2);
+    assertThat(logMessages.get(0)).isEqualTo("---> HTTP GET http://example.com/");
+    assertThat(logMessages.get(1)).matches("<--- HTTP 200 http://example.com/ \\([0-9]+ms\\)");
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_adb88_9097b/rev_adb88-9097b/retrofit/src/test/java/retrofit/RestAdapterTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: d77d4c40f7a03b5fe9abca9f297ef49e43f13481
+Parent1 SHA-1: adb88516676814593e2cc11b3baf5a6b3dcc24b0
+Parent2 SHA-1: 9097b294fb8859be75af8697971d9c93cea21fa6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ private Object invokeRequest(RequestInterceptor requestInterceptor, RestMethodInfo methodInfo,
+        Object[] args) {
+      String url = null;
+      try {
+        methodInfo.init(); // Ensure all relevant method information has been loaded.
+
+        String serverUrl = server.getUrl();
+        RequestBuilder requestBuilder = new RequestBuilder(serverUrl, methodInfo, converter);
+        requestBuilder.setArguments(args);
+
+        requestInterceptor.intercept(requestBuilder);
+
+        Request request = requestBuilder.build();
+        url = request.getUrl();
+
+        if (!methodInfo.isSynchronous) {
+          // If we are executing asynchronously then update the current thread with a useful name.
+          Thread.currentThread().setName(THREAD_PREFIX + url.substring(serverUrl.length()));
+        }
+
+        if (logLevel.log()) {
+          // Log the request data.
+          request = logAndReplaceRequest("HTTP", request);
+        }
+
+        Object profilerObject = null;
+        if (profiler != null) {
+          profilerObject = profiler.beforeCall();
+        }
+
+        long start = System.nanoTime();
+        Response response = clientProvider.get().execute(request);
+        long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+        int statusCode = response.getStatus();
+        if (profiler != null) {
+          RequestInformation requestInfo = getRequestInfo(serverUrl, methodInfo, request);
+          //noinspection unchecked
+          profiler.afterCall(requestInfo, elapsedTime, statusCode, profilerObject);
+        }
+
+        if (logLevel.log()) {
+          // Log the response data.
+          response = logAndReplaceResponse(url, response, elapsedTime);
+        }
+
+        Type type = methodInfo.responseObjectType;
+
+        if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
+          // Caller requested the raw Response object directly.
+          if (type.equals(Response.class)) {
+            if (!methodInfo.isStreaming) {
+              // Read the entire stream and replace with one backed by a byte[].
+              response = Utils.readBodyToBytesIfNecessary(response);
+            }
+
+            if (methodInfo.isSynchronous) {
+              return response;
+            }
+            return new ResponseWrapper(response, response);
+          }
+
+          TypedInput body = response.getBody();
+          if (body == null) {
+            return new ResponseWrapper(response, null);
+          }
+
+          ExceptionCatchingTypedInput wrapped = new ExceptionCatchingTypedInput(body);
+          try {
+            Object convert = converter.fromBody(wrapped, type);
+            if (methodInfo.isSynchronous) {
+              return convert;
+            }
+            return new ResponseWrapper(response, convert);
+          } catch (ConversionException e) {
+            // If the underlying input stream threw an exception, propagate that rather than
+            // indicating that it was a conversion exception.
+            if (wrapped.threwException()) {
+              throw wrapped.getThrownException();
+            }
+
+            // The response body was partially read by the converter. Replace it with null.
+            response = Utils.replaceResponseBody(response, null);
+
+            throw RetrofitError.conversionError(url, response, converter, type, e);
+          }
+        }
+
+        response = Utils.readBodyToBytesIfNecessary(response);
+        throw RetrofitError.httpError(url, response, converter, type);
+      } catch (RetrofitError e) {
+        throw e; // Pass through our own errors.
+      } catch (IOException e) {
+        if (logLevel.log()) {
+          logException(e, url);
+        }
+        throw RetrofitError.networkError(url, e);
+      } catch (Throwable t) {
+        if (logLevel.log()) {
+          logException(t, url);
+        }
+        throw RetrofitError.unexpectedError(url, t);
+      } finally {
+        if (!methodInfo.isSynchronous) {
+          Thread.currentThread().setName(IDLE_THREAD_NAME);
+        }
+      }
+    } ##FSTMerge## private Object invokeRequest(RequestInterceptor requestInterceptor, RestMethodInfo methodInfo,
+        Object[] args) {
+      String url = null;
+      try {
+        methodInfo.init(); // Ensure all relevant method information has been loaded.
+
+        String serverUrl = server.getUrl();
+        RequestBuilder requestBuilder = new RequestBuilder(serverUrl, methodInfo, converter);
+        requestBuilder.setArguments(args);
+
+        requestInterceptor.intercept(requestBuilder);
+
+        Request request = requestBuilder.build();
+        url = request.getUrl();
+
+        if (!methodInfo.isSynchronous) {
+          // If we are executing asynchronously then update the current thread with a useful name.
+          Thread.currentThread().setName(THREAD_PREFIX + url.substring(serverUrl.length()));
+        }
+
+        if (logLevel.log()) {
+          // Log the request data.
+          request = logAndReplaceRequest("HTTP", request);
+        }
+
+        Object profilerObject = null;
+        if (profiler != null) {
+          profilerObject = profiler.beforeCall();
+        }
+
+        long start = System.nanoTime();
+        Response response = clientProvider.get().execute(request);
+        long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+        int statusCode = response.getStatus();
+        if (profiler != null) {
+          RequestInformation requestInfo = getRequestInfo(serverUrl, methodInfo, request);
+          //noinspection unchecked
+          profiler.afterCall(requestInfo, elapsedTime, statusCode, profilerObject);
+        }
+
+        if (logLevel.log()) {
+          // Log the response data.
+          response = logAndReplaceResponse(url, response, elapsedTime);
+        }
+
+        Type type = methodInfo.responseObjectType;
+
+        if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
+          // Caller requested the raw Response object directly.
+          if (type.equals(Response.class)) {
+            // Read the entire stream and replace with one backed by a byte[]
+            response = Utils.readBodyToBytesIfNecessary(response);
+
+            if (methodInfo.isSynchronous) {
+              return response;
+            }
+            return new ResponseWrapper(response, response);
+          }
+
+          TypedInput body = response.getBody();
+          if (body == null) {
+            return new ResponseWrapper(response, null);
+          }
+
+          ExceptionCatchingTypedInput wrapped = new ExceptionCatchingTypedInput(body);
+          try {
+            Object convert = converter.fromBody(wrapped, type);
+            if (methodInfo.isSynchronous) {
+              return convert;
+            }
+            return new ResponseWrapper(response, convert);
+          } catch (ConversionException e) {
+            // If the underlying input stream threw an exception, propagate that rather than
+            // indicating that it was a conversion exception.
+            if (wrapped.threwException()) {
+              throw wrapped.getThrownException();
+            }
+
+            // The response body was partially read by the converter. Replace it with null.
+            response = Utils.replaceResponseBody(response, null);
+
+            throw RetrofitError.conversionError(url, response, converter, type, e);
+          }
+        }
+
+        response = Utils.readBodyToBytesIfNecessary(response);
+        throw RetrofitError.httpError(url, response, converter, type);
+      } catch (RetrofitError e) {
+        throw e; // Pass through our own errors.
+      } catch (IOException e) {
+        if (logLevel.log()) {
+          logException(e, url);
+        }
+        throw RetrofitError.networkError(url, e);
+      } catch (Throwable t) {
+        if (logLevel.log()) {
+          logException(t, url);
+        }
+        throw RetrofitError.unexpectedError(url, t);
+      } finally {
+        if (!methodInfo.isSynchronous) {
+          Thread.currentThread().setName(IDLE_THREAD_NAME);
+        }
+      }
+    } ##FSTMerge## private Object invokeRequest(RequestInterceptor requestInterceptor, RestMethodInfo methodInfo,
+        Object[] args) {
+      String url = null;
+      try {
+        methodInfo.init(); // Ensure all relevant method information has been loaded.
+
+        String serverUrl = server.getUrl();
+        RequestBuilder requestBuilder = new RequestBuilder(serverUrl, methodInfo, converter);
+        requestBuilder.setArguments(args);
+
+        requestInterceptor.intercept(requestBuilder);
+
+        Request request = requestBuilder.build();
+        url = request.getUrl();
+
+        if (!methodInfo.isSynchronous) {
+          // If we are executing asynchronously then update the current thread with a useful name.
+          Thread.currentThread().setName(THREAD_PREFIX + url.substring(serverUrl.length()));
+        }
+
+        if (logLevel.log()) {
+          // Log the request data.
+          request = logAndReplaceRequest("HTTP", request);
+        }
+
+        Object profilerObject = null;
+        if (profiler != null) {
+          profilerObject = profiler.beforeCall();
+        }
+
+        long start = System.nanoTime();
+        Response response = clientProvider.get().execute(request);
+        long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+        int statusCode = response.getStatus();
+        if (profiler != null) {
+          RequestInformation requestInfo = getRequestInfo(serverUrl, methodInfo, request);
+          //noinspection unchecked
+          profiler.afterCall(requestInfo, elapsedTime, statusCode, profilerObject);
+        }
+
+        if (logLevel.log()) {
+          // Log the response data.
+          response = logAndReplaceResponse(url, response, elapsedTime);
+        }
+
+        Type type = methodInfo.responseObjectType;
+
+        if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
+          // Caller requested the raw Response object directly.
+          if (type.equals(Response.class)) {
+            // Read the entire stream and replace with one backed by a byte[]
+            response = Utils.readBodyToBytesIfNecessary(response);
+
+            if (methodInfo.isSynchronous) {
+              return response;
+            }
+            return new ResponseWrapper(response, response);
+          }
+
+          TypedInput body = response.getBody();
+          if (body == null) {
+            if (methodInfo.isSynchronous) {
+              return null;
+            }
+            return new ResponseWrapper(response, null);
+          }
+
+          ExceptionCatchingTypedInput wrapped = new ExceptionCatchingTypedInput(body);
+          try {
+            Object convert = converter.fromBody(wrapped, type);
+            if (methodInfo.isSynchronous) {
+              return convert;
+            }
+            return new ResponseWrapper(response, convert);
+          } catch (ConversionException e) {
+            // If the underlying input stream threw an exception, propagate that rather than
+            // indicating that it was a conversion exception.
+            if (wrapped.threwException()) {
+              throw wrapped.getThrownException();
+            }
+
+            // The response body was partially read by the converter. Replace it with null.
+            response = Utils.replaceResponseBody(response, null);
+
+            throw RetrofitError.conversionError(url, response, converter, type, e);
+          }
+        }
+
+        response = Utils.readBodyToBytesIfNecessary(response);
+        throw RetrofitError.httpError(url, response, converter, type);
+      } catch (RetrofitError e) {
+        throw e; // Pass through our own errors.
+      } catch (IOException e) {
+        if (logLevel.log()) {
+          logException(e, url);
+        }
+        throw RetrofitError.networkError(url, e);
+      } catch (Throwable t) {
+        if (logLevel.log()) {
+          logException(t, url);
+        }
+        throw RetrofitError.unexpectedError(url, t);
+      } finally {
+        if (!methodInfo.isSynchronous) {
+          Thread.currentThread().setName(IDLE_THREAD_NAME);
+        }
+      }
+    }
+File path: /tmp/downloads/retrofit/revisions/rev_adb88_9097b/rev_adb88-9097b/retrofit/src/main/java/retrofit/RestAdapter.java
+
+==================================================================================================================
+Revision: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae.revisions
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Test public void getWithPathParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addPathParam("ping", "pong") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/");
+    assertThat(request.getBody()).isNull();
+  } ##FSTMerge## @Test public void getWithPathParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addNamedParam("ping", "pong") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/");
+    assertThat(request.getBody()).isNull();
+  } ##FSTMerge## @Test public void getWithPathParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addNamedParam("ping", "pong") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/");
+    assertThat(request.getBody()).isNull();
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Test public void getWithPathAndQueryParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addPathParam("ping", "pong") //
+        .addQueryParam("kit", "kat") //
+        .addQueryParam("riff", "raff") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/?kit=kat&riff=raff");
+    assertThat(request.getBody()).isNull();
+  } ##FSTMerge## @Test public void getWithPathAndQueryParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addNamedParam("ping", "pong") //
+        .addNamedParam("kit", "kat") //
+        .addNamedParam("riff", "raff") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/?kit=kat&riff=raff");
+    assertThat(request.getBody()).isNull();
+  } ##FSTMerge## @Test public void getWithPathAndQueryParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addNamedParam("ping", "pong") //
+        .addNamedParam("kit", "kat") //
+        .addNamedParam("riff", "raff") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/?kit=kat&riff=raff");
+    assertThat(request.getBody()).isNull();
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Test public void getWithPathAndQueryQuestionMarkParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addPathParam("ping", "pong?") //
+        .addQueryParam("kit", "kat?") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong%3F/?kit=kat%3F");
+    assertThat(request.getBody()).isNull();
+  } ##FSTMerge## @Test public void getWithPathAndQueryQuestionMarkParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addNamedParam("ping", "pong?") //
+        .addNamedParam("kit", "kat?") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong%3F/?kit=kat%3F");
+    assertThat(request.getBody()).isNull();
+  } ##FSTMerge## @Test public void getWithPathAndQueryQuestionMarkParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addNamedParam("ping", "pong?") //
+        .addNamedParam("kit", "kat?") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong%3F/?kit=kat%3F");
+    assertThat(request.getBody()).isNull();
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Test public void getWithPathAndQueryAmpersandParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addPathParam("ping", "pong&") //
+        .addQueryParam("kit", "kat&") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong%26/?kit=kat%26");
+    assertThat(request.getBody()).isNull();
+  } ##FSTMerge## @Test public void getWithPathAndQueryAmpersandParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addNamedParam("ping", "pong&") //
+        .addNamedParam("kit", "kat&") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong%26/?kit=kat%26");
+    assertThat(request.getBody()).isNull();
+  } ##FSTMerge## @Test public void getWithPathAndQueryAmpersandParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addNamedParam("ping", "pong&") //
+        .addNamedParam("kit", "kat&") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong%26/?kit=kat%26");
+    assertThat(request.getBody()).isNull();
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Test public void getWithPathAndQueryHashParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addPathParam("ping", "pong#") //
+        .addQueryParam("kit", "kat#") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong%23/?kit=kat%23");
+    assertThat(request.getBody()).isNull();
+  } ##FSTMerge## @Test public void getWithPathAndQueryHashParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addNamedParam("ping", "pong#") //
+        .addNamedParam("kit", "kat#") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong%23/?kit=kat%23");
+    assertThat(request.getBody()).isNull();
+  } ##FSTMerge## @Test public void getWithPathAndQueryHashParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addNamedParam("ping", "pong#") //
+        .addNamedParam("kit", "kat#") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong%23/?kit=kat%23");
+    assertThat(request.getBody()).isNull();
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Test public void getWithPathAndQueryParamAsync() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addNamedParam("ping", "pong") //
+        .addNamedParam("kit", "kat") //
+        .setAsynchronous() //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/?kit=kat");
+    assertThat(request.getBody()).isNull();
+  } ##FSTMerge## @Test public void getWithPathAndQueryParamAsync() throws Exception {
+    Request request = new Helper() //
+        .setMethod("GET") //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addNamedParam("ping", "pong") //
+        .addNamedParam("kit", "kat") //
+        .setAsynchronous() //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("GET");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/?kit=kat");
+    assertThat(request.getBody()).isNull();
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Test public void normalPostWithPathParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addPathParam("ping", "pong") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/");
+    assertThat(request.getBody()).isNull();
+  } ##FSTMerge## @Test public void normalPostWithPathParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addNamedParam("ping", "pong") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/");
+    assertThat(request.getBody()).isNull();
+  } ##FSTMerge## @Test public void normalPostWithPathParam() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/") //
+        .addNamedParam("ping", "pong") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/");
+    assertThat(request.getBody()).isNull();
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Test public void singleEntity() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .setBody(Arrays.asList("quick", "brown", "fox")) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertTypedBytes(request.getBody(), "[\"quick\",\"brown\",\"fox\"]");
+  } ##FSTMerge## @Test public void singleEntity() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addSingleEntityParam(Arrays.asList("quick", "brown", "fox")) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertTypedBytes(request.getBody(), "[\"quick\",\"brown\",\"fox\"]");
+  } ##FSTMerge## @Test public void singleEntity() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addSingleEntityParam(Arrays.asList("quick", "brown", "fox")) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+    assertTypedBytes(request.getBody(), "[\"quick\",\"brown\",\"fox\"]");
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Test public void singleEntityWithPathParams() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/{kit}/") //
+        .addPathParam("ping", "pong") //
+        .setBody(Arrays.asList("quick", "brown", "fox")) //
+        .addPathParam("kit", "kat") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/kat/");
+    assertTypedBytes(request.getBody(), "[\"quick\",\"brown\",\"fox\"]");
+  } ##FSTMerge## @Test public void singleEntityWithPathParams() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/{kit}/") //
+        .addNamedParam("ping", "pong") //
+        .addSingleEntityParam(Arrays.asList("quick", "brown", "fox")) //
+        .addNamedParam("kit", "kat") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/kat/");
+    assertTypedBytes(request.getBody(), "[\"quick\",\"brown\",\"fox\"]");
+  } ##FSTMerge## @Test public void singleEntityWithPathParams() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/{kit}/") //
+        .addNamedParam("ping", "pong") //
+        .addSingleEntityParam(Arrays.asList("quick", "brown", "fox")) //
+        .addNamedParam("kit", "kat") //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/kat/");
+    assertTypedBytes(request.getBody(), "[\"quick\",\"brown\",\"fox\"]");
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Test public void singleEntityWithPathParamsAsync() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/{kit}/") //
+        .addNamedParam("ping", "pong") //
+        .addSingleEntityParam(Arrays.asList("quick", "brown", "fox")) //
+        .addNamedParam("kit", "kat") //
+        .setAsynchronous() //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/kat/");
+    assertTypedBytes(request.getBody(), "[\"quick\",\"brown\",\"fox\"]");
+  } ##FSTMerge## @Test public void singleEntityWithPathParamsAsync() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/{ping}/{kit}/") //
+        .addNamedParam("ping", "pong") //
+        .addSingleEntityParam(Arrays.asList("quick", "brown", "fox")) //
+        .addNamedParam("kit", "kat") //
+        .setAsynchronous() //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/pong/kat/");
+    assertTypedBytes(request.getBody(), "[\"quick\",\"brown\",\"fox\"]");
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Test public void simpleMultipart() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .setMultipart() //
+        .addPart("ping", "pong") //
+        .addPart("kit", new TypedString("kat")) //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+
+    MultipartTypedOutput body = (MultipartTypedOutput) request.getBody();
+    List<byte[]> bodyParts = MimeHelper.getParts(body);
+    assertThat(bodyParts).hasSize(2);
+
+    Iterator<byte[]> iterator = bodyParts.iterator();
+
+    String one = new String(iterator.next(), "UTF-8");
+    assertThat(one).contains("ping").contains("pong");
+
+    String two = new String(iterator.next(), "UTF-8");
+    assertThat(two).contains("kit").contains("kat");
+  } ##FSTMerge## @Test public void simpleMultipart() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addNamedParam("ping", "pong") //
+        .addNamedParam("kit", new TypedString("kat")) //
+        .setMultipart() //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+
+    MultipartTypedOutput body = (MultipartTypedOutput) request.getBody();
+    assertThat(body.parts).hasSize(2);
+
+    Iterator<byte[]> iterator = body.parts.iterator();
+
+    String one = new String(iterator.next(), "UTF-8");
+    assertThat(one).contains("ping").contains("pong");
+
+    String two = new String(iterator.next(), "UTF-8");
+    assertThat(two).contains("kit").contains("kat");
+  } ##FSTMerge## @Test public void simpleMultipart() throws Exception {
+    Request request = new Helper() //
+        .setMethod("POST") //
+        .setHasBody() //
+        .setUrl("http://example.com") //
+        .setPath("/foo/bar/") //
+        .addNamedParam("ping", "pong") //
+        .addNamedParam("kit", new TypedString("kat")) //
+        .setMultipart() //
+        .build();
+    assertThat(request.getMethod()).isEqualTo("POST");
+    assertThat(request.getHeaders()).isEmpty();
+    assertThat(request.getUrl()).isEqualTo("http://example.com/foo/bar/");
+
+    MultipartTypedOutput body = (MultipartTypedOutput) request.getBody();
+    assertThat(body.parts).hasSize(2);
+
+    Iterator<byte[]> iterator = body.parts.iterator();
+
+    String one = new String(iterator.next(), "UTF-8");
+    assertThat(one).contains("ping").contains("pong");
+
+    String two = new String(iterator.next(), "UTF-8");
+    assertThat(two).contains("kit").contains("kat");
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private boolean isSynchronous = true; ##FSTMerge## private boolean isSynchronous = true;
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private boolean isMultipart = false; ##FSTMerge## private boolean isMultipart = false;
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ private final List<String> pathParams = new ArrayList<String>(); ##FSTMerge## private Set<String> pathParams; ##FSTMerge## private Set<String> pathParams;
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ private final List<String> queryParams = new ArrayList<String>(); ##FSTMerge## private final List<QueryParam> queryParams = new ArrayList<QueryParam>(); ##FSTMerge## private final List<QueryParam> queryParams = new ArrayList<QueryParam>();
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final List<String> namedParams = new ArrayList<String>(); ##FSTMerge## private final List<String> namedParams = new ArrayList<String>();
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private int singleEntityArgumentIndex = NO_SINGLE_ENTITY; ##FSTMerge## private int singleEntityArgumentIndex = NO_SINGLE_ENTITY;
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## Helper setAsynchronous() {
+      isSynchronous = false;
+      return this;
+    } ##FSTMerge## Helper setAsynchronous() {
+      isSynchronous = false;
+      return this;
+    }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ Helper setPath(String path) {
+      this.path = path;
+      return this;
+    } ##FSTMerge## Helper setPath(String path) {
+      this.path = path;
+      pathParams = RestMethodInfo.parsePathParameters(path);
+      return this;
+    } ##FSTMerge## Helper setPath(String path) {
+      this.path = path;
+      pathParams = RestMethodInfo.parsePathParameters(path);
+      return this;
+    }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ Helper addQueryParam(String name, String value) {
+      addParam(null, name, null, null, value);
+      hasQueryParams = true;
+      return this;
+    } ##FSTMerge## Helper addQueryParam(String name, String value) {
+      QueryParam queryParam = mock(QueryParam.class);
+      when(queryParam.name()).thenReturn(name);
+      when(queryParam.value()).thenReturn(value);
+      queryParams.add(queryParam);
+      return this;
+    } ##FSTMerge## Helper addQueryParam(String name, String value) {
+      QueryParam queryParam = mock(QueryParam.class);
+      when(queryParam.name()).thenReturn(name);
+      when(queryParam.value()).thenReturn(value);
+      queryParams.add(queryParam);
+      return this;
+    }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## Helper addNamedParam(String name, Object value) {
+      if (name == null) {
+        throw new IllegalArgumentException("Name can not be null.");
+      }
+      namedParams.add(name);
+      args.add(value);
+      return this;
+    } ##FSTMerge## Helper addNamedParam(String name, Object value) {
+      if (name == null) {
+        throw new IllegalArgumentException("Name can not be null.");
+      }
+      namedParams.add(name);
+      args.add(value);
+      return this;
+    }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## Helper addSingleEntityParam(Object value) {
+      if (singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
+        throw new IllegalStateException("Single entity param already added.");
+      }
+      // Relying on the fact that this is already less one.
+      singleEntityArgumentIndex = namedParams.size();
+      namedParams.add(null);
+      args.add(value);
+      return this;
+    } ##FSTMerge## Helper addSingleEntityParam(Object value) {
+      if (singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
+        throw new IllegalStateException("Single entity param already added.");
+      }
+      // Relying on the fact that this is already less one.
+      singleEntityArgumentIndex = namedParams.size();
+      namedParams.add(null);
+      args.add(value);
+      return this;
+    }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ Helper setMultipart() {
+      requestType = RequestType.MULTIPART;
+      return this;
+    } ##FSTMerge## Helper setMultipart() {
+      isMultipart = true;
+      return this;
+    } ##FSTMerge## Helper setMultipart() {
+      isMultipart = true;
+      return this;
+    }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ Request build() throws Exception {
+      if (method == null) {
+        throw new IllegalStateException("Method must be set.");
+      }
+      if (path == null) {
+        throw new IllegalStateException("Path must be set.");
+      }
+
+      Method method = getClass().getDeclaredMethod("dummySync");
+
+      RestMethodInfo methodInfo = new RestMethodInfo(method);
+      methodInfo.requestMethod = this.method;
+      methodInfo.requestHasBody = hasBody;
+      methodInfo.requestType = requestType;
+      methodInfo.requestUrl = path;
+      methodInfo.requestUrlParamNames = RestMethodInfo.parsePathParameters(path);
+      methodInfo.requestQuery = query;
+      methodInfo.hasQueryParams = hasQueryParams;
+      methodInfo.requestUrlParam = pathParams.toArray(new String[pathParams.size()]);
+      methodInfo.requestQueryName = queryParams.toArray(new String[queryParams.size()]);
+      methodInfo.requestFormPair = pairParams.toArray(new String[pairParams.size()]);
+      methodInfo.requestMultipartPart = partParams.toArray(new String[partParams.size()]);
+      methodInfo.bodyIndex = bodyIndex;
+      methodInfo.loaded = true;
+
+      return new RequestBuilder(GSON) //
+          .apiUrl(url)
+          .headers(headers)
+          .args(args.toArray(new Object[args.size()]))
+          .methodInfo(methodInfo)
+          .build();
+    } ##FSTMerge## Request build() throws NoSuchMethodException, URISyntaxException {
+      if (method == null) {
+        throw new IllegalStateException("Method must be set.");
+      }
+      if (path == null) {
+        throw new IllegalStateException("Path must be set.");
+      }
+
+      final Method method;
+      if (isSynchronous) {
+        method = getClass().getDeclaredMethod("dummySync");
+      } else {
+        method = getClass().getDeclaredMethod("dummyAsync", Callback.class);
+        args.add(mock(Callback.class));
+      }
+
+      // Create a fake rest method annotation based on set values.
+      RestMethod restMethod = mock(RestMethod.class);
+      when(restMethod.hasBody()).thenReturn(hasBody);
+      when(restMethod.value()).thenReturn(this.method);
+
+      RestMethodInfo methodInfo = new RestMethodInfo(method);
+      methodInfo.restMethod = restMethod;
+      methodInfo.path = path;
+      methodInfo.pathParams = pathParams;
+      methodInfo.pathQueryParams = queryParams.toArray(new QueryParam[queryParams.size()]);
+      methodInfo.namedParams = namedParams.toArray(new String[namedParams.size()]);
+      methodInfo.singleEntityArgumentIndex = singleEntityArgumentIndex;
+      methodInfo.isMultipart = isMultipart;
+      methodInfo.loaded = true;
+
+      return new RequestBuilder(GSON) //
+          .setApiUrl(url)
+          .setHeaders(headers)
+          .setArgs(args.toArray(new Object[args.size()]))
+          .setMethodInfo(methodInfo)
+          .build();
+    } ##FSTMerge## Request build() throws NoSuchMethodException, URISyntaxException {
+      if (method == null) {
+        throw new IllegalStateException("Method must be set.");
+      }
+      if (path == null) {
+        throw new IllegalStateException("Path must be set.");
+      }
+
+      final Method method;
+      if (isSynchronous) {
+        method = getClass().getDeclaredMethod("dummySync");
+      } else {
+        method = getClass().getDeclaredMethod("dummyAsync", Callback.class);
+        args.add(mock(Callback.class));
+      }
+
+      // Create a fake rest method annotation based on set values.
+      RestMethod restMethod = mock(RestMethod.class);
+      when(restMethod.hasBody()).thenReturn(hasBody);
+      when(restMethod.value()).thenReturn(this.method);
+
+      RestMethodInfo methodInfo = new RestMethodInfo(method);
+      methodInfo.restMethod = restMethod;
+      methodInfo.path = path;
+      methodInfo.pathParams = pathParams;
+      methodInfo.pathQueryParams = queryParams.toArray(new QueryParam[queryParams.size()]);
+      methodInfo.headers = methodHeaders;
+      methodInfo.headerParams = headerParams.toArray(new String[headerParams.size()]);
+      methodInfo.namedParams = namedParams.toArray(new String[namedParams.size()]);
+      methodInfo.singleEntityArgumentIndex = singleEntityArgumentIndex;
+      methodInfo.isMultipart = isMultipart;
+      methodInfo.loaded = true;
+
+      return new RequestBuilder(GSON) //
+          .setApiUrl(url)
+          .setHeaders(headers)
+          .setArgs(args.toArray(new Object[args.size()]))
+          .setMethodInfo(methodInfo)
+          .build();
+    }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @SuppressWarnings("UnusedDeclaration") // Accessed via reflection.
+    private void dummyAsync(Callback<Object> cb) {
+    } ##FSTMerge## @SuppressWarnings("UnusedDeclaration") // Accessed via reflection.
+    private void dummyAsync(Callback<Object> cb) {
+    }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/test/java/retrofit/http/RequestBuilderTest.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## static final int NO_SINGLE_ENTITY = -1; ##FSTMerge## static final int NO_SINGLE_ENTITY = -1;
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestMethodInfo.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ private static final Pattern PATH_PARAMETERS = Pattern.compile("\\{([a-z][a-z0-9_-]*)}"); ##FSTMerge## private static final Pattern PATH_PARAMETERS = Pattern.compile("\\{([a-z_-]+)\\}"); ##FSTMerge## private static final Pattern PATH_PARAMETERS = Pattern.compile("\\{([a-z_-]+)\\}");
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestMethodInfo.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## Type type; ##FSTMerge## Type type;
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestMethodInfo.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## RestMethod restMethod; ##FSTMerge## RestMethod restMethod;
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestMethodInfo.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## String path; ##FSTMerge## String path;
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestMethodInfo.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## Set<String> pathParams; ##FSTMerge## Set<String> pathParams;
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestMethodInfo.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## QueryParam[] pathQueryParams; ##FSTMerge## QueryParam[] pathQueryParams;
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestMethodInfo.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## String[] namedParams; ##FSTMerge## String[] namedParams;
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestMethodInfo.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## int singleEntityArgumentIndex = NO_SINGLE_ENTITY; ##FSTMerge## int singleEntityArgumentIndex = NO_SINGLE_ENTITY;
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestMethodInfo.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## boolean isMultipart = false; ##FSTMerge## boolean isMultipart = false;
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestMethodInfo.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ private void parseMethodAnnotations() {
+    for (Annotation methodAnnotation : method.getAnnotations()) {
+      Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
+      RestMethod methodInfo = null;
+
+      // Look for a @RestMethod annotation on the parameter annotation indicating request method.
+      for (Annotation innerAnnotation : annotationType.getAnnotations()) {
+        if (RestMethod.class == innerAnnotation.annotationType()) {
+          methodInfo = (RestMethod) innerAnnotation;
+          break;
+        }
+      }
+
+      if (methodInfo != null) {
+        if (requestMethod != null) {
+          throw new IllegalArgumentException("Method "
+              + method.getName()
+              + " contains multiple HTTP methods. Found: "
+              + requestMethod
+              + " and "
+              + methodInfo.value());
+        }
+        String path;
+        try {
+          path = (String) annotationType.getMethod("value").invoke(methodAnnotation);
+        } catch (Exception e) {
+          throw new RuntimeException("Failed to extract path from "
+              + annotationType.getSimpleName()
+              + " annotation on "
+              + method.getName()
+              + ".", e);
+        }
+        parsePath(path);
+        requestMethod = methodInfo.value();
+        requestHasBody = methodInfo.hasBody();
+      } else if (annotationType == Multipart.class) {
+        requestType = RequestType.MULTIPART;
+      } else if (annotationType == FormEncoded.class) {
+        requestType = RequestType.FORM_ENCODED;
+      }
+    }
+
+    if (requestMethod == null) {
+      throw new IllegalStateException(
+          "Method " + method.getName() + " not annotated with request type (e.g., GET, POST).");
+    }
+    if (!requestHasBody) {
+      if (requestType == RequestType.MULTIPART) {
+        throw new IllegalStateException(
+            "Multipart can only be specific on HTTP methods with request body (e.g., POST). ("
+                + method.getName()
+                + ")");
+      }
+      if (requestType == RequestType.FORM_ENCODED) {
+        throw new IllegalStateException(
+            "Multipart can only be specific on HTTP methods with request body (e.g., POST). ("
+                + method.getName()
+                + ")");
+      }
+    }
+  } ##FSTMerge## private void parseMethodAnnotations() {
+    for (Annotation methodAnnotation : method.getAnnotations()) {
+      Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
+      RestMethod methodInfo = null;
+      for (Annotation innerAnnotation : annotationType.getAnnotations()) {
+        if (RestMethod.class == innerAnnotation.annotationType()) {
+          methodInfo = (RestMethod) innerAnnotation;
+          break;
+        }
+      }
+      if (methodInfo != null) {
+        if (restMethod != null) {
+          throw new IllegalArgumentException("Method contains multiple HTTP annotations.");
+        }
+        try {
+          path = (String) annotationType.getMethod("value").invoke(methodAnnotation);
+        } catch (Exception e) {
+          throw new RuntimeException("Failed to extract URI path.", e);
+        }
+        if (!path.startsWith("/")) {
+          throw new IllegalArgumentException("URL path must be prefixed with '/'.");
+        }
+        pathParams = parsePathParameters(path);
+        restMethod = methodInfo;
+      } else if (annotationType == QueryParams.class) {
+        if (pathQueryParams != null) {
+          throw new IllegalStateException(
+              "QueryParam and QueryParams annotations are mutually exclusive.");
+        }
+        pathQueryParams = ((QueryParams) methodAnnotation).value();
+        if (pathQueryParams.length == 0) {
+          throw new IllegalStateException("QueryParams annotation was empty.");
+        }
+      } else if (annotationType == QueryParam.class) {
+        if (pathQueryParams != null) {
+          throw new IllegalStateException(
+              "QueryParam and QueryParams annotations are mutually exclusive.");
+        }
+        pathQueryParams = new QueryParam[] { (QueryParam) methodAnnotation };
+      } else if (annotationType == Multipart.class) {
+        isMultipart = true;
+      }
+    }
+
+    if (restMethod == null) {
+      throw new IllegalStateException(
+          "Method " + method + " not annotated with request type (e.g., GET, POST).");
+    }
+    if (!restMethod.hasBody() && isMultipart) {
+      throw new IllegalStateException(
+          "Multipart can only be specific on HTTP methods with request body (e.g., POST).");
+    }
+    if (pathQueryParams == null) {
+      pathQueryParams = new QueryParam[0];
+    } else {
+      for (QueryParam pathQueryParam : pathQueryParams) {
+        if (pathParams.contains(pathQueryParam.name())) {
+          throw new IllegalStateException("Query parameters cannot be present in URL.");
+        }
+      }
+    }
+  } ##FSTMerge## private void parseMethodAnnotations() {
+    for (Annotation methodAnnotation : method.getAnnotations()) {
+      Class<? extends Annotation> annotationType = methodAnnotation.annotationType();
+      RestMethod methodInfo = null;
+      for (Annotation innerAnnotation : annotationType.getAnnotations()) {
+        if (RestMethod.class == innerAnnotation.annotationType()) {
+          methodInfo = (RestMethod) innerAnnotation;
+          break;
+        }
+      }
+      if (methodInfo != null) {
+        if (restMethod != null) {
+          throw new IllegalArgumentException("Method contains multiple HTTP annotations.");
+        }
+        try {
+          path = (String) annotationType.getMethod("value").invoke(methodAnnotation);
+        } catch (Exception e) {
+          throw new RuntimeException("Failed to extract URI path.", e);
+        }
+        if (!path.startsWith("/")) {
+          throw new IllegalArgumentException("URL path must be prefixed with '/'.");
+        }
+        pathParams = parsePathParameters(path);
+        restMethod = methodInfo;
+      } else if (annotationType == Headers.class) {
+        String[] headersToParse = ((Headers) methodAnnotation).value();
+        if (headersToParse.length == 0) {
+          throw new IllegalStateException("Headers annotation was empty.");
+        }
+        headers = parseHeaders(headersToParse);
+      } else if (annotationType == QueryParams.class) {
+        if (pathQueryParams != null) {
+          throw new IllegalStateException(
+              "QueryParam and QueryParams annotations are mutually exclusive.");
+        }
+        pathQueryParams = ((QueryParams) methodAnnotation).value();
+        if (pathQueryParams.length == 0) {
+          throw new IllegalStateException("QueryParams annotation was empty.");
+        }
+      } else if (annotationType == QueryParam.class) {
+        if (pathQueryParams != null) {
+          throw new IllegalStateException(
+              "QueryParam and QueryParams annotations are mutually exclusive.");
+        }
+        pathQueryParams = new QueryParam[] { (QueryParam) methodAnnotation };
+      } else if (annotationType == Multipart.class) {
+        isMultipart = true;
+      }
+    }
+
+    if (restMethod == null) {
+      throw new IllegalStateException(
+          "Method " + method + " not annotated with request type (e.g., GET, POST).");
+    }
+    if (!restMethod.hasBody() && isMultipart) {
+      throw new IllegalStateException(
+          "Multipart can only be specific on HTTP methods with request body (e.g., POST).");
+    }
+    if (pathQueryParams == null) {
+      pathQueryParams = new QueryParam[0];
+    } else {
+      for (QueryParam pathQueryParam : pathQueryParams) {
+        if (pathParams.contains(pathQueryParam.name())) {
+          throw new IllegalStateException("Query parameters cannot be present in URL.");
+        }
+      }
+    }
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestMethodInfo.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ private boolean parseResponseType() {
+    // Synchronous methods have a non-void return type.
+    Type returnType = method.getGenericReturnType();
+
+    // Asynchronous methods should have a Callback type as the last argument.
+    Type lastArgType = null;
+    Class<?> lastArgClass = null;
+    Type[] parameterTypes = method.getGenericParameterTypes();
+    if (parameterTypes.length > 0) {
+      Type typeToCheck = parameterTypes[parameterTypes.length - 1];
+      lastArgType = typeToCheck;
+      if (typeToCheck instanceof ParameterizedType) {
+        typeToCheck = ((ParameterizedType) typeToCheck).getRawType();
+      }
+      if (typeToCheck instanceof Class) {
+        lastArgClass = (Class<?>) typeToCheck;
+      }
+    }
+
+    boolean hasReturnType = returnType != void.class;
+    boolean hasCallback = lastArgClass != null && Callback.class.isAssignableFrom(lastArgClass);
+
+    // Check for invalid configurations.
+    if (hasReturnType && hasCallback) {
+      throw new IllegalArgumentException("Method "
+          + method.getName()
+          + " may only have return type or Callback as last argument, not both.");
+    }
+    if (!hasReturnType && !hasCallback) {
+      throw new IllegalArgumentException("Method "
+          + method.getName()
+          + " must have either a return type or Callback as last argument.");
+    }
+
+    if (hasReturnType) {
+      responseObjectType = returnType;
+      return true;
+    }
+
+    lastArgType = Types.getSupertype(lastArgType, Types.getRawType(lastArgType), Callback.class);
+    if (lastArgType instanceof ParameterizedType) {
+      Type[] types = ((ParameterizedType) lastArgType).getActualTypeArguments();
+      for (int i = 0; i < types.length; i++) {
+        Type type = types[i];
+        if (type instanceof WildcardType) {
+          types[i] = ((WildcardType) type).getUpperBounds()[0];
+        }
+      }
+      responseObjectType = types[0];
+      return false;
+    }
+
+    throw new IllegalArgumentException("Last parameter of "
+        + method.getName()
+        + " must be of type Callback<X> or Callback<? super X>. Found: "
+        + lastArgType);
+  } ##FSTMerge## private boolean parseResponseType() {
+    // Synchronous methods have a non-void return type.
+    Type returnType = method.getGenericReturnType();
+
+    // Asynchronous methods should have a Callback type as the last argument.
+    Type lastArgType = null;
+    Class<?> lastArgClass = null;
+    Type[] parameterTypes = method.getGenericParameterTypes();
+    if (parameterTypes.length > 0) {
+      Type typeToCheck = parameterTypes[parameterTypes.length - 1];
+      lastArgType = typeToCheck;
+      if (typeToCheck instanceof ParameterizedType) {
+        typeToCheck = ((ParameterizedType) typeToCheck).getRawType();
+      }
+      if (typeToCheck instanceof Class) {
+        lastArgClass = (Class<?>) typeToCheck;
+      }
+    }
+
+    boolean hasReturnType = returnType != void.class;
+    boolean hasCallback = lastArgClass != null && Callback.class.isAssignableFrom(lastArgClass);
+
+    // Check for invalid configurations.
+    if (hasReturnType && hasCallback) {
+      throw new IllegalArgumentException(
+          "Method may only have return type or Callback as last argument, not both.");
+    }
+    if (!hasReturnType && !hasCallback) {
+      throw new IllegalArgumentException(
+          "Method must have either a return type or Callback as last argument.");
+    }
+
+    if (hasReturnType) {
+      type = returnType;
+      return true;
+    }
+
+    lastArgType = Types.getSupertype(lastArgType, Types.getRawType(lastArgType), Callback.class);
+    if (lastArgType instanceof ParameterizedType) {
+      Type[] types = ((ParameterizedType) lastArgType).getActualTypeArguments();
+      for (int i = 0; i < types.length; i++) {
+        Type type = types[i];
+        if (type instanceof WildcardType) {
+          types[i] = ((WildcardType) type).getUpperBounds()[0];
+        }
+      }
+      type = types[0];
+      return false;
+    }
+    throw new IllegalArgumentException(
+        String.format("Last parameter of %s must be of type Callback<X> or Callback<? super X>.",
+            method));
+  } ##FSTMerge## private boolean parseResponseType() {
+    // Synchronous methods have a non-void return type.
+    Type returnType = method.getGenericReturnType();
+
+    // Asynchronous methods should have a Callback type as the last argument.
+    Type lastArgType = null;
+    Class<?> lastArgClass = null;
+    Type[] parameterTypes = method.getGenericParameterTypes();
+    if (parameterTypes.length > 0) {
+      Type typeToCheck = parameterTypes[parameterTypes.length - 1];
+      lastArgType = typeToCheck;
+      if (typeToCheck instanceof ParameterizedType) {
+        typeToCheck = ((ParameterizedType) typeToCheck).getRawType();
+      }
+      if (typeToCheck instanceof Class) {
+        lastArgClass = (Class<?>) typeToCheck;
+      }
+    }
+
+    boolean hasReturnType = returnType != void.class;
+    boolean hasCallback = lastArgClass != null && Callback.class.isAssignableFrom(lastArgClass);
+
+    // Check for invalid configurations.
+    if (hasReturnType && hasCallback) {
+      throw new IllegalArgumentException(
+          "Method may only have return type or Callback as last argument, not both.");
+    }
+    if (!hasReturnType && !hasCallback) {
+      throw new IllegalArgumentException(
+          "Method must have either a return type or Callback as last argument.");
+    }
+
+    if (hasReturnType) {
+      type = returnType;
+      return true;
+    }
+
+    lastArgType = Types.getSupertype(lastArgType, Types.getRawType(lastArgType), Callback.class);
+    if (lastArgType instanceof ParameterizedType) {
+      Type[] types = ((ParameterizedType) lastArgType).getActualTypeArguments();
+      for (int i = 0; i < types.length; i++) {
+        Type type = types[i];
+        if (type instanceof WildcardType) {
+          types[i] = ((WildcardType) type).getUpperBounds()[0];
+        }
+      }
+      type = types[0];
+      return false;
+    }
+    throw new IllegalArgumentException(
+        String.format("Last parameter of %s must be of type Callback<X> or Callback<? super X>.",
+            method));
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestMethodInfo.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ private void parseParameters() {
+    Class<?>[] parameterTypes = method.getParameterTypes();
+
+    Annotation[][] parameterAnnotationArrays = method.getParameterAnnotations();
+    int count = parameterAnnotationArrays.length;
+    if (!isSynchronous) {
+      count -= 1; // Callback is last argument when not a synchronous method.
+    }
+
+    String[] urlParam = new String[count];
+    String[] queryName = new String[count];
+    String[] formValue = new String[count];
+    String[] multipartPart = new String[count];
+    boolean gotPair = false;
+    boolean gotPart = false;
+
+    for (int i = 0; i < count; i++) {
+      boolean hasRetrofitAnnotation = false;
+
+      Class<?> paramaterType = parameterTypes[i];
+      Annotation[] parameterAnnotations = parameterAnnotationArrays[i];
+      if (parameterAnnotations != null) {
+        for (Annotation parameterAnnotation : parameterAnnotations) {
+          Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
+
+          if (annotationType == Path.class) {
+            hasRetrofitAnnotation = true;
+            String name = ((Path) parameterAnnotation).value();
+
+            // Verify URL replacement name is actually present in the URL path.
+            if (!requestUrlParamNames.contains(name)) {
+              throw new IllegalStateException(
+                  "Method path \"" + requestUrl + "\" does not contain {" + name + "}.");
+            }
+
+            urlParam[i] = name;
+          } else if (annotationType == Query.class) {
+            hasRetrofitAnnotation = true;
+            hasQueryParams = true;
+            String name = ((Query) parameterAnnotation).value();
+
+            // TODO verify query name not already used in URL?
+
+            queryName[i] = name;
+          } else if (annotationType == Pair.class) {
+            if (requestType != RequestType.FORM_ENCODED) {
+              throw new IllegalStateException(
+                  "@Pair parameters can only be used with form encoding.");
+            }
+
+            gotPair = true;
+            hasRetrofitAnnotation = true;
+            String name = ((Pair) parameterAnnotation).value();
+
+            // TODO verify name not already used?
+
+            formValue[i] = name;
+          } else if (annotationType == Part.class) {
+            if (requestType != RequestType.MULTIPART) {
+              throw new IllegalStateException(
+                  "@Part parameters can only be used with multipart encoding.");
+            }
+
+            gotPart = true;
+            hasRetrofitAnnotation = true;
+            String name = ((Part) parameterAnnotation).value();
+
+            // TODO verify name not already used?
+
+            multipartPart[i] = name;
+          } else if (annotationType == Body.class) {
+            if (requestType != RequestType.SIMPLE) {
+              throw new IllegalStateException(
+                  "@Body parameters cannot be used with form or multi-part encoding.");
+            }
+            if (bodyIndex != NO_BODY) {
+              throw new IllegalStateException(
+                  "Method annotated with multiple Body method annotations: " + method);
+            }
+
+            hasRetrofitAnnotation = true;
+            bodyIndex = i;
+          }
+        }
+      }
+
+      if (!hasRetrofitAnnotation) {
+        throw new IllegalStateException(
+            "No annotations found on parameter " + (i + 1) + " of " + method.getName());
+      }
+    }
+
+    if (requestType == RequestType.SIMPLE && !requestHasBody && bodyIndex != NO_BODY) {
+      throw new IllegalStateException("Non-body HTTP method cannot contain @Body or @TypedOutput.");
+    }
+    if (requestType == RequestType.FORM_ENCODED && !gotPair) {
+      throw new IllegalStateException("Form-encoded method must contain at least one @Pair.");
+    }
+    if (requestType == RequestType.MULTIPART && !gotPart) {
+      throw new IllegalStateException("Multipart method must contain at least one @Part.");
+    }
+
+    requestUrlParam = urlParam;
+    requestQueryName = queryName;
+    requestFormPair = formValue;
+    requestMultipartPart = multipartPart;
+  } ##FSTMerge## private void parseParameters() {
+    Class<?>[] parameterTypes = method.getParameterTypes();
+    Annotation[][] parameterAnnotationArrays = method.getParameterAnnotations();
+    int count = parameterAnnotationArrays.length;
+    if (!isSynchronous) {
+      count -= 1; // Callback is last argument when not a synchronous method.
+    }
+
+    String[] namedParams = new String[count];
+    for (int i = 0; i < count; i++) {
+      Class<?> parameterType = parameterTypes[i];
+      Annotation[] parameterAnnotations = parameterAnnotationArrays[i];
+      if (parameterAnnotations == null || parameterAnnotations.length == 0) {
+        throw new IllegalStateException("Argument " + i + " lacks annotation.");
+      }
+      for (Annotation parameterAnnotation : parameterAnnotations) {
+        Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
+        if (annotationType == Name.class) {
+          String name = ((Name) parameterAnnotation).value();
+          namedParams[i] = name;
+          boolean isPathParam = pathParams.contains(name);
+          if (parameterType == TypedOutput.class && (isPathParam || !restMethod.hasBody())) {
+            throw new IllegalStateException("TypedOutput cannot be used as URL parameter.");
+          }
+          if (!isPathParam && !isMultipart && restMethod.hasBody()) {
+            throw new IllegalStateException(
+                "Non-path params can only be used in multipart request.");
+          }
+        } else if (annotationType == SingleEntity.class) {
+          if (isMultipart) {
+            throw new IllegalStateException("SingleEntity cannot be used with multipart request.");
+          }
+          if (singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
+            throw new IllegalStateException(
+                "Method annotated with multiple SingleEntity method annotations: " + method);
+          }
+          singleEntityArgumentIndex = i;
+        } else {
+          throw new IllegalStateException(
+              "Argument " + i + " has invalid annotation " + annotationType + ": " + method);
+        }
+      }
+    }
+    // Check for single entity + non-path parameters.
+    if (singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
+      for (String namedParam : namedParams) {
+        if (namedParam != null && !pathParams.contains(namedParam)) {
+          throw new IllegalStateException(
+              "Single entity and non-path parameters cannot both be present.");
+        }
+      }
+    }
+    if (!restMethod.hasBody() && (isMultipart || singleEntityArgumentIndex != NO_SINGLE_ENTITY)) {
+      throw new IllegalStateException(
+          "Non-body HTTP method cannot contain @SingleEntity or @TypedOutput.");
+    }
+    this.namedParams = namedParams;
+  } ##FSTMerge## private void parseParameters() {
+    Class<?>[] parameterTypes = method.getParameterTypes();
+    Annotation[][] parameterAnnotationArrays = method.getParameterAnnotations();
+    int count = parameterAnnotationArrays.length;
+    if (!isSynchronous) {
+      count -= 1; // Callback is last argument when not a synchronous method.
+    }
+
+    String[] namedParams = new String[count];
+    String[] headerParams = new String[count];
+    for (int i = 0; i < count; i++) {
+      Class<?> parameterType = parameterTypes[i];
+      Annotation[] parameterAnnotations = parameterAnnotationArrays[i];
+      if (parameterAnnotations == null || parameterAnnotations.length == 0) {
+        throw new IllegalStateException("Argument " + i + " lacks annotation.");
+      }
+      for (Annotation parameterAnnotation : parameterAnnotations) {
+        Class<? extends Annotation> annotationType = parameterAnnotation.annotationType();
+        if (annotationType == Name.class) {
+          String name = ((Name) parameterAnnotation).value();
+          namedParams[i] = name;
+          boolean isPathParam = pathParams.contains(name);
+          if (parameterType == TypedOutput.class && (isPathParam || !restMethod.hasBody())) {
+            throw new IllegalStateException("TypedOutput cannot be used as URL parameter.");
+          }
+          if (!isPathParam && !isMultipart && restMethod.hasBody()) {
+            throw new IllegalStateException(
+                "Non-path params can only be used in multipart request.");
+          }
+        } else if (annotationType == Header.class) {
+          String header = ((Header) parameterAnnotation).value();
+          headerParams[i] = header;
+          if (parameterType != String.class) {
+            throw new IllegalStateException(
+                "Expected @Header parameter type to be String: " + header);
+          }
+        } else if (annotationType == SingleEntity.class) {
+          if (isMultipart) {
+            throw new IllegalStateException("SingleEntity cannot be used with multipart request.");
+          }
+          if (singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
+            throw new IllegalStateException(
+                "Method annotated with multiple SingleEntity method annotations: " + method);
+          }
+          singleEntityArgumentIndex = i;
+        } else {
+          throw new IllegalStateException(
+              "Argument " + i + " has invalid annotation " + annotationType + ": " + method);
+        }
+      }
+    }
+    // Check for single entity + non-path parameters.
+    if (singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
+      for (String namedParam : namedParams) {
+        if (namedParam != null && !pathParams.contains(namedParam)) {
+          throw new IllegalStateException(
+              "Single entity and non-path parameters cannot both be present.");
+        }
+      }
+    }
+    if (!restMethod.hasBody() && (isMultipart || singleEntityArgumentIndex != NO_SINGLE_ENTITY)) {
+      throw new IllegalStateException(
+          "Non-body HTTP method cannot contain @SingleEntity or @TypedOutput.");
+    }
+    this.namedParams = namedParams;
+    this.headerParams = headerParams;
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestMethodInfo.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final Headers headers; ##FSTMerge## private final HeaderPairs headers;
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestAdapter.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @SuppressWarnings("unchecked")
+  public <T> T create(Class<T> service) {
+    if (!service.isInterface()) {
+      throw new IllegalArgumentException("Only interface endpoint definitions are supported.");
+    }
+    return (T) Proxy.newProxyInstance(service.getClassLoader(), new Class<?>[] { service },
+        new RestHandler());
+  } ##FSTMerge## @SuppressWarnings("unchecked")
+  public <T> T create(Class<T> type) {
+    if (!type.isInterface()) {
+      throw new IllegalArgumentException("Only interface endpoint definitions are supported.");
+    }
+    return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type },
+        new RestHandler());
+  } ##FSTMerge## @SuppressWarnings("unchecked")
+  public <T> T create(Class<T> type) {
+    if (!type.isInterface()) {
+      throw new IllegalArgumentException("Only interface endpoint definitions are supported.");
+    }
+    return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type },
+        new RestHandler());
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestAdapter.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ private Object invokeRequest(RestMethodInfo methodDetails, Object[] args) {
+      methodDetails.init(); // Ensure all relevant method information has been loaded.
+
+      String serverUrl = server.getUrl();
+      String url = serverUrl; // Keep some url in case RequestBuilder throws an exception.
+      try {
+        Request request = new RequestBuilder(converter) //
+            .apiUrl(serverUrl) //
+            .args(args) //
+            .headers(requestHeaders.get()) //
+            .methodInfo(methodDetails) //
+            .build();
+        url = request.getUrl();
+
+        if (!methodDetails.isSynchronous) {
+          // If we are executing asynchronously then update the current thread with a useful name.
+          Thread.currentThread().setName(THREAD_PREFIX + url.substring(serverUrl.length()));
+        }
+
+        if (debug) {
+          request = logAndReplaceRequest(request);
+        }
+
+        Object profilerObject = null;
+        if (profiler != null) {
+          profilerObject = profiler.beforeCall();
+        }
+
+        long start = System.nanoTime();
+        Response response = clientProvider.get().execute(request);
+        long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+        int statusCode = response.getStatus();
+        if (profiler != null) {
+          RequestInformation requestInfo = getRequestInfo(serverUrl, methodDetails, request);
+          profiler.afterCall(requestInfo, elapsedTime, statusCode, profilerObject);
+        }
+
+        if (debug) {
+          response = logAndReplaceResponse(url, response, elapsedTime);
+        }
+
+        Type type = methodDetails.responseObjectType;
+
+        if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
+          // Caller requested the raw Response object directly.
+          if (type.equals(Response.class)) {
+            // Read the entire stream and replace with one backed by a byte[]
+            response = Utils.readBodyToBytesIfNecessary(response);
+
+            if (methodDetails.isSynchronous) {
+              return response;
+            }
+            return new ResponseWrapper(response, response);
+          }
+
+          TypedInput body = response.getBody();
+          if (body == null) {
+            return new ResponseWrapper(response, null);
+          }
+          try {
+            Object convert = converter.fromBody(body, type);
+            if (methodDetails.isSynchronous) {
+              return convert;
+            }
+            return new ResponseWrapper(response, convert);
+          } catch (ConversionException e) {
+            // The response body was partially read by the converter. Replace it with null.
+            response = Utils.replaceResponseBody(response, null);
+
+            throw RetrofitError.conversionError(url, response, converter, type, e);
+          }
+        }
+
+        response = Utils.readBodyToBytesIfNecessary(response);
+        throw RetrofitError.httpError(url, response, converter, type);
+      } catch (RetrofitError e) {
+        throw e; // Pass through our own errors.
+      } catch (IOException e) {
+        throw RetrofitError.networkError(url, e);
+      } catch (Throwable t) {
+        throw RetrofitError.unexpectedError(url, t);
+      } finally {
+        if (!methodDetails.isSynchronous) {
+          Thread.currentThread().setName(IDLE_THREAD_NAME);
+        }
+      }
+    } ##FSTMerge## private Object invokeRequest(RestMethodInfo methodDetails, Object[] args) {
+      methodDetails.init(); // Ensure all relevant method information has been loaded.
+
+      String serverUrl = server.getUrl();
+      String url = serverUrl; // Keep some url in case RequestBuilder throws an exception.
+      try {
+        Request request = new RequestBuilder(converter) //
+            .setApiUrl(serverUrl)
+            .setArgs(args)
+            .setHeaders(headers.get())
+            .setMethodInfo(methodDetails)
+            .build();
+        url = request.getUrl();
+
+        if (!methodDetails.isSynchronous) {
+          // If we are executing asynchronously then update the current thread with a useful name.
+          Thread.currentThread().setName(THREAD_PREFIX + url.substring(serverUrl.length()));
+        }
+
+        if (debug) {
+          request = logAndReplaceRequest(request);
+        }
+
+        Object profilerObject = null;
+        if (profiler != null) {
+          profilerObject = profiler.beforeCall();
+        }
+
+        long start = System.nanoTime();
+        Response response = clientProvider.get().execute(request);
+        long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+        int statusCode = response.getStatus();
+        if (profiler != null) {
+          RequestInformation requestInfo = getRequestInfo(serverUrl, methodDetails, request);
+          profiler.afterCall(requestInfo, elapsedTime, statusCode, profilerObject);
+        }
+
+        if (debug) {
+          response = logAndReplaceResponse(url, response, elapsedTime);
+        }
+
+        Type type = methodDetails.type;
+
+        if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
+          // Caller requested the raw Response object directly.
+          if (type.equals(Response.class)) {
+            // Read the entire stream and replace with one backed by a byte[]
+            response = Utils.readBodyToBytesIfNecessary(response);
+
+            if (methodDetails.isSynchronous) {
+              return response;
+            }
+            return new ResponseWrapper(response, response);
+          }
+
+          TypedInput body = response.getBody();
+          if (body == null) {
+            return new ResponseWrapper(response, null);
+          }
+          try {
+            Object convert = converter.fromBody(body, type);
+            if (methodDetails.isSynchronous) {
+              return convert;
+            }
+            return new ResponseWrapper(response, convert);
+          } catch (ConversionException e) {
+            // The response body was partially read by the converter. Replace it with null.
+            response = Utils.replaceResponseBody(response, null);
+
+            throw RetrofitError.conversionError(url, response, converter, type, e);
+          }
+        }
+
+        response = Utils.readBodyToBytesIfNecessary(response);
+        throw RetrofitError.httpError(url, response, converter, type);
+      } catch (RetrofitError e) {
+        throw e; // Pass through our own errors.
+      } catch (IOException e) {
+        throw RetrofitError.networkError(url, e);
+      } catch (Throwable t) {
+        throw RetrofitError.unexpectedError(url, t);
+      } finally {
+        if (!methodDetails.isSynchronous) {
+          Thread.currentThread().setName(IDLE_THREAD_NAME);
+        }
+      }
+    } ##FSTMerge## private Object invokeRequest(RestMethodInfo methodDetails, Object[] args) {
+      methodDetails.init(); // Ensure all relevant method information has been loaded.
+
+      String serverUrl = server.getUrl();
+      String url = serverUrl; // Keep some url in case RequestBuilder throws an exception.
+      try {
+        Request request = new RequestBuilder(converter) //
+            .setApiUrl(serverUrl)
+            .setArgs(args)
+            .setHeaders(headers.get())
+            .setMethodInfo(methodDetails)
+            .build();
+        url = request.getUrl();
+
+        if (!methodDetails.isSynchronous) {
+          // If we are executing asynchronously then update the current thread with a useful name.
+          Thread.currentThread().setName(THREAD_PREFIX + url.substring(serverUrl.length()));
+        }
+
+        if (debug) {
+          request = logAndReplaceRequest(request);
+        }
+
+        Object profilerObject = null;
+        if (profiler != null) {
+          profilerObject = profiler.beforeCall();
+        }
+
+        long start = System.nanoTime();
+        Response response = clientProvider.get().execute(request);
+        long elapsedTime = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+        int statusCode = response.getStatus();
+        if (profiler != null) {
+          RequestInformation requestInfo = getRequestInfo(serverUrl, methodDetails, request);
+          profiler.afterCall(requestInfo, elapsedTime, statusCode, profilerObject);
+        }
+
+        if (debug) {
+          response = logAndReplaceResponse(url, response, elapsedTime);
+        }
+
+        Type type = methodDetails.type;
+
+        if (statusCode >= 200 && statusCode < 300) { // 2XX == successful request
+          // Caller requested the raw Response object directly.
+          if (type.equals(Response.class)) {
+            // Read the entire stream and replace with one backed by a byte[]
+            response = Utils.readBodyToBytesIfNecessary(response);
+
+            if (methodDetails.isSynchronous) {
+              return response;
+            }
+            return new ResponseWrapper(response, response);
+          }
+
+          TypedInput body = response.getBody();
+          if (body == null) {
+            return new ResponseWrapper(response, null);
+          }
+          try {
+            Object convert = converter.fromBody(body, type);
+            if (methodDetails.isSynchronous) {
+              return convert;
+            }
+            return new ResponseWrapper(response, convert);
+          } catch (ConversionException e) {
+            // The response body was partially read by the converter. Replace it with null.
+            response = Utils.replaceResponseBody(response, null);
+
+            throw RetrofitError.conversionError(url, response, converter, type, e);
+          }
+        }
+
+        response = Utils.readBodyToBytesIfNecessary(response);
+        throw RetrofitError.httpError(url, response, converter, type);
+      } catch (RetrofitError e) {
+        throw e; // Pass through our own errors.
+      } catch (IOException e) {
+        throw RetrofitError.networkError(url, e);
+      } catch (Throwable t) {
+        throw RetrofitError.unexpectedError(url, t);
+      } finally {
+        if (!methodDetails.isSynchronous) {
+          Thread.currentThread().setName(IDLE_THREAD_NAME);
+        }
+      }
+    }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestAdapter.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ private static Profiler.RequestInformation getRequestInfo(String serverUrl,
+      RestMethodInfo methodDetails, Request request) {
+    long contentLength = 0;
+    String contentType = null;
+
+    TypedOutput body = request.getBody();
+    if (body != null) {
+      contentLength = body.length();
+      contentType = body.mimeType();
+    }
+
+    return new Profiler.RequestInformation(methodDetails.requestMethod, serverUrl,
+        methodDetails.requestUrl, contentLength, contentType);
+  } ##FSTMerge## private static Profiler.RequestInformation getRequestInfo(String serverUrl,
+      RestMethodInfo methodDetails, Request request) {
+    long contentLength = 0;
+    String contentType = null;
+
+    TypedOutput body = request.getBody();
+    if (body != null) {
+      contentLength = body.length();
+      contentType = body.mimeType();
+    }
+
+    return new Profiler.RequestInformation(methodDetails.restMethod.value(), serverUrl,
+        methodDetails.path, contentLength, contentType);
+  } ##FSTMerge## private static Profiler.RequestInformation getRequestInfo(String serverUrl,
+      RestMethodInfo methodDetails, Request request) {
+    long contentLength = 0;
+    String contentType = null;
+
+    TypedOutput body = request.getBody();
+    if (body != null) {
+      contentLength = body.length();
+      contentType = body.mimeType();
+    }
+
+    return new Profiler.RequestInformation(methodDetails.restMethod.value(), serverUrl,
+        methodDetails.path, contentLength, contentType);
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestAdapter.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private Headers headers; ##FSTMerge## private HeaderPairs headers;
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestAdapter.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public RestAdapter build() {
+      if (server == null) {
+        throw new IllegalArgumentException("Server may not be null.");
+      }
+      ensureSaneDefaults();
+      return new RestAdapter(server, clientProvider, httpExecutor, callbackExecutor, requestHeaders,
+          converter, profiler, log, debug);
+    } ##FSTMerge## public RestAdapter build() {
+      if (server == null) {
+        throw new IllegalArgumentException("Server may not be null.");
+      }
+      ensureSaneDefaults();
+      return new RestAdapter(server, clientProvider, httpExecutor, callbackExecutor, headers,
+          converter, profiler, log, debug);
+    } ##FSTMerge## public RestAdapter build() {
+      if (server == null) {
+        throw new IllegalArgumentException("Server may not be null.");
+      }
+      ensureSaneDefaults();
+      return new RestAdapter(server, clientProvider, httpExecutor, callbackExecutor, headers,
+          converter, profiler, log, debug);
+    }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestAdapter.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ private void ensureSaneDefaults() {
+      if (converter == null) {
+        converter = Platform.get().defaultConverter();
+      }
+      if (clientProvider == null) {
+        clientProvider = Platform.get().defaultClient();
+      }
+      if (httpExecutor == null) {
+        httpExecutor = Platform.get().defaultHttpExecutor();
+      }
+      if (callbackExecutor == null) {
+        callbackExecutor = Platform.get().defaultCallbackExecutor();
+      }
+      if (log == null) {
+        log = Platform.get().defaultLog();
+      }
+      if (requestHeaders == null) {
+        requestHeaders = RequestHeaders.NONE;
+      }
+    } ##FSTMerge## private void ensureSaneDefaults() {
+      if (converter == null) {
+        converter = Platform.get().defaultConverter();
+      }
+      if (clientProvider == null) {
+        clientProvider = Platform.get().defaultClient();
+      }
+      if (httpExecutor == null) {
+        httpExecutor = Platform.get().defaultHttpExecutor();
+      }
+      if (callbackExecutor == null) {
+        callbackExecutor = Platform.get().defaultCallbackExecutor();
+      }
+      if (log == null) {
+        log = Platform.get().defaultLog();
+      }
+      if (headers == null) {
+        headers = Headers.NONE;
+      }
+    } ##FSTMerge## private void ensureSaneDefaults() {
+      if (converter == null) {
+        converter = Platform.get().defaultConverter();
+      }
+      if (clientProvider == null) {
+        clientProvider = Platform.get().defaultClient();
+      }
+      if (httpExecutor == null) {
+        httpExecutor = Platform.get().defaultHttpExecutor();
+      }
+      if (callbackExecutor == null) {
+        callbackExecutor = Platform.get().defaultCallbackExecutor();
+      }
+      if (log == null) {
+        log = Platform.get().defaultLog();
+      }
+      if (headers == null) {
+        headers = HeaderPairs.NONE;
+      }
+    }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RestAdapter.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## RequestBuilder setMethodInfo(RestMethodInfo methodDetails) {
+    this.methodInfo = methodDetails;
+    return this;
+  } ##FSTMerge## RequestBuilder setMethodInfo(RestMethodInfo methodDetails) {
+    this.methodInfo = methodDetails;
+    return this;
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RequestBuilder.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## RequestBuilder setApiUrl(String apiUrl) {
+    this.apiUrl = apiUrl;
+    return this;
+  } ##FSTMerge## RequestBuilder setApiUrl(String apiUrl) {
+    this.apiUrl = apiUrl;
+    return this;
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RequestBuilder.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## RequestBuilder setArgs(Object[] args) {
+    this.args = args;
+    return this;
+  } ##FSTMerge## RequestBuilder setArgs(Object[] args) {
+    this.args = args;
+    return this;
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RequestBuilder.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private List<Parameter> createParamList() {
+    List<Parameter> params = new ArrayList<Parameter>();
+
+    // Add arguments as parameters.
+    String[] pathNamedParams = methodInfo.namedParams;
+    int singleEntityArgumentIndex = methodInfo.singleEntityArgumentIndex;
+    for (int i = 0; i < pathNamedParams.length; i++) {
+      Object arg = args[i];
+      if (arg == null) continue;
+      if (i != singleEntityArgumentIndex) {
+        params.add(new Parameter(pathNamedParams[i], arg, arg.getClass()));
+      }
+    }
+
+    return params;
+  } ##FSTMerge## private List<Parameter> createParamList() {
+    List<Parameter> params = new ArrayList<Parameter>();
+
+    // Add arguments as parameters.
+    String[] pathNamedParams = methodInfo.namedParams;
+    int singleEntityArgumentIndex = methodInfo.singleEntityArgumentIndex;
+    for (int i = 0; i < pathNamedParams.length; i++) {
+      Object arg = args[i];
+      if (arg == null || pathNamedParams[i] == null) continue;
+      if (i != singleEntityArgumentIndex) {
+        params.add(new Parameter(pathNamedParams[i], arg, arg.getClass()));
+      }
+    }
+
+    return params;
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RequestBuilder.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ Request build() throws UnsupportedEncodingException {
+    String apiUrl = this.apiUrl;
+
+    StringBuilder url = new StringBuilder(apiUrl);
+    if (apiUrl.endsWith("/")) {
+      // We enforce relative paths to start with '/'. Prevent a double-slash.
+      url.deleteCharAt(url.length() - 1);
+    }
+
+    // Append the method relative URL.
+    url.append(buildRelativeUrl());
+
+    // Append query parameters, if needed.
+    if (methodInfo.hasQueryParams) {
+      boolean first = true;
+      String requestQuery = methodInfo.requestQuery;
+      if (requestQuery != null) {
+        url.append(requestQuery);
+        first = false;
+      }
+      String[] requestQueryName = methodInfo.requestQueryName;
+      for (int i = 0; i < requestQueryName.length; i++) {
+        String query = requestQueryName[i];
+        if (query != null) {
+          String value = URLEncoder.encode(String.valueOf(args[i]), "UTF-8");
+          url.append(first ? '?' : '&').append(query).append('=').append(value);
+          first = false;
+        }
+      }
+    }
+
+    return new Request(methodInfo.requestMethod, url.toString(), headers, buildBody());
+  } ##FSTMerge## Request build() {
+    // Alter parameter list if path parameters are present.
+    Set<String> pathParams = new LinkedHashSet<String>(methodInfo.pathParams);
+    List<Parameter> paramList = createParamList();
+    String replacedPath = methodInfo.path;
+    for (String pathParam : pathParams) {
+      Parameter found = null;
+      for (Parameter param : paramList) {
+        if (param.getName().equals(pathParam)) {
+          found = param;
+          break;
+        }
+      }
+      if (found != null) {
+        String value = getUrlEncodedValue(found);
+        replacedPath = replacedPath.replace("{" + found.getName() + "}", value);
+        paramList.remove(found);
+      } else {
+        throw new IllegalArgumentException(
+            "URL param " + pathParam + " has no matching method @Name param.");
+      }
+    }
+
+    if (methodInfo.singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
+      // We're passing a JSON object as the entity: paramList should only contain path param values.
+      if (!paramList.isEmpty()) {
+        throw new IllegalStateException(
+            "Found @Name param on single-entity request that was not used for path substitution.");
+      }
+    }
+
+    StringBuilder url = new StringBuilder(apiUrl);
+    if (apiUrl.endsWith("/")) {
+      // We enforce relative paths to start with '/'. Prevent a double-slash.
+      url.deleteCharAt(url.length() - 1);
+    }
+    url.append(replacedPath);
+
+    // Add query parameter(s), if specified.
+    for (QueryParam annotation : methodInfo.pathQueryParams) {
+      paramList.add(new Parameter(annotation.name(), annotation.value(), String.class));
+    }
+
+    TypedOutput body = null;
+    if (!methodInfo.restMethod.hasBody()) {
+      for (int i = 0, count = paramList.size(); i < count; i++) {
+        url.append((i == 0) ? '?' : '&');
+        Parameter nonPathParam = paramList.get(i);
+        String value = getUrlEncodedValue(nonPathParam);
+        url.append(nonPathParam.getName()).append("=").append(value);
+      }
+    } else if (!paramList.isEmpty()) {
+      if (methodInfo.isMultipart) {
+        MultipartTypedOutput multipartBody = new MultipartTypedOutput();
+        for (Parameter parameter : paramList) {
+          Object value = parameter.getValue();
+          TypedOutput typedOutput;
+          if (value instanceof TypedOutput) {
+            typedOutput = (TypedOutput) value;
+          } else {
+            typedOutput = new TypedString(value.toString());
+          }
+          multipartBody.addPart(parameter.getName(), typedOutput);
+        }
+        body = multipartBody;
+      } else {
+        body = converter.toBody(paramList);
+      }
+    } else if (methodInfo.singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
+      Object singleEntity = args[methodInfo.singleEntityArgumentIndex];
+      if (singleEntity instanceof TypedOutput) {
+        body = (TypedOutput) singleEntity;
+      } else {
+        body = converter.toBody(singleEntity);
+      }
+    }
+
+    return new Request(methodInfo.restMethod.value(), url.toString(), headers, body);
+  } ##FSTMerge## Request build() {
+    // Alter parameter list if path parameters are present.
+    Set<String> pathParams = new LinkedHashSet<String>(methodInfo.pathParams);
+    List<Parameter> paramList = createParamList();
+    String replacedPath = methodInfo.path;
+    for (String pathParam : pathParams) {
+      Parameter found = null;
+      for (Parameter param : paramList) {
+        if (param.getName().equals(pathParam)) {
+          found = param;
+          break;
+        }
+      }
+      if (found != null) {
+        String value = getUrlEncodedValue(found);
+        replacedPath = replacedPath.replace("{" + found.getName() + "}", value);
+        paramList.remove(found);
+      } else {
+        throw new IllegalArgumentException(
+            "URL param " + pathParam + " has no matching method @Name param.");
+      }
+    }
+
+    if (methodInfo.singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
+      // We're passing a JSON object as the entity: paramList should only contain path param values.
+      if (!paramList.isEmpty()) {
+        throw new IllegalStateException(
+            "Found @Name param on single-entity request that was not used for path substitution.");
+      }
+    }
+
+    StringBuilder url = new StringBuilder(apiUrl);
+    if (apiUrl.endsWith("/")) {
+      // We enforce relative paths to start with '/'. Prevent a double-slash.
+      url.deleteCharAt(url.length() - 1);
+    }
+    url.append(replacedPath);
+
+    // Add query parameter(s), if specified.
+    for (QueryParam annotation : methodInfo.pathQueryParams) {
+      paramList.add(new Parameter(annotation.name(), annotation.value(), String.class));
+    }
+
+    TypedOutput body = null;
+    if (!methodInfo.restMethod.hasBody()) {
+      for (int i = 0, count = paramList.size(); i < count; i++) {
+        url.append((i == 0) ? '?' : '&');
+        Parameter nonPathParam = paramList.get(i);
+        String value = getUrlEncodedValue(nonPathParam);
+        url.append(nonPathParam.getName()).append("=").append(value);
+      }
+    } else if (!paramList.isEmpty()) {
+      if (methodInfo.isMultipart) {
+        MultipartTypedOutput multipartBody = new MultipartTypedOutput();
+        for (Parameter parameter : paramList) {
+          Object value = parameter.getValue();
+          TypedOutput typedOutput;
+          if (value instanceof TypedOutput) {
+            typedOutput = (TypedOutput) value;
+          } else {
+            typedOutput = new TypedString(value.toString());
+          }
+          multipartBody.addPart(parameter.getName(), typedOutput);
+        }
+        body = multipartBody;
+      } else {
+        body = converter.toBody(paramList);
+      }
+    } else if (methodInfo.singleEntityArgumentIndex != NO_SINGLE_ENTITY) {
+      Object singleEntity = args[methodInfo.singleEntityArgumentIndex];
+      if (singleEntity instanceof TypedOutput) {
+        body = (TypedOutput) singleEntity;
+      } else {
+        body = converter.toBody(singleEntity);
+      }
+    }
+
+    List<HeaderPair> headers = new ArrayList<HeaderPair>();
+    if (this.headers != null) {
+      headers.addAll(this.headers);
+    }
+    if (methodInfo.headers != null) {
+      headers.addAll(methodInfo.headers);
+    }
+    // RFC 2616: Field names are case-insensitive
+    List<String> lcHeadersToRemove = new ArrayList<String>();
+    if (methodInfo.headerParams != null) {
+      for (int i = 0; i < methodInfo.headerParams.length; i++) {
+        String name = methodInfo.headerParams[i];
+        if (name == null) continue;
+        Object arg = args[i];
+        if (arg != null) {
+          headers.add(new HeaderPair(name, arg.toString()));
+        } else {
+          lcHeadersToRemove.add(name.toLowerCase());
+        }
+      }
+    }
+    for (Iterator<HeaderPair> header = headers.iterator(); header.hasNext();) {
+      // RFC 2616: Field names are case-insensitive
+      if (lcHeadersToRemove.contains(header.next().getName().toLowerCase()))
+        header.remove();
+    }
+    return new Request(methodInfo.restMethod.value(), url.toString(), headers, body);
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RequestBuilder.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private static String getUrlEncodedValue(Parameter found) {
+    try {
+      return URLEncoder.encode(String.valueOf(found.getValue()), "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      throw new AssertionError(e);
+    }
+  } ##FSTMerge## private static String getUrlEncodedValue(Parameter found) {
+    try {
+      return URLEncoder.encode(String.valueOf(found.getValue()), "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      throw new AssertionError(e);
+    }
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/RequestBuilder.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Retention(RUNTIME)
+@Target(PARAMETER)
+public ##FSTMerge## @Retention(RUNTIME)
+@Target(PARAMETER)
+public
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/SingleEntity.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Target(METHOD) @Retention(RUNTIME)
+public ##FSTMerge## @Target(METHOD) @Retention(RUNTIME)
+public
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/QueryParams.java
+############## CONFLICT ##############
+Conflict type: DefaultValueAnnotation
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## QueryParam[] value(); ##FSTMerge## QueryParam[] value();
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/QueryParams.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Target(METHOD) @Retention(RUNTIME)
+public ##FSTMerge## @Target(METHOD) @Retention(RUNTIME)
+public
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/QueryParam.java
+############## CONFLICT ##############
+Conflict type: DefaultValueAnnotation
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## String name(); ##FSTMerge## String name();
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/QueryParam.java
+############## CONFLICT ##############
+Conflict type: DefaultValueAnnotation
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## String value(); ##FSTMerge## String value();
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/QueryParam.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Retention(RUNTIME) @Target(PARAMETER)
+public ##FSTMerge## @Retention(RUNTIME) @Target(PARAMETER)
+public
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/Name.java
+############## CONFLICT ##############
+Conflict type: DefaultValueAnnotation
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## String value(); ##FSTMerge## String value();
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/Name.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## final ##FSTMerge## final
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/MultipartTypedOutput.java
+############## CONFLICT ##############
+Conflict type: ImplementList
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## implements TypedOutput ##FSTMerge## implements TypedOutput
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/MultipartTypedOutput.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## final List<byte[]> parts = new ArrayList<byte[]>(); ##FSTMerge## final List<byte[]> parts = new ArrayList<byte[]>();
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/MultipartTypedOutput.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final byte[] footer; ##FSTMerge## private final byte[] footer;
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/MultipartTypedOutput.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final String boundary; ##FSTMerge## private final String boundary;
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/MultipartTypedOutput.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private long length; ##FSTMerge## private long length;
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/MultipartTypedOutput.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## MultipartTypedOutput() {
+    boundary = UUID.randomUUID().toString();
+    footer = buildBoundary(boundary, false, true);
+    length = footer.length;
+  } ##FSTMerge## MultipartTypedOutput() {
+    boundary = UUID.randomUUID().toString();
+    footer = buildBoundary(boundary, false, true);
+    length = footer.length;
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/MultipartTypedOutput.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## void addPart(String name, TypedOutput body) {
+    if (name == null) {
+      throw new NullPointerException("Part name must not be null.");
+    }
+    if (body == null) {
+      throw new NullPointerException("Part body must not be null.");
+    }
+
+    byte[] part = buildPart(name, body, parts.isEmpty());
+    parts.add(part);
+    length += part.length;
+  } ##FSTMerge## void addPart(String name, TypedOutput body) {
+    if (name == null) {
+      throw new NullPointerException("Part name must not be null.");
+    }
+    if (body == null) {
+      throw new NullPointerException("Part body must not be null.");
+    }
+
+    byte[] part = buildPart(name, body, parts.isEmpty());
+    parts.add(part);
+    length += part.length;
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/MultipartTypedOutput.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override public String fileName() {
+    return null;
+  } ##FSTMerge## @Override public String fileName() {
+    return null;
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/MultipartTypedOutput.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override public String mimeType() {
+    return "multipart/form-data; boundary=" + boundary;
+  } ##FSTMerge## @Override public String mimeType() {
+    return "multipart/form-data; boundary=" + boundary;
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/MultipartTypedOutput.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override public long length() {
+    return length;
+  } ##FSTMerge## @Override public long length() {
+    return length;
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/MultipartTypedOutput.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override public void writeTo(OutputStream out) throws IOException {
+    for (byte[] part : parts) {
+      out.write(part);
+    }
+    out.write(footer);
+  } ##FSTMerge## @Override public void writeTo(OutputStream out) throws IOException {
+    for (byte[] part : parts) {
+      out.write(part);
+    }
+    out.write(footer);
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/MultipartTypedOutput.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private byte[] buildPart(String name, TypedOutput body, boolean first) {
+    ByteArrayOutputStream out = null;
+    try {
+      out = new ByteArrayOutputStream();
+      out.write(buildBoundary(boundary, first, false));
+      out.write(buildHeader(name, body));
+      body.writeTo(out);
+      return out.toByteArray();
+    } catch (IOException ex) {
+      throw new RuntimeException("Unable to write multipart request.", ex);
+    } finally {
+      if (out != null) {
+        try {
+          out.close();
+        } catch (IOException ignored) {
+        }
+      }
+    }
+  } ##FSTMerge## private byte[] buildPart(String name, TypedOutput body, boolean first) {
+    ByteArrayOutputStream out = null;
+    try {
+      out = new ByteArrayOutputStream();
+      out.write(buildBoundary(boundary, first, false));
+      out.write(buildHeader(name, body));
+      body.writeTo(out);
+      return out.toByteArray();
+    } catch (IOException ex) {
+      throw new RuntimeException("Unable to write multipart request.", ex);
+    } finally {
+      if (out != null) {
+        try {
+          out.close();
+        } catch (IOException ignored) {
+        }
+      }
+    }
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/MultipartTypedOutput.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private static byte[] buildBoundary(String boundary, boolean first, boolean last) {
+    try {
+      StringBuilder sb = new StringBuilder();
+      if (!first) {
+        sb.append("\r\n");
+      }
+      sb.append("--");
+      sb.append(boundary);
+      if (last) {
+        sb.append("--");
+      } else {
+        sb.append("\r\n");
+      }
+      return sb.toString().getBytes("UTF-8");
+    } catch (IOException ex) {
+      throw new RuntimeException("Unable to write multipart boundary", ex);
+    }
+  } ##FSTMerge## private static byte[] buildBoundary(String boundary, boolean first, boolean last) {
+    try {
+      StringBuilder sb = new StringBuilder();
+      if (!first) {
+        sb.append("\r\n");
+      }
+      sb.append("--");
+      sb.append(boundary);
+      if (last) {
+        sb.append("--");
+      } else {
+        sb.append("\r\n");
+      }
+      return sb.toString().getBytes("UTF-8");
+    } catch (IOException ex) {
+      throw new RuntimeException("Unable to write multipart boundary", ex);
+    }
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/MultipartTypedOutput.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8f5138693fb8dba2635995edc236b0b168363f09
+Parent1 SHA-1: 2ef7ca064584f60416581b0793557eb4277136a1
+Parent2 SHA-1: 941ae858bc7bc1d03887df36590bd7c9ec8cb184
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private byte[] buildHeader(String name, TypedOutput value) {
+    try {
+      StringBuilder headers = new StringBuilder();
+      headers.append("Content-Disposition: form-data; name=\"");
+      headers.append(name);
+      if (value.fileName() != null) {
+        headers.append("\"; filename=\"");
+        headers.append(value.fileName());
+      }
+      headers.append("\"\r\nContent-Type: ");
+      headers.append(value.mimeType());
+      headers.append("\r\nContent-Transfer-Encoding: binary\r\n\r\n");
+      return headers.toString().getBytes("UTF-8");
+    } catch (IOException ex) {
+      throw new RuntimeException("Unable to write multipart header", ex);
+    }
+  } ##FSTMerge## private byte[] buildHeader(String name, TypedOutput value) {
+    try {
+      StringBuilder headers = new StringBuilder();
+      headers.append("Content-Disposition: form-data; name=\"");
+      headers.append(name);
+      if (value.fileName() != null) {
+        headers.append("\"; filename=\"");
+        headers.append(value.fileName());
+      }
+      headers.append("\"\r\nContent-Type: ");
+      headers.append(value.mimeType());
+      headers.append("\r\nContent-Transfer-Encoding: binary\r\n\r\n");
+      return headers.toString().getBytes("UTF-8");
+    } catch (IOException ex) {
+      throw new RuntimeException("Unable to write multipart header", ex);
+    }
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_2ef7c_941ae/rev_2ef7c-941ae/retrofit/src/main/java/retrofit/http/MultipartTypedOutput.java
+
+==================================================================================================================
+Revision: /tmp/downloads/retrofit/revisions/rev_35b72_83871/rev_35b72-83871.revisions
+############## CONFLICT ##############
+Conflict type: AddSameFd
+Merge Commit SHA-1: d0102f271d3ed01b9b6a215a8b9f84c6865440ba
+Parent1 SHA-1: 35b725752b7769cbd6051ebfff896cb5b1c19a1b
+Parent2 SHA-1: 838711b4f6cfdbb778549b374c04fd7b531f355e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ private HttpProfiler mockProfiler; ##FSTMerge## ##FSTMerge## private HttpProfiler mockProfiler;
+File path: /tmp/downloads/retrofit/revisions/rev_35b72_83871/rev_35b72-83871/http/src/test/java/retrofit/http/RestAdapterTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: d0102f271d3ed01b9b6a215a8b9f84c6865440ba
+Parent1 SHA-1: 35b725752b7769cbd6051ebfff896cb5b1c19a1b
+Parent2 SHA-1: 838711b4f6cfdbb778549b374c04fd7b531f355e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Override @Before public void setUp() throws Exception {
+    mockHttpClient = createMock(HttpClient.class);
+    mockExecutor   = createMock(Executor.class);
+    mockMainThread = createMock(MainThread.class);
+    mockHeaders    = createMock(Headers.class);
+    mockCallback   = createMock(Callback.class);
+    mockResponse   = createMock(HttpResponse.class);
+    mockProfiler   = createMock(HttpProfiler.class);
+
+    injector = Guice.createInjector(
+        new AbstractModule() {
+          @Override protected void configure() {
+            bind(Server.class).toInstance(new Server("http://host/api/",
+                "http://host/web/", true));
+            bind(HttpClient.class).toInstance(mockHttpClient);
+            bind(Executor.class).toInstance(mockExecutor);
+            bind(MainThread.class).toInstance(mockMainThread);
+            bind(Headers.class).toInstance(mockHeaders);
+            bind(HttpProfiler.class).toInstance(HttpProfiler.NONE);
+            install(service(DeleteService.class));
+            install(service(GetService.class));
+            install(service(PostService.class));
+            install(service(PutService.class));
+          }
+        });
+  } ##FSTMerge## @Override @Before public void setUp() throws Exception {
+    mockHttpClient = createMock(HttpClient.class);
+    mockExecutor   = createMock(Executor.class);
+    mockMainThread = createMock(MainThread.class);
+    mockHeaders    = createMock(Headers.class);
+    mockCallback   = createMock(Callback.class);
+    mockResponse   = createMock(HttpResponse.class);
+
+    injector = Guice.createInjector(
+        new AbstractModule() {
+          @Override protected void configure() {
+            bind(Server.class).toInstance(new Server("http://host/api/",
+                "http://host/web/", true));
+            bind(HttpClient.class).toInstance(mockHttpClient);
+            bind(Executor.class).toInstance(mockExecutor);
+            bind(MainThread.class).toInstance(mockMainThread);
+            bind(Headers.class).toInstance(mockHeaders);
+            install(service(DeleteService.class));
+            install(service(GetService.class));
+            install(service(PostService.class));
+            install(service(PutService.class));
+          }
+        });
+  } ##FSTMerge## @Override @Before public void setUp() throws Exception {
+    mockHttpClient = createMock(HttpClient.class);
+    mockExecutor   = createMock(Executor.class);
+    mockMainThread = createMock(MainThread.class);
+    mockHeaders    = createMock(Headers.class);
+    mockCallback   = createMock(Callback.class);
+    mockResponse   = createMock(HttpResponse.class);
+    mockProfiler   = createMock(HttpProfiler.class);
+
+    injector = Guice.createInjector(
+        new AbstractModule() {
+          @Override protected void configure() {
+            bind(Server.class).toInstance(new Server("http://host/api/",
+                "http://host/web/", true));
+            bind(HttpClient.class).toInstance(mockHttpClient);
+            bind(Executor.class).toInstance(mockExecutor);
+            bind(MainThread.class).toInstance(mockMainThread);
+            bind(Headers.class).toInstance(mockHeaders);
+            bind(HttpProfiler.class).toInstance(HttpProfiler.NONE);
+            install(service(DeleteService.class));
+            install(service(GetService.class));
+            install(service(PostService.class));
+            install(service(PutService.class));
+          }
+        });
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_35b72_83871/rev_35b72-83871/http/src/test/java/retrofit/http/RestAdapterTest.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: d0102f271d3ed01b9b6a215a8b9f84c6865440ba
+Parent1 SHA-1: 35b725752b7769cbd6051ebfff896cb5b1c19a1b
+Parent2 SHA-1: 838711b4f6cfdbb778549b374c04fd7b531f355e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Inject private HttpProfiler profiler = HttpProfiler.NONE; ##FSTMerge## @Inject(optional = true) private HttpProfiler profiler; ##FSTMerge## @Inject private HttpProfiler profiler = HttpProfiler.NONE;
+File path: /tmp/downloads/retrofit/revisions/rev_35b72_83871/rev_35b72-83871/http/src/main/java/retrofit/http/RestAdapter.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: d0102f271d3ed01b9b6a215a8b9f84c6865440ba
+Parent1 SHA-1: 35b725752b7769cbd6051ebfff896cb5b1c19a1b
+Parent2 SHA-1: 838711b4f6cfdbb778549b374c04fd7b531f355e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @SuppressWarnings("unchecked")
+  public static <T> T create(RestAdapter restAdapter, Class<T> type) {
+    RestAdapter.RestHandler handler = restAdapter.new RestHandler();
+    return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{type}, handler);
+  } ##FSTMerge## ##FSTMerge## @SuppressWarnings("unchecked")
+  public static <T> T create(RestAdapter restAdapter, Class<T> type) {
+    RestAdapter.RestHandler handler = restAdapter.new RestHandler();
+    return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{type}, handler);
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_35b72_83871/rev_35b72-83871/http/src/main/java/retrofit/http/RestAdapter.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: d0102f271d3ed01b9b6a215a8b9f84c6865440ba
+Parent1 SHA-1: 35b725752b7769cbd6051ebfff896cb5b1c19a1b
+Parent2 SHA-1: 838711b4f6cfdbb778549b374c04fd7b531f355e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public static <T> com.google.inject.Provider<T> createProvider(final Class<T> type) {
+    return new com.google.inject.Provider<T>() {
+      @Inject RestAdapter restAdapter;
+      @Override public T get() {
+        return create(restAdapter, type);
+      }
+    };
+  } ##FSTMerge## public static <T> Provider<T> createProvider(final Class<T> type) {
+    return new Provider<T>() {
+      @Inject RestAdapter restAdapter;
+
+      @SuppressWarnings("unchecked")
+      @Override public T get() {
+        RestAdapter.RestHandler handler = restAdapter.new RestHandler();
+        return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{type}, handler);
+      }
+    };
+  } ##FSTMerge## public static <T> com.google.inject.Provider<T> createProvider(final Class<T> type) {
+    return new com.google.inject.Provider<T>() {
+      @Inject RestAdapter restAdapter;
+      @Override public T get() {
+        return create(restAdapter, type);
+      }
+    };
+  }
+File path: /tmp/downloads/retrofit/revisions/rev_35b72_83871/rev_35b72-83871/http/src/main/java/retrofit/http/RestAdapter.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: d0102f271d3ed01b9b6a215a8b9f84c6865440ba
+Parent1 SHA-1: 35b725752b7769cbd6051ebfff896cb5b1c19a1b
+Parent2 SHA-1: 838711b4f6cfdbb778549b374c04fd7b531f355e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Override public Object invoke(Object proxy, final Method method, final Object[] args) {
+      // Construct HTTP request.
+      final UiCallback<?> callback =
+          UiCallback.create((Callback<?>) args[args.length - 1], mainThread);
+
+      String url = server.apiUrl();
+      String startTime = "NULL";
+      try {
+        // Build the request and headers.
+        final HttpUriRequest request = new HttpRequestBuilder(gson).setMethod(method)
+            .setArgs(args)
+            .setApiUrl(server.apiUrl())
+            .setHeaders(headers)
+            .build();
+        url = request.getURI().toString();
+
+        // The last parameter should be of type Callback<T>. Determine T.
+        Type[] genericParameterTypes = method.getGenericParameterTypes();
+        final Type resultType = getCallbackParameterType(method, genericParameterTypes);
+        LOGGER.fine("Sending " + request.getMethod() + " to " + request.getURI());
+        final Date start = new Date();
+        startTime = dateFormat.get().format(start);
+
+        final GsonResponseHandler<?> gsonResponseHandler =
+            GsonResponseHandler.create(gson, resultType, callback, url, startTime);
+
+        // Optionally wrap the response handler for server call profiling.
+        final ResponseHandler<Void> rh = (profiler == HttpProfiler.NONE)
+            ? gsonResponseHandler
+            : createProfiler(gsonResponseHandler, (HttpProfiler<?>) profiler, getRequestInfo(method, request), start);
+
+        // Execute HTTP request in the background.
+        final String finalUrl = url;
+        final String finalStartTime = startTime;
+        executor.execute(new Runnable() {
+          @Override public void run() {
+            backgroundInvoke(request, rh, callback, finalUrl, finalStartTime);
+          }
+        });
+      } catch (Throwable t) {
+        LOGGER.log(Level.WARNING, t.getMessage() + " from " + url + " at " + startTime, t);
+        callback.unexpectedError(t);
+      }
+
+      // Methods should return void.
+      return null;
+    } ##FSTMerge## @Override public Object invoke(Object proxy, final Method method, final Object[] args) {
+      // Construct HTTP request.
+      final UiCallback<?> callback =
+          UiCallback.create((Callback<?>) args[args.length - 1], mainThread);
+
+      String url = server.apiUrl();
+      String startTime = "NULL";
+      try {
+        // Build the request and headers.
+        final HttpUriRequest request = new HttpRequestBuilder(gson).setMethod(method)
+            .setArgs(args)
+            .setApiUrl(server.apiUrl())
+            .setHeaders(headers)
+            .build();
+        url = request.getURI().toString();
+
+        // The last parameter should be of type Callback<T>. Determine T.
+        Type[] genericParameterTypes = method.getGenericParameterTypes();
+        final Type resultType = getCallbackParameterType(method, genericParameterTypes);
+        LOGGER.fine("Sending " + request.getMethod() + " to " + request.getURI());
+        final Date start = new Date();
+        startTime = dateFormat.get().format(start);
+
+        final GsonResponseHandler<?> gsonResponseHandler =
+            GsonResponseHandler.create(gson, resultType, callback, url, startTime);
+
+        // Optionally wrap the response handler for server call profiling.
+        final ResponseHandler<Void> rh = (profiler == null) ? gsonResponseHandler
+            : createProfiler(gsonResponseHandler, (HttpProfiler<?>) profiler, getRequestInfo(method, request), start);
+
+        // Execute HTTP request in the background.
+        final String finalUrl = url;
+        final String finalStartTime = startTime;
+        executor.execute(new Runnable() {
+          @Override public void run() {
+            backgroundInvoke(request, rh, callback, finalUrl, finalStartTime);
+          }
+        });
+      } catch (Throwable t) {
+        LOGGER.log(Level.WARNING, t.getMessage() + " from " + url + " at " + startTime, t);
+        callback.unexpectedError(t);
+      }
+
+      // Methods should return void.
+      return null;
+    } ##FSTMerge## @Override public Object invoke(Object proxy, final Method method, final Object[] args) {
+      // Construct HTTP request.
+      final UiCallback<?> callback =
+          UiCallback.create((Callback<?>) args[args.length - 1], mainThread);
+
+      String url = server.apiUrl();
+      String startTime = "NULL";
+      try {
+        // Build the request and headers.
+        final HttpUriRequest request = new HttpRequestBuilder(gson).setMethod(method)
+            .setArgs(args)
+            .setApiUrl(server.apiUrl())
+            .setHeaders(headers)
+            .build();
+        url = request.getURI().toString();
+
+        // The last parameter should be of type Callback<T>. Determine T.
+        Type[] genericParameterTypes = method.getGenericParameterTypes();
+        final Type resultType = getCallbackParameterType(method, genericParameterTypes);
+        LOGGER.fine("Sending " + request.getMethod() + " to " + request.getURI());
+        final Date start = new Date();
+        startTime = dateFormat.get().format(start);
+
+        final GsonResponseHandler<?> gsonResponseHandler =
+            GsonResponseHandler.create(gson, resultType, callback, url, startTime);
+
+        // Optionally wrap the response handler for server call profiling.
+        final ResponseHandler<Void> rh = (profiler == HttpProfiler.NONE)
+            ? gsonResponseHandler
+            : createProfiler(gsonResponseHandler, (HttpProfiler<?>) profiler, getRequestInfo(method, request), start);
+
+        // Execute HTTP request in the background.
+        final String finalUrl = url;
+        final String finalStartTime = startTime;
+        executor.execute(new Runnable() {
+          @Override public void run() {
+            backgroundInvoke(request, rh, callback, finalUrl, finalStartTime);
+          }
+        });
+      } catch (Throwable t) {
+        LOGGER.log(Level.WARNING, t.getMessage() + " from " + url + " at " + startTime, t);
+        callback.unexpectedError(t);
+      }
+
+      // Methods should return void.
+      return null;
+    }
+File path: /tmp/downloads/retrofit/revisions/rev_35b72_83871/rev_35b72-83871/http/src/main/java/retrofit/http/RestAdapter.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: d0102f271d3ed01b9b6a215a8b9f84c6865440ba
+Parent1 SHA-1: 35b725752b7769cbd6051ebfff896cb5b1c19a1b
+Parent2 SHA-1: 838711b4f6cfdbb778549b374c04fd7b531f355e
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ private HttpProfiler.RequestInformation getRequestInfo(Method method, HttpUriRequest request) {
+      RequestLine requestLine = RequestLine.fromMethod(method);
+      HttpMethodType httpMethod = requestLine.getHttpMethod();
+      HttpProfiler.Method profilerMethod = httpMethod.profilerMethod();
+
+      long contentLength = 0;
+      String contentType = null;
+      if (request instanceof HttpEntityEnclosingRequestBase) {
+        HttpEntityEnclosingRequestBase entityReq = (HttpEntityEnclosingRequestBase) request;
+        HttpEntity entity = entityReq.getEntity();
+        contentLength = entity.getContentLength();
+
+        Header entityContentType = entity.getContentType();
+        contentType = entityContentType != null ? entityContentType.getValue() : null;
+      }
+
+      return new HttpProfiler.RequestInformation(profilerMethod, server.apiUrl(), requestLine.getRelativePath(),
+          contentLength, contentType);
+    } ##FSTMerge## private HttpProfiler.RequestInformation getRequestInfo(Method method, HttpUriRequest request) {
+      RequestLine requestLine = RequestLine.fromMethod(method);
+      HttpMethodType httpMethod = requestLine.getHttpMethod();
+      HttpProfiler.Method profilerMethod = httpMethod.profilerMethod();
+
+      long contentLength = 0;
+      String contentType = null;
+      if (request instanceof HttpEntityEnclosingRequestBase) {
+        HttpEntityEnclosingRequestBase entityReq = (HttpEntityEnclosingRequestBase) request;
+        HttpEntity entity = entityReq.getEntity();
+        contentLength = entity.getContentLength();
+        contentType = entity.getContentType().getValue();
+      }
+
+      return new HttpProfiler.RequestInformation(profilerMethod, server.apiUrl(), requestLine.getRelativePath(),
+          contentLength, contentType);
+    } ##FSTMerge## private HttpProfiler.RequestInformation getRequestInfo(Method method, HttpUriRequest request) {
+      RequestLine requestLine = RequestLine.fromMethod(method);
+      HttpMethodType httpMethod = requestLine.getHttpMethod();
+      HttpProfiler.Method profilerMethod = httpMethod.profilerMethod();
+
+      long contentLength = 0;
+      String contentType = null;
+      if (request instanceof HttpEntityEnclosingRequestBase) {
+        HttpEntityEnclosingRequestBase entityReq = (HttpEntityEnclosingRequestBase) request;
+        HttpEntity entity = entityReq.getEntity();
+        contentLength = entity.getContentLength();
+        contentType = entity.getContentType().getValue();
+      }
+
+      return new HttpProfiler.RequestInformation(profilerMethod, server.apiUrl(), requestLine.getRelativePath(),
+          contentLength, contentType);
+    }
+File path: /tmp/downloads/retrofit/revisions/rev_35b72_83871/rev_35b72-83871/http/src/main/java/retrofit/http/RestAdapter.java
+############## CONFLICT ##############
+Conflict type: AddSameFd
+Merge Commit SHA-1: d0102f271d3ed01b9b6a215a8b9f84c6865440ba
+Parent1 SHA-1: 35b725752b7769cbd6051ebfff896cb5b1c19a1b
+Parent2 SHA-1: 838711b4f6cfdbb778549b374c04fd7b531f355e
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ HttpProfiler<Void> NONE = new HttpProfiler<Void>() {
+    @Override public Void beforeCall() {
+      return null;
+    }
+    @Override public void afterCall(RequestInformation requestInfo,
+        long elapsedTime, int statusCode, Void beforeCallData) {
+    }
+  }; ##FSTMerge## ##FSTMerge## HttpProfiler<Void> NONE = new HttpProfiler<Void>() {
+    @Override public Void beforeCall() {
+      return null;
+    }
+    @Override public void afterCall(RequestInformation requestInfo,
+        long elapsedTime, int statusCode, Void beforeCallData) {
+    }
+  };
+File path: /tmp/downloads/retrofit/revisions/rev_35b72_83871/rev_35b72-83871/http/src/main/java/retrofit/http/HttpProfiler.java
+
+=========================================================

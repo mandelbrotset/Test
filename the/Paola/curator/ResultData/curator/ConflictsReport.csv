@@ -1,0 +1,3477 @@
+=========================================================
+Revision: /tmp/downloads/curator/revisions/rev_74434_8cd83/rev_74434-8cd83.revisions
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 95c2d1c053135736c7e930ac5bbe5d6137230ecd
+Parent1 SHA-1: 74434b8b3e294c4213a2ab792519829e4bfdf88e
+Parent2 SHA-1: 8cd8347c8fb4406e7eb41dafe20abcdd52d8818d
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private volatile Future<Void>           mainLoopTask; ##FSTMerge## private volatile Future<Void>           mainLoopTask;
+File path: /tmp/downloads/curator/revisions/rev_74434_8cd83/rev_74434-8cd83/curator-recipes/src/main/java/com/netflix/curator/framework/recipes/cache/PathChildrenCache.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 95c2d1c053135736c7e930ac5bbe5d6137230ecd
+Parent1 SHA-1: 74434b8b3e294c4213a2ab792519829e4bfdf88e
+Parent2 SHA-1: 8cd8347c8fb4406e7eb41dafe20abcdd52d8818d
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void     start(boolean buildInitial) throws Exception
+    {
+        Preconditions.checkState(!executorService.isShutdown(), "already started");
+
+        client.getConnectionStateListenable().addListener(connectionStateListener);
+        executorService.submit
+        (
+            new Callable<Void>()
+            {
+                @Override
+                public Void call() throws Exception
+                {
+                    mainLoop();
+                    return null;
+                }
+            }
+        );
+
+        if ( buildInitial )
+        {
+            rebuild();
+        }
+        else
+        {
+            refresh(false);
+        }
+    } ##FSTMerge## public void     start(boolean buildInitial) throws Exception
+    {
+        Preconditions.checkState(!executorService.isShutdown(), "already started");
+
+        client.getConnectionStateListenable().addListener(connectionStateListener);
+        mainLoopTask = executorService.submit
+        (
+            new Callable<Void>()
+            {
+                @Override
+                public Void call() throws Exception
+                {
+                    mainLoop();
+                    return null;
+                }
+            }
+        );
+
+        if ( buildInitial )
+        {
+            rebuild();
+        }
+        else
+        {
+            refresh(false);
+        }
+    } ##FSTMerge## public void     start(boolean buildInitial) throws Exception
+    {
+        Preconditions.checkState(!executorService.isShutdown(), "already started");
+
+        client.getConnectionStateListenable().addListener(connectionStateListener);
+        mainLoopTask = executorService.submit
+            (
+                new Callable<Void>()
+                {
+                    @Override
+                    public Void call() throws Exception
+                    {
+                        mainLoop();
+                        return null;
+                    }
+                }
+            );
+
+        if ( buildInitial )
+        {
+            rebuild();
+        }
+        else
+        {
+            offerOperation(new RefreshOperation(this));
+        }
+    }
+File path: /tmp/downloads/curator/revisions/rev_74434_8cd83/rev_74434-8cd83/curator-recipes/src/main/java/com/netflix/curator/framework/recipes/cache/PathChildrenCache.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 95c2d1c053135736c7e930ac5bbe5d6137230ecd
+Parent1 SHA-1: 74434b8b3e294c4213a2ab792519829e4bfdf88e
+Parent2 SHA-1: 8cd8347c8fb4406e7eb41dafe20abcdd52d8818d
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Override
+    public void close() throws IOException
+    {
+        Preconditions.checkState(!executorService.isShutdown(), "has not been started");
+
+        client.getConnectionStateListenable().removeListener(connectionStateListener);
+        executorService.shutdownNow();
+    } ##FSTMerge## @Override
+    public void close() throws IOException
+    {
+        Preconditions.checkState(!executorService.isShutdown(), "has not been started");
+
+        client.getConnectionStateListenable().removeListener(connectionStateListener);
+        mainLoopTask.cancel(true);
+    } ##FSTMerge## @Override
+    public void close() throws IOException
+    {
+        Preconditions.checkState(!executorService.isShutdown(), "has not been started");
+
+        client.getConnectionStateListenable().removeListener(connectionStateListener);
+        mainLoopTask.cancel(true);
+    }
+File path: /tmp/downloads/curator/revisions/rev_74434_8cd83/rev_74434-8cd83/curator-recipes/src/main/java/com/netflix/curator/framework/recipes/cache/PathChildrenCache.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 95c2d1c053135736c7e930ac5bbe5d6137230ecd
+Parent1 SHA-1: 74434b8b3e294c4213a2ab792519829e4bfdf88e
+Parent2 SHA-1: 8cd8347c8fb4406e7eb41dafe20abcdd52d8818d
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void     forEach(final Function<T, Void> function)
+    {
+        for ( final ListenerEntry<T> entry : listeners.values() )
+        {
+            entry.executor.execute
+            (
+                new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        try
+                        {
+                            function.apply(entry.listener);
+                        }
+                        catch ( Throwable e )
+                        {
+                            log.error(String.format("Listener (%s) threw an exception", entry.listener), e);
+                        }
+                    }
+                }
+            );
+        }
+    } ##FSTMerge## public void     forEach(Function<T, Void> function)
+    {
+        for ( final ListenerEntry<T> entry : listeners.values() )
+        {
+            try
+            {
+                function.apply(entry.listener);
+            }
+            catch ( Throwable e )
+            {
+                log.error(String.format("Listener (%s) threw an exception", entry.listener), e);
+            }
+        }
+    } ##FSTMerge## public void     forEach(final Function<T, Void> function)
+    {
+        for ( final ListenerEntry<T> entry : listeners.values() )
+        {
+            entry.executor.execute
+            (
+                new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        try
+                        {
+                            function.apply(entry.listener);
+                        }
+                        catch ( Throwable e )
+                        {
+                            log.error(String.format("Listener (%s) threw an exception", entry.listener), e);
+                        }
+                    }
+                }
+            );
+        }
+    }
+File path: /tmp/downloads/curator/revisions/rev_74434_8cd83/rev_74434-8cd83/curator-framework/src/main/java/com/netflix/curator/framework/listen/ListenerContainer.java
+
+==================================================================================================================
+Revision: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4.revisions
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Override
+    public void kill()
+    {
+        try
+        {
+            Field                   cnxnFactoryField = ZooKeeperServerMain.class.getDeclaredField("cnxnFactory");
+            cnxnFactoryField.setAccessible(true);
+            NIOServerCnxn.Factory   cnxnFactory = (NIOServerCnxn.Factory)cnxnFactoryField.get(this);
+            cnxnFactory.shutdown();
+
+            Field               ssField = cnxnFactory.getClass().getDeclaredField("ss");
+            ssField.setAccessible(true);
+            ServerSocketChannel ss = (ServerSocketChannel)ssField.get(cnxnFactory);
+            ss.close();
+
+            close();
+        }
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+        }
+    } ##FSTMerge## @Override
+    public void kill()
+    {
+        try
+        {
+            Field               cnxnFactoryField = ZooKeeperServerMain.class.getDeclaredField("cnxnFactory");
+            cnxnFactoryField.setAccessible(true);
+            ServerCnxnFactory   cnxnFactory = (ServerCnxnFactory)cnxnFactoryField.get(this);
+            cnxnFactory.closeAll();
+
+            Field               ssField = cnxnFactory.getClass().getDeclaredField("ss");
+            ssField.setAccessible(true);
+            ServerSocketChannel ss = (ServerSocketChannel)ssField.get(cnxnFactory);
+            ss.close();
+
+            close();
+        }
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+        }
+    } ##FSTMerge## @Override
+    public void kill()
+    {
+        try
+        {
+            Field               cnxnFactoryField = ZooKeeperServerMain.class.getDeclaredField("cnxnFactory");
+            cnxnFactoryField.setAccessible(true);
+            ServerCnxnFactory   cnxnFactory = (ServerCnxnFactory)cnxnFactoryField.get(this);
+            cnxnFactory.closeAll();
+
+            Field               ssField = cnxnFactory.getClass().getDeclaredField("ss");
+            ssField.setAccessible(true);
+            ServerSocketChannel ss = (ServerSocketChannel)ssField.get(cnxnFactory);
+            ss.close();
+
+            close();
+        }
+        catch ( Exception e )
+        {
+            e.printStackTrace();    // just ignore - this class is only for testing
+        }
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-test/src/main/java/com/netflix/curator/test/TestingZooKeeperMain.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Override
+    public void close() throws IOException
+    {
+        shutdown();
+
+        try
+        {
+            Field                   cnxnFactoryField = ZooKeeperServerMain.class.getDeclaredField("cnxnFactory");
+            cnxnFactoryField.setAccessible(true);
+            NIOServerCnxn.Factory   cnxnFactory = (NIOServerCnxn.Factory)cnxnFactoryField.get(this);
+
+            ZooKeeperServer     zkServer = cnxnFactory.getZooKeeperServer();
+            if ( zkServer != null ) 
+            {
+                ZKDatabase      zkDb = zkServer.getZKDatabase();
+                if ( zkDb != null )
+                {
+                    // make ZK server close its log files
+                    zkDb.close();
+                }
+            }
+        }
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+        }
+    } ##FSTMerge## @Override
+    public void close() throws IOException
+    {
+        shutdown();
+
+        try
+        {
+            Field               cnxnFactoryField = ZooKeeperServerMain.class.getDeclaredField("cnxnFactory");
+            cnxnFactoryField.setAccessible(true);
+            ServerCnxnFactory   cnxnFactory = (ServerCnxnFactory)cnxnFactoryField.get(this);
+
+            Field               zkServerField = ServerCnxnFactory.class.getDeclaredField("zkServer");
+            zkServerField.setAccessible(true);
+            ZooKeeperServer     zkServer = (ZooKeeperServer)zkServerField.get(cnxnFactory);
+            if ( zkServer != null ) 
+            {
+                ZKDatabase      zkDb = zkServer.getZKDatabase();
+                if ( zkDb != null )
+                {
+                    // make ZK server close its log files
+                    zkDb.close();
+                }
+            }
+        }
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+        }
+    } ##FSTMerge## @Override
+    public void close() throws IOException
+    {
+        shutdown();
+
+        try
+        {
+            ServerCnxnFactory   cnxnFactory = getServerConnectionFactory();
+            if ( cnxnFactory != null )
+            {
+                ZooKeeperServer     zkServer = getZooKeeperServer(cnxnFactory);
+                if ( zkServer != null )
+                {
+                    ZKDatabase      zkDb = zkServer.getZKDatabase();
+                    if ( zkDb != null )
+                    {
+                        // make ZK server close its log files
+                        zkDb.close();
+                    }
+                }
+            }
+        }
+        catch ( Exception e )
+        {
+            e.printStackTrace();    // just ignore - this class is only for testing
+        }
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-test/src/main/java/com/netflix/curator/test/TestingZooKeeperMain.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## TransactionSetDataBuilder   asTransactionSetDataBuilder(final CuratorTransactionImpl curatorTransaction, final CuratorMultiTransactionRecord transaction)
+    {
+        return new TransactionSetDataBuilder()
+        {
+            @Override
+            public CuratorTransactionBridge forPath(String path, byte[] data) throws Exception
+            {
+                String      fixedPath = client.fixForNamespace(path);
+                transaction.add(Op.setData(fixedPath, data, version), OperationType.SET_DATA, path);
+                return curatorTransaction;
+            }
+
+            @Override
+            public CuratorTransactionBridge forPath(String path) throws Exception
+            {
+                return forPath(path, client.getDefaultData());
+            }
+
+            @Override
+            public PathAndBytesable<CuratorTransactionBridge> withVersion(int version)
+            {
+                SetDataBuilderImpl.this.withVersion(version);
+                return this;
+            }
+        };
+    } ##FSTMerge## TransactionSetDataBuilder   asTransactionSetDataBuilder(final CuratorTransactionImpl curatorTransaction, final CuratorMultiTransactionRecord transaction)
+    {
+        return new TransactionSetDataBuilder()
+        {
+            @Override
+            public CuratorTransactionBridge forPath(String path, byte[] data) throws Exception
+            {
+                String      fixedPath = client.fixForNamespace(path);
+                transaction.add(Op.setData(fixedPath, data, version), OperationType.SET_DATA, path);
+                return curatorTransaction;
+            }
+
+            @Override
+            public CuratorTransactionBridge forPath(String path) throws Exception
+            {
+                return forPath(path, client.getDefaultData());
+            }
+
+            @Override
+            public PathAndBytesable<CuratorTransactionBridge> withVersion(int version)
+            {
+                SetDataBuilderImpl.this.withVersion(version);
+                return this;
+            }
+        };
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/SetDataBuilderImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## TransactionDeleteBuilder    asTransactionDeleteBuilder(final CuratorTransactionImpl curatorTransaction, final CuratorMultiTransactionRecord transaction)
+    {
+        return new TransactionDeleteBuilder()
+        {
+            @Override
+            public CuratorTransactionBridge forPath(String path) throws Exception
+            {
+                String      fixedPath = client.fixForNamespace(path);
+                transaction.add(Op.delete(fixedPath, version), OperationType.DELETE, path);
+                return curatorTransaction;
+            }
+
+            @Override
+            public Pathable<CuratorTransactionBridge> withVersion(int version)
+            {
+                DeleteBuilderImpl.this.withVersion(version);
+                return this;
+            }
+        };
+    } ##FSTMerge## TransactionDeleteBuilder    asTransactionDeleteBuilder(final CuratorTransactionImpl curatorTransaction, final CuratorMultiTransactionRecord transaction)
+    {
+        return new TransactionDeleteBuilder()
+        {
+            @Override
+            public CuratorTransactionBridge forPath(String path) throws Exception
+            {
+                String      fixedPath = client.fixForNamespace(path);
+                transaction.add(Op.delete(fixedPath, version), OperationType.DELETE, path);
+                return curatorTransaction;
+            }
+
+            @Override
+            public Pathable<CuratorTransactionBridge> withVersion(int version)
+            {
+                DeleteBuilderImpl.this.withVersion(version);
+                return this;
+            }
+        };
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/DeleteBuilderImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## TransactionCreateBuilder        asTransactionCreateBuilder(final CuratorTransactionImpl curatorTransaction, final CuratorMultiTransactionRecord transaction)
+    {
+        return new TransactionCreateBuilder()
+        {
+            @Override
+            public PathAndBytesable<CuratorTransactionBridge> withACL(List<ACL> aclList)
+            {
+                CreateBuilderImpl.this.withACL(aclList);
+                return this;
+            }
+
+            @Override
+            public ACLPathAndBytesable<CuratorTransactionBridge> withMode(CreateMode mode)
+            {
+                CreateBuilderImpl.this.withMode(mode);
+                return this;
+            }
+
+            @Override
+            public CuratorTransactionBridge forPath(String path) throws Exception
+            {
+                return forPath(path, client.getDefaultData());
+            }
+
+            @Override
+            public CuratorTransactionBridge forPath(String path, byte[] data) throws Exception
+            {
+                String      fixedPath = client.fixForNamespace(path);
+                transaction.add(Op.create(fixedPath, data, acling.getAclList(path), createMode), OperationType.CREATE, path);
+                return curatorTransaction;
+            }
+        };
+    } ##FSTMerge## TransactionCreateBuilder        asTransactionCreateBuilder(final CuratorTransactionImpl curatorTransaction, final CuratorMultiTransactionRecord transaction)
+    {
+        return new TransactionCreateBuilder()
+        {
+            @Override
+            public PathAndBytesable<CuratorTransactionBridge> withACL(List<ACL> aclList)
+            {
+                CreateBuilderImpl.this.withACL(aclList);
+                return this;
+            }
+
+            @Override
+            public ACLPathAndBytesable<CuratorTransactionBridge> withMode(CreateMode mode)
+            {
+                CreateBuilderImpl.this.withMode(mode);
+                return this;
+            }
+
+            @Override
+            public CuratorTransactionBridge forPath(String path) throws Exception
+            {
+                return forPath(path, client.getDefaultData());
+            }
+
+            @Override
+            public CuratorTransactionBridge forPath(String path, byte[] data) throws Exception
+            {
+                String      fixedPath = client.fixForNamespace(path);
+                transaction.add(Op.create(fixedPath, data, acling.getAclList(path), createMode), OperationType.CREATE, path);
+                return curatorTransaction;
+            }
+        };
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CreateBuilderImpl.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/test/java/com/netflix/curator/framework/imps/TestTransactions.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## extends BaseClassForTests ##FSTMerge## extends BaseClassForTests
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/test/java/com/netflix/curator/framework/imps/TestTransactions.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Test
+    public void     testCheckVersion() throws Exception
+    {
+        CuratorFramework        client = CuratorFrameworkFactory.newClient(server.getConnectString(), new RetryOneTime(1));
+        client.start();
+        try
+        {
+            client.create().forPath("/foo");
+            Stat        stat = client.setData().forPath("/foo", "new".getBytes());  // up the version
+
+            try
+            {
+                client.inTransaction()
+                    .check().withVersion(stat.getVersion() + 1).forPath("/foo") // force a bad version
+                .and()
+                    .create().forPath("/bar")
+                .and()
+                    .commit();
+
+                Assert.fail();
+            }
+            catch ( KeeperException.BadVersionException correct )
+            {
+                // correct
+            }
+            
+            Assert.assertNull(client.checkExists().forPath("/bar"));
+        }
+        finally
+        {
+            client.close();
+        }
+    } ##FSTMerge## @Test
+    public void     testCheckVersion() throws Exception
+    {
+        CuratorFramework        client = CuratorFrameworkFactory.newClient(server.getConnectString(), new RetryOneTime(1));
+        client.start();
+        try
+        {
+            client.create().forPath("/foo");
+            Stat        stat = client.setData().forPath("/foo", "new".getBytes());  // up the version
+
+            try
+            {
+                client.inTransaction()
+                    .check().withVersion(stat.getVersion() + 1).forPath("/foo") // force a bad version
+                .and()
+                    .create().forPath("/bar")
+                .and()
+                    .commit();
+
+                Assert.fail();
+            }
+            catch ( KeeperException.BadVersionException correct )
+            {
+                // correct
+            }
+            
+            Assert.assertNull(client.checkExists().forPath("/bar"));
+        }
+        finally
+        {
+            client.close();
+        }
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/test/java/com/netflix/curator/framework/imps/TestTransactions.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Test
+    public void     testWithNamespace() throws Exception
+    {
+        CuratorFramework        client = CuratorFrameworkFactory.builder().connectString(server.getConnectString()).retryPolicy(new RetryOneTime(1)).namespace("galt").build();
+        client.start();
+        try
+        {
+            Collection<CuratorTransactionResult>    results =
+                client.inTransaction()
+                    .create().forPath("/foo", "one".getBytes())
+                .and()
+                    .create().withMode(CreateMode.PERSISTENT_SEQUENTIAL).forPath("/test-", "one".getBytes())
+                .and()
+                    .setData().forPath("/foo", "two".getBytes())
+                .and()
+                    .create().forPath("/foo/bar")
+                .and()
+                    .delete().forPath("/foo/bar")
+                .and()
+                    .commit();
+
+            Assert.assertTrue(client.checkExists().forPath("/foo") != null);
+            Assert.assertTrue(client.nonNamespaceView().checkExists().forPath("/galt/foo") != null);
+            Assert.assertEquals(client.getData().forPath("/foo"), "two".getBytes());
+            Assert.assertTrue(client.checkExists().forPath("/foo/bar") == null);
+
+            CuratorTransactionResult    ephemeralResult = Iterables.find(results, CuratorTransactionResult.ofTypeAndPath(OperationType.CREATE, "/test-"));
+            Assert.assertNotNull(ephemeralResult);
+            Assert.assertNotEquals(ephemeralResult.getResultPath(), "/test-");
+            Assert.assertTrue(ephemeralResult.getResultPath().startsWith("/test-"));
+        }
+        finally
+        {
+            client.close();
+        }
+    } ##FSTMerge## @Test
+    public void     testWithNamespace() throws Exception
+    {
+        CuratorFramework        client = CuratorFrameworkFactory.builder().connectString(server.getConnectString()).retryPolicy(new RetryOneTime(1)).namespace("galt").build();
+        client.start();
+        try
+        {
+            Collection<CuratorTransactionResult>    results =
+                client.inTransaction()
+                    .create().forPath("/foo", "one".getBytes())
+                .and()
+                    .create().withMode(CreateMode.PERSISTENT_SEQUENTIAL).forPath("/test-", "one".getBytes())
+                .and()
+                    .setData().forPath("/foo", "two".getBytes())
+                .and()
+                    .create().forPath("/foo/bar")
+                .and()
+                    .delete().forPath("/foo/bar")
+                .and()
+                    .commit();
+
+            Assert.assertTrue(client.checkExists().forPath("/foo") != null);
+            Assert.assertTrue(client.nonNamespaceView().checkExists().forPath("/galt/foo") != null);
+            Assert.assertEquals(client.getData().forPath("/foo"), "two".getBytes());
+            Assert.assertTrue(client.checkExists().forPath("/foo/bar") == null);
+
+            CuratorTransactionResult    ephemeralResult = Iterables.find(results, CuratorTransactionResult.ofTypeAndPath(OperationType.CREATE, "/test-"));
+            Assert.assertNotNull(ephemeralResult);
+            Assert.assertNotEquals(ephemeralResult.getResultPath(), "/test-");
+            Assert.assertTrue(ephemeralResult.getResultPath().startsWith("/test-"));
+        }
+        finally
+        {
+            client.close();
+        }
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/test/java/com/netflix/curator/framework/imps/TestTransactions.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Test
+    public void     testBasic() throws Exception
+    {
+        CuratorFramework        client = CuratorFrameworkFactory.newClient(server.getConnectString(), new RetryOneTime(1));
+        client.start();
+        try
+        {
+            Collection<CuratorTransactionResult>    results =
+                client.inTransaction()
+                    .create().forPath("/foo")
+                .and()
+                    .create().forPath("/foo/bar", "snafu".getBytes())
+                .and()
+                    .commit();
+
+            Assert.assertTrue(client.checkExists().forPath("/foo/bar") != null);
+            Assert.assertEquals(client.getData().forPath("/foo/bar"), "snafu".getBytes());
+
+            CuratorTransactionResult    fooResult = Iterables.find(results, CuratorTransactionResult.ofTypeAndPath(OperationType.CREATE, "/foo"));
+            CuratorTransactionResult    fooBarResult = Iterables.find(results, CuratorTransactionResult.ofTypeAndPath(OperationType.CREATE, "/foo/bar"));
+            Assert.assertNotNull(fooResult);
+            Assert.assertNotNull(fooBarResult);
+            Assert.assertNotSame(fooResult, fooBarResult);
+            Assert.assertEquals(fooResult.getResultPath(), "/foo");
+            Assert.assertEquals(fooBarResult.getResultPath(), "/foo/bar");
+        }
+        finally
+        {
+            client.close();
+        }
+    } ##FSTMerge## @Test
+    public void     testBasic() throws Exception
+    {
+        CuratorFramework        client = CuratorFrameworkFactory.newClient(server.getConnectString(), new RetryOneTime(1));
+        client.start();
+        try
+        {
+            Collection<CuratorTransactionResult>    results =
+                client.inTransaction()
+                    .create().forPath("/foo")
+                .and()
+                    .create().forPath("/foo/bar", "snafu".getBytes())
+                .and()
+                    .commit();
+
+            Assert.assertTrue(client.checkExists().forPath("/foo/bar") != null);
+            Assert.assertEquals(client.getData().forPath("/foo/bar"), "snafu".getBytes());
+
+            CuratorTransactionResult    fooResult = Iterables.find(results, CuratorTransactionResult.ofTypeAndPath(OperationType.CREATE, "/foo"));
+            CuratorTransactionResult    fooBarResult = Iterables.find(results, CuratorTransactionResult.ofTypeAndPath(OperationType.CREATE, "/foo/bar"));
+            Assert.assertNotNull(fooResult);
+            Assert.assertNotNull(fooBarResult);
+            Assert.assertNotSame(fooResult, fooBarResult);
+            Assert.assertEquals(fooResult.getResultPath(), "/foo");
+            Assert.assertEquals(fooBarResult.getResultPath(), "/foo/bar");
+        }
+        finally
+        {
+            client.close();
+        }
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/test/java/com/netflix/curator/framework/imps/TestTransactions.java
+############## CONFLICT ##############
+Conflict type: ImplementList
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## implements CuratorTransaction, CuratorTransactionBridge, CuratorTransactionFinal ##FSTMerge## implements CuratorTransaction, CuratorTransactionBridge, CuratorTransactionFinal
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final CuratorFrameworkImpl              client; ##FSTMerge## private final CuratorFrameworkImpl              client;
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final CuratorMultiTransactionRecord     transaction; ##FSTMerge## private final CuratorMultiTransactionRecord     transaction;
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private boolean         isCommitted = false; ##FSTMerge## private boolean         isCommitted = false;
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## CuratorTransactionImpl(CuratorFrameworkImpl client)
+    {
+        this.client = client;
+        transaction = new CuratorMultiTransactionRecord();
+    } ##FSTMerge## CuratorTransactionImpl(CuratorFrameworkImpl client)
+    {
+        this.client = client;
+        transaction = new CuratorMultiTransactionRecord();
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+    public CuratorTransactionFinal and()
+    {
+        return this;
+    } ##FSTMerge## @Override
+    public CuratorTransactionFinal and()
+    {
+        return this;
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+    public TransactionCreateBuilder create()
+    {
+        Preconditions.checkState(!isCommitted, "transaction already committed");
+
+        return new CreateBuilderImpl(client).asTransactionCreateBuilder(this, transaction);
+    } ##FSTMerge## @Override
+    public TransactionCreateBuilder create()
+    {
+        Preconditions.checkState(!isCommitted, "transaction already committed");
+
+        return new CreateBuilderImpl(client).asTransactionCreateBuilder(this, transaction);
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+    public TransactionDeleteBuilder delete()
+    {
+        Preconditions.checkState(!isCommitted, "transaction already committed");
+
+        return new DeleteBuilderImpl(client).asTransactionDeleteBuilder(this, transaction);
+    } ##FSTMerge## @Override
+    public TransactionDeleteBuilder delete()
+    {
+        Preconditions.checkState(!isCommitted, "transaction already committed");
+
+        return new DeleteBuilderImpl(client).asTransactionDeleteBuilder(this, transaction);
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+    public TransactionSetDataBuilder setData()
+    {
+        Preconditions.checkState(!isCommitted, "transaction already committed");
+
+        return new SetDataBuilderImpl(client).asTransactionSetDataBuilder(this, transaction);
+    } ##FSTMerge## @Override
+    public TransactionSetDataBuilder setData()
+    {
+        Preconditions.checkState(!isCommitted, "transaction already committed");
+
+        return new SetDataBuilderImpl(client).asTransactionSetDataBuilder(this, transaction);
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+    public TransactionCheckBuilder check()
+    {
+        Preconditions.checkState(!isCommitted, "transaction already committed");
+
+        return new TransactionCheckBuilder()
+        {
+            private int         version = -1;
+
+            @Override
+            public CuratorTransactionBridge forPath(String path) throws Exception
+            {
+                String      fixedPath = client.fixForNamespace(path);
+                transaction.add(Op.check(fixedPath, version), OperationType.CHECK, path);
+
+                return CuratorTransactionImpl.this;
+            }
+
+            @Override
+            public Pathable<CuratorTransactionBridge> withVersion(int version)
+            {
+                this.version = version;
+                return this;
+            }
+        };
+    } ##FSTMerge## @Override
+    public TransactionCheckBuilder check()
+    {
+        Preconditions.checkState(!isCommitted, "transaction already committed");
+
+        return new TransactionCheckBuilder()
+        {
+            private int         version = -1;
+
+            @Override
+            public CuratorTransactionBridge forPath(String path) throws Exception
+            {
+                String      fixedPath = client.fixForNamespace(path);
+                transaction.add(Op.check(fixedPath, version), OperationType.CHECK, path);
+
+                return CuratorTransactionImpl.this;
+            }
+
+            @Override
+            public Pathable<CuratorTransactionBridge> withVersion(int version)
+            {
+                this.version = version;
+                return this;
+            }
+        };
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+    public Collection<CuratorTransactionResult> commit() throws Exception
+    {
+        Preconditions.checkState(!isCommitted, "transaction already committed");
+        isCommitted = true;
+
+        final AtomicBoolean firstTime = new AtomicBoolean(true);
+        List<OpResult>      resultList = RetryLoop.callWithRetry
+        (
+            client.getZookeeperClient(),
+            new Callable<List<OpResult>>()
+            {
+                @Override
+                public List<OpResult> call() throws Exception
+                {
+                    return doOperation(firstTime);
+                }
+            }
+        );
+        
+        if ( resultList.size() != transaction.metadataSize() )
+        {
+            throw new IllegalStateException(String.format("Result size (%d) doesn't match input size (%d)", resultList.size(), transaction.metadataSize()));
+        }
+
+        ImmutableList.Builder<CuratorTransactionResult>     builder = ImmutableList.builder();
+        for ( int i = 0; i < resultList.size(); ++i )
+        {
+            OpResult                                    opResult = resultList.get(i);
+            CuratorMultiTransactionRecord.TypeAndPath   metadata = transaction.getMetadata(i);
+            CuratorTransactionResult                    curatorResult = makeCuratorResult(opResult, metadata);
+            builder.add(curatorResult);
+        }
+
+        return builder.build();
+    } ##FSTMerge## @Override
+    public Collection<CuratorTransactionResult> commit() throws Exception
+    {
+        Preconditions.checkState(!isCommitted, "transaction already committed");
+        isCommitted = true;
+
+        final AtomicBoolean firstTime = new AtomicBoolean(true);
+        List<OpResult>      resultList = RetryLoop.callWithRetry
+        (
+            client.getZookeeperClient(),
+            new Callable<List<OpResult>>()
+            {
+                @Override
+                public List<OpResult> call() throws Exception
+                {
+                    return doOperation(firstTime);
+                }
+            }
+        );
+        
+        if ( resultList.size() != transaction.metadataSize() )
+        {
+            throw new IllegalStateException(String.format("Result size (%d) doesn't match input size (%d)", resultList.size(), transaction.metadataSize()));
+        }
+
+        ImmutableList.Builder<CuratorTransactionResult>     builder = ImmutableList.builder();
+        for ( int i = 0; i < resultList.size(); ++i )
+        {
+            OpResult                                    opResult = resultList.get(i);
+            CuratorMultiTransactionRecord.TypeAndPath   metadata = transaction.getMetadata(i);
+            CuratorTransactionResult                    curatorResult = makeCuratorResult(opResult, metadata);
+            builder.add(curatorResult);
+        }
+
+        return builder.build();
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private List<OpResult> doOperation(AtomicBoolean firstTime) throws Exception
+    {
+        boolean         localFirstTime = firstTime.getAndSet(false);
+        if ( !localFirstTime )
+        {
+
+        }
+
+        List<OpResult>  opResults = client.getZooKeeper().multi(transaction);
+        if ( opResults.size() > 0 )
+        {
+            OpResult        firstResult = opResults.get(0);
+            if ( firstResult.getType() == ZooDefs.OpCode.error )
+            {
+                OpResult.ErrorResult        error = (OpResult.ErrorResult)firstResult;
+                KeeperException.Code        code = KeeperException.Code.get(error.getErr());
+                if ( code == null )
+                {
+                    code = KeeperException.Code.UNIMPLEMENTED;
+                }
+                throw KeeperException.create(code);
+            }
+        }
+        return opResults;
+    } ##FSTMerge## private List<OpResult> doOperation(AtomicBoolean firstTime) throws Exception
+    {
+        boolean         localFirstTime = firstTime.getAndSet(false);
+        if ( !localFirstTime )
+        {
+
+        }
+
+        List<OpResult>  opResults = client.getZooKeeper().multi(transaction);
+        if ( opResults.size() > 0 )
+        {
+            OpResult        firstResult = opResults.get(0);
+            if ( firstResult.getType() == ZooDefs.OpCode.error )
+            {
+                OpResult.ErrorResult        error = (OpResult.ErrorResult)firstResult;
+                KeeperException.Code        code = KeeperException.Code.get(error.getErr());
+                if ( code == null )
+                {
+                    code = KeeperException.Code.UNIMPLEMENTED;
+                }
+                throw KeeperException.create(code);
+            }
+        }
+        return opResults;
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private CuratorTransactionResult makeCuratorResult(OpResult opResult, CuratorMultiTransactionRecord.TypeAndPath metadata)
+    {
+        String                                      resultPath = null;
+        Stat resultStat = null;
+        switch ( opResult.getType() )
+        {
+            default:
+            {
+                // NOP
+                break;
+            }
+
+            case ZooDefs.OpCode.create:
+            {
+                OpResult.CreateResult       createResult = (OpResult.CreateResult)opResult;
+                resultPath = client.unfixForNamespace(createResult.getPath());
+                break;
+            }
+
+            case ZooDefs.OpCode.setData:
+            {
+                OpResult.SetDataResult      setDataResult = (OpResult.SetDataResult)opResult;
+                resultStat = setDataResult.getStat();
+                break;
+            }
+        }
+
+        return new CuratorTransactionResult(metadata.type, metadata.forPath, resultPath, resultStat);
+    } ##FSTMerge## private CuratorTransactionResult makeCuratorResult(OpResult opResult, CuratorMultiTransactionRecord.TypeAndPath metadata)
+    {
+        String                                      resultPath = null;
+        Stat resultStat = null;
+        switch ( opResult.getType() )
+        {
+            default:
+            {
+                // NOP
+                break;
+            }
+
+            case ZooDefs.OpCode.create:
+            {
+                OpResult.CreateResult       createResult = (OpResult.CreateResult)opResult;
+                resultPath = client.unfixForNamespace(createResult.getPath());
+                break;
+            }
+
+            case ZooDefs.OpCode.setData:
+            {
+                OpResult.SetDataResult      setDataResult = (OpResult.SetDataResult)opResult;
+                resultStat = setDataResult.getStat();
+                break;
+            }
+        }
+
+        return new CuratorTransactionResult(metadata.type, metadata.forPath, resultPath, resultStat);
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## extends MultiTransactionRecord ##FSTMerge## extends MultiTransactionRecord
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final List<TypeAndPath>     metadata = Lists.newArrayList(); ##FSTMerge## private final List<TypeAndPath>     metadata = Lists.newArrayList();
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## static ##FSTMerge## static
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## final OperationType type; ##FSTMerge## final OperationType type;
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## final String forPath; ##FSTMerge## final String forPath;
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## TypeAndPath(OperationType type, String forPath)
+        {
+            this.type = type;
+            this.forPath = forPath;
+        } ##FSTMerge## TypeAndPath(OperationType type, String forPath)
+        {
+            this.type = type;
+            this.forPath = forPath;
+        }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+    public final void add(Op op)
+    {
+        throw new UnsupportedOperationException();
+    } ##FSTMerge## @Override
+    public final void add(Op op)
+    {
+        throw new UnsupportedOperationException();
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## void add(Op op, OperationType type, String forPath)
+    {
+        super.add(op);
+        metadata.add(new TypeAndPath(type, forPath));
+    } ##FSTMerge## void add(Op op, OperationType type, String forPath)
+    {
+        super.add(op);
+        metadata.add(new TypeAndPath(type, forPath));
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## TypeAndPath     getMetadata(int index)
+    {
+        return metadata.get(index);
+    } ##FSTMerge## TypeAndPath     getMetadata(int index)
+    {
+        return metadata.get(index);
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## int             metadataSize()
+    {
+        return metadata.size();
+    } ##FSTMerge## int             metadataSize()
+    {
+        return metadata.size();
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/TransactionSetDataBuilder.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## extends
+    PathAndBytesable<CuratorTransactionBridge>,
+    Versionable<PathAndBytesable<CuratorTransactionBridge>> ##FSTMerge## extends
+    PathAndBytesable<CuratorTransactionBridge>,
+    Versionable<PathAndBytesable<CuratorTransactionBridge>>
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/TransactionSetDataBuilder.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/TransactionDeleteBuilder.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## extends
+    Pathable<CuratorTransactionBridge>,
+    Versionable<Pathable<CuratorTransactionBridge>> ##FSTMerge## extends
+    Pathable<CuratorTransactionBridge>,
+    Versionable<Pathable<CuratorTransactionBridge>>
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/TransactionDeleteBuilder.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/TransactionCreateBuilder.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## extends
+    PathAndBytesable<CuratorTransactionBridge>,
+    CreateModable<ACLPathAndBytesable<CuratorTransactionBridge>>,
+    ACLPathAndBytesable<CuratorTransactionBridge> ##FSTMerge## extends
+    PathAndBytesable<CuratorTransactionBridge>,
+    CreateModable<ACLPathAndBytesable<CuratorTransactionBridge>>,
+    ACLPathAndBytesable<CuratorTransactionBridge>
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/TransactionCreateBuilder.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/TransactionCheckBuilder.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## extends
+    Pathable<CuratorTransactionBridge>,
+    Versionable<Pathable<CuratorTransactionBridge>> ##FSTMerge## extends
+    Pathable<CuratorTransactionBridge>,
+    Versionable<Pathable<CuratorTransactionBridge>>
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/TransactionCheckBuilder.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/OperationType.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final OperationType type; ##FSTMerge## private final OperationType type;
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final String        forPath; ##FSTMerge## private final String        forPath;
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final String        resultPath; ##FSTMerge## private final String        resultPath;
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final Stat          resultStat; ##FSTMerge## private final Stat          resultStat;
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public static Predicate<CuratorTransactionResult>       ofTypeAndPath(final OperationType type, final String forPath)
+    {
+        return new Predicate<CuratorTransactionResult>()
+        {
+            @Override
+            public boolean apply(CuratorTransactionResult result)
+            {
+                return (result.getType() == type) && result.getForPath().equals(forPath);
+            }
+        };
+    } ##FSTMerge## public static Predicate<CuratorTransactionResult>       ofTypeAndPath(final OperationType type, final String forPath)
+    {
+        return new Predicate<CuratorTransactionResult>()
+        {
+            @Override
+            public boolean apply(CuratorTransactionResult result)
+            {
+                return (result.getType() == type) && result.getForPath().equals(forPath);
+            }
+        };
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public CuratorTransactionResult(OperationType type, String forPath, String resultPath, Stat resultStat)
+    {
+        this.forPath = forPath;
+        this.resultPath = resultPath;
+        this.resultStat = resultStat;
+        this.type = type;
+    } ##FSTMerge## public CuratorTransactionResult(OperationType type, String forPath, String resultPath, Stat resultStat)
+    {
+        this.forPath = forPath;
+        this.resultPath = resultPath;
+        this.resultStat = resultStat;
+        this.type = type;
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public OperationType getType()
+    {
+        return type;
+    } ##FSTMerge## public OperationType getType()
+    {
+        return type;
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public String getForPath()
+    {
+        return forPath;
+    } ##FSTMerge## public String getForPath()
+    {
+        return forPath;
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public String getResultPath()
+    {
+        return resultPath;
+    } ##FSTMerge## public String getResultPath()
+    {
+        return resultPath;
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public Stat getResultStat()
+    {
+        return resultStat;
+    } ##FSTMerge## public Stat getResultStat()
+    {
+        return resultStat;
+    }
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionFinal.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## extends CuratorTransaction ##FSTMerge## extends CuratorTransaction
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionFinal.java
+############## CONFLICT ##############
+Conflict type: SameSignatureCM
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: copiedFile
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public Collection<CuratorTransactionResult> commit() throws Exception; ##FSTMerge## public Collection<CuratorTransactionResult> commit() throws Exception;
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionFinal.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionBridge.java
+############## CONFLICT ##############
+Conflict type: SameSignatureCM
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: copiedFile
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public CuratorTransactionFinal and(); ##FSTMerge## public CuratorTransactionFinal and();
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionBridge.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransaction.java
+############## CONFLICT ##############
+Conflict type: SameSignatureCM
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: copiedFile
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public TransactionCreateBuilder create(); ##FSTMerge## public TransactionCreateBuilder create();
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransaction.java
+############## CONFLICT ##############
+Conflict type: SameSignatureCM
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: copiedFile
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public TransactionDeleteBuilder delete(); ##FSTMerge## public TransactionDeleteBuilder delete();
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransaction.java
+############## CONFLICT ##############
+Conflict type: SameSignatureCM
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: copiedFile
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public TransactionSetDataBuilder setData(); ##FSTMerge## public TransactionSetDataBuilder setData();
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransaction.java
+############## CONFLICT ##############
+Conflict type: SameSignatureCM
+Merge Commit SHA-1: 7941e0403f34c6e15f66061d0bbc192f591b7a45
+Parent1 SHA-1: 8e9a54c6ca3d33c947d9f069f6d1cffcae8da2dd
+Parent2 SHA-1: f78e49828e1ed7ac593448a2db995d79e1d126a6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: copiedFile
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public TransactionCheckBuilder check(); ##FSTMerge## public TransactionCheckBuilder check();
+File path: /tmp/downloads/curator/revisions/rev_8e9a5_f78e4/rev_8e9a5-f78e4/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransaction.java
+
+==================================================================================================================
+Revision: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58.revisions
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+    public CuratorTransaction inTransaction()
+    {
+        Preconditions.checkState(state.get() == State.STARTED);
+
+        return new CuratorTransactionImpl(this);
+    } ##FSTMerge## @Override
+    public CuratorTransaction inTransaction()
+    {
+        Preconditions.checkState(state.get() == State.STARTED, "instance must be started before calling this method");
+
+        return new CuratorTransactionImpl(this);
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorFrameworkImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## TransactionCreateBuilder        asTransactionCreateBuilder(final CuratorTransactionImpl curatorTransaction, final CuratorMultiTransactionRecord transaction)
+    {
+        return new TransactionCreateBuilder()
+        {
+            @Override
+            public PathAndBytesable<CuratorTransactionBridge> withACL(List<ACL> aclList)
+            {
+                CreateBuilderImpl.this.withACL(aclList);
+                return this;
+            }
+
+            @Override
+            public ACLPathAndBytesable<CuratorTransactionBridge> withMode(CreateMode mode)
+            {
+                CreateBuilderImpl.this.withMode(mode);
+                return this;
+            }
+
+            @Override
+            public CuratorTransactionBridge forPath(String path) throws Exception
+            {
+                return forPath(path, client.getDefaultData());
+            }
+
+            @Override
+            public CuratorTransactionBridge forPath(String path, byte[] data) throws Exception
+            {
+                String      fixedPath = client.fixForNamespace(path);
+                transaction.add(Op.create(fixedPath, data, acling.getAclList(path), createMode), OperationType.CREATE, path);
+                return curatorTransaction;
+            }
+        };
+    } ##FSTMerge## TransactionCreateBuilder        asTransactionCreateBuilder(final CuratorTransactionImpl curatorTransaction, final CuratorMultiTransactionRecord transaction)
+    {
+        return new TransactionCreateBuilder()
+        {
+            @Override
+            public PathAndBytesable<CuratorTransactionBridge> withACL(List<ACL> aclList)
+            {
+                CreateBuilderImpl.this.withACL(aclList);
+                return this;
+            }
+
+            @Override
+            public ACLPathAndBytesable<CuratorTransactionBridge> withMode(CreateMode mode)
+            {
+                CreateBuilderImpl.this.withMode(mode);
+                return this;
+            }
+
+            @Override
+            public CuratorTransactionBridge forPath(String path) throws Exception
+            {
+                return forPath(path, client.getDefaultData());
+            }
+
+            @Override
+            public CuratorTransactionBridge forPath(String path, byte[] data) throws Exception
+            {
+                String      fixedPath = client.fixForNamespace(path);
+                transaction.add(Op.create(fixedPath, data, acling.getAclList(path), createMode), OperationType.CREATE, path);
+                return curatorTransaction;
+            }
+        };
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CreateBuilderImpl.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/test/java/com/netflix/curator/framework/imps/TestTransactions.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## extends BaseClassForTests ##FSTMerge## extends BaseClassForTests
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/test/java/com/netflix/curator/framework/imps/TestTransactions.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Test
+    public void     testCheckVersion() throws Exception
+    {
+        CuratorFramework        client = CuratorFrameworkFactory.newClient(server.getConnectString(), new RetryOneTime(1));
+        client.start();
+        try
+        {
+            client.create().forPath("/foo");
+            Stat        stat = client.setData().forPath("/foo", "new".getBytes());  // up the version
+
+            try
+            {
+                client.inTransaction()
+                    .check().withVersion(stat.getVersion() + 1).forPath("/foo") // force a bad version
+                .and()
+                    .create().forPath("/bar")
+                .and()
+                    .commit();
+
+                Assert.fail();
+            }
+            catch ( KeeperException.BadVersionException correct )
+            {
+                // correct
+            }
+            
+            Assert.assertNull(client.checkExists().forPath("/bar"));
+        }
+        finally
+        {
+            client.close();
+        }
+    } ##FSTMerge## @Test
+    public void     testCheckVersion() throws Exception
+    {
+        CuratorFramework        client = CuratorFrameworkFactory.newClient(server.getConnectString(), new RetryOneTime(1));
+        client.start();
+        try
+        {
+            client.create().forPath("/foo");
+            Stat        stat = client.setData().forPath("/foo", "new".getBytes());  // up the version
+
+            try
+            {
+                client.inTransaction()
+                    .check().withVersion(stat.getVersion() + 1).forPath("/foo") // force a bad version
+                .and()
+                    .create().forPath("/bar")
+                .and()
+                    .commit();
+
+                Assert.fail();
+            }
+            catch ( KeeperException.BadVersionException correct )
+            {
+                // correct
+            }
+            
+            Assert.assertNull(client.checkExists().forPath("/bar"));
+        }
+        finally
+        {
+            client.close();
+        }
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/test/java/com/netflix/curator/framework/imps/TestTransactions.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Test
+    public void     testWithNamespace() throws Exception
+    {
+        CuratorFramework        client = CuratorFrameworkFactory.builder().connectString(server.getConnectString()).retryPolicy(new RetryOneTime(1)).namespace("galt").build();
+        client.start();
+        try
+        {
+            Collection<CuratorTransactionResult>    results =
+                client.inTransaction()
+                    .create().forPath("/foo", "one".getBytes())
+                .and()
+                    .create().withMode(CreateMode.PERSISTENT_SEQUENTIAL).forPath("/test-", "one".getBytes())
+                .and()
+                    .setData().forPath("/foo", "two".getBytes())
+                .and()
+                    .create().forPath("/foo/bar")
+                .and()
+                    .delete().forPath("/foo/bar")
+                .and()
+                    .commit();
+
+            Assert.assertTrue(client.checkExists().forPath("/foo") != null);
+            Assert.assertTrue(client.nonNamespaceView().checkExists().forPath("/galt/foo") != null);
+            Assert.assertEquals(client.getData().forPath("/foo"), "two".getBytes());
+            Assert.assertTrue(client.checkExists().forPath("/foo/bar") == null);
+
+            CuratorTransactionResult    ephemeralResult = Iterables.find(results, CuratorTransactionResult.ofTypeAndPath(OperationType.CREATE, "/test-"));
+            Assert.assertNotNull(ephemeralResult);
+            Assert.assertNotEquals(ephemeralResult.getResultPath(), "/test-");
+            Assert.assertTrue(ephemeralResult.getResultPath().startsWith("/test-"));
+        }
+        finally
+        {
+            client.close();
+        }
+    } ##FSTMerge## @Test
+    public void     testWithNamespace() throws Exception
+    {
+        CuratorFramework        client = CuratorFrameworkFactory.builder().connectString(server.getConnectString()).retryPolicy(new RetryOneTime(1)).namespace("galt").build();
+        client.start();
+        try
+        {
+            Collection<CuratorTransactionResult>    results =
+                client.inTransaction()
+                    .create().forPath("/foo", "one".getBytes())
+                .and()
+                    .create().withMode(CreateMode.PERSISTENT_SEQUENTIAL).forPath("/test-", "one".getBytes())
+                .and()
+                    .setData().forPath("/foo", "two".getBytes())
+                .and()
+                    .create().forPath("/foo/bar")
+                .and()
+                    .delete().forPath("/foo/bar")
+                .and()
+                    .commit();
+
+            Assert.assertTrue(client.checkExists().forPath("/foo") != null);
+            Assert.assertTrue(client.nonNamespaceView().checkExists().forPath("/galt/foo") != null);
+            Assert.assertEquals(client.getData().forPath("/foo"), "two".getBytes());
+            Assert.assertTrue(client.checkExists().forPath("/foo/bar") == null);
+
+            CuratorTransactionResult    ephemeralResult = Iterables.find(results, CuratorTransactionResult.ofTypeAndPath(OperationType.CREATE, "/test-"));
+            Assert.assertNotNull(ephemeralResult);
+            Assert.assertNotEquals(ephemeralResult.getResultPath(), "/test-");
+            Assert.assertTrue(ephemeralResult.getResultPath().startsWith("/test-"));
+        }
+        finally
+        {
+            client.close();
+        }
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/test/java/com/netflix/curator/framework/imps/TestTransactions.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Test
+    public void     testBasic() throws Exception
+    {
+        CuratorFramework        client = CuratorFrameworkFactory.newClient(server.getConnectString(), new RetryOneTime(1));
+        client.start();
+        try
+        {
+            Collection<CuratorTransactionResult>    results =
+                client.inTransaction()
+                    .create().forPath("/foo")
+                .and()
+                    .create().forPath("/foo/bar", "snafu".getBytes())
+                .and()
+                    .commit();
+
+            Assert.assertTrue(client.checkExists().forPath("/foo/bar") != null);
+            Assert.assertEquals(client.getData().forPath("/foo/bar"), "snafu".getBytes());
+
+            CuratorTransactionResult    fooResult = Iterables.find(results, CuratorTransactionResult.ofTypeAndPath(OperationType.CREATE, "/foo"));
+            CuratorTransactionResult    fooBarResult = Iterables.find(results, CuratorTransactionResult.ofTypeAndPath(OperationType.CREATE, "/foo/bar"));
+            Assert.assertNotNull(fooResult);
+            Assert.assertNotNull(fooBarResult);
+            Assert.assertNotSame(fooResult, fooBarResult);
+            Assert.assertEquals(fooResult.getResultPath(), "/foo");
+            Assert.assertEquals(fooBarResult.getResultPath(), "/foo/bar");
+        }
+        finally
+        {
+            client.close();
+        }
+    } ##FSTMerge## @Test
+    public void     testBasic() throws Exception
+    {
+        CuratorFramework        client = CuratorFrameworkFactory.newClient(server.getConnectString(), new RetryOneTime(1));
+        client.start();
+        try
+        {
+            Collection<CuratorTransactionResult>    results =
+                client.inTransaction()
+                    .create().forPath("/foo")
+                .and()
+                    .create().forPath("/foo/bar", "snafu".getBytes())
+                .and()
+                    .commit();
+
+            Assert.assertTrue(client.checkExists().forPath("/foo/bar") != null);
+            Assert.assertEquals(client.getData().forPath("/foo/bar"), "snafu".getBytes());
+
+            CuratorTransactionResult    fooResult = Iterables.find(results, CuratorTransactionResult.ofTypeAndPath(OperationType.CREATE, "/foo"));
+            CuratorTransactionResult    fooBarResult = Iterables.find(results, CuratorTransactionResult.ofTypeAndPath(OperationType.CREATE, "/foo/bar"));
+            Assert.assertNotNull(fooResult);
+            Assert.assertNotNull(fooBarResult);
+            Assert.assertNotSame(fooResult, fooBarResult);
+            Assert.assertEquals(fooResult.getResultPath(), "/foo");
+            Assert.assertEquals(fooBarResult.getResultPath(), "/foo/bar");
+        }
+        finally
+        {
+            client.close();
+        }
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/test/java/com/netflix/curator/framework/imps/TestTransactions.java
+############## CONFLICT ##############
+Conflict type: ImplementList
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## implements CuratorTransaction, CuratorTransactionBridge, CuratorTransactionFinal ##FSTMerge## implements CuratorTransaction, CuratorTransactionBridge, CuratorTransactionFinal
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final CuratorFrameworkImpl              client; ##FSTMerge## private final CuratorFrameworkImpl              client;
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final CuratorMultiTransactionRecord     transaction; ##FSTMerge## private final CuratorMultiTransactionRecord     transaction;
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private boolean         isCommitted = false; ##FSTMerge## private boolean         isCommitted = false;
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## CuratorTransactionImpl(CuratorFrameworkImpl client)
+    {
+        this.client = client;
+        transaction = new CuratorMultiTransactionRecord();
+    } ##FSTMerge## CuratorTransactionImpl(CuratorFrameworkImpl client)
+    {
+        this.client = client;
+        transaction = new CuratorMultiTransactionRecord();
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+    public CuratorTransactionFinal and()
+    {
+        return this;
+    } ##FSTMerge## @Override
+    public CuratorTransactionFinal and()
+    {
+        return this;
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+    public TransactionCreateBuilder create()
+    {
+        Preconditions.checkArgument(!isCommitted);
+
+        return new CreateBuilderImpl(client).asTransactionCreateBuilder(this, transaction);
+    } ##FSTMerge## @Override
+    public TransactionCreateBuilder create()
+    {
+        Preconditions.checkState(!isCommitted, "transaction already committed");
+
+        return new CreateBuilderImpl(client).asTransactionCreateBuilder(this, transaction);
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+    public TransactionDeleteBuilder delete()
+    {
+        Preconditions.checkArgument(!isCommitted);
+
+        return new DeleteBuilderImpl(client).asTransactionDeleteBuilder(this, transaction);
+    } ##FSTMerge## @Override
+    public TransactionDeleteBuilder delete()
+    {
+        Preconditions.checkState(!isCommitted, "transaction already committed");
+
+        return new DeleteBuilderImpl(client).asTransactionDeleteBuilder(this, transaction);
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+    public TransactionSetDataBuilder setData()
+    {
+        Preconditions.checkArgument(!isCommitted);
+
+        return new SetDataBuilderImpl(client).asTransactionSetDataBuilder(this, transaction);
+    } ##FSTMerge## @Override
+    public TransactionSetDataBuilder setData()
+    {
+        Preconditions.checkState(!isCommitted, "transaction already committed");
+
+        return new SetDataBuilderImpl(client).asTransactionSetDataBuilder(this, transaction);
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+    public TransactionCheckBuilder check()
+    {
+        Preconditions.checkArgument(!isCommitted);
+
+        return new TransactionCheckBuilder()
+        {
+            private int         version = -1;
+
+            @Override
+            public CuratorTransactionBridge forPath(String path) throws Exception
+            {
+                String      fixedPath = client.fixForNamespace(path);
+                transaction.add(Op.check(fixedPath, version), OperationType.CHECK, path);
+
+                return CuratorTransactionImpl.this;
+            }
+
+            @Override
+            public Pathable<CuratorTransactionBridge> withVersion(int version)
+            {
+                this.version = version;
+                return this;
+            }
+        };
+    } ##FSTMerge## @Override
+    public TransactionCheckBuilder check()
+    {
+        Preconditions.checkState(!isCommitted, "transaction already committed");
+
+        return new TransactionCheckBuilder()
+        {
+            private int         version = -1;
+
+            @Override
+            public CuratorTransactionBridge forPath(String path) throws Exception
+            {
+                String      fixedPath = client.fixForNamespace(path);
+                transaction.add(Op.check(fixedPath, version), OperationType.CHECK, path);
+
+                return CuratorTransactionImpl.this;
+            }
+
+            @Override
+            public Pathable<CuratorTransactionBridge> withVersion(int version)
+            {
+                this.version = version;
+                return this;
+            }
+        };
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+    public Collection<CuratorTransactionResult> commit() throws Exception
+    {
+        Preconditions.checkArgument(!isCommitted);
+        isCommitted = true;
+
+        final AtomicBoolean firstTime = new AtomicBoolean(true);
+        List<OpResult>      resultList = RetryLoop.callWithRetry
+        (
+            client.getZookeeperClient(),
+            new Callable<List<OpResult>>()
+            {
+                @Override
+                public List<OpResult> call() throws Exception
+                {
+                    return doOperation(firstTime);
+                }
+            }
+        );
+        
+        if ( resultList.size() != transaction.metadataSize() )
+        {
+            throw new IllegalStateException(String.format("Result size (%d) doesn't match input size (%d)", resultList.size(), transaction.metadataSize()));
+        }
+
+        ImmutableList.Builder<CuratorTransactionResult>     builder = ImmutableList.builder();
+        for ( int i = 0; i < resultList.size(); ++i )
+        {
+            OpResult                                    opResult = resultList.get(i);
+            CuratorMultiTransactionRecord.TypeAndPath   metadata = transaction.getMetadata(i);
+            CuratorTransactionResult                    curatorResult = makeCuratorResult(opResult, metadata);
+            builder.add(curatorResult);
+        }
+
+        return builder.build();
+    } ##FSTMerge## @Override
+    public Collection<CuratorTransactionResult> commit() throws Exception
+    {
+        Preconditions.checkState(!isCommitted, "transaction already committed");
+        isCommitted = true;
+
+        final AtomicBoolean firstTime = new AtomicBoolean(true);
+        List<OpResult>      resultList = RetryLoop.callWithRetry
+        (
+            client.getZookeeperClient(),
+            new Callable<List<OpResult>>()
+            {
+                @Override
+                public List<OpResult> call() throws Exception
+                {
+                    return doOperation(firstTime);
+                }
+            }
+        );
+        
+        if ( resultList.size() != transaction.metadataSize() )
+        {
+            throw new IllegalStateException(String.format("Result size (%d) doesn't match input size (%d)", resultList.size(), transaction.metadataSize()));
+        }
+
+        ImmutableList.Builder<CuratorTransactionResult>     builder = ImmutableList.builder();
+        for ( int i = 0; i < resultList.size(); ++i )
+        {
+            OpResult                                    opResult = resultList.get(i);
+            CuratorMultiTransactionRecord.TypeAndPath   metadata = transaction.getMetadata(i);
+            CuratorTransactionResult                    curatorResult = makeCuratorResult(opResult, metadata);
+            builder.add(curatorResult);
+        }
+
+        return builder.build();
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private List<OpResult> doOperation(AtomicBoolean firstTime) throws Exception
+    {
+        boolean         localFirstTime = firstTime.getAndSet(false);
+        if ( !localFirstTime )
+        {
+
+        }
+
+        List<OpResult>  opResults = client.getZooKeeper().multi(transaction);
+        if ( opResults.size() > 0 )
+        {
+            OpResult        firstResult = opResults.get(0);
+            if ( firstResult.getType() == ZooDefs.OpCode.error )
+            {
+                OpResult.ErrorResult        error = (OpResult.ErrorResult)firstResult;
+                KeeperException.Code        code = KeeperException.Code.get(error.getErr());
+                if ( code == null )
+                {
+                    code = KeeperException.Code.UNIMPLEMENTED;
+                }
+                throw KeeperException.create(code);
+            }
+        }
+        return opResults;
+    } ##FSTMerge## private List<OpResult> doOperation(AtomicBoolean firstTime) throws Exception
+    {
+        boolean         localFirstTime = firstTime.getAndSet(false);
+        if ( !localFirstTime )
+        {
+
+        }
+
+        List<OpResult>  opResults = client.getZooKeeper().multi(transaction);
+        if ( opResults.size() > 0 )
+        {
+            OpResult        firstResult = opResults.get(0);
+            if ( firstResult.getType() == ZooDefs.OpCode.error )
+            {
+                OpResult.ErrorResult        error = (OpResult.ErrorResult)firstResult;
+                KeeperException.Code        code = KeeperException.Code.get(error.getErr());
+                if ( code == null )
+                {
+                    code = KeeperException.Code.UNIMPLEMENTED;
+                }
+                throw KeeperException.create(code);
+            }
+        }
+        return opResults;
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private CuratorTransactionResult makeCuratorResult(OpResult opResult, CuratorMultiTransactionRecord.TypeAndPath metadata)
+    {
+        String                                      resultPath = null;
+        Stat resultStat = null;
+        switch ( opResult.getType() )
+        {
+            default:
+            {
+                // NOP
+                break;
+            }
+
+            case ZooDefs.OpCode.create:
+            {
+                OpResult.CreateResult       createResult = (OpResult.CreateResult)opResult;
+                resultPath = client.unfixForNamespace(createResult.getPath());
+                break;
+            }
+
+            case ZooDefs.OpCode.setData:
+            {
+                OpResult.SetDataResult      setDataResult = (OpResult.SetDataResult)opResult;
+                resultStat = setDataResult.getStat();
+                break;
+            }
+        }
+
+        return new CuratorTransactionResult(metadata.type, metadata.forPath, resultPath, resultStat);
+    } ##FSTMerge## private CuratorTransactionResult makeCuratorResult(OpResult opResult, CuratorMultiTransactionRecord.TypeAndPath metadata)
+    {
+        String                                      resultPath = null;
+        Stat resultStat = null;
+        switch ( opResult.getType() )
+        {
+            default:
+            {
+                // NOP
+                break;
+            }
+
+            case ZooDefs.OpCode.create:
+            {
+                OpResult.CreateResult       createResult = (OpResult.CreateResult)opResult;
+                resultPath = client.unfixForNamespace(createResult.getPath());
+                break;
+            }
+
+            case ZooDefs.OpCode.setData:
+            {
+                OpResult.SetDataResult      setDataResult = (OpResult.SetDataResult)opResult;
+                resultStat = setDataResult.getStat();
+                break;
+            }
+        }
+
+        return new CuratorTransactionResult(metadata.type, metadata.forPath, resultPath, resultStat);
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorTransactionImpl.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## extends MultiTransactionRecord ##FSTMerge## extends MultiTransactionRecord
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final List<TypeAndPath>     metadata = Lists.newArrayList(); ##FSTMerge## private final List<TypeAndPath>     metadata = Lists.newArrayList();
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## static ##FSTMerge## static
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## final OperationType type; ##FSTMerge## final OperationType type;
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## final String forPath; ##FSTMerge## final String forPath;
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## TypeAndPath(OperationType type, String forPath)
+        {
+            this.type = type;
+            this.forPath = forPath;
+        } ##FSTMerge## TypeAndPath(OperationType type, String forPath)
+        {
+            this.type = type;
+            this.forPath = forPath;
+        }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+    public final void add(Op op)
+    {
+        throw new UnsupportedOperationException();
+    } ##FSTMerge## @Override
+    public final void add(Op op)
+    {
+        throw new UnsupportedOperationException();
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## void add(Op op, OperationType type, String forPath)
+    {
+        super.add(op);
+        metadata.add(new TypeAndPath(type, forPath));
+    } ##FSTMerge## void add(Op op, OperationType type, String forPath)
+    {
+        super.add(op);
+        metadata.add(new TypeAndPath(type, forPath));
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## TypeAndPath     getMetadata(int index)
+    {
+        return metadata.get(index);
+    } ##FSTMerge## TypeAndPath     getMetadata(int index)
+    {
+        return metadata.get(index);
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## int             metadataSize()
+    {
+        return metadata.size();
+    } ##FSTMerge## int             metadataSize()
+    {
+        return metadata.size();
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/imps/CuratorMultiTransactionRecord.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/TransactionSetDataBuilder.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## extends
+    PathAndBytesable<CuratorTransactionBridge>,
+    Versionable<PathAndBytesable<CuratorTransactionBridge>> ##FSTMerge## extends
+    PathAndBytesable<CuratorTransactionBridge>,
+    Versionable<PathAndBytesable<CuratorTransactionBridge>>
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/TransactionSetDataBuilder.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/TransactionDeleteBuilder.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## extends
+    Pathable<CuratorTransactionBridge>,
+    Versionable<Pathable<CuratorTransactionBridge>> ##FSTMerge## extends
+    Pathable<CuratorTransactionBridge>,
+    Versionable<Pathable<CuratorTransactionBridge>>
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/TransactionDeleteBuilder.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/TransactionCreateBuilder.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## extends
+    PathAndBytesable<CuratorTransactionBridge>,
+    CreateModable<ACLPathAndBytesable<CuratorTransactionBridge>>,
+    ACLPathAndBytesable<CuratorTransactionBridge> ##FSTMerge## extends
+    PathAndBytesable<CuratorTransactionBridge>,
+    CreateModable<ACLPathAndBytesable<CuratorTransactionBridge>>,
+    ACLPathAndBytesable<CuratorTransactionBridge>
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/TransactionCreateBuilder.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/TransactionCheckBuilder.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## extends
+    Pathable<CuratorTransactionBridge>,
+    Versionable<Pathable<CuratorTransactionBridge>> ##FSTMerge## extends
+    Pathable<CuratorTransactionBridge>,
+    Versionable<Pathable<CuratorTransactionBridge>>
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/TransactionCheckBuilder.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/OperationType.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final OperationType type; ##FSTMerge## private final OperationType type;
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final String        forPath; ##FSTMerge## private final String        forPath;
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final String        resultPath; ##FSTMerge## private final String        resultPath;
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final Stat          resultStat; ##FSTMerge## private final Stat          resultStat;
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public static Predicate<CuratorTransactionResult>       ofTypeAndPath(final OperationType type, final String forPath)
+    {
+        return new Predicate<CuratorTransactionResult>()
+        {
+            @Override
+            public boolean apply(CuratorTransactionResult result)
+            {
+                return (result.getType() == type) && result.getForPath().equals(forPath);
+            }
+        };
+    } ##FSTMerge## public static Predicate<CuratorTransactionResult>       ofTypeAndPath(final OperationType type, final String forPath)
+    {
+        return new Predicate<CuratorTransactionResult>()
+        {
+            @Override
+            public boolean apply(CuratorTransactionResult result)
+            {
+                return (result.getType() == type) && result.getForPath().equals(forPath);
+            }
+        };
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public CuratorTransactionResult(OperationType type, String forPath, String resultPath, Stat resultStat)
+    {
+        this.forPath = forPath;
+        this.resultPath = resultPath;
+        this.resultStat = resultStat;
+        this.type = type;
+    } ##FSTMerge## public CuratorTransactionResult(OperationType type, String forPath, String resultPath, Stat resultStat)
+    {
+        this.forPath = forPath;
+        this.resultPath = resultPath;
+        this.resultStat = resultStat;
+        this.type = type;
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public OperationType getType()
+    {
+        return type;
+    } ##FSTMerge## public OperationType getType()
+    {
+        return type;
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public String getForPath()
+    {
+        return forPath;
+    } ##FSTMerge## public String getForPath()
+    {
+        return forPath;
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public String getResultPath()
+    {
+        return resultPath;
+    } ##FSTMerge## public String getResultPath()
+    {
+        return resultPath;
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public Stat getResultStat()
+    {
+        return resultStat;
+    } ##FSTMerge## public Stat getResultStat()
+    {
+        return resultStat;
+    }
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionResult.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionFinal.java
+############## CONFLICT ##############
+Conflict type: ExtendsList
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## extends CuratorTransaction ##FSTMerge## extends CuratorTransaction
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionFinal.java
+############## CONFLICT ##############
+Conflict type: SameSignatureCM
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: copiedFile
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public Collection<CuratorTransactionResult> commit() throws Exception; ##FSTMerge## public Collection<CuratorTransactionResult> commit() throws Exception;
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionFinal.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionBridge.java
+############## CONFLICT ##############
+Conflict type: SameSignatureCM
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: copiedFile
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public CuratorTransactionFinal and(); ##FSTMerge## public CuratorTransactionFinal and();
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransactionBridge.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public ##FSTMerge## public
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransaction.java
+############## CONFLICT ##############
+Conflict type: SameSignatureCM
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: copiedFile
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public TransactionCreateBuilder create(); ##FSTMerge## public TransactionCreateBuilder create();
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransaction.java
+############## CONFLICT ##############
+Conflict type: SameSignatureCM
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: copiedFile
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public TransactionDeleteBuilder delete(); ##FSTMerge## public TransactionDeleteBuilder delete();
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransaction.java
+############## CONFLICT ##############
+Conflict type: SameSignatureCM
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: copiedFile
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public TransactionSetDataBuilder setData(); ##FSTMerge## public TransactionSetDataBuilder setData();
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransaction.java
+############## CONFLICT ##############
+Conflict type: SameSignatureCM
+Merge Commit SHA-1: 068e89b5169f87924c0804096a9c65fd0197a0d2
+Parent1 SHA-1: b5a2a9fec393a43813a8598207e2080059d15d9d
+Parent2 SHA-1: 0ca5859cd5d1d006e9a2cd5c243603fcb5f82cb6
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: copiedFile
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public TransactionCheckBuilder check(); ##FSTMerge## public TransactionCheckBuilder check();
+File path: /tmp/downloads/curator/revisions/rev_b5a2a_0ca58/rev_b5a2a-0ca58/curator-framework/src/main/java/com/netflix/curator/framework/api/transaction/CuratorTransaction.java
+
+=========================================================

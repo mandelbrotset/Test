@@ -1,0 +1,8 @@
+#!/bin/bash
+#Outputs the parent of a given commit
+#$1: path to repo
+#$2: child commit
+
+cd $1
+
+git show ${2}^ --format=%H | head -n1

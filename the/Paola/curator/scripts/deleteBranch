@@ -1,0 +1,7 @@
+#!/bin/bash
+#Deletes a branch
+#$1: path to repo
+#$2: branch to delete
+
+cd $1
+git branch -D $2

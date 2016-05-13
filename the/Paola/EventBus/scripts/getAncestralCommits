@@ -1,0 +1,8 @@
+#!/bin/bash
+#outputs the two ancestral commits of a merge commit separated by a space
+#$1: path to repo
+#$2: merge commit
+
+cd $1
+
+git --no-pager log --merges --format=%p $2 | head -n1

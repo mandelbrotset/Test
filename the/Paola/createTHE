@@ -1,0 +1,21 @@
+#!/bin/bash
+mkdir android-async-http
+mkdir android-best-practices
+mkdir Universal-Image-Loader
+mkdir curator
+mkdir elasticsearch
+mkdir EventBus
+mkdir fresco
+mkdir guava
+mkdir iosched
+mkdir java-design-patterns
+mkdir leakcanary
+mkdir libgdx
+mkdir okhttp
+mkdir react-native
+mkdir retrofit
+mkdir RxJava
+mkdir SlidingMenu
+mkdir spring-framework
+mkdir storm
+mkdir zxing

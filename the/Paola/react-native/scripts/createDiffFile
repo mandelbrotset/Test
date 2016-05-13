@@ -1,0 +1,10 @@
+#!/bin/bash
+#Creates a file containing the git diff of two commits
+#$1: path to repo
+#$2: left ancestral commit
+#$3: right ancestral commit
+#$4: path to output file
+
+cd $1
+
+(git --no-pager diff $2 $3) > $4

@@ -1,0 +1,103 @@
+=========================================================
+Revision: /tmp/downloads/SlidingMenu/revisions/rev_e44c1_72e2c/rev_e44c1-72e2c.revisions
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 2d19a64f89c882bb5eacf2304637624c1c9b3d61
+Parent1 SHA-1: e44c1d3122d48269893c0d47f43dc4325d6a7321
+Parent2 SHA-1: 72e2c9c43a021d929aabe8c19786982a47a75977
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ protected void onLayout(boolean changed, int l, int t, int r, int b) {
+			mInLayout = true;
+			populate();
+			mInLayout = false;
+
+			final int count = getChildCount();
+			int height = b - t;
+			int paddingTop = getPaddingTop();
+			int paddingBottom = getPaddingBottom();
+
+			for (int i = 0; i < count; i++) {
+				final View child = getChildAt(i);
+				if (child.getVisibility() != GONE) {
+					int pos = infoForChild(child).position;
+					int childLeft = 0;
+					int childTop = 0;
+					childLeft = getChildLeft(pos);
+					child.layout(childLeft, childTop,
+							childLeft + child.getMeasuredWidth(),
+							childTop + child.getMeasuredHeight());
+					if (DEBUG)
+						Log.v(TAG, "top: " + childTop + ", left: " + childLeft +
+								", height: " + child.getMeasuredHeight() + 
+								", width:" + child.getMeasuredWidth());
+				}
+			}
+			mTopPageBounds = paddingTop;
+			mBottomPageBounds = height - paddingBottom;
+			mFirstLayout = false;
+		} ##FSTMerge## protected void onLayout(boolean changed, int l, int t, int r, int b) {
+			mInLayout = true;
+			populate();
+			mInLayout = false;
+
+			final int count = getChildCount();
+			int height = b - t;
+			int paddingTop = getPaddingTop();
+			int paddingBottom = getPaddingBottom();
+
+			for (int i = 0; i < count; i++) {
+				final View child = getChildAt(i);
+				if (child.getVisibility() != GONE) {
+					int pos = infoForChild(child).position;
+					int childLeft = 0;
+					int childTop = 0;
+					childLeft = getChildLeft(pos);
+					child.layout(childLeft, childTop,
+							childLeft + child.getMeasuredWidth(),
+							childTop + child.getMeasuredHeight());
+					Log.v(TAG, "top: " + childTop + ", left: " + childLeft +
+							", height: " + child.getMeasuredHeight() + 
+							", width:" + child.getMeasuredWidth());
+				}
+			}
+			mTopPageBounds = paddingTop;
+			mBottomPageBounds = height - paddingBottom;
+			mFirstLayout = false;
+		} ##FSTMerge## protected void onLayout(boolean changed, int l, int t, int r, int b) {
+			mInLayout = true;
+			populate();
+			mInLayout = false;
+
+			final int count = getChildCount();
+			int height = b - t;
+			int paddingTop = getPaddingTop();
+			int paddingBottom = getPaddingBottom();
+
+			for (int i = 0; i < count; i++) {
+				final View child = getChildAt(i);
+				if (child.getVisibility() != GONE) {
+					int pos = infoForChild(child).position;
+					int childLeft = 0;
+					int childTop = 0;
+					childLeft = getChildLeft(pos);
+					child.layout(childLeft, childTop,
+							childLeft + child.getMeasuredWidth(),
+							childTop + child.getMeasuredHeight());
+					if (DEBUG) Log.v(TAG, "top: " + childTop + ", left: " + childLeft +
+							", height: " + child.getMeasuredHeight() + 
+							", width:" + child.getMeasuredWidth());
+				}
+			}
+			mTopPageBounds = paddingTop;
+			mBottomPageBounds = height - paddingBottom;
+			mFirstLayout = false;
+		}
+File path: /tmp/downloads/SlidingMenu/revisions/rev_e44c1_72e2c/rev_e44c1-72e2c/library/src/com/slidingmenu/lib/CustomViewAbove.java
+
+=========================================================

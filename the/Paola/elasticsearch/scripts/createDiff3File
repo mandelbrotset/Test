@@ -1,0 +1,11 @@
+#!/bin/bash
+#Creates a file containing the git diff of two commits
+#$1: path to CFT files
+#$2: left file
+#$3: common ancestor
+#$4: right file
+#$5: path to output file
+
+cd $1
+
+git merge-file -p --diff3 $2 $3 $4 > $5

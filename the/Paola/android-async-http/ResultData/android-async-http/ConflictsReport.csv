@@ -1,0 +1,3350 @@
+=========================================================
+Revision: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541.revisions
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## protected static final int SUCCESS_JSON_MESSAGE = 100; ##FSTMerge## protected static final int SUCCESS_JSON_MESSAGE = 100;
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/JsonHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+    protected void sendSuccessMessage(final int statusCode, final Header[] headers, final String responseBody) {
+        if (statusCode != HttpStatus.SC_NO_CONTENT) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Object jsonResponse = parseResponse(responseBody);
+                        sendMessage(obtainMessage(SUCCESS_JSON_MESSAGE, new Object[]{statusCode, headers, jsonResponse}));
+                    } catch (JSONException e) {
+                        sendFailureMessage(statusCode, headers, e, responseBody);
+                    }
+                }
+            }).start();
+        } else {
+            sendMessage(obtainMessage(SUCCESS_JSON_MESSAGE, new Object[]{statusCode, headers, new JSONObject()}));
+        }
+    } ##FSTMerge## @Override
+    protected void sendSuccessMessage(final int statusCode, final Header[] headers, final String responseBody) {
+        if (statusCode != HttpStatus.SC_NO_CONTENT) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        final Object jsonResponse = parseResponse(responseBody);
+                        postRunnable(new Runnable() {
+                            @Override
+                            public void run() {
+                                sendMessage(obtainMessage(SUCCESS_JSON_MESSAGE, new Object[]{statusCode, headers, jsonResponse}));
+                            }
+                        });
+                    } catch (final JSONException e) {
+                        postRunnable(new Runnable() {
+                            @Override
+                            public void run() {
+                                sendFailureMessage(statusCode, headers, e, responseBody);
+                            }
+                        });
+                    }
+                }
+            }).start();
+        } else {
+            sendMessage(obtainMessage(SUCCESS_JSON_MESSAGE, new Object[]{statusCode, headers, new JSONObject()}));
+        }
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/JsonHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+    protected void handleMessage(Message msg) {
+        switch (msg.what) {
+            case SUCCESS_JSON_MESSAGE:
+                Object[] response = (Object[]) msg.obj;
+                handleSuccessJsonMessage((Integer) response[0], (Header[]) response[1], response[2]);
+                break;
+            default:
+                super.handleMessage(msg);
+        }
+    } ##FSTMerge## @Override
+    protected void handleMessage(Message msg) {
+        switch (msg.what) {
+            case SUCCESS_JSON_MESSAGE:
+                Object[] response = (Object[]) msg.obj;
+                handleSuccessJsonMessage((Integer) response[0], (Header[]) response[1], response[2]);
+                break;
+            default:
+                super.handleMessage(msg);
+        }
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/JsonHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## protected void handleSuccessJsonMessage(int statusCode, Header[] headers, Object jsonResponse) {
+        if (jsonResponse instanceof JSONObject) {
+            onSuccess(statusCode, headers, (JSONObject) jsonResponse);
+        } else if (jsonResponse instanceof JSONArray) {
+            onSuccess(statusCode, headers, (JSONArray) jsonResponse);
+        } else if (jsonResponse instanceof String) {
+            onSuccess(statusCode, headers, (String) jsonResponse);
+        } else {
+            onFailure(new JSONException("Unexpected type " + jsonResponse.getClass().getName()), (JSONObject) null);
+        }
+    } ##FSTMerge## protected void handleSuccessJsonMessage(int statusCode, Header[] headers, Object jsonResponse) {
+        if (jsonResponse instanceof JSONObject) {
+            onSuccess(statusCode, headers, (JSONObject) jsonResponse);
+        } else if (jsonResponse instanceof JSONArray) {
+            onSuccess(statusCode, headers, (JSONArray) jsonResponse);
+        } else if (jsonResponse instanceof String) {
+            onSuccess(statusCode, headers, (String) jsonResponse);
+        } else {
+            onFailure(new JSONException("Unexpected type " + jsonResponse.getClass().getName()), (JSONObject) null);
+        }
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/JsonHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## protected Object parseResponse(String responseBody) throws JSONException {
+        if (null == responseBody)
+            return null;
+        Object result = null;
+        //trim the string to prevent start with blank, and test if the string is valid JSON, because the parser don't do this :(. If Json is not valid this will return null
+        responseBody = responseBody.trim();
+        if (responseBody.startsWith("{") || responseBody.startsWith("[")) {
+            result = new JSONTokener(responseBody).nextValue();
+        }
+        if (result == null) {
+            result = responseBody;
+        }
+        return result;
+    } ##FSTMerge## protected Object parseResponse(String responseBody) throws JSONException {
+        if (null == responseBody)
+            return null;
+        Object result = null;
+        //trim the string to prevent start with blank, and test if the string is valid JSON, because the parser don't do this :(. If Json is not valid this will return null
+        responseBody = responseBody.trim();
+        if (responseBody.startsWith("{") || responseBody.startsWith("[")) {
+            result = new JSONTokener(responseBody).nextValue();
+        }
+        if (result == null) {
+            result = responseBody;
+        }
+        return result;
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/JsonHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+    protected void handleFailureMessage(final int statusCode, final Header[] headers, final Throwable e, final String responseBody) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (responseBody != null) {
+                        Object jsonResponse = parseResponse(responseBody);
+                        if (jsonResponse instanceof JSONObject) {
+                            onFailure(statusCode, headers, e, (JSONObject) jsonResponse);
+                        } else if (jsonResponse instanceof JSONArray) {
+                            onFailure(statusCode, headers, e, (JSONArray) jsonResponse);
+                        } else if (jsonResponse instanceof String) {
+                            onFailure(statusCode, headers, e, (String) jsonResponse);
+                        } else {
+                            onFailure(statusCode, headers, e, responseBody);
+                        }
+                    } else {
+                        onFailure(e, "");
+                    }
+                } catch (JSONException ex) {
+                    onFailure(statusCode, headers, e, responseBody);
+                }
+            }
+        }).start();
+
+    } ##FSTMerge## @Override
+    protected void handleFailureMessage(final int statusCode, final Header[] headers, final Throwable e, final String responseBody) {
+        if (responseBody != null) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        final Object jsonResponse = parseResponse(responseBody);
+                        postRunnable(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (jsonResponse instanceof JSONObject) {
+                                    onFailure(statusCode, headers, e, (JSONObject) jsonResponse);
+                                } else if (jsonResponse instanceof JSONArray) {
+                                    onFailure(statusCode, headers, e, (JSONArray) jsonResponse);
+                                } else if (jsonResponse instanceof String) {
+                                    onFailure(statusCode, headers, e, (String) jsonResponse);
+                                } else {
+                                    onFailure(statusCode, headers, e, responseBody);
+                                }
+                            }
+                        });
+
+                    } catch (JSONException ex) {
+                        postRunnable(new Runnable() {
+                            @Override
+                            public void run() {
+                                onFailure(statusCode, headers, e, responseBody);
+                            }
+                        });
+
+                    }
+                }
+            }).start();
+        } else {
+            onFailure(e, "");
+        }
+
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/JsonHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public AsyncHttpResponseHandler() {
+        // Set up a handler to post events back to the correct thread if possible
+        if (Looper.myLooper() != null) {
+            handler = new ResponderHandler(this);
+        }
+    } ##FSTMerge## public AsyncHttpResponseHandler() {
+        // Set up a handler to post events back to the correct thread if possible
+        if (Looper.myLooper() != null) {
+            handler = new Handler() {
+                @Override
+                public void handleMessage(Message msg) {
+                    AsyncHttpResponseHandler.this.handleMessage(msg);
+                }
+            };
+        }
+    } ##FSTMerge## public AsyncHttpResponseHandler() {
+        // Set up a handler to post events back to the correct thread if possible
+        if (Looper.myLooper() != null) {
+            handler = new Handler() {
+                @Override
+                public void handleMessage(Message msg) {
+                    AsyncHttpResponseHandler.this.handleMessage(msg);
+                }
+            };
+        }
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Deprecated
+    public void onSuccess(String content) {
+    } ##FSTMerge## public void onSuccess(String content) {
+    } ##FSTMerge## public void onSuccess(String content) {
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Deprecated
+    public void onSuccess(int statusCode, Header[] headers, String content) {
+        onSuccess(statusCode, content);
+    } ##FSTMerge## public void onSuccess(int statusCode, Header[] headers, String content) {
+        onSuccess(statusCode, content);
+    } ##FSTMerge## public void onSuccess(int statusCode, Header[] headers, String content) {
+        onSuccess(statusCode, content);
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Deprecated
+    public void onSuccess(int statusCode, String content) {
+        onSuccess(content);
+    } ##FSTMerge## public void onSuccess(int statusCode, String content) {
+        onSuccess(content);
+    } ##FSTMerge## public void onSuccess(int statusCode, String content) {
+        onSuccess(content);
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Deprecated
+    public void onFailure(Throwable error, String content) {
+        // By default, call the deprecated onFailure(Throwable) for compatibility
+        onFailure(error);
+    } ##FSTMerge## public void onFailure(Throwable error, String content) {
+        // By default, call the deprecated onFailure(Throwable) for compatibility
+        onFailure(error);
+    } ##FSTMerge## public void onFailure(Throwable error, String content) {
+        // By default, call the deprecated onFailure(Throwable) for compatibility
+        onFailure(error);
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Deprecated
+    public void onFailure(int statusCode, Throwable error, String content) {
+        // By default, call the chain method onFailure(Throwable,String)
+        onFailure(error, content);
+    } ##FSTMerge## public void onFailure(int statusCode, Throwable error, String content) {
+        // By default, call the chain method onFailure(Throwable,String)
+        onFailure(error, content);
+    } ##FSTMerge## public void onFailure(int statusCode, Throwable error, String content) {
+        // By default, call the chain method onFailure(Throwable,String)
+        onFailure(error, content);
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Deprecated
+    public void onFailure(int statusCode, Header[] headers, Throwable error, String content) {
+        // By default, call the chain method onFailure(int,Throwable,String)
+        onFailure(statusCode, error, content);
+    } ##FSTMerge## public void onFailure(int statusCode, Header[] headers, Throwable error, String content) {
+        // By default, call the chain method onFailure(int,Throwable,String)
+        onFailure(statusCode, error, content);
+    } ##FSTMerge## public void onFailure(int statusCode, Header[] headers, Throwable error, String content) {
+        // By default, call the chain method onFailure(int,Throwable,String)
+        onFailure(statusCode, error, content);
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## protected void sendSuccessMessage(int statusCode, Header[] headers, String responseBody) {
+        sendMessage(obtainMessage(SUCCESS_MESSAGE, new Object[]{statusCode, headers, responseBody}));
+    } ##FSTMerge## protected void sendSuccessMessage(int statusCode, Header[] headers, String responseBody) {
+        sendMessage(obtainMessage(SUCCESS_MESSAGE, new Object[]{statusCode, headers, responseBody}));
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## protected void sendFailureMessage(int statusCode, Header[] headers, Throwable e, String responseBody) {
+        sendMessage(obtainMessage(FAILURE_MESSAGE, new Object[]{statusCode, headers, e, responseBody}));
+    } ##FSTMerge## protected void sendFailureMessage(int statusCode, Header[] headers, Throwable e, String responseBody) {
+        sendMessage(obtainMessage(FAILURE_MESSAGE, new Object[]{statusCode, headers, e, responseBody}));
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Deprecated
+    protected void sendFailureMessage(Throwable e, String responseBody) {
+        sendMessage(obtainMessage(FAILURE_MESSAGE, new Object[]{0, null, e, responseBody}));
+    } ##FSTMerge## @Deprecated
+    protected void sendFailureMessage(Throwable e, String responseBody) {
+        sendMessage(obtainMessage(FAILURE_MESSAGE, new Object[]{0, null, e, responseBody}));
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## protected void sendFailureMessage(int statusCode, Header[] headers, Throwable e, byte[] responseBody) {
+        sendMessage(obtainMessage(FAILURE_MESSAGE, new Object[]{statusCode, headers, e, responseBody}));
+    } ##FSTMerge## protected void sendFailureMessage(int statusCode, Header[] headers, Throwable e, byte[] responseBody) {
+        sendMessage(obtainMessage(FAILURE_MESSAGE, new Object[]{statusCode, headers, e, responseBody}));
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Deprecated
+    protected void sendFailureMessage(Throwable e, byte[] responseBody) {
+        sendMessage(obtainMessage(FAILURE_MESSAGE, new Object[]{0, null, e, responseBody}));
+    } ##FSTMerge## @Deprecated
+    protected void sendFailureMessage(Throwable e, byte[] responseBody) {
+        sendMessage(obtainMessage(FAILURE_MESSAGE, new Object[]{0, null, e, responseBody}));
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## protected void handleSuccessMessage(int statusCode, Header[] headers, String responseBody) {
+        onSuccess(statusCode, headers, responseBody);
+    } ##FSTMerge## protected void handleSuccessMessage(int statusCode, Header[] headers, String responseBody) {
+        onSuccess(statusCode, headers, responseBody);
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## protected void handleFailureMessage(int statusCode, Header[] headers, Throwable e, String responseBody) {
+        onFailure(statusCode, headers, e, responseBody);
+    } ##FSTMerge## protected void handleFailureMessage(int statusCode, Header[] headers, Throwable e, String responseBody) {
+        onFailure(statusCode, headers, e, responseBody);
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ protected void handleMessage(Message msg) {
+        Object[] response;
+
+        switch (msg.what) {
+            case SUCCESS_MESSAGE:
+                response = (Object[]) msg.obj;
+                onSuccess((Integer) response[0], (Header[]) response[1], (byte[]) response[2]);
+                break;
+            case FAILURE_MESSAGE:
+                response = (Object[]) msg.obj;
+                onFailure((Integer) response[0], (Header[]) response[1], (byte[]) response[2], (Throwable) response[3]);
+                break;
+            case START_MESSAGE:
+                onStart();
+                break;
+            case FINISH_MESSAGE:
+                onFinish();
+                break;
+            case PROGRESS_MESSAGE:
+                response = (Object[]) msg.obj;
+                onProgress((Integer) response[0], (Integer) response[1]);
+                break;
+            case RETRY_MESSAGE:
+                onRetry();
+              break;
+        }
+    } ##FSTMerge## protected void handleMessage(Message msg) {
+        Object[] response;
+
+        switch (msg.what) {
+            case SUCCESS_MESSAGE:
+                response = (Object[]) msg.obj;
+                handleSuccessMessage((Integer) response[0], (Header[]) response[1], (String) response[2]);
+                break;
+            case FAILURE_MESSAGE:
+                response = (Object[]) msg.obj;
+                handleFailureMessage((Integer) response[0], (Header[]) response[1], (Throwable) response[2], (String) response[3]);
+                break;
+            case START_MESSAGE:
+                onStart();
+                break;
+            case FINISH_MESSAGE:
+                onFinish();
+                break;
+            case PROGRESS_MESSAGE:
+                response = (Object[]) msg.obj;
+                onProgress((Integer) response[0], (Integer) response[1]);
+                break;
+        }
+    } ##FSTMerge## protected void handleMessage(Message msg) {
+        Object[] response;
+
+        switch (msg.what) {
+            case SUCCESS_MESSAGE:
+                response = (Object[]) msg.obj;
+                handleSuccessMessage((Integer) response[0], (Header[]) response[1], (String) response[2]);
+                break;
+            case FAILURE_MESSAGE:
+                response = (Object[]) msg.obj;
+                handleFailureMessage((Integer) response[0], (Header[]) response[1], (Throwable) response[2], (String) response[3]);
+                break;
+            case START_MESSAGE:
+                onStart();
+                break;
+            case FINISH_MESSAGE:
+                onFinish();
+                break;
+            case PROGRESS_MESSAGE:
+                response = (Object[]) msg.obj;
+                onProgress((Integer) response[0], (Integer) response[1]);
+                break;
+        }
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ protected void sendMessage(Message msg) {
+        if (getUseSynchronousMode() || handler == null) {
+            handleMessage(msg);
+        } else if (!Thread.currentThread().isInterrupted()) { // do not send messages if request has been cancelled
+            handler.sendMessage(msg);
+        }
+    } ##FSTMerge## protected void sendMessage(Message msg) {
+        if (handler != null) {
+            handler.sendMessage(msg);
+        } else {
+            handleMessage(msg);
+        }
+    } ##FSTMerge## protected void sendMessage(Message msg) {
+        if (handler != null) {
+            handler.sendMessage(msg);
+        } else {
+            handleMessage(msg);
+        }
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ protected void postRunnable(Runnable r) {
+        if (r != null) {
+            handler.post(r);
+        }
+    } ##FSTMerge## ##FSTMerge## protected void postRunnable(Runnable r) {
+        if (r != null) {
+            handler.post(r);
+        }
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 4b90839035aabf36837544935ea4a7c9d7f04345
+Parent1 SHA-1: dfd8661690261b897fb448a94e2619f2de5359b2
+Parent2 SHA-1: c1541be6adc2f8f81d169ca579d4de5ebf8aeb33
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ void sendResponseMessage(HttpResponse response) throws IOException {
+        // do not process if request has been cancelled
+        if (!Thread.currentThread().isInterrupted()) {
+            StatusLine status = response.getStatusLine();
+            byte[] responseBody = null;
+            responseBody = getResponseData(response.getEntity());
+            // additional cancellation check as getResponseData() can take non-zero time to process
+            if (!Thread.currentThread().isInterrupted()) {
+                if (status.getStatusCode() >= 300) {
+                    sendFailureMessage(status.getStatusCode(), response.getAllHeaders(), responseBody, new HttpResponseException(status.getStatusCode(), status.getReasonPhrase()));
+                } else {
+                    sendSuccessMessage(status.getStatusCode(), response.getAllHeaders(), responseBody);
+                }
+            }
+        }
+    } ##FSTMerge## protected void sendResponseMessage(HttpResponse response) {
+        if (response == null) {
+            sendFailureMessage(0, null, new IllegalStateException("No response"), (String) null);
+            return;
+        }
+        StatusLine status = response.getStatusLine();
+        String responseBody = null;
+        try {
+            HttpEntity entity;
+            HttpEntity temp = response.getEntity();
+            if (temp != null) {
+                entity = new BufferedHttpEntity(temp);
+                responseBody = EntityUtils.toString(entity, getCharset());
+            }
+        } catch (IOException e) {
+            try {
+                if (response.getEntity() != null)
+                    response.getEntity().consumeContent();
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
+            sendFailureMessage(status.getStatusCode(), response.getAllHeaders(), e, (String) null);
+            return;
+        }
+
+        if (status.getStatusCode() >= 300) {
+            sendFailureMessage(status.getStatusCode(), response.getAllHeaders(), new HttpResponseException(status.getStatusCode(), status.getReasonPhrase()), responseBody);
+        } else {
+            sendSuccessMessage(status.getStatusCode(), response.getAllHeaders(), responseBody);
+        }
+    } ##FSTMerge## protected void sendResponseMessage(HttpResponse response) {
+        if (response == null) {
+            sendFailureMessage(0, null, new IllegalStateException("No response"), (String) null);
+            return;
+        }
+        StatusLine status = response.getStatusLine();
+        String responseBody = null;
+        try {
+            HttpEntity entity;
+            HttpEntity temp = response.getEntity();
+            if (temp != null) {
+                entity = new BufferedHttpEntity(temp);
+                responseBody = EntityUtils.toString(entity, getCharset());
+            }
+        } catch (IOException e) {
+            try {
+                if (response.getEntity() != null)
+                    response.getEntity().consumeContent();
+            } catch (Throwable t) {
+                t.printStackTrace();
+            }
+            sendFailureMessage(status.getStatusCode(), response.getAllHeaders(), e, (String) null);
+            return;
+        }
+
+        if (status.getStatusCode() >= 300) {
+            sendFailureMessage(status.getStatusCode(), response.getAllHeaders(), new HttpResponseException(status.getStatusCode(), status.getReasonPhrase()), responseBody);
+        } else {
+            sendSuccessMessage(status.getStatusCode(), response.getAllHeaders(), responseBody);
+        }
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_dfd86_c1541/rev_dfd86-c1541/library/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+
+==================================================================================================================
+Revision: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784.revisions
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public static void makeRequest() {
+        AsyncHttpClient client = new AsyncHttpClient();
+
+        client.get("http://www.google.com", new TextHttpResponseHandler() {
+            @Override
+            public void onSuccess(String response) {
+                System.out.println(response);
+            }
+        });
+    } ##FSTMerge## public static void makeRequest() {
+        AsyncHttpClient client = new AsyncHttpClient();
+
+        client.get("http://www.google.com", new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(String response) {
+                System.out.println(response);
+            }
+        });
+    } ##FSTMerge## public static void makeRequest() {
+        AsyncHttpClient client = new AsyncHttpClient();
+
+        client.get("http://www.google.com", new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(String response) {
+                System.out.println(response);
+            }
+        });
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/examples/ExampleUsage.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ AsyncHttpResponseHandler responseHandler = new TextHttpResponseHandler() {
+
+		void sendResponseMessage(org.apache.http.HttpResponse response) throws IOException {
+			responseCode = response.getStatusLine().getStatusCode();
+			super.sendResponseMessage(response);
+		};
+
+		@Override
+		protected void sendMessage(Message msg) {
+			/*
+			 * Dont use the handler and send it directly to the analysis
+			 * (because its all the same thread)
+			 */
+			handleMessage(msg);
+		}
+
+		@Override
+		public void onSuccess(String content) {
+			result = content;
+		}
+
+		@Override
+		public void onFailure(String content, Throwable error) {
+			result = onRequestFailed(error, content);
+		}
+	}; ##FSTMerge## AsyncHttpResponseHandler responseHandler = new AsyncHttpResponseHandler() {
+
+		void sendResponseMessage(org.apache.http.HttpResponse response) {
+			responseCode = response.getStatusLine().getStatusCode();
+			super.sendResponseMessage(response);
+		};
+
+		@Override
+		protected void sendMessage(Message msg) {
+			/*
+			 * Dont use the handler and send it directly to the analysis
+			 * (because its all the same thread)
+			 */
+			handleMessage(msg);
+		}
+
+		@Override
+		public void onSuccess(String content) {
+			result = content;
+		}
+
+		@Override
+		public void onFailure(Throwable error, String content) {
+			result = onRequestFailed(error, content);
+		}
+	}; ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/SyncHttpClient.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
+        boolean retry = true;
+
+        Boolean b = (Boolean) context.getAttribute(ExecutionContext.HTTP_REQ_SENT);
+        boolean sent = (b != null && b.booleanValue());
+
+        if(executionCount > maxRetries) {
+            // Do not retry if over max retry count
+            retry = false;
+        } else if (exceptionBlacklist.contains(exception.getClass())) {
+            // immediately cancel retry if the error is blacklisted
+            retry = false;
+        } else if (exceptionWhitelist.contains(exception.getClass())) {
+            // immediately retry if error is whitelisted
+            retry = true;
+        } else if (!sent) {
+            // for most other errors, retry only if request hasn't been fully sent yet
+            retry = true;
+        }
+
+        if(retry) {
+            // resend all idempotent requests
+            HttpUriRequest currentReq = (HttpUriRequest) context.getAttribute( ExecutionContext.HTTP_REQUEST );
+            String requestType = currentReq.getMethod();
+            retry = !requestType.equals("POST");
+        }
+
+        if (retry) {
+            SystemClock.sleep(retrySleepTimeMS);
+        } else {
+            exception.printStackTrace();
+        }
+
+        return retry;
+    } ##FSTMerge## public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
+        boolean retry = true;
+
+        Boolean b = (Boolean) context.getAttribute(ExecutionContext.HTTP_REQ_SENT);
+        boolean sent = (b != null && b.booleanValue());
+
+        if(executionCount > maxRetries) {
+            // Do not retry if over max retry count
+            retry = false;
+        } else if (exceptionBlacklist.contains(exception.getClass())) {
+            // immediately cancel retry if the error is blacklisted
+            retry = false;
+        } else if (exceptionWhitelist.contains(exception.getClass())) {
+            // immediately retry if error is whitelisted
+            retry = true;
+        } else if (!sent) {
+            // for most other errors, retry only if request hasn't been fully sent yet
+            retry = true;
+        }
+
+        if(retry) {
+            // resend all idempotent requests
+            HttpUriRequest currentReq = (HttpUriRequest) context.getAttribute( ExecutionContext.HTTP_REQUEST );
+            String requestType = currentReq.getMethod();
+            retry = !requestType.equals("POST");
+        }
+
+        if(retry) {
+            SystemClock.sleep(RETRY_SLEEP_TIME_MILLIS);
+        } else {
+            exception.printStackTrace();
+        }
+
+        return retry;
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/RetryHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ protected List<BasicNameValuePair> urlParams; ##FSTMerge## protected ConcurrentHashMap<String, String> urlParams; ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public RequestParams() {
+        init();
+    } ##FSTMerge## public RequestParams() {
+        init();
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public RequestParams(Map<String, String> source) {
+        init();
+
+        for(Map.Entry<String, String> entry : source.entrySet()) {
+            add(entry.getKey(), entry.getValue());
+        }
+    } ##FSTMerge## public RequestParams(Map<String, String> source) {
+        init();
+
+        for(Map.Entry<String, String> entry : source.entrySet()) {
+            put(entry.getKey(), entry.getValue());
+        }
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public RequestParams(String key, String value) {
+        init();
+
+        add(key, value);
+    } ##FSTMerge## public RequestParams(String key, String value) {
+        init();
+
+        put(key, value);
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public RequestParams(Object... keysAndValues) {
+      init();
+      int len = keysAndValues.length;
+      if (len % 2 != 0)
+        throw new IllegalArgumentException("Supplied arguments must be even");
+      for (int i = 0; i < len; i += 2) {
+        String key = String.valueOf(keysAndValues[i]);
+        String val = String.valueOf(keysAndValues[i + 1]);
+        add(key, val);
+      }
+    } ##FSTMerge## public RequestParams(Object... keysAndValues) {
+      init();
+      int len = keysAndValues.length;
+      if (len % 2 != 0)
+        throw new IllegalArgumentException("Supplied arguments must be even");
+      for (int i = 0; i < len; i += 2) {
+        String key = String.valueOf(keysAndValues[i]);
+        String val = String.valueOf(keysAndValues[i + 1]);
+        put(key, val);
+      }
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void put(String key, File file) throws FileNotFoundException {
+        put(key, new FileInputStream(file), file.getName());
+    } ##FSTMerge## public void put(String key, File file) throws FileNotFoundException {
+        put(key, new FileInputStream(file), file.getName());
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void put(String key, InputStream stream) {
+        put(key, stream, null);
+    } ##FSTMerge## public void put(String key, InputStream stream) {
+        put(key, stream, null);
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void put(String key, InputStream stream, String fileName) {
+        put(key, stream, fileName, null);
+    } ##FSTMerge## public void put(String key, InputStream stream, String fileName) {
+        put(key, stream, fileName, null);
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void put(String key, InputStream stream, String fileName, String contentType) {
+        if(key != null && stream != null) {
+            fileParams.put(key, new FileWrapper(stream, fileName, contentType));
+        }
+    } ##FSTMerge## public void put(String key, InputStream stream, String fileName, String contentType) {
+        if(key != null && stream != null) {
+            fileParams.put(key, new FileWrapper(stream, fileName, contentType));
+        }
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void remove(String key){
+        urlParams.remove(key);
+        fileParams.remove(key);
+    } ##FSTMerge## public void remove(String key){
+        urlParams.remove(key);
+        fileParams.remove(key);
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+        for(BasicNameValuePair pair : urlParams) {
+            if(result.length() > 0)
+                result.append("&");
+
+            result.append(pair.getName());
+            result.append("=");
+            result.append(pair.getValue());
+        }
+
+        for(ConcurrentHashMap.Entry<String, FileWrapper> entry : fileParams.entrySet()) {
+            if(result.length() > 0)
+                result.append("&");
+
+            result.append(entry.getKey());
+            result.append("=");
+            result.append("FILE");
+        }
+
+        return result.toString();
+    } ##FSTMerge## @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+        for(ConcurrentHashMap.Entry<String, String> entry : urlParams.entrySet()) {
+            if(result.length() > 0)
+                result.append("&");
+
+            result.append(entry.getKey());
+            result.append("=");
+            result.append(entry.getValue());
+        }
+
+        for(ConcurrentHashMap.Entry<String, FileWrapper> entry : fileParams.entrySet()) {
+            if(result.length() > 0)
+                result.append("&");
+
+            result.append(entry.getKey());
+            result.append("=");
+            result.append("FILE");
+        }
+
+        return result.toString();
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public HttpEntity getEntity() {
+        HttpEntity entity = null;
+
+        if(!fileParams.isEmpty()) {
+            SimpleMultipartEntity multipartEntity = new SimpleMultipartEntity();
+
+            // Add string params
+            for(BasicNameValuePair pair : urlParams) {
+                multipartEntity.addPart(pair.getName(), pair.getValue());
+            }
+
+            // Add file params
+            int currentIndex = 0;
+            int lastIndex = fileParams.entrySet().size() - 1;
+            for(ConcurrentHashMap.Entry<String, FileWrapper> entry : fileParams.entrySet()) {
+                FileWrapper file = entry.getValue();
+                if(file.inputStream != null) {
+                    boolean isLast = currentIndex == lastIndex;
+                    if(file.contentType != null) {
+                        multipartEntity.addPart(entry.getKey(), file.getFileName(), file.inputStream, file.contentType, isLast);
+                    } else {
+                        multipartEntity.addPart(entry.getKey(), file.getFileName(), file.inputStream, isLast);
+                    }
+                }
+                currentIndex++;
+            }
+
+            entity = multipartEntity;
+        } else {
+            try {
+                entity = new UrlEncodedFormEntity(getParamsList(), ENCODING);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return entity;
+    } ##FSTMerge## public HttpEntity getEntity() {
+        HttpEntity entity = null;
+
+        if(!fileParams.isEmpty()) {
+            SimpleMultipartEntity multipartEntity = new SimpleMultipartEntity();
+
+            // Add string params
+            for(ConcurrentHashMap.Entry<String, String> entry : urlParams.entrySet()) {
+                multipartEntity.addPart(entry.getKey(), entry.getValue());
+            }
+
+            // Add file params
+            int currentIndex = 0;
+            int lastIndex = fileParams.entrySet().size() - 1;
+            for(ConcurrentHashMap.Entry<String, FileWrapper> entry : fileParams.entrySet()) {
+                FileWrapper file = entry.getValue();
+                if(file.inputStream != null) {
+                    boolean isLast = currentIndex == lastIndex;
+                    if(file.contentType != null) {
+                        multipartEntity.addPart(entry.getKey(), file.getFileName(), file.inputStream, file.contentType, isLast);
+                    } else {
+                        multipartEntity.addPart(entry.getKey(), file.getFileName(), file.inputStream, isLast);
+                    }
+                }
+                currentIndex++;
+            }
+
+            entity = multipartEntity;
+        } else {
+            try {
+                entity = new UrlEncodedFormEntity(getParamsList(), ENCODING);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return entity;
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ private void init(){
+        urlParams = Collections.synchronizedList(new ArrayList<BasicNameValuePair>());
+        fileParams = new ConcurrentHashMap<String, FileWrapper>();
+    } ##FSTMerge## private void init(){
+        urlParams = new ConcurrentHashMap<String, String>();
+        fileParams = new ConcurrentHashMap<String, FileWrapper>();
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ protected List<BasicNameValuePair> getParamsList() {
+        List<BasicNameValuePair> lparams = new LinkedList<BasicNameValuePair>();
+
+        for(BasicNameValuePair pair : urlParams) {
+            lparams.add(pair);
+        }
+
+        return lparams;
+    } ##FSTMerge## protected List<BasicNameValuePair> getParamsList() {
+        List<BasicNameValuePair> lparams = new LinkedList<BasicNameValuePair>();
+
+        for(ConcurrentHashMap.Entry<String, String> entry : urlParams.entrySet()) {
+            lparams.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
+        }
+
+        return lparams;
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ protected String getParamString() {
+        return URLEncodedUtils.format(getParamsList(), ENCODING);
+    } ##FSTMerge## protected String getParamString() {
+        return URLEncodedUtils.format(getParamsList(), ENCODING);
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public FileWrapper(InputStream inputStream, String fileName, String contentType) {
+            this.inputStream = inputStream;
+            this.fileName = fileName;
+            this.contentType = contentType;
+        } ##FSTMerge## public FileWrapper(InputStream inputStream, String fileName, String contentType) {
+            this.inputStream = inputStream;
+            this.fileName = fileName;
+            this.contentType = contentType;
+        } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public String getFileName() {
+            if(fileName != null) {
+                return fileName;
+            } else {
+                return "nofilename";
+            }
+        } ##FSTMerge## public String getFileName() {
+            if(fileName != null) {
+                return fileName;
+            } else {
+                return "nofilename";
+            }
+        } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Override
+    protected void handleMessage(Message msg) {
+        Object[] response;
+        switch(msg.what){
+            case SUCCESS_JSON_MESSAGE:
+                response = (Object[]) msg.obj;
+                handleSuccessJsonMessage(((Integer) response[0]).intValue(), response[1]);
+                break;
+            case FAILURE_JSON_MESSAGE:
+                response = (Object[]) msg.obj;
+                handleFailureJsonMessage(((Integer) response[0]).intValue(), response[1], (Throwable) response[2]);
+                break;
+            default:
+                super.handleMessage(msg);
+        }
+    } ##FSTMerge## @Override
+    protected void handleMessage(Message msg) {
+        switch(msg.what){
+            case SUCCESS_JSON_MESSAGE:
+                Object[] response = (Object[]) msg.obj;
+                handleSuccessJsonMessage(((Integer) response[0]).intValue(), response[1]);
+                break;
+            default:
+                super.handleMessage(msg);
+        }
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/JsonHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ protected void handleSuccessJsonMessage(int statusCode, Object jsonResponse) {
+        if(jsonResponse instanceof JSONObject) {
+            onSuccess(statusCode, (JSONObject)jsonResponse);
+        } else if(jsonResponse instanceof JSONArray) {
+            onSuccess(statusCode, (JSONArray)jsonResponse);
+        } else {
+            onFailure(statusCode, (JSONObject)null, new JSONException("Unexpected type " + jsonResponse.getClass().getName()));
+        }
+    } ##FSTMerge## protected void handleSuccessJsonMessage(int statusCode, Object jsonResponse) {
+        if(jsonResponse instanceof JSONObject) {
+            onSuccess(statusCode, (JSONObject)jsonResponse);
+        } else if(jsonResponse instanceof JSONArray) {
+            onSuccess(statusCode, (JSONArray)jsonResponse);
+        } else {
+            onFailure(new JSONException("Unexpected type " + jsonResponse.getClass().getName()), (JSONObject)null);
+        }
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/JsonHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ void sendResponseMessage(HttpResponse response) throws IOException {
+        StatusLine status = response.getStatusLine();
+        Header[] contentTypeHeaders = response.getHeaders("Content-Type");
+        byte[] responseBody = null;
+        if(contentTypeHeaders.length != 1) {
+            //malformed/ambiguous HTTP Header, ABORT!
+            sendFailureMessage(status.getStatusCode(), responseBody, new HttpResponseException(status.getStatusCode(), "None, or more than one, Content-Type Header found!"));
+            return;
+        }
+        Header contentTypeHeader = contentTypeHeaders[0];
+        boolean foundAllowedContentType = false;
+        for(String anAllowedContentType : mAllowedContentTypes) {
+            if(anAllowedContentType.equals(contentTypeHeader.getValue())) {
+                foundAllowedContentType = true;
+            }
+        }
+        if(!foundAllowedContentType) {
+            //Content-Type not in allowed list, ABORT!
+            sendFailureMessage(status.getStatusCode(), responseBody, new HttpResponseException(status.getStatusCode(), "Content-Type not allowed!"));
+            return;
+        }
+        super.sendResponseMessage( response );
+    } ##FSTMerge## void sendResponseMessage(HttpResponse response) {
+        StatusLine status = response.getStatusLine();
+        Header[] contentTypeHeaders = response.getHeaders("Content-Type");
+        byte[] responseBody = null;
+        if(contentTypeHeaders.length != 1) {
+            //malformed/ambiguous HTTP Header, ABORT!
+            sendFailureMessage(new HttpResponseException(status.getStatusCode(), "None, or more than one, Content-Type Header found!"), responseBody);
+            return;
+        }
+        Header contentTypeHeader = contentTypeHeaders[0];
+        boolean foundAllowedContentType = false;
+        for(String anAllowedContentType : mAllowedContentTypes) {
+            if(anAllowedContentType.equals(contentTypeHeader.getValue())) {
+                foundAllowedContentType = true;
+            }
+        }
+        if(!foundAllowedContentType) {
+            //Content-Type not in allowed list, ABORT!
+            sendFailureMessage(new HttpResponseException(status.getStatusCode(), "Content-Type not allowed!"), responseBody);
+            return;
+        }
+        try {
+            HttpEntity entity = null;
+            HttpEntity temp = response.getEntity();
+            if(temp != null) {
+                entity = new BufferedHttpEntity(temp);
+            }
+            responseBody = EntityUtils.toByteArray(entity);
+        } catch(IOException e) {
+            sendFailureMessage(e, (byte[]) null);
+        }
+
+        if(status.getStatusCode() >= 300) {
+            sendFailureMessage(new HttpResponseException(status.getStatusCode(), status.getReasonPhrase()), responseBody);
+        } else {
+            sendSuccessMessage(status.getStatusCode(), responseBody);
+        }
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/BinaryHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public AsyncHttpResponseHandler() {
+        // Set up a handler to post events back to the correct thread if
+        // possible
+        if (Looper.myLooper() != null) {
+            handler = new ResponderHandler(this);
+        }
+    } ##FSTMerge## public AsyncHttpResponseHandler() {
+        // Set up a handler to post events back to the correct thread if possible
+        if(Looper.myLooper() != null) {
+            handler = new Handler(){
+                public void handleMessage(Message msg){
+                    AsyncHttpResponseHandler.this.handleMessage(msg);
+                }
+            };
+        }
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ protected void handleMessage(Message msg) {
+        Object[] response;
+
+        switch (msg.what) {
+        case SUCCESS_MESSAGE:
+            response = (Object[]) msg.obj;
+            handleSuccessMessage(((Integer) response[0]).intValue(), (byte[]) response[1]);
+            break;
+        case FAILURE_MESSAGE:
+            response = (Object[]) msg.obj;
+            handleFailureMessage(((Integer) response[0]).intValue(), (byte[]) response[1], (Throwable) response[2]);
+            break;
+        case START_MESSAGE:
+            onStart();
+            break;
+        case FINISH_MESSAGE:
+            onFinish();
+            break;
+        case PROGRESS_MESSAGE:
+            response = (Object[]) msg.obj;
+            onProgress(((Integer) response[0]).intValue(), ((Integer) response[1]).intValue());
+            break;
+        case RETRY_MESSAGE:
+            handleRetryMessage();
+          break;
+        }
+    } ##FSTMerge## protected void handleMessage(Message msg) {
+        Object[] response;
+
+        switch(msg.what) {
+            case SUCCESS_MESSAGE:
+                response = (Object[])msg.obj;
+                handleSuccessMessage(((Integer) response[0]).intValue(), (String) response[1]);
+                break;
+            case FAILURE_MESSAGE:
+                response = (Object[])msg.obj;
+                handleFailureMessage((Throwable)response[0], (String)response[1]);
+                break;
+            case START_MESSAGE:
+                onStart();
+                break;
+            case FINISH_MESSAGE:
+                onFinish();
+                break;
+        }
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ protected void sendMessage(Message msg) {
+        // do not send messages if request has been cancelled
+        if (!Thread.currentThread().isInterrupted()) {
+            if (handler != null) {
+                handler.sendMessage(msg);
+            } else {
+                handleMessage(msg);
+            }
+        }
+    } ##FSTMerge## protected void sendMessage(Message msg) {
+        if(handler != null){
+            handler.sendMessage(msg);
+        } else {
+            handleMessage(msg);
+        }
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ void sendResponseMessage(HttpResponse response) throws IOException {
+        // do not process if request has been cancelled
+        if (!Thread.currentThread().isInterrupted()) {
+            StatusLine status = response.getStatusLine();
+            byte[] responseBody = null;
+            responseBody = getResponseData(response.getEntity());
+            if (status.getStatusCode() >= 300) {
+                sendFailureMessage(status.getStatusCode(), responseBody, new HttpResponseException(status.getStatusCode(), status.getReasonPhrase()));
+            } else {
+                sendSuccessMessage(status.getStatusCode(), responseBody);
+            }
+        }
+    } ##FSTMerge## void sendResponseMessage(HttpResponse response) {
+        StatusLine status = response.getStatusLine();
+        String responseBody = null;
+        try {
+            HttpEntity entity = null;
+            HttpEntity temp = response.getEntity();
+            if(temp != null) {
+                entity = new BufferedHttpEntity(temp);
+                responseBody = EntityUtils.toString(entity, "UTF-8");
+            }
+        } catch(IOException e) {
+            sendFailureMessage(e, (String) null);
+        }
+
+        if(status.getStatusCode() >= 300) {
+            sendFailureMessage(new HttpResponseException(status.getStatusCode(), status.getReasonPhrase()), responseBody);
+        } else {
+            sendSuccessMessage(status.getStatusCode(), responseBody);
+        }
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public AsyncHttpRequest(AbstractHttpClient client, HttpContext context, HttpUriRequest request, AsyncHttpResponseHandler responseHandler) {
+        this.client = client;
+        this.context = context;
+        this.request = request;
+        this.responseHandler = responseHandler;
+    } ##FSTMerge## public AsyncHttpRequest(AbstractHttpClient client, HttpContext context, HttpUriRequest request, AsyncHttpResponseHandler responseHandler) {
+        this.client = client;
+        this.context = context;
+        this.request = request;
+        this.responseHandler = responseHandler;
+        if(responseHandler instanceof BinaryHttpResponseHandler) {
+            this.isBinaryRequest = true;
+        }
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/AsyncHttpRequest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void run() {
+        if (responseHandler != null) {
+            responseHandler.sendStartMessage();
+        }
+
+        try {
+            makeRequestWithRetries();
+        } catch (IOException e) {
+            if (responseHandler != null) {
+                responseHandler.sendFailureMessage(0, null, e);
+            }
+        }
+        if (responseHandler != null) {
+            responseHandler.sendFinishMessage();
+        }
+    } ##FSTMerge## public void run() {
+        try {
+            if(responseHandler != null){
+                responseHandler.sendStartMessage();
+            }
+
+            makeRequestWithRetries();
+
+            if(responseHandler != null) {
+                responseHandler.sendFinishMessage();
+            }
+        } catch (IOException e) {
+            if(responseHandler != null) {
+                responseHandler.sendFinishMessage();
+                if(this.isBinaryRequest) {
+                    responseHandler.sendFailureMessage(e, (byte[]) null);
+                } else {
+                    responseHandler.sendFailureMessage(e, (String) null);
+                }
+            }
+        }
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/AsyncHttpRequest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ private void makeRequest() throws IOException {
+        if(!Thread.currentThread().isInterrupted()) {
+            HttpResponse response = client.execute(request, context);
+            if(!Thread.currentThread().isInterrupted()) {
+                if(responseHandler != null) {
+                    responseHandler.sendResponseMessage(response);
+                }
+            }
+        }
+    } ##FSTMerge## private void makeRequest() throws IOException {
+        if(!Thread.currentThread().isInterrupted()) {
+            HttpResponse response = client.execute(request, context);
+            if(!Thread.currentThread().isInterrupted()) {
+                if(responseHandler != null) {
+                    responseHandler.sendResponseMessage(response);
+                }
+            } else{
+                //TODO: should raise InterruptedException? this block is reached whenever the request is cancelled before its response is received
+            }
+        }
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/AsyncHttpRequest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ private void makeRequestWithRetries() throws IOException {
+        // This is an additional layer of retry logic lifted from droid-fu
+        // See: https://github.com/kaeppler/droid-fu/blob/master/src/main/java/com/github/droidfu/http/BetterHttpRequestBase.java
+        boolean retry = true;
+        IOException cause = null;
+        HttpRequestRetryHandler retryHandler = client.getHttpRequestRetryHandler();
+        try
+        {
+            while (retry) {
+                try {
+                    makeRequest();
+                    return;
+                } catch (UnknownHostException e) {
+                    // switching between WI-FI and mobile data networks can cause a retry which then results in an UnknownHostException
+                    // while the WI-FI is initialising. The retry logic will be invoked here, if this is NOT the first retry
+                    // (to assist in genuine cases of unknown host) which seems better than outright failure
+                    cause = new IOException("UnknownHostException exception: " + e.getMessage());
+                    retry = (executionCount > 0) && retryHandler.retryRequest(cause, ++executionCount, context);
+                } catch (IOException e) {
+                    cause = e;
+                    retry = retryHandler.retryRequest(cause, ++executionCount, context);
+                } catch (NullPointerException e) {
+                    // there's a bug in HttpClient 4.0.x that on some occasions causes
+                    // DefaultRequestExecutor to throw an NPE, see
+                    // http://code.google.com/p/android/issues/detail?id=5255
+                    cause = new IOException("NPE in HttpClient: " + e.getMessage());
+                    retry = retryHandler.retryRequest(cause, ++executionCount, context);
+                }
+                if(retry && (responseHandler != null)) {
+                  responseHandler.sendRetryMessage();
+                }
+            }
+        } catch (Exception e) {
+            // catch anything else to ensure failure message is propagated
+            cause = new IOException("Unhandled exception: " + e.getMessage());
+        }
+        
+        // cleaned up to throw IOException
+        throw(cause);
+    } ##FSTMerge## private void makeRequestWithRetries() throws ConnectException {
+        // This is an additional layer of retry logic lifted from droid-fu
+        // See: https://github.com/kaeppler/droid-fu/blob/master/src/main/java/com/github/droidfu/http/BetterHttpRequestBase.java
+        boolean retry = true;
+        IOException cause = null;
+        HttpRequestRetryHandler retryHandler = client.getHttpRequestRetryHandler();
+        while (retry) {
+            try {
+                makeRequest();
+                return;
+            } catch (UnknownHostException e) {
+		        if(responseHandler != null) {
+		            responseHandler.sendFailureMessage(e, "can't resolve host");
+		        }
+	        	return;
+            }catch (SocketException e){
+                // Added to detect host unreachable
+                if(responseHandler != null) {
+                    responseHandler.sendFailureMessage(e, "can't resolve host");
+                }
+                return;
+            }catch (SocketTimeoutException e){
+                if(responseHandler != null) {
+                    responseHandler.sendFailureMessage(e, "socket time out");
+                }
+                return;
+            } catch (IOException e) {
+                cause = e;
+                retry = retryHandler.retryRequest(cause, ++executionCount, context);
+            } catch (NullPointerException e) {
+                // there's a bug in HttpClient 4.0.x that on some occasions causes
+                // DefaultRequestExecutor to throw an NPE, see
+                // http://code.google.com/p/android/issues/detail?id=5255
+                cause = new IOException("NPE in HttpClient" + e.getMessage());
+                retry = retryHandler.retryRequest(cause, ++executionCount, context);
+            }
+        }
+
+        // no retries left, crap out with exception
+        ConnectException ex = new ConnectException();
+        ex.initCause(cause);
+        throw ex;
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/AsyncHttpRequest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5cdeb42eeb13f8741adccb5cf341c5bee7974a36
+Parent1 SHA-1: cb99009b08b1488d0293a96d258d2eea5abfbe98
+Parent2 SHA-1: a87843c34e7563e48a249a459a16365ca7a97cc9
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public AsyncHttpClient() {
+        this(DEFAULT_MAX_RETRIES, DEFAULT_RETRY_SLEEP_TIME_MILLIS);
+    } ##FSTMerge## public AsyncHttpClient() {
+        BasicHttpParams httpParams = new BasicHttpParams();
+
+        ConnManagerParams.setTimeout(httpParams, socketTimeout);
+        ConnManagerParams.setMaxConnectionsPerRoute(httpParams, new ConnPerRouteBean(maxConnections));
+        ConnManagerParams.setMaxTotalConnections(httpParams, DEFAULT_MAX_CONNECTIONS);
+
+        HttpConnectionParams.setSoTimeout(httpParams, socketTimeout);
+        HttpConnectionParams.setConnectionTimeout(httpParams, socketTimeout);
+        HttpConnectionParams.setTcpNoDelay(httpParams, true);
+        HttpConnectionParams.setSocketBufferSize(httpParams, DEFAULT_SOCKET_BUFFER_SIZE);
+
+        HttpProtocolParams.setVersion(httpParams, HttpVersion.HTTP_1_1);
+        HttpProtocolParams.setUserAgent(httpParams, String.format("android-async-http/%s (http://loopj.com/android-async-http)", VERSION));
+
+        SchemeRegistry schemeRegistry = new SchemeRegistry();
+        schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
+        schemeRegistry.register(new Scheme("https", SSLSocketFactory.getSocketFactory(), 443));
+        ThreadSafeClientConnManager cm = new ThreadSafeClientConnManager(httpParams, schemeRegistry);
+
+        httpContext = new SyncBasicHttpContext(new BasicHttpContext());
+        httpClient = new DefaultHttpClient(cm, httpParams);
+        httpClient.addRequestInterceptor(new HttpRequestInterceptor() {
+            public void process(HttpRequest request, HttpContext context) {
+                if (!request.containsHeader(HEADER_ACCEPT_ENCODING)) {
+                    request.addHeader(HEADER_ACCEPT_ENCODING, ENCODING_GZIP);
+                }
+                for (String header : clientHeaderMap.keySet()) {
+                    request.addHeader(header, clientHeaderMap.get(header));
+                }
+            }
+        });
+
+        httpClient.addResponseInterceptor(new HttpResponseInterceptor() {
+            public void process(HttpResponse response, HttpContext context) {
+                final HttpEntity entity = response.getEntity();
+                if (entity == null) {
+                    return;
+                }
+                final Header encoding = entity.getContentEncoding();
+                if (encoding != null) {
+                    for (HeaderElement element : encoding.getElements()) {
+                        if (element.getName().equalsIgnoreCase(ENCODING_GZIP)) {
+                            response.setEntity(new InflatingEntity(response.getEntity()));
+                            break;
+                        }
+                    }
+                }
+            }
+        });
+
+        httpClient.setHttpRequestRetryHandler(new RetryHandler(DEFAULT_MAX_RETRIES));
+
+        threadPool = (ThreadPoolExecutor)Executors.newCachedThreadPool();
+
+        requestMap = new WeakHashMap<Context, List<WeakReference<Future<?>>>>();
+        clientHeaderMap = new HashMap<String, String>();
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_cb990_a8784/rev_cb990-a8784/src/com/loopj/android/http/AsyncHttpClient.java
+
+==================================================================================================================
+Revision: /tmp/downloads/android-async-http/revisions/rev_50664_f1ab3/rev_50664-f1ab3.revisions
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5b62f2f76b76bb9940fc46f1a4baedf010852a7a
+Parent1 SHA-1: 506644a6abfd9b4f94d250e043d4fbb700f2eec3
+Parent2 SHA-1: f1ab377b8505d5499781a919147ba83896d862b8
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void add(String key, String value) {
+        if(key != null && value != null) {
+            Object params = urlParamsWithObjects.get(key);
+            if (params == null) {
+                // Backward compatible, which will result in "k=v1&k=v2&k=v3"
+                params = new HashSet<String>();
+                this.put(key, params);
+            }
+            if (params instanceof List) {
+                ((List<Object>) params).add(value);
+            } else if (params instanceof Set) {
+                ((Set<Object>) params).add(value);
+            }
+        }
+    } ##FSTMerge## public void add(String key, String value) {
+        if(key != null && value != null) {
+            ArrayList<String> paramArray = urlParamsWithArray.get(key);
+            if (paramArray == null) {
+                paramArray = new ArrayList<String>();
+                this.put(key, paramArray);
+            }
+            paramArray.add(value);
+        }
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_50664_f1ab3/rev_50664-f1ab3/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5b62f2f76b76bb9940fc46f1a4baedf010852a7a
+Parent1 SHA-1: 506644a6abfd9b4f94d250e043d4fbb700f2eec3
+Parent2 SHA-1: f1ab377b8505d5499781a919147ba83896d862b8
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void remove(String key){
+        urlParams.remove(key);
+        fileParams.remove(key);
+        urlParamsWithObjects.remove(key);
+    } ##FSTMerge## public void remove(String key){
+        urlParams.remove(key);
+        fileParams.remove(key);
+        urlParamsWithArray.remove(key);
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_50664_f1ab3/rev_50664-f1ab3/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5b62f2f76b76bb9940fc46f1a4baedf010852a7a
+Parent1 SHA-1: 506644a6abfd9b4f94d250e043d4fbb700f2eec3
+Parent2 SHA-1: f1ab377b8505d5499781a919147ba83896d862b8
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+        for(ConcurrentHashMap.Entry<String, String> entry : urlParams.entrySet()) {
+            if(result.length() > 0)
+                result.append("&");
+
+            result.append(entry.getKey());
+            result.append("=");
+            result.append(entry.getValue());
+        }
+
+        for(ConcurrentHashMap.Entry<String, FileWrapper> entry : fileParams.entrySet()) {
+            if(result.length() > 0)
+                result.append("&");
+
+            result.append(entry.getKey());
+            result.append("=");
+            result.append("FILE");
+        }
+
+        List<BasicNameValuePair> params = getParamsList(null, urlParamsWithObjects);
+        for (BasicNameValuePair kv : params) {
+            if (result.length() > 0)
+                result.append("&");
+            
+            result.append(kv.getName());
+            result.append("=");
+            result.append(kv.getValue());
+        }
+
+        return result.toString();
+    } ##FSTMerge## @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+        for(ConcurrentHashMap.Entry<String, String> entry : urlParams.entrySet()) {
+            if(result.length() > 0)
+                result.append("&");
+
+            result.append(entry.getKey());
+            result.append("=");
+            result.append(entry.getValue());
+        }
+
+        for(ConcurrentHashMap.Entry<String, FileWrapper> entry : fileParams.entrySet()) {
+            if(result.length() > 0)
+                result.append("&");
+
+            result.append(entry.getKey());
+            result.append("=");
+            result.append("FILE");
+        }
+
+        for(ConcurrentHashMap.Entry<String, ArrayList<String>> entry : urlParamsWithArray.entrySet()) {
+            if(result.length() > 0)
+                result.append("&");
+
+            ArrayList<String> values = entry.getValue();
+            for (int i = 0; i < values.size(); i++) {
+                if (i != 0)
+                    result.append("&");
+                result.append(entry.getKey());
+                result.append("=");
+                result.append(values.get(i));
+            }
+        }
+
+        return result.toString();
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_50664_f1ab3/rev_50664-f1ab3/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5b62f2f76b76bb9940fc46f1a4baedf010852a7a
+Parent1 SHA-1: 506644a6abfd9b4f94d250e043d4fbb700f2eec3
+Parent2 SHA-1: f1ab377b8505d5499781a919147ba83896d862b8
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public HttpEntity getEntity() {
+        HttpEntity entity = null;
+
+        if(!fileParams.isEmpty()) {
+            SimpleMultipartEntity multipartEntity = new SimpleMultipartEntity();
+
+            // Add string params
+            for(ConcurrentHashMap.Entry<String, String> entry : urlParams.entrySet()) {
+                multipartEntity.addPart(entry.getKey(), entry.getValue());
+            }
+
+            // Add non-string params
+            List<BasicNameValuePair> params = getParamsList(null, urlParamsWithObjects);
+            for (BasicNameValuePair kv : params) {
+                multipartEntity.addPart(kv.getName(), kv.getValue());
+            }
+
+            // Add file params
+            int currentIndex = 0;
+            int lastIndex = fileParams.entrySet().size() - 1;
+            for(ConcurrentHashMap.Entry<String, FileWrapper> entry : fileParams.entrySet()) {
+                FileWrapper file = entry.getValue();
+                if(file.inputStream != null) {
+                    boolean isLast = currentIndex == lastIndex;
+                    if(file.contentType != null) {
+                        multipartEntity.addPart(entry.getKey(), file.getFileName(), file.inputStream, file.contentType, isLast);
+                    } else {
+                        multipartEntity.addPart(entry.getKey(), file.getFileName(), file.inputStream, isLast);
+                    }
+                }
+                currentIndex++;
+            }
+
+            entity = multipartEntity;
+        } else {
+            try {
+                entity = new UrlEncodedFormEntity(getParamsList(), ENCODING);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return entity;
+    } ##FSTMerge## public HttpEntity getEntity() {
+        HttpEntity entity = null;
+
+        if(!fileParams.isEmpty()) {
+            SimpleMultipartEntity multipartEntity = new SimpleMultipartEntity();
+
+            // Add string params
+            for(ConcurrentHashMap.Entry<String, String> entry : urlParams.entrySet()) {
+                multipartEntity.addPart(entry.getKey(), entry.getValue());
+            }
+
+            // Add dupe params
+            for(ConcurrentHashMap.Entry<String, ArrayList<String>> entry : urlParamsWithArray.entrySet()) {
+                ArrayList<String> values = entry.getValue();
+                for (String value : values) {
+                    multipartEntity.addPart(entry.getKey(), value);
+                }
+            }
+
+            // Add file params
+            int currentIndex = 0;
+            int lastIndex = fileParams.entrySet().size() - 1;
+            for(ConcurrentHashMap.Entry<String, FileWrapper> entry : fileParams.entrySet()) {
+                FileWrapper file = entry.getValue();
+                if(file.inputStream != null) {
+                    boolean isLast = currentIndex == lastIndex;
+                    if(file.contentType != null) {
+                        multipartEntity.addPart(entry.getKey(), file.getFileName(), file.inputStream, file.contentType, isLast);
+                    } else {
+                        multipartEntity.addPart(entry.getKey(), file.getFileName(), file.inputStream, isLast);
+                    }
+                }
+                currentIndex++;
+            }
+
+            entity = multipartEntity;
+        } else {
+            try {
+                entity = new UrlEncodedFormEntity(getParamsList(), ENCODING);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return entity;
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_50664_f1ab3/rev_50664-f1ab3/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5b62f2f76b76bb9940fc46f1a4baedf010852a7a
+Parent1 SHA-1: 506644a6abfd9b4f94d250e043d4fbb700f2eec3
+Parent2 SHA-1: f1ab377b8505d5499781a919147ba83896d862b8
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ private void init(){
+        urlParams = new ConcurrentHashMap<String, String>();
+        fileParams = new ConcurrentHashMap<String, FileWrapper>();
+        urlParamsWithObjects = new ConcurrentHashMap<String, Object>();
+    } ##FSTMerge## private void init(){
+        urlParams = new ConcurrentHashMap<String, String>();
+        fileParams = new ConcurrentHashMap<String, FileWrapper>();
+        urlParamsWithArray = new ConcurrentHashMap<String, ArrayList<String>>();
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_50664_f1ab3/rev_50664-f1ab3/src/com/loopj/android/http/RequestParams.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 5b62f2f76b76bb9940fc46f1a4baedf010852a7a
+Parent1 SHA-1: 506644a6abfd9b4f94d250e043d4fbb700f2eec3
+Parent2 SHA-1: f1ab377b8505d5499781a919147ba83896d862b8
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ protected List<BasicNameValuePair> getParamsList() {
+        List<BasicNameValuePair> lparams = new LinkedList<BasicNameValuePair>();
+
+        for(ConcurrentHashMap.Entry<String, String> entry : urlParams.entrySet()) {
+            lparams.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
+        }
+
+        lparams.addAll(getParamsList(null, urlParamsWithObjects));
+
+        return lparams;
+    } ##FSTMerge## protected List<BasicNameValuePair> getParamsList() {
+        List<BasicNameValuePair> lparams = new LinkedList<BasicNameValuePair>();
+
+        for(ConcurrentHashMap.Entry<String, String> entry : urlParams.entrySet()) {
+            lparams.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
+        }
+
+        for(ConcurrentHashMap.Entry<String, ArrayList<String>> entry : urlParamsWithArray.entrySet()) {
+            ArrayList<String> values = entry.getValue();
+            for (String value : values) {
+                lparams.add(new BasicNameValuePair(entry.getKey(), value));
+            }
+        }
+
+        return lparams;
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_50664_f1ab3/rev_50664-f1ab3/src/com/loopj/android/http/RequestParams.java
+
+==================================================================================================================
+Revision: /tmp/downloads/android-async-http/revisions/rev_a5e55_c8cff/rev_a5e55-c8cff.revisions
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: a35e7b0ada68f31ad2f91e4aa8f58a9949cfecc9
+Parent1 SHA-1: a5e55ebe7e2c79de4a7a589011002f8a139102c7
+Parent2 SHA-1: c8cfff99dbad5b8eefc37e646efa1cb1dbbe7e30
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void onSuccess(int statusCode, String content)
+    {
+        onSuccess(content);
+    } ##FSTMerge## public void onSuccess(int statusCode, String content) {
+        onSuccess(content);
+    } ##FSTMerge## public void onSuccess(int statusCode, String content) {
+        onSuccess(content);
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_a5e55_c8cff/rev_a5e55-c8cff/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: a35e7b0ada68f31ad2f91e4aa8f58a9949cfecc9
+Parent1 SHA-1: a5e55ebe7e2c79de4a7a589011002f8a139102c7
+Parent2 SHA-1: c8cfff99dbad5b8eefc37e646efa1cb1dbbe7e30
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## protected void sendSuccessMessage(int statusCode, String responseBody) {
+        sendMessage(obtainMessage(SUCCESS_MESSAGE, new Object[]{new Integer(statusCode), responseBody}));
+    } ##FSTMerge## protected void sendSuccessMessage(int statusCode, String responseBody) {
+        sendMessage(obtainMessage(SUCCESS_MESSAGE, new Object[]{new Integer(statusCode), responseBody}));
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_a5e55_c8cff/rev_a5e55-c8cff/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: a35e7b0ada68f31ad2f91e4aa8f58a9949cfecc9
+Parent1 SHA-1: a5e55ebe7e2c79de4a7a589011002f8a139102c7
+Parent2 SHA-1: c8cfff99dbad5b8eefc37e646efa1cb1dbbe7e30
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## protected void handleSuccessMessage(int statusCode, String responseBody) {
+        onSuccess(statusCode, responseBody);
+    } ##FSTMerge## protected void handleSuccessMessage(int statusCode, String responseBody) {
+        onSuccess(statusCode, responseBody);
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_a5e55_c8cff/rev_a5e55-c8cff/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: a35e7b0ada68f31ad2f91e4aa8f58a9949cfecc9
+Parent1 SHA-1: a5e55ebe7e2c79de4a7a589011002f8a139102c7
+Parent2 SHA-1: c8cfff99dbad5b8eefc37e646efa1cb1dbbe7e30
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ protected void handleMessage(Message msg) {
+        Object[] response;
+
+        switch(msg.what) {
+            case SUCCESS_MESSAGE:
+                response = (Object[])msg.obj;
+                handleSuccessMessage(((Integer) response[0]).intValue(), (Header[]) response[1], (String) response[2]);
+                break;
+            case FAILURE_MESSAGE:
+                response = (Object[])msg.obj;
+                handleFailureMessage((Throwable)response[0], (String)response[1]);
+                break;
+            case START_MESSAGE:
+                onStart();
+                break;
+            case FINISH_MESSAGE:
+                onFinish();
+                break;
+        }
+    } ##FSTMerge## protected void handleMessage(Message msg) {
+        Object[] response;
+
+        switch(msg.what) {
+            case SUCCESS_MESSAGE:
+                response = (Object[])msg.obj;
+                handleSuccessMessage(((Integer) response[0]).intValue(), (String) response[1]);
+                break;
+            case FAILURE_MESSAGE:
+                response = (Object[])msg.obj;
+                handleFailureMessage((Throwable)response[0], (String)response[1]);
+                break;
+            case START_MESSAGE:
+                onStart();
+                break;
+            case FINISH_MESSAGE:
+                onFinish();
+                break;
+        }
+    } ##FSTMerge## protected void handleMessage(Message msg) {
+        Object[] response;
+
+        switch(msg.what) {
+            case SUCCESS_MESSAGE:
+                response = (Object[])msg.obj;
+                handleSuccessMessage(((Integer) response[0]).intValue(), (String) response[1]);
+                break;
+            case FAILURE_MESSAGE:
+                response = (Object[])msg.obj;
+                handleFailureMessage((Throwable)response[0], (String)response[1]);
+                break;
+            case START_MESSAGE:
+                onStart();
+                break;
+            case FINISH_MESSAGE:
+                onFinish();
+                break;
+        }
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_a5e55_c8cff/rev_a5e55-c8cff/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: a35e7b0ada68f31ad2f91e4aa8f58a9949cfecc9
+Parent1 SHA-1: a5e55ebe7e2c79de4a7a589011002f8a139102c7
+Parent2 SHA-1: c8cfff99dbad5b8eefc37e646efa1cb1dbbe7e30
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ void sendResponseMessage(HttpResponse response) {
+        StatusLine status = response.getStatusLine();
+        String responseBody = null;
+        try {
+            HttpEntity entity = null;
+            HttpEntity temp = response.getEntity();
+            if(temp != null) {
+                entity = new BufferedHttpEntity(temp);
+                responseBody = EntityUtils.toString(entity, "UTF-8");
+            }
+        } catch(IOException e) {
+            sendFailureMessage(e, (String) null);
+        }
+
+        if(status.getStatusCode() >= 300) {
+            sendFailureMessage(new HttpResponseException(status.getStatusCode(), status.getReasonPhrase()), responseBody);
+        } else {
+            sendSuccessMessage(status.getStatusCode(), response.getAllHeaders(), responseBody);
+        }
+    } ##FSTMerge## void sendResponseMessage(HttpResponse response) {
+        StatusLine status = response.getStatusLine();
+        String responseBody = null;
+        try {
+            HttpEntity entity = null;
+            HttpEntity temp = response.getEntity();
+            if(temp != null) {
+                entity = new BufferedHttpEntity(temp);
+                responseBody = EntityUtils.toString(entity, "UTF-8");
+            }
+        } catch(IOException e) {
+            sendFailureMessage(e, (String) null);
+        }
+
+        if(status.getStatusCode() >= 300) {
+            sendFailureMessage(new HttpResponseException(status.getStatusCode(), status.getReasonPhrase()), responseBody);
+        } else {
+            sendSuccessMessage(status.getStatusCode(), responseBody);
+        }
+    } ##FSTMerge## void sendResponseMessage(HttpResponse response) {
+        StatusLine status = response.getStatusLine();
+        String responseBody = null;
+        try {
+            HttpEntity entity = null;
+            HttpEntity temp = response.getEntity();
+            if(temp != null) {
+                entity = new BufferedHttpEntity(temp);
+                responseBody = EntityUtils.toString(entity, "UTF-8");
+            }
+        } catch(IOException e) {
+            sendFailureMessage(e, (String) null);
+        }
+
+        if(status.getStatusCode() >= 300) {
+            sendFailureMessage(new HttpResponseException(status.getStatusCode(), status.getReasonPhrase()), responseBody);
+        } else {
+            sendSuccessMessage(status.getStatusCode(), responseBody);
+        }
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_a5e55_c8cff/rev_a5e55-c8cff/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+
+==================================================================================================================
+Revision: /tmp/downloads/android-async-http/revisions/rev_3e12d_ded7e/rev_3e12d-ded7e.revisions
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: a5e55ebe7e2c79de4a7a589011002f8a139102c7
+Parent1 SHA-1: 3e12dea27ca068079ede1e8e6da392166873ce38
+Parent2 SHA-1: ded7e8001d1e77ce70979adfa0a987bcecd8daea
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+        onSuccess(statusCode, response);
+    } ##FSTMerge## ##FSTMerge## public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+        onSuccess(statusCode, response);
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_3e12d_ded7e/rev_3e12d-ded7e/src/com/loopj/android/http/JsonHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: a5e55ebe7e2c79de4a7a589011002f8a139102c7
+Parent1 SHA-1: 3e12dea27ca068079ede1e8e6da392166873ce38
+Parent2 SHA-1: ded7e8001d1e77ce70979adfa0a987bcecd8daea
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+        onSuccess(statusCode, response);
+    } ##FSTMerge## ##FSTMerge## public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+        onSuccess(statusCode, response);
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_3e12d_ded7e/rev_3e12d-ded7e/src/com/loopj/android/http/JsonHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: a5e55ebe7e2c79de4a7a589011002f8a139102c7
+Parent1 SHA-1: 3e12dea27ca068079ede1e8e6da392166873ce38
+Parent2 SHA-1: ded7e8001d1e77ce70979adfa0a987bcecd8daea
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void onSuccess(int statusCode,  JSONArray response) {
+        onSuccess(response);
+    } ##FSTMerge## public void onSuccess(int statusCode, JSONArray response) {
+        onSuccess(response);
+    } ##FSTMerge## public void onSuccess(int statusCode,  JSONArray response) {
+        onSuccess(response);
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_3e12d_ded7e/rev_3e12d-ded7e/src/com/loopj/android/http/JsonHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: a5e55ebe7e2c79de4a7a589011002f8a139102c7
+Parent1 SHA-1: 3e12dea27ca068079ede1e8e6da392166873ce38
+Parent2 SHA-1: ded7e8001d1e77ce70979adfa0a987bcecd8daea
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Override
+    protected void sendSuccessMessage(int statusCode, Header[] headers, String responseBody) {
+        try {
+            Object jsonResponse = parseResponse(responseBody);
+            sendMessage(obtainMessage(SUCCESS_JSON_MESSAGE, new Object[]{statusCode, headers, jsonResponse}));
+        } catch(JSONException e) {
+            sendFailureMessage(e, responseBody);
+        }
+    } ##FSTMerge## ##FSTMerge## @Override
+    protected void sendSuccessMessage(int statusCode, Header[] headers, String responseBody) {
+        if (statusCode != HttpStatus.SC_NO_CONTENT){        
+            try {
+                Object jsonResponse = parseResponse(responseBody);
+	        sendMessage(obtainMessage(SUCCESS_JSON_MESSAGE, new Object[]{statusCode, headers, jsonResponse}));
+    	    } catch(JSONException e) {
+    	        sendFailureMessage(e, responseBody);
+    	    }
+        } else {
+            sendMessage(obtainMessage(SUCCESS_JSON_MESSAGE, new Object[]{statusCode, new JSONObject()}));
+    	}
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_3e12d_ded7e/rev_3e12d-ded7e/src/com/loopj/android/http/JsonHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: a5e55ebe7e2c79de4a7a589011002f8a139102c7
+Parent1 SHA-1: 3e12dea27ca068079ede1e8e6da392166873ce38
+Parent2 SHA-1: ded7e8001d1e77ce70979adfa0a987bcecd8daea
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Override
+    protected void handleMessage(Message msg) {
+        switch(msg.what){
+            case SUCCESS_JSON_MESSAGE:
+                Object[] response = (Object[]) msg.obj;
+                handleSuccessJsonMessage(((Integer) response[0]).intValue(),(Header[]) response[1] ,response[2]);
+                break;
+            default:
+                super.handleMessage(msg);
+        }
+    } ##FSTMerge## @Override
+    protected void handleMessage(Message msg) {
+        switch(msg.what){
+            case SUCCESS_JSON_MESSAGE:
+                Object[] response = (Object[]) msg.obj;
+                handleSuccessJsonMessage(((Integer) response[0]).intValue(), response[1]);
+                break;
+            default:
+                super.handleMessage(msg);
+        }
+    } ##FSTMerge## @Override
+    protected void handleMessage(Message msg) {
+        switch(msg.what){
+            case SUCCESS_JSON_MESSAGE:
+                Object[] response = (Object[]) msg.obj;
+                handleSuccessJsonMessage(((Integer) response[0]).intValue(),(Header[]) response[1] ,response[2]);
+                break;
+            default:
+                super.handleMessage(msg);
+        }
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_3e12d_ded7e/rev_3e12d-ded7e/src/com/loopj/android/http/JsonHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: a5e55ebe7e2c79de4a7a589011002f8a139102c7
+Parent1 SHA-1: 3e12dea27ca068079ede1e8e6da392166873ce38
+Parent2 SHA-1: ded7e8001d1e77ce70979adfa0a987bcecd8daea
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ protected void handleSuccessJsonMessage(int statusCode,Header[] headers, Object jsonResponse) {
+        if(jsonResponse instanceof JSONObject) {
+            onSuccess(statusCode, headers, (JSONObject)jsonResponse);
+        } else if(jsonResponse instanceof JSONArray) {
+            onSuccess(statusCode, headers, (JSONArray)jsonResponse);
+        } else {
+            onFailure(new JSONException("Unexpected type " + jsonResponse.getClass().getName()), (JSONObject)null);
+        }
+    } ##FSTMerge## ##FSTMerge## protected void handleSuccessJsonMessage(int statusCode,Header[] headers, Object jsonResponse) {
+        if(jsonResponse instanceof JSONObject) {
+            onSuccess(statusCode, headers, (JSONObject)jsonResponse);
+        } else if(jsonResponse instanceof JSONArray) {
+            onSuccess(statusCode, headers, (JSONArray)jsonResponse);
+        } else {
+            onFailure(new JSONException("Unexpected type " + jsonResponse.getClass().getName()), (JSONObject)null);
+        }
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_3e12d_ded7e/rev_3e12d-ded7e/src/com/loopj/android/http/JsonHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: a5e55ebe7e2c79de4a7a589011002f8a139102c7
+Parent1 SHA-1: 3e12dea27ca068079ede1e8e6da392166873ce38
+Parent2 SHA-1: ded7e8001d1e77ce70979adfa0a987bcecd8daea
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void onSuccess(int statusCode, Header[] headers, String content) {
+        onSuccess(statusCode, content);
+    } ##FSTMerge## ##FSTMerge## public void onSuccess(int statusCode, Header[] headers, String content) {
+        onSuccess(statusCode, content);
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_3e12d_ded7e/rev_3e12d-ded7e/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: a5e55ebe7e2c79de4a7a589011002f8a139102c7
+Parent1 SHA-1: 3e12dea27ca068079ede1e8e6da392166873ce38
+Parent2 SHA-1: ded7e8001d1e77ce70979adfa0a987bcecd8daea
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void onSuccess(int statusCode, String content)
+    {
+        onSuccess(content);
+    } ##FSTMerge## public void onSuccess(int statusCode, String content) {
+        onSuccess(content);
+    } ##FSTMerge## public void onSuccess(int statusCode, String content)
+    {
+        onSuccess(content);
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_3e12d_ded7e/rev_3e12d-ded7e/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: a5e55ebe7e2c79de4a7a589011002f8a139102c7
+Parent1 SHA-1: 3e12dea27ca068079ede1e8e6da392166873ce38
+Parent2 SHA-1: ded7e8001d1e77ce70979adfa0a987bcecd8daea
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ protected void sendSuccessMessage(int statusCode, Header[] headers, String responseBody) {
+        sendMessage(obtainMessage(SUCCESS_MESSAGE, new Object[]{new Integer(statusCode), headers, responseBody}));
+    } ##FSTMerge## ##FSTMerge## protected void sendSuccessMessage(int statusCode, Header[] headers, String responseBody) {
+        sendMessage(obtainMessage(SUCCESS_MESSAGE, new Object[]{new Integer(statusCode), headers, responseBody}));
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_3e12d_ded7e/rev_3e12d-ded7e/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: a5e55ebe7e2c79de4a7a589011002f8a139102c7
+Parent1 SHA-1: 3e12dea27ca068079ede1e8e6da392166873ce38
+Parent2 SHA-1: ded7e8001d1e77ce70979adfa0a987bcecd8daea
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ protected void handleSuccessMessage(int statusCode, Header[] headers, String responseBody) {
+        onSuccess(statusCode, headers, responseBody);
+    } ##FSTMerge## ##FSTMerge## protected void handleSuccessMessage(int statusCode, Header[] headers, String responseBody) {
+        onSuccess(statusCode, headers, responseBody);
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_3e12d_ded7e/rev_3e12d-ded7e/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: a5e55ebe7e2c79de4a7a589011002f8a139102c7
+Parent1 SHA-1: 3e12dea27ca068079ede1e8e6da392166873ce38
+Parent2 SHA-1: ded7e8001d1e77ce70979adfa0a987bcecd8daea
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ protected void handleMessage(Message msg) {
+        Object[] response;
+
+        switch(msg.what) {
+            case SUCCESS_MESSAGE:
+                response = (Object[])msg.obj;
+                handleSuccessMessage(((Integer) response[0]).intValue(), (Header[]) response[1], (String) response[2]);
+                break;
+            case FAILURE_MESSAGE:
+                response = (Object[])msg.obj;
+                handleFailureMessage((Throwable)response[0], (String)response[1]);
+                break;
+            case START_MESSAGE:
+                onStart();
+                break;
+            case FINISH_MESSAGE:
+                onFinish();
+                break;
+        }
+    } ##FSTMerge## protected void handleMessage(Message msg) {
+        Object[] response;
+
+        switch(msg.what) {
+            case SUCCESS_MESSAGE:
+                response = (Object[])msg.obj;
+                handleSuccessMessage(((Integer) response[0]).intValue(), (String) response[1]);
+                break;
+            case FAILURE_MESSAGE:
+                response = (Object[])msg.obj;
+                handleFailureMessage((Throwable)response[0], (String)response[1]);
+                break;
+            case START_MESSAGE:
+                onStart();
+                break;
+            case FINISH_MESSAGE:
+                onFinish();
+                break;
+        }
+    } ##FSTMerge## protected void handleMessage(Message msg) {
+        Object[] response;
+
+        switch(msg.what) {
+            case SUCCESS_MESSAGE:
+                response = (Object[])msg.obj;
+                handleSuccessMessage(((Integer) response[0]).intValue(), (Header[]) response[1], (String) response[2]);
+                break;
+            case FAILURE_MESSAGE:
+                response = (Object[])msg.obj;
+                handleFailureMessage((Throwable)response[0], (String)response[1]);
+                break;
+            case START_MESSAGE:
+                onStart();
+                break;
+            case FINISH_MESSAGE:
+                onFinish();
+                break;
+        }
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_3e12d_ded7e/rev_3e12d-ded7e/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: a5e55ebe7e2c79de4a7a589011002f8a139102c7
+Parent1 SHA-1: 3e12dea27ca068079ede1e8e6da392166873ce38
+Parent2 SHA-1: ded7e8001d1e77ce70979adfa0a987bcecd8daea
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ void sendResponseMessage(HttpResponse response) {
+        StatusLine status = response.getStatusLine();
+        String responseBody = null;
+        try {
+            HttpEntity entity = null;
+            HttpEntity temp = response.getEntity();
+            if(temp != null) {
+                entity = new BufferedHttpEntity(temp);
+                responseBody = EntityUtils.toString(entity, "UTF-8");
+            }
+        } catch(IOException e) {
+            sendFailureMessage(e, (String) null);
+        }
+
+        if(status.getStatusCode() >= 300) {
+            sendFailureMessage(new HttpResponseException(status.getStatusCode(), status.getReasonPhrase()), responseBody);
+        } else {
+            sendSuccessMessage(status.getStatusCode(),response.getAllHeaders(), responseBody);
+        }
+    } ##FSTMerge## void sendResponseMessage(HttpResponse response) {
+        StatusLine status = response.getStatusLine();
+        String responseBody = null;
+        try {
+            HttpEntity entity = null;
+            HttpEntity temp = response.getEntity();
+            if(temp != null) {
+                entity = new BufferedHttpEntity(temp);
+                responseBody = EntityUtils.toString(entity, "UTF-8");
+            }
+        } catch(IOException e) {
+            sendFailureMessage(e, (String) null);
+        }
+
+        if(status.getStatusCode() >= 300) {
+            sendFailureMessage(new HttpResponseException(status.getStatusCode(), status.getReasonPhrase()), responseBody);
+        } else {
+            sendSuccessMessage(status.getStatusCode(), responseBody);
+        }
+    } ##FSTMerge## void sendResponseMessage(HttpResponse response) {
+        StatusLine status = response.getStatusLine();
+        String responseBody = null;
+        try {
+            HttpEntity entity = null;
+            HttpEntity temp = response.getEntity();
+            if(temp != null) {
+                entity = new BufferedHttpEntity(temp);
+                responseBody = EntityUtils.toString(entity, "UTF-8");
+            }
+        } catch(IOException e) {
+            sendFailureMessage(e, (String) null);
+        }
+
+        if(status.getStatusCode() >= 300) {
+            sendFailureMessage(new HttpResponseException(status.getStatusCode(), status.getReasonPhrase()), responseBody);
+        } else {
+            sendSuccessMessage(status.getStatusCode(), response.getAllHeaders(), responseBody);
+        }
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_3e12d_ded7e/rev_3e12d-ded7e/src/com/loopj/android/http/AsyncHttpResponseHandler.java
+
+==================================================================================================================
+Revision: /tmp/downloads/android-async-http/revisions/rev_c0a31_c2cbe/rev_c0a31-c2cbe.revisions
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 2741354ebcdaa911d5e8d73a77c5b85f2d0ff1c1
+Parent1 SHA-1: c0a31d3362cbc2c0d62b90256df3eca8bbbe1dfc
+Parent2 SHA-1: c2cbe6b6474678a3ba194838707b4573ed71cb74
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Override
+    protected void sendSuccessMessage(int statusCode, String responseBody) {
+    	if (statusCode != HttpStatus.SC_NO_CONTENT){
+	        try {
+	            Object jsonResponse = parseResponse(responseBody);
+	            sendMessage(obtainMessage(SUCCESS_JSON_MESSAGE, new Object[]{statusCode, jsonResponse}));
+	        } catch(JSONException e) {
+	            sendFailureMessage(e, responseBody);
+	        }
+    	}else{
+    		sendMessage(obtainMessage(SUCCESS_JSON_MESSAGE, new Object[]{statusCode, new JSONObject()}));
+    	}
+    } ##FSTMerge## @Override
+    protected void sendSuccessMessage(int statusCode, String responseBody) {
+        try {
+            Object jsonResponse = parseResponse(responseBody);
+            sendMessage(obtainMessage(SUCCESS_JSON_MESSAGE, new Object[]{statusCode, jsonResponse}));
+        } catch(JSONException e) {
+            sendFailureMessage(e, responseBody);
+        }
+    } ##FSTMerge##
+File path: /tmp/downloads/android-async-http/revisions/rev_c0a31_c2cbe/rev_c0a31-c2cbe/src/com/loopj/android/http/JsonHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 2741354ebcdaa911d5e8d73a77c5b85f2d0ff1c1
+Parent1 SHA-1: c0a31d3362cbc2c0d62b90256df3eca8bbbe1dfc
+Parent2 SHA-1: c2cbe6b6474678a3ba194838707b4573ed71cb74
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ private void makeRequestWithRetries() throws ConnectException {
+        // This is an additional layer of retry logic lifted from droid-fu
+        // See: https://github.com/kaeppler/droid-fu/blob/master/src/main/java/com/github/droidfu/http/BetterHttpRequestBase.java
+        boolean retry = true;
+        IOException cause = null;
+        HttpRequestRetryHandler retryHandler = client.getHttpRequestRetryHandler();
+        while (retry) {
+            try {
+                makeRequest();
+                return;
+            } catch (UnknownHostException e) {
+		        if(responseHandler != null) {
+		            responseHandler.sendFailureMessage(e, "can't resolve host");
+		        }
+	        	return;
+            }catch (SocketException e){
+                // Added to detect host unreachable
+                if(responseHandler != null) {
+                    responseHandler.sendFailureMessage(e, "can't resolve host");
+                }
+                return;
+            }catch (SocketTimeoutException e){
+                if(responseHandler != null) {
+                    responseHandler.sendFailureMessage(e, "socket time out");
+                }
+                return;
+            } catch (IOException e) {
+                cause = e;
+                retry = retryHandler.retryRequest(cause, ++executionCount, context);
+            } catch (NullPointerException e) {
+                // there's a bug in HttpClient 4.0.x that on some occasions causes
+                // DefaultRequestExecutor to throw an NPE, see
+                // http://code.google.com/p/android/issues/detail?id=5255
+                cause = new IOException("NPE in HttpClient" + e.getMessage());
+                retry = retryHandler.retryRequest(cause, ++executionCount, context);
+            }
+        }
+
+        // no retries left, crap out with exception
+        ConnectException ex = new ConnectException();
+        ex.initCause(cause);
+        throw ex;
+    } ##FSTMerge## private void makeRequestWithRetries() throws ConnectException {
+        // This is an additional layer of retry logic lifted from droid-fu
+        // See: https://github.com/kaeppler/droid-fu/blob/master/src/main/java/com/github/droidfu/http/BetterHttpRequestBase.java
+        boolean retry = true;
+        IOException cause = null;
+        HttpRequestRetryHandler retryHandler = client.getHttpRequestRetryHandler();
+        while (retry) {
+            try {
+                makeRequest();
+                return;
+	    } catch (UnknownHostException e) {
+	        if(responseHandler != null) {
+	            responseHandler.sendFailureMessage(e, "can't resolve host");
+		}
+		return;
+            } catch (IOException e) {
+                cause = e;
+                retry = retryHandler.retryRequest(cause, ++executionCount, context);
+            } catch (NullPointerException e) {
+                // there's a bug in HttpClient 4.0.x that on some occasions causes
+                // DefaultRequestExecutor to throw an NPE, see
+                // http://code.google.com/p/android/issues/detail?id=5255
+                cause = new IOException("NPE in HttpClient" + e.getMessage());
+                retry = retryHandler.retryRequest(cause, ++executionCount, context);
+            }
+        }
+
+        // no retries left, crap out with exception
+        ConnectException ex = new ConnectException();
+        ex.initCause(cause);
+        throw ex;
+    } ##FSTMerge## private void makeRequestWithRetries() throws IOException {
+        // This is an additional layer of retry logic lifted from droid-fu
+        // See: https://github.com/kaeppler/droid-fu/blob/master/src/main/java/com/github/droidfu/http/BetterHttpRequestBase.java
+        boolean retry = true;
+        IOException cause = null;
+        HttpRequestRetryHandler retryHandler = client.getHttpRequestRetryHandler();
+        try
+        {
+            while (retry) {
+                try {
+                    makeRequest();
+                    return;
+                } catch (UnknownHostException e) {
+                    // switching between WI-FI and mobile data networks can cause a retry which then results in an UnknownHostException
+                    // while the WI-FI is initialising. The retry logic will be invoked here, if this is NOT the first retry
+                    // (to assist in genuine cases of unknown host) which seems better than outright failure
+                    cause = new IOException("UnknownHostException exception: " + e.getMessage());
+                    retry = (executionCount > 0) && retryHandler.retryRequest(cause, ++executionCount, context);
+                } catch (IOException e) {
+                    cause = e;
+                    retry = retryHandler.retryRequest(cause, ++executionCount, context);
+                } catch (NullPointerException e) {
+                    // there's a bug in HttpClient 4.0.x that on some occasions causes
+                    // DefaultRequestExecutor to throw an NPE, see
+                    // http://code.google.com/p/android/issues/detail?id=5255
+                    cause = new IOException("NPE in HttpClient: " + e.getMessage());
+                    retry = retryHandler.retryRequest(cause, ++executionCount, context);
+                }
+                if(retry && (responseHandler != null)) {
+                  responseHandler.sendRetryMessage();
+                }
+            }
+        } catch (Exception e) {
+            // catch anything else to ensure failure message is propagated
+            cause = new IOException("Unhandled exception: " + e.getMessage());
+        }
+        
+        // cleaned up to throw IOException
+        throw(cause);
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_c0a31_c2cbe/rev_c0a31-c2cbe/src/com/loopj/android/http/AsyncHttpRequest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 2741354ebcdaa911d5e8d73a77c5b85f2d0ff1c1
+Parent1 SHA-1: c0a31d3362cbc2c0d62b90256df3eca8bbbe1dfc
+Parent2 SHA-1: c2cbe6b6474678a3ba194838707b4573ed71cb74
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ protected void sendRequest(DefaultHttpClient client, HttpContext httpContext, HttpUriRequest uriRequest, String contentType, AsyncHttpResponseHandler responseHandler, Context context) {
+        if(contentType != null) {
+            uriRequest.addHeader("Content-Type", contentType);
+        }
+
+        Future<?> request = threadPool.submit(new AsyncHttpRequest(client, httpContext, uriRequest, responseHandler));
+
+        if(context != null) {
+            // Add request to request map
+            List<WeakReference<Future<?>>> requestList = requestMap.get(context);
+            if(requestList == null) {
+                requestList = new LinkedList<WeakReference<Future<?>>>();
+                requestMap.put(context, requestList);
+            }
+
+            requestList.add(new WeakReference<Future<?>>(request));
+
+            // TODO: Remove dead weakrefs from requestLists?
+        }
+    } ##FSTMerge## private void sendRequest(DefaultHttpClient client, HttpContext httpContext, HttpUriRequest uriRequest, String contentType, AsyncHttpResponseHandler responseHandler, Context context) {
+        if(contentType != null) {
+            uriRequest.addHeader("Content-Type", contentType);
+        }
+
+        Future<?> request = threadPool.submit(new AsyncHttpRequest(client, httpContext, uriRequest, responseHandler));
+
+        if(context != null) {
+            // Add request to request map
+            List<WeakReference<Future<?>>> requestList = requestMap.get(context);
+            if(requestList == null) {
+                requestList = new LinkedList<WeakReference<Future<?>>>();
+                requestMap.put(context, requestList);
+            }
+
+            requestList.add(new WeakReference<Future<?>>(request));
+
+            // TODO: Remove dead weakrefs from requestLists?
+        }
+    } ##FSTMerge## private void sendRequest(DefaultHttpClient client, HttpContext httpContext, HttpUriRequest uriRequest, String contentType, AsyncHttpResponseHandler responseHandler, Context context) {
+        if(contentType != null) {
+            uriRequest.addHeader("Content-Type", contentType);
+        }
+
+        Future<?> request = threadPool.submit(new AsyncHttpRequest(client, httpContext, uriRequest, responseHandler));
+
+        if(context != null) {
+            // Add request to request map
+            List<WeakReference<Future<?>>> requestList = requestMap.get(context);
+            if(requestList == null) {
+                requestList = new LinkedList<WeakReference<Future<?>>>();
+                requestMap.put(context, requestList);
+            }
+
+            requestList.add(new WeakReference<Future<?>>(request));
+
+            // TODO: Remove dead weakrefs from requestLists?
+        }
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_c0a31_c2cbe/rev_c0a31-c2cbe/src/com/loopj/android/http/AsyncHttpClient.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 2741354ebcdaa911d5e8d73a77c5b85f2d0ff1c1
+Parent1 SHA-1: c0a31d3362cbc2c0d62b90256df3eca8bbbe1dfc
+Parent2 SHA-1: c2cbe6b6474678a3ba194838707b4573ed71cb74
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public static String getUrlWithQueryString(String url, RequestParams params) {
+        if(params != null) {
+            String paramString = params.getParamString();
+            if (url.indexOf("?") == -1) {
+                url += "?" + paramString;
+            } else {
+                url += "&" + paramString;
+            }
+        }
+
+        return url;
+    } ##FSTMerge## public static String getUrlWithQueryString(String url, RequestParams params) {
+        if(params != null) {
+            String paramString = params.getParamString();
+            url += "?" + paramString;
+        }
+
+        return url;
+    } ##FSTMerge## public static String getUrlWithQueryString(String url, RequestParams params) {
+        if(params != null) {
+            String paramString = params.getParamString();
+            url += "?" + paramString;
+        }
+
+        return url;
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_c0a31_c2cbe/rev_c0a31-c2cbe/src/com/loopj/android/http/AsyncHttpClient.java
+
+==================================================================================================================
+Revision: /tmp/downloads/android-async-http/revisions/rev_a80e4_32ae8/rev_a80e4-32ae8.revisions
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8d2ed57a9e482d90cb6e90cf663cdecbace2bb62
+Parent1 SHA-1: a80e40854af44872300ef8c729c11b90cc08e1ef
+Parent2 SHA-1: 32ae848fab462d87c92c9b97d3d973c52f37e123
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## @Override
+    protected void sendSuccessMessage(String responseBody) {
+        try {
+            Object jsonResponse = parseResponse(responseBody);
+            sendMessage(obtainMessage(SUCCESS_JSON_MESSAGE, jsonResponse));
+        } catch(JSONException e) {
+            sendFailureMessage(e, responseBody);
+        }
+    } ##FSTMerge## @Override
+    protected void sendSuccessMessage(String responseBody) {
+        try {
+            Object jsonResponse = parseResponse(responseBody);
+            sendMessage(obtainMessage(SUCCESS_JSON_MESSAGE, jsonResponse));
+        } catch(JSONException e) {
+            sendFailureMessage(e, responseBody);
+        }
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_a80e4_32ae8/rev_a80e4-32ae8/src/com/loopj/android/http/JsonHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8d2ed57a9e482d90cb6e90cf663cdecbace2bb62
+Parent1 SHA-1: a80e40854af44872300ef8c729c11b90cc08e1ef
+Parent2 SHA-1: 32ae848fab462d87c92c9b97d3d973c52f37e123
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Override
+    protected void handleMessage(Message msg) {
+        switch(msg.what){
+            case SUCCESS_JSON_MESSAGE:
+                Object[] response = (Object[]) msg.obj;
+                handleSuccessJsonMessage(((Integer) response[0]).intValue(), response[1]);
+                break;
+            default:
+                super.handleMessage(msg);
+        }
+    } ##FSTMerge## @Override
+    protected void handleMessage(Message msg) {
+        switch(msg.what){
+            case SUCCESS_JSON_MESSAGE:
+                handleSuccessJsonMessage(msg.obj);
+                break;
+            default:
+                super.handleMessage(msg);
+        }
+    } ##FSTMerge## @Override
+    protected void handleMessage(Message msg) {
+        switch(msg.what){
+            case SUCCESS_JSON_MESSAGE:
+                handleSuccessJsonMessage(msg.obj);
+                break;
+            default:
+                super.handleMessage(msg);
+        }
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_a80e4_32ae8/rev_a80e4-32ae8/src/com/loopj/android/http/JsonHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8d2ed57a9e482d90cb6e90cf663cdecbace2bb62
+Parent1 SHA-1: a80e40854af44872300ef8c729c11b90cc08e1ef
+Parent2 SHA-1: 32ae848fab462d87c92c9b97d3d973c52f37e123
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## protected void handleSuccessJsonMessage(Object jsonResponse) {
+        if(jsonResponse instanceof JSONObject) {
+            onSuccess((JSONObject)jsonResponse);
+        } else if(jsonResponse instanceof JSONArray) {
+            onSuccess((JSONArray)jsonResponse);
+        } else {
+            onFailure(new JSONException("Unexpected type " + jsonResponse.getClass().getName()));
+        }
+    } ##FSTMerge## protected void handleSuccessJsonMessage(Object jsonResponse) {
+        if(jsonResponse instanceof JSONObject) {
+            onSuccess((JSONObject)jsonResponse);
+        } else if(jsonResponse instanceof JSONArray) {
+            onSuccess((JSONArray)jsonResponse);
+        } else {
+            onFailure(new JSONException("Unexpected type " + jsonResponse.getClass().getName()), (JSONObject)null);
+        }
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_a80e4_32ae8/rev_a80e4-32ae8/src/com/loopj/android/http/JsonHttpResponseHandler.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 8d2ed57a9e482d90cb6e90cf663cdecbace2bb62
+Parent1 SHA-1: a80e40854af44872300ef8c729c11b90cc08e1ef
+Parent2 SHA-1: 32ae848fab462d87c92c9b97d3d973c52f37e123
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ protected Object parseResponse(String responseBody) throws JSONException {
+        Object result = null;
+        //trim the string to prevent start with blank, and test if the string is valid JSON, because the parser don't do this :(. If Json is not valid this will return null
+	    responseBody = responseBody.trim();
+	    if(responseBody.startsWith("{") || responseBody.startsWith("[")) {
+	        result = new JSONTokener(responseBody).nextValue();
+	    }
+	    return result;
+    } ##FSTMerge## protected Object parseResponse(String responseBody) throws JSONException {
+        Object result = null;
+        //trim the string to prevent start with blank, and test if the string is valid JSON, because the parser don't do this :(. If Json is not valid this will return null
+	responseBody = responseBody.trim();
+	if(responseBody.startsWith("{") || responseBody.startsWith("[")) {
+	    result = new JSONTokener(responseBody).nextValue();
+	}
+	return result;
+    } ##FSTMerge## protected Object parseResponse(String responseBody) throws JSONException {
+        Object result = null;
+        //trim the string to prevent start with blank, and test if the string is valid JSON, because the parser don't do this :(. If Json is not valid this will return null
+		responseBody = responseBody.trim();
+		if(responseBody.startsWith("{") || responseBody.startsWith("[")) {
+			result = new JSONTokener(responseBody).nextValue();
+		}
+		if (result == null) {
+			result = responseBody;
+		}
+		return result;
+    }
+File path: /tmp/downloads/android-async-http/revisions/rev_a80e4_32ae8/rev_a80e4-32ae8/src/com/loopj/android/http/JsonHttpResponseHandler.java
+
+=========================================================

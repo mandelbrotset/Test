@@ -1,0 +1,2130 @@
+=========================================================
+Revision: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056.revisions
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void testPostSticky() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.register(this);
+        assertEquals("Sticky", lastEvent);
+        assertEquals(Thread.currentThread(), lastThread);
+    } ##FSTMerge## public void testPostSticky() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.registerSticky(this);
+        assertEquals("Sticky", lastEvent);
+        assertEquals(Thread.currentThread(), lastThread);
+    } ##FSTMerge## public void testPostSticky() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.registerSticky(this);
+        assertEquals("Sticky", lastEvent);
+        assertEquals(Thread.currentThread(), lastThread);
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBusTest/src/de/greenrobot/event/test/EventBusStickyEventTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void testPostStickyTwoEvents() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.postSticky(new IntTestEvent(7));
+        eventBus.register(this);
+        assertEquals(2, eventCount.intValue());
+    } ##FSTMerge## public void testPostStickyTwoEvents() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.postSticky(new IntTestEvent(7));
+        eventBus.registerSticky(this);
+        assertEquals(2, eventCount.intValue());
+    } ##FSTMerge## public void testPostStickyTwoEvents() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.postSticky(new IntTestEvent(7));
+        eventBus.registerSticky(this);
+        assertEquals(2, eventCount.intValue());
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBusTest/src/de/greenrobot/event/test/EventBusStickyEventTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void testPostStickyTwoSubscribers() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.postSticky(new IntTestEvent(7));
+        eventBus.register(this);
+        StickyIntTestSubscriber subscriber2 = new StickyIntTestSubscriber();
+        eventBus.register(subscriber2);
+        assertEquals(3, eventCount.intValue());
+
+        eventBus.postSticky("Sticky");
+        assertEquals(4, eventCount.intValue());
+
+        eventBus.postSticky(new IntTestEvent(8));
+        assertEquals(6, eventCount.intValue());
+    } ##FSTMerge## ##FSTMerge## public void testPostStickyTwoSubscribers() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.postSticky(new IntTestEvent(7));
+        eventBus.registerSticky(this);
+        StickyIntTestSubscriber subscriber2 = new StickyIntTestSubscriber();
+        eventBus.registerSticky(subscriber2);
+        assertEquals(3, eventCount.intValue());
+
+        eventBus.postSticky("Sticky");
+        assertEquals(4, eventCount.intValue());
+
+        eventBus.postSticky(new IntTestEvent(8));
+        assertEquals(6, eventCount.intValue());
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBusTest/src/de/greenrobot/event/test/EventBusStickyEventTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void testPostStickyRegisterNonSticky() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.register(new NonStickySubscriber());
+        assertNull(lastEvent);
+        assertEquals(0, eventCount.intValue());
+    } ##FSTMerge## public void testPostStickyRegisterNonSticky() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.register(this);
+        assertNull(lastEvent);
+        assertEquals(0, eventCount.intValue());
+    } ##FSTMerge## public void testPostStickyRegisterNonSticky() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.register(this);
+        assertNull(lastEvent);
+        assertEquals(0, eventCount.intValue());
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBusTest/src/de/greenrobot/event/test/EventBusStickyEventTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void testPostNonStickyRegisterSticky() throws InterruptedException {
+        eventBus.post("NonSticky");
+        eventBus.register(this);
+        assertNull(lastEvent);
+        assertEquals(0, eventCount.intValue());
+    } ##FSTMerge## public void testPostNonStickyRegisterSticky() throws InterruptedException {
+        eventBus.post("NonSticky");
+        eventBus.registerSticky(this);
+        assertNull(lastEvent);
+        assertEquals(0, eventCount.intValue());
+    } ##FSTMerge## public void testPostNonStickyRegisterSticky() throws InterruptedException {
+        eventBus.post("NonSticky");
+        eventBus.registerSticky(this);
+        assertNull(lastEvent);
+        assertEquals(0, eventCount.intValue());
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBusTest/src/de/greenrobot/event/test/EventBusStickyEventTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void testPostStickyTwice() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.postSticky("NewSticky");
+        eventBus.register(this);
+        assertEquals("NewSticky", lastEvent);
+    } ##FSTMerge## public void testPostStickyTwice() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.postSticky("NewSticky");
+        eventBus.registerSticky(this);
+        assertEquals("NewSticky", lastEvent);
+    } ##FSTMerge## public void testPostStickyTwice() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.postSticky("NewSticky");
+        eventBus.registerSticky(this);
+        assertEquals("NewSticky", lastEvent);
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBusTest/src/de/greenrobot/event/test/EventBusStickyEventTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void testPostStickyThenPostNormal() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.post("NonSticky");
+        eventBus.register(this);
+        assertEquals("Sticky", lastEvent);
+    } ##FSTMerge## public void testPostStickyThenPostNormal() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.post("NonSticky");
+        eventBus.registerSticky(this);
+        assertEquals("Sticky", lastEvent);
+    } ##FSTMerge## public void testPostStickyThenPostNormal() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.post("NonSticky");
+        eventBus.registerSticky(this);
+        assertEquals("Sticky", lastEvent);
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBusTest/src/de/greenrobot/event/test/EventBusStickyEventTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void testPostStickyWithRegisterAndUnregister() throws InterruptedException {
+        eventBus.register(this);
+        eventBus.postSticky("Sticky");
+        assertEquals("Sticky", lastEvent);
+
+        eventBus.unregister(this);
+        eventBus.register(this);
+        assertEquals("Sticky", lastEvent);
+        assertEquals(2, eventCount.intValue());
+
+        eventBus.postSticky("NewSticky");
+        assertEquals(3, eventCount.intValue());
+        assertEquals("NewSticky", lastEvent);
+
+        eventBus.unregister(this);
+        eventBus.register(this);
+        assertEquals(4, eventCount.intValue());
+        assertEquals("NewSticky", lastEvent);
+    } ##FSTMerge## public void testPostStickyWithRegisterAndUnregister() throws InterruptedException {
+        eventBus.registerSticky(this);
+        eventBus.postSticky("Sticky");
+        assertEquals("Sticky", lastEvent);
+
+        eventBus.unregister(this);
+        eventBus.registerSticky(this);
+        assertEquals("Sticky", lastEvent);
+        assertEquals(2, eventCount.intValue());
+
+        eventBus.postSticky("NewSticky");
+        assertEquals(3, eventCount.intValue());
+        assertEquals("NewSticky", lastEvent);
+
+        eventBus.unregister(this);
+        eventBus.registerSticky(this);
+        assertEquals(4, eventCount.intValue());
+        assertEquals("NewSticky", lastEvent);
+    } ##FSTMerge## public void testPostStickyWithRegisterAndUnregister() throws InterruptedException {
+        eventBus.registerSticky(this);
+        eventBus.postSticky("Sticky");
+        assertEquals("Sticky", lastEvent);
+
+        eventBus.unregister(this);
+        eventBus.registerSticky(this);
+        assertEquals("Sticky", lastEvent);
+        assertEquals(2, eventCount.intValue());
+
+        eventBus.postSticky("NewSticky");
+        assertEquals(3, eventCount.intValue());
+        assertEquals("NewSticky", lastEvent);
+
+        eventBus.unregister(this);
+        eventBus.registerSticky(this);
+        assertEquals(4, eventCount.intValue());
+        assertEquals("NewSticky", lastEvent);
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBusTest/src/de/greenrobot/event/test/EventBusStickyEventTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void testPostStickyRemoveClass() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.removeStickyEvent(String.class);
+        assertNull(eventBus.getStickyEvent(String.class));
+        eventBus.register(this);
+        assertNull(lastEvent);
+        assertEquals(0, eventCount.intValue());
+    } ##FSTMerge## public void testPostStickyRemoveClass() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.removeStickyEvent(String.class);
+        assertNull(eventBus.getStickyEvent(String.class));
+        eventBus.registerSticky(this);
+        assertNull(lastEvent);
+        assertEquals(0, eventCount.intValue());
+    } ##FSTMerge## public void testPostStickyRemoveClass() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.removeStickyEvent(String.class);
+        assertNull(eventBus.getStickyEvent(String.class));
+        eventBus.registerSticky(this);
+        assertNull(lastEvent);
+        assertEquals(0, eventCount.intValue());
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBusTest/src/de/greenrobot/event/test/EventBusStickyEventTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void testPostStickyRemoveEvent() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        assertTrue(eventBus.removeStickyEvent("Sticky"));
+        assertNull(eventBus.getStickyEvent(String.class));
+        eventBus.register(this);
+        assertNull(lastEvent);
+        assertEquals(0, eventCount.intValue());
+    } ##FSTMerge## public void testPostStickyRemoveEvent() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        assertTrue(eventBus.removeStickyEvent("Sticky"));
+        assertNull(eventBus.getStickyEvent(String.class));
+        eventBus.registerSticky(this);
+        assertNull(lastEvent);
+        assertEquals(0, eventCount.intValue());
+    } ##FSTMerge## public void testPostStickyRemoveEvent() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        assertTrue(eventBus.removeStickyEvent("Sticky"));
+        assertNull(eventBus.getStickyEvent(String.class));
+        eventBus.registerSticky(this);
+        assertNull(lastEvent);
+        assertEquals(0, eventCount.intValue());
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBusTest/src/de/greenrobot/event/test/EventBusStickyEventTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void testPostStickyRemoveAll() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.postSticky(new IntTestEvent(77));
+        eventBus.removeAllStickyEvents();
+        assertNull(eventBus.getStickyEvent(String.class));
+        assertNull(eventBus.getStickyEvent(IntTestEvent.class));
+        eventBus.register(this);
+        assertNull(lastEvent);
+        assertEquals(0, eventCount.intValue());
+    } ##FSTMerge## public void testPostStickyRemoveAll() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.postSticky(new IntTestEvent(77));
+        eventBus.removeAllStickyEvents();
+        assertNull(eventBus.getStickyEvent(String.class));
+        assertNull(eventBus.getStickyEvent(IntTestEvent.class));
+        eventBus.registerSticky(this);
+        assertNull(lastEvent);
+        assertEquals(0, eventCount.intValue());
+    } ##FSTMerge## public void testPostStickyRemoveAll() throws InterruptedException {
+        eventBus.postSticky("Sticky");
+        eventBus.postSticky(new IntTestEvent(77));
+        eventBus.removeAllStickyEvents();
+        assertNull(eventBus.getStickyEvent(String.class));
+        assertNull(eventBus.getStickyEvent(IntTestEvent.class));
+        eventBus.registerSticky(this);
+        assertNull(lastEvent);
+        assertEquals(0, eventCount.intValue());
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBusTest/src/de/greenrobot/event/test/EventBusStickyEventTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void testRemoveStickyEventInSubscriber() throws InterruptedException {
+        eventBus.register(new RemoveStickySubscriber());
+        eventBus.postSticky("Sticky");
+        eventBus.register(this);
+        assertNull(lastEvent);
+        assertEquals(0, eventCount.intValue());
+        assertNull(eventBus.getStickyEvent(String.class));
+    } ##FSTMerge## public void testRemoveStickyEventInSubscriber() throws InterruptedException {
+        eventBus.registerSticky(new Object() {
+            @SuppressWarnings("unused")
+            public void onEvent(String event) {
+                eventBus.removeStickyEvent(event);
+            }
+        });
+        eventBus.postSticky("Sticky");
+        eventBus.registerSticky(this);
+        assertNull(lastEvent);
+        assertEquals(0, eventCount.intValue());
+        assertNull(eventBus.getStickyEvent(String.class));
+    } ##FSTMerge## public void testRemoveStickyEventInSubscriber() throws InterruptedException {
+        eventBus.registerSticky(new Object() {
+            @SuppressWarnings("unused")
+            public void onEvent(String event) {
+                eventBus.removeStickyEvent(event);
+            }
+        });
+        eventBus.postSticky("Sticky");
+        eventBus.registerSticky(this);
+        assertNull(lastEvent);
+        assertEquals(0, eventCount.intValue());
+        assertNull(eventBus.getStickyEvent(String.class));
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBusTest/src/de/greenrobot/event/test/EventBusStickyEventTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Subscribe(sticky = true)
+    public void onEvent(String event) {
+        trackEvent(event);
+    } ##FSTMerge## public void onEvent(String event) {
+        trackEvent(event);
+    } ##FSTMerge## public void onEvent(String event) {
+        trackEvent(event);
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBusTest/src/de/greenrobot/event/test/EventBusStickyEventTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Subscribe(sticky = true)
+    public void onEvent(IntTestEvent event) {
+        trackEvent(event);
+    } ##FSTMerge## public void onEvent(IntTestEvent event) {
+        trackEvent(event);
+    } ##FSTMerge## public void onEvent(IntTestEvent event) {
+        trackEvent(event);
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBusTest/src/de/greenrobot/event/test/EventBusStickyEventTest.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public ##FSTMerge## ##FSTMerge## public
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBusTest/src/de/greenrobot/event/test/EventBusStickyEventTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Subscribe(sticky = true)
+        public void onEvent(IntTestEvent event) {
+            trackEvent(event);
+        } ##FSTMerge## ##FSTMerge## public void onEvent(IntTestEvent event) {
+            trackEvent(event);
+        }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBusTest/src/de/greenrobot/event/test/EventBusStickyEventTest.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private static final String ON_EVENT_METHOD_NAME = "onEvent"; ##FSTMerge## private static final String ON_EVENT_METHOD_NAME = "onEvent";
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBus/src/de/greenrobot/event/SubscriberMethodFinder.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private static final int BRIDGE = 0x40; ##FSTMerge## private static final int BRIDGE = 0x40;
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBus/src/de/greenrobot/event/SubscriberMethodFinder.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private static final int SYNTHETIC = 0x1000; ##FSTMerge## private static final int SYNTHETIC = 0x1000;
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBus/src/de/greenrobot/event/SubscriberMethodFinder.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private static final int MODIFIERS_IGNORE = Modifier.ABSTRACT | Modifier.STATIC | BRIDGE | SYNTHETIC; ##FSTMerge## private static final int MODIFIERS_IGNORE = Modifier.ABSTRACT | Modifier.STATIC | BRIDGE | SYNTHETIC;
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBus/src/de/greenrobot/event/SubscriberMethodFinder.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private static final Map<String, List<SubscriberMethod>> methodCache = new HashMap<String, List<SubscriberMethod>>(); ##FSTMerge## private static final Map<Class<?>, List<SubscriberMethod>> methodCache = new HashMap<Class<?>, List<SubscriberMethod>>();
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBus/src/de/greenrobot/event/SubscriberMethodFinder.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final Map<Class<?>, Class<?>> skipMethodVerificationForClasses; ##FSTMerge## private final Map<Class<?>, Class<?>> skipMethodVerificationForClasses;
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBus/src/de/greenrobot/event/SubscriberMethodFinder.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## SubscriberMethodFinder(List<Class<?>> skipMethodVerificationForClassesList) {
+        skipMethodVerificationForClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
+        if (skipMethodVerificationForClassesList != null) {
+            for (Class<?> clazz : skipMethodVerificationForClassesList) {
+                skipMethodVerificationForClasses.put(clazz, clazz);
+            }
+        }
+    } ##FSTMerge## SubscriberMethodFinder(List<Class<?>> skipMethodVerificationForClassesList) {
+        skipMethodVerificationForClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
+        if (skipMethodVerificationForClassesList != null) {
+            for (Class<?> clazz : skipMethodVerificationForClassesList) {
+                skipMethodVerificationForClasses.put(clazz, clazz);
+            }
+        }
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBus/src/de/greenrobot/event/SubscriberMethodFinder.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## List<SubscriberMethod> findSubscriberMethods(Class<?> subscriberClass) {
+        String key = subscriberClass.getName();
+        List<SubscriberMethod> subscriberMethods;
+        synchronized (methodCache) {
+            subscriberMethods = methodCache.get(key);
+        }
+        if (subscriberMethods != null) {
+            return subscriberMethods;
+        }
+        subscriberMethods = new ArrayList<SubscriberMethod>();
+        Class<?> clazz = subscriberClass;
+        HashMap<String, Class> eventTypesFound = new HashMap<String, Class>();
+        StringBuilder methodKeyBuilder = new StringBuilder();
+        while (clazz != null) {
+            String name = clazz.getName();
+            if (name.startsWith("java.") || name.startsWith("javax.") || name.startsWith("android.")) {
+                // Skip system classes, this just degrades performance
+                break;
+            }
+
+            // Starting with EventBus 2.2 we enforced methods to be public (might change with annotations again)
+            try {
+                // This is faster than getMethods, especially when subscribers a fat classes like Activities
+                Method[] methods = clazz.getDeclaredMethods();
+                filterSubscriberMethods(subscriberMethods, eventTypesFound, methodKeyBuilder, methods);
+            } catch (Throwable th) {
+                th.printStackTrace();
+                // Workaround for java.lang.NoClassDefFoundError, see https://github.com/greenrobot/EventBus/issues/149
+                Method[] methods = subscriberClass.getMethods();
+                subscriberMethods.clear();
+                eventTypesFound.clear();
+                filterSubscriberMethods(subscriberMethods, eventTypesFound, methodKeyBuilder, methods);
+                break;
+            }
+            clazz = clazz.getSuperclass();
+        }
+        if (subscriberMethods.isEmpty()) {
+            throw new EventBusException("Subscriber " + subscriberClass + " has no public methods called "
+                    + ON_EVENT_METHOD_NAME);
+        } else {
+            synchronized (methodCache) {
+                methodCache.put(key, subscriberMethods);
+            }
+            return subscriberMethods;
+        }
+    } ##FSTMerge## List<SubscriberMethod> findSubscriberMethods(Class<?> subscriberClass) {
+        List<SubscriberMethod> subscriberMethods;
+        synchronized (methodCache) {
+            subscriberMethods = methodCache.get(subscriberClass);
+        }
+        if (subscriberMethods != null) {
+            return subscriberMethods;
+        }
+        subscriberMethods = new ArrayList<SubscriberMethod>();
+        Class<?> clazz = subscriberClass;
+        HashMap<String, Class> eventTypesFound = new HashMap<String, Class>();
+        StringBuilder methodKeyBuilder = new StringBuilder();
+        while (clazz != null) {
+            String name = clazz.getName();
+            if (name.startsWith("java.") || name.startsWith("javax.") || name.startsWith("android.")) {
+                // Skip system classes, this just degrades performance
+                break;
+            }
+
+            // Starting with EventBus 2.2 we enforced methods to be public (might change with annotations again)
+            try {
+                // This is faster than getMethods, especially when subscribers a fat classes like Activities
+                Method[] methods = clazz.getDeclaredMethods();
+                filterSubscriberMethods(subscriberMethods, eventTypesFound, methodKeyBuilder, methods);
+            } catch (Throwable th) {
+                // Workaround for java.lang.NoClassDefFoundError, see https://github.com/greenrobot/EventBus/issues/149
+                Method[] methods = subscriberClass.getMethods();
+                subscriberMethods.clear();
+                eventTypesFound.clear();
+                filterSubscriberMethods(subscriberMethods, eventTypesFound, methodKeyBuilder, methods);
+                break;
+            }
+            clazz = clazz.getSuperclass();
+        }
+        if (subscriberMethods.isEmpty()) {
+            throw new EventBusException("Subscriber " + subscriberClass + " has no public methods called "
+                    + ON_EVENT_METHOD_NAME);
+        } else {
+            synchronized (methodCache) {
+                methodCache.put(subscriberClass, subscriberMethods);
+            }
+            return subscriberMethods;
+        }
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBus/src/de/greenrobot/event/SubscriberMethodFinder.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private void filterSubscriberMethods(List<SubscriberMethod> subscriberMethods,
+                                         HashMap<String, Class> eventTypesFound, StringBuilder methodKeyBuilder,
+                                         Method[] methods) {
+        for (Method method : methods) {
+            String methodName = method.getName();
+            if (methodName.startsWith(ON_EVENT_METHOD_NAME)) {
+                int modifiers = method.getModifiers();
+                Class<?> methodClass = method.getDeclaringClass();
+                if ((modifiers & Modifier.PUBLIC) != 0 && (modifiers & MODIFIERS_IGNORE) == 0) {
+                    Class<?>[] parameterTypes = method.getParameterTypes();
+                    if (parameterTypes.length == 1) {
+                        ThreadMode threadMode = getThreadMode(methodClass, method, methodName);
+                        if (threadMode == null) {
+                            continue;
+                        }
+                        Class<?> eventType = parameterTypes[0];
+                        methodKeyBuilder.setLength(0);
+                        methodKeyBuilder.append(methodName);
+                        methodKeyBuilder.append('>').append(eventType.getName());
+                        String methodKey = methodKeyBuilder.toString();
+                        Class methodClassOld = eventTypesFound.put(methodKey, methodClass);
+                        if (methodClassOld == null || methodClassOld.isAssignableFrom(methodClass)) {
+                            // Only add if not already found in a sub class
+                            subscriberMethods.add(new SubscriberMethod(method, threadMode, eventType));
+                        } else {
+                            // Revert the put, old class is further down the class hierarchy
+                            eventTypesFound.put(methodKey, methodClassOld);
+                        }
+                    }
+                } else if (!skipMethodVerificationForClasses.containsKey(methodClass)) {
+                    Log.d(EventBus.TAG, "Skipping method (not public, static or abstract): " + methodClass + "."
+                            + methodName);
+                }
+            }
+        }
+    } ##FSTMerge## private void filterSubscriberMethods(List<SubscriberMethod> subscriberMethods,
+                                         HashMap<String, Class> eventTypesFound, StringBuilder methodKeyBuilder,
+                                         Method[] methods) {
+        for (Method method : methods) {
+            String methodName = method.getName();
+            if (methodName.startsWith(ON_EVENT_METHOD_NAME)) {
+                int modifiers = method.getModifiers();
+                Class<?> methodClass = method.getDeclaringClass();
+                if ((modifiers & Modifier.PUBLIC) != 0 && (modifiers & MODIFIERS_IGNORE) == 0) {
+                    Class<?>[] parameterTypes = method.getParameterTypes();
+                    if (parameterTypes.length == 1) {
+                        ThreadMode threadMode = getThreadMode(methodClass, method, methodName);
+                        if (threadMode == null) {
+                            continue;
+                        }
+                        Class<?> eventType = parameterTypes[0];
+                        methodKeyBuilder.setLength(0);
+                        methodKeyBuilder.append(methodName);
+                        methodKeyBuilder.append('>').append(eventType.getName());
+                        String methodKey = methodKeyBuilder.toString();
+                        Class methodClassOld = eventTypesFound.put(methodKey, methodClass);
+                        if (methodClassOld == null || methodClassOld.isAssignableFrom(methodClass)) {
+                            // Only add if not already found in a sub class
+                            subscriberMethods.add(new SubscriberMethod(method, threadMode, eventType));
+                        } else {
+                            // Revert the put, old class is further down the class hierarchy
+                            eventTypesFound.put(methodKey, methodClassOld);
+                        }
+                    }
+                } else if (!skipMethodVerificationForClasses.containsKey(methodClass)) {
+                    Log.d(EventBus.TAG, "Skipping method (not public, static or abstract): " + methodClass + "."
+                            + methodName);
+                }
+            }
+        }
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBus/src/de/greenrobot/event/SubscriberMethodFinder.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private ThreadMode getThreadMode(Class<?> clazz, Method method, String methodName) {
+        String modifierString = methodName.substring(ON_EVENT_METHOD_NAME.length());
+        ThreadMode threadMode;
+        if (modifierString.length() == 0) {
+            threadMode = ThreadMode.PostThread;
+        } else if (modifierString.equals("MainThread")) {
+            threadMode = ThreadMode.MainThread;
+        } else if (modifierString.equals("BackgroundThread")) {
+            threadMode = ThreadMode.BackgroundThread;
+        } else if (modifierString.equals("Async")) {
+            threadMode = ThreadMode.Async;
+        } else {
+            if (!skipMethodVerificationForClasses.containsKey(clazz)) {
+                throw new EventBusException("Illegal onEvent method, check for typos: " + method);
+            } else {
+                threadMode = null;
+            }
+        }
+        return threadMode;
+    } ##FSTMerge## private ThreadMode getThreadMode(Class<?> clazz, Method method, String methodName) {
+        String modifierString = methodName.substring(ON_EVENT_METHOD_NAME.length());
+        ThreadMode threadMode;
+        if (modifierString.length() == 0) {
+            threadMode = ThreadMode.PostThread;
+        } else if (modifierString.equals("MainThread")) {
+            threadMode = ThreadMode.MainThread;
+        } else if (modifierString.equals("BackgroundThread")) {
+            threadMode = ThreadMode.BackgroundThread;
+        } else if (modifierString.equals("Async")) {
+            threadMode = ThreadMode.Async;
+        } else {
+            if (!skipMethodVerificationForClasses.containsKey(clazz)) {
+                throw new EventBusException("Illegal onEvent method, check for typos: " + method);
+            } else {
+                threadMode = null;
+            }
+        }
+        return threadMode;
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBus/src/de/greenrobot/event/SubscriberMethodFinder.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 562e9fa3478760fd212a56c8472003eeb633bf86
+Parent1 SHA-1: 4e42ed943050cab8b71e0765e0e37c9df142b4a1
+Parent2 SHA-1: af056ad10958ddff921e43442bee187396754ff5
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## static void clearCaches() {
+        synchronized (methodCache) {
+            methodCache.clear();
+        }
+    } ##FSTMerge## static void clearCaches() {
+        synchronized (methodCache) {
+            methodCache.clear();
+        }
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_4e42e_af056/rev_4e42e-af056/EventBus/src/de/greenrobot/event/SubscriberMethodFinder.java
+
+==================================================================================================================
+Revision: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa.revisions
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void testHasSubscriberForEventSuperclass() {
+        assertFalse(eventBus.hasSubscriberForEvent(String.class));
+
+        Object subscriber = new ObjectSubscriber();
+        eventBus.register(subscriber);
+        assertTrue(eventBus.hasSubscriberForEvent(String.class));
+
+        eventBus.unregister(subscriber);
+        assertFalse(eventBus.hasSubscriberForEvent(String.class));
+    } ##FSTMerge## public void testHasSubscriberForEventSuperclass() {
+        assertFalse(eventBus.hasSubscriberForEvent(String.class));
+
+        Object subscriber = new Object() {
+            public void onEvent(Object event) {
+            }
+        };
+        eventBus.register(subscriber);
+        assertTrue(eventBus.hasSubscriberForEvent(String.class));
+
+        eventBus.unregister(subscriber);
+        assertFalse(eventBus.hasSubscriberForEvent(String.class));
+    } ##FSTMerge## public void testHasSubscriberForEventSuperclass() {
+        assertFalse(eventBus.hasSubscriberForEvent(String.class));
+
+        Object subscriber = new Object() {
+            public void onEvent(Object event) {
+            }
+        };
+        eventBus.register(subscriber);
+        assertTrue(eventBus.hasSubscriberForEvent(String.class));
+
+        eventBus.unregister(subscriber);
+        assertFalse(eventBus.hasSubscriberForEvent(String.class));
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBusTest/src/de/greenrobot/event/test/EventBusBasicTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void testHasSubscriberForEventImplementedInterface() {
+        assertFalse(eventBus.hasSubscriberForEvent(String.class));
+
+        Object subscriber = new CharSequenceSubscriber();
+        eventBus.register(subscriber);
+        assertTrue(eventBus.hasSubscriberForEvent(CharSequence.class));
+        assertTrue(eventBus.hasSubscriberForEvent(String.class));
+
+        eventBus.unregister(subscriber);
+        assertFalse(eventBus.hasSubscriberForEvent(CharSequence.class));
+        assertFalse(eventBus.hasSubscriberForEvent(String.class));
+    } ##FSTMerge## public void testHasSubscriberForEventImplementedInterface() {
+        assertFalse(eventBus.hasSubscriberForEvent(String.class));
+
+        Object subscriber = new Object() {
+            public void onEvent(CharSequence event) {
+            }
+        };
+        eventBus.register(subscriber);
+        assertTrue(eventBus.hasSubscriberForEvent(CharSequence.class));
+        assertTrue(eventBus.hasSubscriberForEvent(String.class));
+
+        eventBus.unregister(subscriber);
+        assertFalse(eventBus.hasSubscriberForEvent(CharSequence.class));
+        assertFalse(eventBus.hasSubscriberForEvent(String.class));
+    } ##FSTMerge## public void testHasSubscriberForEventImplementedInterface() {
+        assertFalse(eventBus.hasSubscriberForEvent(String.class));
+
+        Object subscriber = new Object() {
+            public void onEvent(CharSequence event) {
+            }
+        };
+        eventBus.register(subscriber);
+        assertTrue(eventBus.hasSubscriberForEvent(CharSequence.class));
+        assertTrue(eventBus.hasSubscriberForEvent(String.class));
+
+        eventBus.unregister(subscriber);
+        assertFalse(eventBus.hasSubscriberForEvent(CharSequence.class));
+        assertFalse(eventBus.hasSubscriberForEvent(String.class));
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBusTest/src/de/greenrobot/event/test/EventBusBasicTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Subscribe
+    public void onEvent(String event) {
+        lastStringEvent = event;
+        countStringEvent++;
+    } ##FSTMerge## public void onEvent(String event) {
+        lastStringEvent = event;
+        countStringEvent++;
+    } ##FSTMerge## public void onEvent(String event) {
+        lastStringEvent = event;
+        countStringEvent++;
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBusTest/src/de/greenrobot/event/test/EventBusBasicTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Subscribe
+    public void onEvent(Integer event) {
+        lastIntEvent = event;
+        countIntEvent++;
+    } ##FSTMerge## public void onEvent(Integer event) {
+        lastIntEvent = event;
+        countIntEvent++;
+    } ##FSTMerge## public void onEvent(Integer event) {
+        lastIntEvent = event;
+        countIntEvent++;
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBusTest/src/de/greenrobot/event/test/EventBusBasicTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Subscribe
+    public void onEvent(MyEvent event) {
+        countMyEvent++;
+    } ##FSTMerge## public void onEvent(MyEvent event) {
+        countMyEvent++;
+    } ##FSTMerge## public void onEvent(MyEvent event) {
+        countMyEvent++;
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBusTest/src/de/greenrobot/event/test/EventBusBasicTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Subscribe
+    public void onEvent(MyEventExtended event) {
+        countMyEventExtended++;
+    } ##FSTMerge## public void onEvent(MyEventExtended event) {
+        countMyEventExtended++;
+    } ##FSTMerge## public void onEvent(MyEventExtended event) {
+        countMyEventExtended++;
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBusTest/src/de/greenrobot/event/test/EventBusBasicTest.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public static ##FSTMerge## static ##FSTMerge## static
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBusTest/src/de/greenrobot/event/test/EventBusBasicTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Subscribe
+        public void onEvent(String event) {
+            lastStringEvent = event;
+        } ##FSTMerge## public void onEvent(String event) {
+            lastStringEvent = event;
+        } ##FSTMerge## public void onEvent(String event) {
+            lastStringEvent = event;
+        }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBusTest/src/de/greenrobot/event/test/EventBusBasicTest.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public ##FSTMerge##  ##FSTMerge## 
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBusTest/src/de/greenrobot/event/test/EventBusBasicTest.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public ##FSTMerge##  ##FSTMerge## 
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBusTest/src/de/greenrobot/event/test/EventBusBasicTest.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public ##FSTMerge##  ##FSTMerge## 
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBusTest/src/de/greenrobot/event/test/EventBusBasicTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Subscribe
+        public void onEvent(Integer event) {
+            lastEvent = event;
+            countEvent++;
+            assertEquals(countEvent, event.intValue());
+
+            if (event < 10) {
+                int countIntEventBefore = countEvent;
+                eventBus.post(event + 1);
+                // All our post calls will just enqueue the event, so check count is unchanged
+                assertEquals(countIntEventBefore, countIntEventBefore);
+            }
+        } ##FSTMerge## public void onEvent(Integer event) {
+            lastEvent = event;
+            countEvent++;
+            assertEquals(countEvent, event.intValue());
+
+            if (event < 10) {
+                int countIntEventBefore = countEvent;
+                eventBus.post(event + 1);
+                // All our post calls will just enqueue the event, so check count is unchanged
+                assertEquals(countIntEventBefore, countIntEventBefore);
+            }
+        } ##FSTMerge## public void onEvent(Integer event) {
+            lastEvent = event;
+            countEvent++;
+            assertEquals(countEvent, event.intValue());
+
+            if (event < 10) {
+                int countIntEventBefore = countEvent;
+                eventBus.post(event + 1);
+                // All our post calls will just enqueue the event, so check count is unchanged
+                assertEquals(countIntEventBefore, countIntEventBefore);
+            }
+        }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBusTest/src/de/greenrobot/event/test/EventBusBasicTest.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private static final String ON_EVENT_METHOD_NAME = "onEvent"; ##FSTMerge## private static final String ON_EVENT_METHOD_NAME = "onEvent";
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBus/src/de/greenrobot/event/SubscriberMethodFinder.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private static final Map<String, List<SubscriberMethod>> methodCache = new HashMap<String, List<SubscriberMethod>>(); ##FSTMerge## private static final Map<String, List<SubscriberMethod>> methodCache = new HashMap<String, List<SubscriberMethod>>();
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBus/src/de/greenrobot/event/SubscriberMethodFinder.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private final Map<Class<?>, Class<?>> skipMethodVerificationForClasses; ##FSTMerge## private final Map<Class<?>, Class<?>> skipMethodVerificationForClasses;
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBus/src/de/greenrobot/event/SubscriberMethodFinder.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## SubscriberMethodFinder(List<Class<?>> skipMethodVerificationForClassesList) {
+        skipMethodVerificationForClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
+        if (skipMethodVerificationForClassesList != null) {
+            for (Class<?> clazz : skipMethodVerificationForClassesList) {
+                skipMethodVerificationForClasses.put(clazz, clazz);
+            }
+        }
+    } ##FSTMerge## SubscriberMethodFinder(List<Class<?>> skipMethodVerificationForClassesList) {
+        skipMethodVerificationForClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
+        if (skipMethodVerificationForClassesList != null) {
+            for (Class<?> clazz : skipMethodVerificationForClassesList) {
+                skipMethodVerificationForClasses.put(clazz, clazz);
+            }
+        }
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBus/src/de/greenrobot/event/SubscriberMethodFinder.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## List<SubscriberMethod> findSubscriberMethods(Class<?> subscriberClass) {
+        String key = subscriberClass.getName();
+        List<SubscriberMethod> subscriberMethods;
+        synchronized (methodCache) {
+            subscriberMethods = methodCache.get(key);
+        }
+        if (subscriberMethods != null) {
+            return subscriberMethods;
+        }
+        subscriberMethods = new ArrayList<SubscriberMethod>();
+        Class<?> clazz = subscriberClass;
+        HashSet<String> eventTypesFound = new HashSet<String>();
+        StringBuilder methodKeyBuilder = new StringBuilder();
+        while (clazz != null) {
+            String name = clazz.getName();
+            if (name.startsWith("java.") || name.startsWith("javax.") || name.startsWith("android.")) {
+                // Skip system classes, this just degrades performance
+                break;
+            }
+
+            // Starting with EventBus 2.2 we enforced methods to be public (might change with annotations again)
+            Method[] methods = clazz.getDeclaredMethods();
+            for (Method method : methods) {
+                String methodName = method.getName();
+                if (methodName.startsWith(ON_EVENT_METHOD_NAME)) {
+                    int modifiers = method.getModifiers();
+                    if ((modifiers & Modifier.PUBLIC) != 0 && (modifiers & MODIFIERS_IGNORE) == 0) {
+                        Class<?>[] parameterTypes = method.getParameterTypes();
+                        if (parameterTypes.length == 1) {
+                            String modifierString = methodName.substring(ON_EVENT_METHOD_NAME.length());
+                            ThreadMode threadMode;
+                            if (modifierString.length() == 0) {
+                                threadMode = ThreadMode.PostThread;
+                            } else if (modifierString.equals("MainThread")) {
+                                threadMode = ThreadMode.MainThread;
+                            } else if (modifierString.equals("BackgroundThread")) {
+                                threadMode = ThreadMode.BackgroundThread;
+                            } else if (modifierString.equals("Async")) {
+                                threadMode = ThreadMode.Async;
+                            } else {
+                                if (skipMethodVerificationForClasses.containsKey(clazz)) {
+                                    continue;
+                                } else {
+                                    throw new EventBusException("Illegal onEvent method, check for typos: " + method);
+                                }
+                            }
+                            Class<?> eventType = parameterTypes[0];
+                            methodKeyBuilder.setLength(0);
+                            methodKeyBuilder.append(methodName);
+                            methodKeyBuilder.append('>').append(eventType.getName());
+                            String methodKey = methodKeyBuilder.toString();
+                            if (eventTypesFound.add(methodKey)) {
+                                // Only add if not already found in a sub class
+                                subscriberMethods.add(new SubscriberMethod(method, threadMode, eventType));
+                            }
+                        }
+                    } else if (!skipMethodVerificationForClasses.containsKey(clazz)) {
+                        Log.d(EventBus.TAG, "Skipping method (not public, static or abstract): " + clazz + "."
+                                + methodName);
+                    }
+                }
+            }
+            clazz = clazz.getSuperclass();
+        }
+        if (subscriberMethods.isEmpty()) {
+            throw new EventBusException("Subscriber " + subscriberClass + " has no public methods called "
+                    + ON_EVENT_METHOD_NAME);
+        } else {
+            synchronized (methodCache) {
+                methodCache.put(key, subscriberMethods);
+            }
+            return subscriberMethods;
+        }
+    } ##FSTMerge## List<SubscriberMethod> findSubscriberMethods(Class<?> subscriberClass) {
+        String key = subscriberClass.getName();
+        List<SubscriberMethod> subscriberMethods;
+        synchronized (methodCache) {
+            subscriberMethods = methodCache.get(key);
+        }
+        if (subscriberMethods != null) {
+            return subscriberMethods;
+        }
+        subscriberMethods = new ArrayList<SubscriberMethod>();
+        Class<?> clazz = subscriberClass;
+        HashMap<String, Class> eventTypesFound = new HashMap<String, Class>();
+        StringBuilder methodKeyBuilder = new StringBuilder();
+        while (clazz != null) {
+            String name = clazz.getName();
+            if (name.startsWith("java.") || name.startsWith("javax.") || name.startsWith("android.")) {
+                // Skip system classes, this just degrades performance
+                break;
+            }
+
+            // Starting with EventBus 2.2 we enforced methods to be public (might change with annotations again)
+            try {
+                // This is faster than getMethods, especially when subscribers a fat classes like Activities
+                Method[] methods = clazz.getDeclaredMethods();
+                filterSubscriberMethods(subscriberMethods, eventTypesFound, methodKeyBuilder, methods);
+            } catch (Throwable th) {
+                th.printStackTrace();
+                // Workaround for java.lang.NoClassDefFoundError, see https://github.com/greenrobot/EventBus/issues/149
+                Method[] methods = subscriberClass.getMethods();
+                subscriberMethods.clear();
+                eventTypesFound.clear();
+                filterSubscriberMethods(subscriberMethods, eventTypesFound, methodKeyBuilder, methods);
+                break;
+            }
+            clazz = clazz.getSuperclass();
+        }
+        if (subscriberMethods.isEmpty()) {
+            throw new EventBusException("Subscriber " + subscriberClass + " has no public methods called "
+                    + ON_EVENT_METHOD_NAME);
+        } else {
+            synchronized (methodCache) {
+                methodCache.put(key, subscriberMethods);
+            }
+            return subscriberMethods;
+        }
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBus/src/de/greenrobot/event/SubscriberMethodFinder.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ static void clearCaches() {
+        synchronized (METHOD_CACHE) {
+            METHOD_CACHE.clear();
+        }
+    } ##FSTMerge## static void clearCaches() {
+        synchronized (methodCache) {
+            methodCache.clear();
+        }
+    } ##FSTMerge## static void clearCaches() {
+        synchronized (methodCache) {
+            methodCache.clear();
+        }
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBus/src/de/greenrobot/event/SubscriberMethodFinder.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public static String TAG = "EventBus"; ##FSTMerge## public static String TAG = "Event"; ##FSTMerge## public static String TAG = "Event";
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBus/src/de/greenrobot/event/EventBus.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ EventBus(EventBusBuilder builder) {
+        subscriptionsByEventType = new HashMap<Class<?>, CopyOnWriteArrayList<Subscription>>();
+        typesBySubscriber = new HashMap<Object, List<Class<?>>>();
+        stickyEvents = new ConcurrentHashMap<Class<?>, Object>();
+        mainThreadPoster = new HandlerPoster(this, Looper.getMainLooper(), 10);
+        backgroundPoster = new BackgroundPoster(this);
+        asyncPoster = new AsyncPoster(this);
+        subscriberMethodFinder = new SubscriberMethodFinder(/* TODO */ false, builder.ignoreGeneratedIndex);
+        logSubscriberExceptions = builder.logSubscriberExceptions;
+        logNoSubscriberMessages = builder.logNoSubscriberMessages;
+        sendSubscriberExceptionEvent = builder.sendSubscriberExceptionEvent;
+        sendNoSubscriberEvent = builder.sendNoSubscriberEvent;
+        throwSubscriberException = builder.throwSubscriberException;
+        eventInheritance = builder.eventInheritance;
+        executorService = builder.executorService;
+    } ##FSTMerge## EventBus(EventBusBuilder builder) {
+        subscriptionsByEventType = new HashMap<Class<?>, CopyOnWriteArrayList<Subscription>>();
+        typesBySubscriber = new HashMap<Object, List<Class<?>>>();
+        stickyEvents = new ConcurrentHashMap<Class<?>, Object>();
+        mainThreadPoster = new HandlerPoster(this, Looper.getMainLooper(), 10);
+        backgroundPoster = new BackgroundPoster(this);
+        asyncPoster = new AsyncPoster(this);
+        subscriberMethodFinder = new SubscriberMethodFinder(builder.skipMethodVerificationForClasses);
+        logSubscriberExceptions = builder.logSubscriberExceptions;
+        logNoSubscriberMessages = builder.logNoSubscriberMessages;
+        sendSubscriberExceptionEvent = builder.sendSubscriberExceptionEvent;
+        sendNoSubscriberEvent = builder.sendNoSubscriberEvent;
+        throwSubscriberException = builder.throwSubscriberException;
+        eventInheritance = builder.eventInheritance;
+        executorService = builder.executorService;
+    } ##FSTMerge## EventBus(EventBusBuilder builder) {
+        subscriptionsByEventType = new HashMap<Class<?>, CopyOnWriteArrayList<Subscription>>();
+        typesBySubscriber = new HashMap<Object, List<Class<?>>>();
+        stickyEvents = new ConcurrentHashMap<Class<?>, Object>();
+        mainThreadPoster = new HandlerPoster(this, Looper.getMainLooper(), 10);
+        backgroundPoster = new BackgroundPoster(this);
+        asyncPoster = new AsyncPoster(this);
+        subscriberMethodFinder = new SubscriberMethodFinder(builder.skipMethodVerificationForClasses);
+        logSubscriberExceptions = builder.logSubscriberExceptions;
+        logNoSubscriberMessages = builder.logNoSubscriberMessages;
+        sendSubscriberExceptionEvent = builder.sendSubscriberExceptionEvent;
+        sendNoSubscriberEvent = builder.sendNoSubscriberEvent;
+        throwSubscriberException = builder.throwSubscriberException;
+        eventInheritance = builder.eventInheritance;
+        executorService = builder.executorService;
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBus/src/de/greenrobot/event/EventBus.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public void register(Object subscriber) {
+        Class<?> subscriberClass = subscriber.getClass();
+
+        // @Subscribe in anonymous classes is invisible to annotation processing, always fall back to reflection
+        // Note: Avoid Class.isAnonymousClass() because it is super slow (getSimpleName() is super slow, too)
+        String name = subscriberClass.getName();
+        int dollarIndex = name.lastIndexOf('$');
+        boolean forceReflection = dollarIndex != -1 && dollarIndex < name.length() - 1 &&
+                Character.isDigit(name.charAt(dollarIndex + 1));
+
+        List<SubscriberMethod> subscriberMethods =
+                subscriberMethodFinder.findSubscriberMethods(subscriberClass, forceReflection);
+        for (SubscriberMethod subscriberMethod : subscriberMethods) {
+            subscribe(subscriber, subscriberMethod);
+        }
+    } ##FSTMerge## public void register(Object subscriber) {
+        register(subscriber, false, 0);
+    } ##FSTMerge## public void register(Object subscriber) {
+        register(subscriber, false, 0);
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBus/src/de/greenrobot/event/EventBus.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public void register(Object subscriber, int priority) {
+        register(subscriber, false, priority);
+    } ##FSTMerge## public void register(Object subscriber, int priority) {
+        register(subscriber, false, priority);
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBus/src/de/greenrobot/event/EventBus.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public void registerSticky(Object subscriber) {
+        register(subscriber, true, 0);
+    } ##FSTMerge## public void registerSticky(Object subscriber) {
+        register(subscriber, true, 0);
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBus/src/de/greenrobot/event/EventBus.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## public void registerSticky(Object subscriber, int priority) {
+        register(subscriber, true, priority);
+    } ##FSTMerge## public void registerSticky(Object subscriber, int priority) {
+        register(subscriber, true, priority);
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBus/src/de/greenrobot/event/EventBus.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private synchronized void register(Object subscriber, boolean sticky, int priority) {
+        List<SubscriberMethod> subscriberMethods = subscriberMethodFinder.findSubscriberMethods(subscriber.getClass());
+        for (SubscriberMethod subscriberMethod : subscriberMethods) {
+            subscribe(subscriber, subscriberMethod, sticky, priority);
+        }
+    } ##FSTMerge## private synchronized void register(Object subscriber, boolean sticky, int priority) {
+        List<SubscriberMethod> subscriberMethods = subscriberMethodFinder.findSubscriberMethods(subscriber.getClass());
+        for (SubscriberMethod subscriberMethod : subscriberMethods) {
+            subscribe(subscriber, subscriberMethod, sticky, priority);
+        }
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBus/src/de/greenrobot/event/EventBus.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ ##FSTMerge## private void subscribe(Object subscriber, SubscriberMethod subscriberMethod, boolean sticky, int priority) {
+        Class<?> eventType = subscriberMethod.eventType;
+        CopyOnWriteArrayList<Subscription> subscriptions = subscriptionsByEventType.get(eventType);
+        Subscription newSubscription = new Subscription(subscriber, subscriberMethod, priority);
+        if (subscriptions == null) {
+            subscriptions = new CopyOnWriteArrayList<Subscription>();
+            subscriptionsByEventType.put(eventType, subscriptions);
+        } else {
+            if (subscriptions.contains(newSubscription)) {
+                throw new EventBusException("Subscriber " + subscriber.getClass() + " already registered to event "
+                        + eventType);
+            }
+        }
+
+        // Starting with EventBus 2.2 we enforced methods to be public (might change with annotations again)
+        // subscriberMethod.method.setAccessible(true);
+
+        int size = subscriptions.size();
+        for (int i = 0; i <= size; i++) {
+            if (i == size || newSubscription.priority > subscriptions.get(i).priority) {
+                subscriptions.add(i, newSubscription);
+                break;
+            }
+        }
+
+        List<Class<?>> subscribedEvents = typesBySubscriber.get(subscriber);
+        if (subscribedEvents == null) {
+            subscribedEvents = new ArrayList<Class<?>>();
+            typesBySubscriber.put(subscriber, subscribedEvents);
+        }
+        subscribedEvents.add(eventType);
+
+        if (sticky) {
+            if (eventInheritance) {
+                // Existing sticky events of all subclasses of eventType have to be considered.
+                // Note: Iterating over all events may be inefficient with lots of sticky events,
+                // thus data structure should be changed to allow a more efficient lookup
+                // (e.g. an additional map storing sub classes of super classes: Class -> List<Class>).
+                Set<Map.Entry<Class<?>, Object>> entries = stickyEvents.entrySet();
+                for (Map.Entry<Class<?>, Object> entry : entries) {
+                    Class<?> candidateEventType = entry.getKey();
+                    if (eventType.isAssignableFrom(candidateEventType)) {
+                        Object stickyEvent = entry.getValue();
+                        checkPostStickyEventToSubscription(newSubscription, stickyEvent);
+                    }
+                }
+            } else {
+                Object stickyEvent = stickyEvents.get(eventType);
+                checkPostStickyEventToSubscription(newSubscription, stickyEvent);
+            }
+        }
+    } ##FSTMerge## private void subscribe(Object subscriber, SubscriberMethod subscriberMethod, boolean sticky, int priority) {
+        Class<?> eventType = subscriberMethod.eventType;
+        CopyOnWriteArrayList<Subscription> subscriptions = subscriptionsByEventType.get(eventType);
+        Subscription newSubscription = new Subscription(subscriber, subscriberMethod, priority);
+        if (subscriptions == null) {
+            subscriptions = new CopyOnWriteArrayList<Subscription>();
+            subscriptionsByEventType.put(eventType, subscriptions);
+        } else {
+            if (subscriptions.contains(newSubscription)) {
+                throw new EventBusException("Subscriber " + subscriber.getClass() + " already registered to event "
+                        + eventType);
+            }
+        }
+
+        // Starting with EventBus 2.2 we enforced methods to be public (might change with annotations again)
+        // subscriberMethod.method.setAccessible(true);
+
+        int size = subscriptions.size();
+        for (int i = 0; i <= size; i++) {
+            if (i == size || newSubscription.priority > subscriptions.get(i).priority) {
+                subscriptions.add(i, newSubscription);
+                break;
+            }
+        }
+
+        List<Class<?>> subscribedEvents = typesBySubscriber.get(subscriber);
+        if (subscribedEvents == null) {
+            subscribedEvents = new ArrayList<Class<?>>();
+            typesBySubscriber.put(subscriber, subscribedEvents);
+        }
+        subscribedEvents.add(eventType);
+
+        if (sticky) {
+            if (eventInheritance) {
+                // Existing sticky events of all subclasses of eventType have to be considered.
+                // Note: Iterating over all events may be inefficient with lots of sticky events,
+                // thus data structure should be changed to allow a more efficient lookup
+                // (e.g. an additional map storing sub classes of super classes: Class -> List<Class>).
+                Set<Map.Entry<Class<?>, Object>> entries = stickyEvents.entrySet();
+                for (Map.Entry<Class<?>, Object> entry : entries) {
+                    Class<?> candidateEventType = entry.getKey();
+                    if (eventType.isAssignableFrom(candidateEventType)) {
+                        Object stickyEvent = entry.getValue();
+                        checkPostStickyEventToSubscription(newSubscription, stickyEvent);
+                    }
+                }
+            } else {
+                Object stickyEvent = stickyEvents.get(eventType);
+                checkPostStickyEventToSubscription(newSubscription, stickyEvent);
+            }
+        }
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBus/src/de/greenrobot/event/EventBus.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ private void unsubscribeByEventType(Object subscriber, Class<?> eventType) {
+        List<Subscription> subscriptions = subscriptionsByEventType.get(eventType);
+        if (subscriptions != null) {
+            // Got to synchronize to avoid shifted positions when adding/removing concurrently
+            synchronized (subscriptions) {
+                int size = subscriptions.size();
+                for (int i = 0; i < size; i++) {
+                    Subscription subscription = subscriptions.get(i);
+                    if (subscription.subscriber == subscriber) {
+                        subscription.active = false;
+                        subscriptions.remove(i);
+                        i--;
+                        size--;
+                    }
+                }
+            }
+        }
+    } ##FSTMerge## ##FSTMerge## private void unsubscribeByEventType(Object subscriber, Class<?> eventType) {
+        List<Subscription> subscriptions = subscriptionsByEventType.get(eventType);
+        if (subscriptions != null) {
+            int size = subscriptions.size();
+            for (int i = 0; i < size; i++) {
+                Subscription subscription = subscriptions.get(i);
+                if (subscription.subscriber == subscriber) {
+                    subscription.active = false;
+                    subscriptions.remove(i);
+                    i--;
+                    size--;
+                }
+            }
+        }
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBus/src/de/greenrobot/event/EventBus.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 506db44716dfa8e17bfd02b22f705460c976dd83
+Parent1 SHA-1: f72fe79cea4ee12e59168c70c96051aa073f9b10
+Parent2 SHA-1: 039faa574d5610f1c7f75a8800d14ff7fc245a88
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public synchronized void unregister(Object subscriber) {
+        List<Class<?>> subscribedTypes = typesBySubscriber.get(subscriber);
+        if (subscribedTypes != null) {
+            for (Class<?> eventType : subscribedTypes) {
+                unsubscribeByEventType(subscriber, eventType);
+            }
+            typesBySubscriber.remove(subscriber);
+        } else {
+            Log.w(TAG, "Subscriber to unregister was not registered before: " + subscriber.getClass());
+        }
+    } ##FSTMerge## public synchronized void unregister(Object subscriber) {
+        List<Class<?>> subscribedTypes = typesBySubscriber.get(subscriber);
+        if (subscribedTypes != null) {
+            for (Class<?> eventType : subscribedTypes) {
+                unubscribeByEventType(subscriber, eventType);
+            }
+            typesBySubscriber.remove(subscriber);
+        } else {
+            Log.w(TAG, "Subscriber to unregister was not registered before: " + subscriber.getClass());
+        }
+    } ##FSTMerge## public synchronized void unregister(Object subscriber) {
+        List<Class<?>> subscribedTypes = typesBySubscriber.get(subscriber);
+        if (subscribedTypes != null) {
+            for (Class<?> eventType : subscribedTypes) {
+                unsubscribeByEventType(subscriber, eventType);
+            }
+            typesBySubscriber.remove(subscriber);
+        } else {
+            Log.w(TAG, "Subscriber to unregister was not registered before: " + subscriber.getClass());
+        }
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_f72fe_039fa/rev_f72fe-039fa/EventBus/src/de/greenrobot/event/EventBus.java
+
+==================================================================================================================
+Revision: /tmp/downloads/EventBus/revisions/rev_89bb5_1aa2e/rev_89bb5-1aa2e.revisions
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 60fbf6f35e2ba3077e81a24d9f67a5c64dc4581d
+Parent1 SHA-1: 89bb5357d7ac0bcf45696a86832cc9ee67650039
+Parent2 SHA-1: 1aa2e3353b4882034cd3e25c561af4b092a67d6d
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Subscribe
+    public void onEvent(Object event) {
+        countObjectEvent++;
+    } ##FSTMerge## public void onEvent(Object event) {
+        countObjectEvent++;
+    } ##FSTMerge## public void onEvent(Object event) {
+        countObjectEvent++;
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_89bb5_1aa2e/rev_89bb5-1aa2e/EventBusTest/src/de/greenrobot/event/test/EventBusInheritanceTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 60fbf6f35e2ba3077e81a24d9f67a5c64dc4581d
+Parent1 SHA-1: 89bb5357d7ac0bcf45696a86832cc9ee67650039
+Parent2 SHA-1: 1aa2e3353b4882034cd3e25c561af4b092a67d6d
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Subscribe
+    public void onEvent(MyEvent event) {
+        countMyEvent++;
+    } ##FSTMerge## public void onEvent(MyEvent event) {
+        countMyEvent++;
+    } ##FSTMerge## public void onEvent(MyEvent event) {
+        countMyEvent++;
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_89bb5_1aa2e/rev_89bb5-1aa2e/EventBusTest/src/de/greenrobot/event/test/EventBusInheritanceTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 60fbf6f35e2ba3077e81a24d9f67a5c64dc4581d
+Parent1 SHA-1: 89bb5357d7ac0bcf45696a86832cc9ee67650039
+Parent2 SHA-1: 1aa2e3353b4882034cd3e25c561af4b092a67d6d
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Subscribe
+    public void onEvent(MyEventExtended event) {
+        countMyEventExtended++;
+    } ##FSTMerge## public void onEvent(MyEventExtended event) {
+        countMyEventExtended++;
+    } ##FSTMerge## public void onEvent(MyEventExtended event) {
+        countMyEventExtended++;
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_89bb5_1aa2e/rev_89bb5-1aa2e/EventBusTest/src/de/greenrobot/event/test/EventBusInheritanceTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 60fbf6f35e2ba3077e81a24d9f67a5c64dc4581d
+Parent1 SHA-1: 89bb5357d7ac0bcf45696a86832cc9ee67650039
+Parent2 SHA-1: 1aa2e3353b4882034cd3e25c561af4b092a67d6d
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Subscribe
+    public void onEvent(MyEventInterface event) {
+        countMyEventInterface++;
+    } ##FSTMerge## public void onEvent(MyEventInterface event) {
+        countMyEventInterface++;
+    } ##FSTMerge## public void onEvent(MyEventInterface event) {
+        countMyEventInterface++;
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_89bb5_1aa2e/rev_89bb5-1aa2e/EventBusTest/src/de/greenrobot/event/test/EventBusInheritanceTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 60fbf6f35e2ba3077e81a24d9f67a5c64dc4581d
+Parent1 SHA-1: 89bb5357d7ac0bcf45696a86832cc9ee67650039
+Parent2 SHA-1: 1aa2e3353b4882034cd3e25c561af4b092a67d6d
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Subscribe
+    public void onEvent(MyEventInterfaceExtended event) {
+        countMyEventInterfaceExtended++;
+    } ##FSTMerge## public void onEvent(MyEventInterfaceExtended event) {
+        countMyEventInterfaceExtended++;
+    } ##FSTMerge## public void onEvent(MyEventInterfaceExtended event) {
+        countMyEventInterfaceExtended++;
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_89bb5_1aa2e/rev_89bb5-1aa2e/EventBusTest/src/de/greenrobot/event/test/EventBusInheritanceTest.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 60fbf6f35e2ba3077e81a24d9f67a5c64dc4581d
+Parent1 SHA-1: 89bb5357d7ac0bcf45696a86832cc9ee67650039
+Parent2 SHA-1: 1aa2e3353b4882034cd3e25c561af4b092a67d6d
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public static ##FSTMerge## static ##FSTMerge## static
+File path: /tmp/downloads/EventBus/revisions/rev_89bb5_1aa2e/rev_89bb5-1aa2e/EventBusTest/src/de/greenrobot/event/test/EventBusInheritanceTest.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 60fbf6f35e2ba3077e81a24d9f67a5c64dc4581d
+Parent1 SHA-1: 89bb5357d7ac0bcf45696a86832cc9ee67650039
+Parent2 SHA-1: 1aa2e3353b4882034cd3e25c561af4b092a67d6d
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public static ##FSTMerge## static ##FSTMerge## static
+File path: /tmp/downloads/EventBus/revisions/rev_89bb5_1aa2e/rev_89bb5-1aa2e/EventBusTest/src/de/greenrobot/event/test/EventBusInheritanceTest.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 60fbf6f35e2ba3077e81a24d9f67a5c64dc4581d
+Parent1 SHA-1: 89bb5357d7ac0bcf45696a86832cc9ee67650039
+Parent2 SHA-1: 1aa2e3353b4882034cd3e25c561af4b092a67d6d
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public static ##FSTMerge## static ##FSTMerge## static
+File path: /tmp/downloads/EventBus/revisions/rev_89bb5_1aa2e/rev_89bb5-1aa2e/EventBusTest/src/de/greenrobot/event/test/EventBusInheritanceTest.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 60fbf6f35e2ba3077e81a24d9f67a5c64dc4581d
+Parent1 SHA-1: 89bb5357d7ac0bcf45696a86832cc9ee67650039
+Parent2 SHA-1: 1aa2e3353b4882034cd3e25c561af4b092a67d6d
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public static ##FSTMerge## static ##FSTMerge## static
+File path: /tmp/downloads/EventBus/revisions/rev_89bb5_1aa2e/rev_89bb5-1aa2e/EventBusTest/src/de/greenrobot/event/test/EventBusInheritanceTest.java
+############## CONFLICT ##############
+Conflict type: ModifierList
+Merge Commit SHA-1: 60fbf6f35e2ba3077e81a24d9f67a5c64dc4581d
+Parent1 SHA-1: 89bb5357d7ac0bcf45696a86832cc9ee67650039
+Parent2 SHA-1: 1aa2e3353b4882034cd3e25c561af4b092a67d6d
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public static ##FSTMerge## static ##FSTMerge## static
+File path: /tmp/downloads/EventBus/revisions/rev_89bb5_1aa2e/rev_89bb5-1aa2e/EventBusTest/src/de/greenrobot/event/test/EventBusInheritanceTest.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 60fbf6f35e2ba3077e81a24d9f67a5c64dc4581d
+Parent1 SHA-1: 89bb5357d7ac0bcf45696a86832cc9ee67650039
+Parent2 SHA-1: 1aa2e3353b4882034cd3e25c561af4b092a67d6d
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ @Subscribe
+        public void onEvent(MyEvent event) {
+            countMyEventOverwritten++;
+        } ##FSTMerge## public void onEvent(MyEvent event) {
+            countMyEventOverwritten++;
+        } ##FSTMerge## public void onEvent(MyEvent event) {
+            countMyEventOverwritten++;
+        }
+File path: /tmp/downloads/EventBus/revisions/rev_89bb5_1aa2e/rev_89bb5-1aa2e/EventBusTest/src/de/greenrobot/event/test/EventBusInheritanceTest.java
+############## CONFLICT ##############
+Conflict type: EditSameFd
+Merge Commit SHA-1: 60fbf6f35e2ba3077e81a24d9f67a5c64dc4581d
+Parent1 SHA-1: 89bb5357d7ac0bcf45696a86832cc9ee67650039
+Parent2 SHA-1: 1aa2e3353b4882034cd3e25c561af4b092a67d6d
+Number of Conflicts: 1
+Different Spacing: 1
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ public static String TAG = "EventBus"; ##FSTMerge## public static String TAG = "Event"; ##FSTMerge## public static String TAG = "Event";
+File path: /tmp/downloads/EventBus/revisions/rev_89bb5_1aa2e/rev_89bb5-1aa2e/EventBus/src/de/greenrobot/event/EventBus.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 60fbf6f35e2ba3077e81a24d9f67a5c64dc4581d
+Parent1 SHA-1: 89bb5357d7ac0bcf45696a86832cc9ee67650039
+Parent2 SHA-1: 1aa2e3353b4882034cd3e25c561af4b092a67d6d
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ EventBus(EventBusBuilder builder) {
+        subscriptionsByEventType = new HashMap<Class<?>, CopyOnWriteArrayList<Subscription>>();
+        typesBySubscriber = new HashMap<Object, List<Class<?>>>();
+        stickyEvents = new ConcurrentHashMap<Class<?>, Object>();
+        mainThreadPoster = new HandlerPoster(this, Looper.getMainLooper(), 10);
+        backgroundPoster = new BackgroundPoster(this);
+        asyncPoster = new AsyncPoster(this);
+        subscriberMethodFinder = new SubscriberMethodFinder(/* TODO */ false);
+        logSubscriberExceptions = builder.logSubscriberExceptions;
+        logNoSubscriberMessages = builder.logNoSubscriberMessages;
+        sendSubscriberExceptionEvent = builder.sendSubscriberExceptionEvent;
+        sendNoSubscriberEvent = builder.sendNoSubscriberEvent;
+        throwSubscriberException = builder.throwSubscriberException;
+        eventInheritance = builder.eventInheritance;
+        executorService = builder.executorService;
+    } ##FSTMerge## EventBus(EventBusBuilder builder) {
+        subscriptionsByEventType = new HashMap<Class<?>, CopyOnWriteArrayList<Subscription>>();
+        typesBySubscriber = new HashMap<Object, List<Class<?>>>();
+        stickyEvents = new ConcurrentHashMap<Class<?>, Object>();
+        mainThreadPoster = new HandlerPoster(this, Looper.getMainLooper(), 10);
+        backgroundPoster = new BackgroundPoster(this);
+        asyncPoster = new AsyncPoster(this);
+        subscriberMethodFinder = new SubscriberMethodFinder(builder.skipMethodVerificationForClasses);
+        logSubscriberExceptions = builder.logSubscriberExceptions;
+        logNoSubscriberMessages = builder.logNoSubscriberMessages;
+        sendSubscriberExceptionEvent = builder.sendSubscriberExceptionEvent;
+        sendNoSubscriberEvent = builder.sendNoSubscriberEvent;
+        throwSubscriberException = builder.throwSubscriberException;
+        eventInheritance = builder.eventInheritance;
+        executorService = builder.executorService;
+    } ##FSTMerge## EventBus(EventBusBuilder builder) {
+        subscriptionsByEventType = new HashMap<Class<?>, CopyOnWriteArrayList<Subscription>>();
+        typesBySubscriber = new HashMap<Object, List<Class<?>>>();
+        stickyEvents = new ConcurrentHashMap<Class<?>, Object>();
+        mainThreadPoster = new HandlerPoster(this, Looper.getMainLooper(), 10);
+        backgroundPoster = new BackgroundPoster(this);
+        asyncPoster = new AsyncPoster(this);
+        subscriberMethodFinder = new SubscriberMethodFinder(builder.skipMethodVerificationForClasses);
+        logSubscriberExceptions = builder.logSubscriberExceptions;
+        logNoSubscriberMessages = builder.logNoSubscriberMessages;
+        sendSubscriberExceptionEvent = builder.sendSubscriberExceptionEvent;
+        sendNoSubscriberEvent = builder.sendNoSubscriberEvent;
+        throwSubscriberException = builder.throwSubscriberException;
+        eventInheritance = builder.eventInheritance;
+        executorService = builder.executorService;
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_89bb5_1aa2e/rev_89bb5-1aa2e/EventBus/src/de/greenrobot/event/EventBus.java
+############## CONFLICT ##############
+Conflict type: EditSameMC
+Merge Commit SHA-1: 60fbf6f35e2ba3077e81a24d9f67a5c64dc4581d
+Parent1 SHA-1: 89bb5357d7ac0bcf45696a86832cc9ee67650039
+Parent2 SHA-1: 1aa2e3353b4882034cd3e25c561af4b092a67d6d
+Number of Conflicts: 1
+Different Spacing: 0
+Consecutive Lines: 0
+Intersection: 0
+Cause same signature: 
+Possible renaming: 0
+Conflict body: 
+~~FSTMerge~~ private synchronized void register(Object subscriber, boolean sticky, int priority) {
+        Class<?> subscriberClass = subscriber.getClass();
+        if(subscriberClass.isAnonymousClass()) {
+            // We cannot get @Subscribe annotations from anonymous classes, so fail fast
+            throw new EventBusException("Anonymous class cannot be registered: "+ subscriberClass);
+        }
+        List<SubscriberMethod> subscriberMethods = subscriberMethodFinder.findSubscriberMethods(subscriberClass);
+        for (SubscriberMethod subscriberMethod : subscriberMethods) {
+            subscribe(subscriber, subscriberMethod, sticky, priority);
+        }
+    } ##FSTMerge## private synchronized void register(Object subscriber, boolean sticky, int priority) {
+        List<SubscriberMethod> subscriberMethods = subscriberMethodFinder.findSubscriberMethods(subscriber.getClass());
+        for (SubscriberMethod subscriberMethod : subscriberMethods) {
+            subscribe(subscriber, subscriberMethod, sticky, priority);
+        }
+    } ##FSTMerge## private synchronized void register(Object subscriber, boolean sticky, int priority) {
+        List<SubscriberMethod> subscriberMethods = subscriberMethodFinder.findSubscriberMethods(subscriber.getClass());
+        for (SubscriberMethod subscriberMethod : subscriberMethods) {
+            subscribe(subscriber, subscriberMethod, sticky, priority);
+        }
+    }
+File path: /tmp/downloads/EventBus/revisions/rev_89bb5_1aa2e/rev_89bb5-1aa2e/EventBus/src/de/greenrobot/event/EventBus.java
+
+=========================================================
