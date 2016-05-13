@@ -1,8 +1,14 @@
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+
+import jxl.write.WriteException;
+import jxl.write.biff.RowsExceededException;
 
 public class Extractor {
 	public final static String TEMP_FOLDER = "/tmp/";
@@ -10,11 +16,13 @@ public class Extractor {
 	public final static String CONFLICT_REPORT_PATH = "/home/isak/Documents/Master/Test/Paola/ResultData/atmosphere/ConflictsReport.csv";
 	private String conflictReport;
 	
+	private WorkBookCreator wbc;
 	
 	public Extractor() {
 		//analyzeConflictReport(CONFLICT_REPORT_PATH, "/home/isak/Documents/Master/projects/hej");
-		analyzeConflictReport("/home/isak/Documents/Master/braresults/paolaboarba/EventBus/ResultData/EventBus/ConflictsReport.csv", "/home/isak/Documents/Master/projects/EventBus");
-		//analyzeConflictReport("/home/isak/Documents/Master/Test/the/Paola/elasticsearch/ResultData/elasticsearch/ConflictsReport.csv", "/home/isak/Documents/Master/projects/elasticsearch");
+	analyzeConflictReport("/home/isak/Documents/Master/braresults/paolaboarba/EventBus/ResultData/EventBus/ConflictsReport.csv", "/home/isak/Documents/Master/projects/EventBus");
+		wbc = new WorkBookCreator("ExtractorHactorResult.xls");
+		wbc.createSheet("Result", "Merge Commit SHA", "Result Body", "Left SHA", "Left Body", "Left Date", "Right SHA", "Right Body", "Right Date");
 	}
 	
 	private void analyzeConflictReport(String conflictReportPath, String pathToRepo) {
@@ -28,6 +36,7 @@ public class Extractor {
 			filterConflicts(conflictStrings);
 			ArrayList<Conflict> conflicts = createConflicts(conflictStrings, pathToRepo);
 			analyzeConflicts(conflicts, pathToRepo);
+			wbc.writeToWorkbook();
 			//writeFile();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -53,9 +62,20 @@ public class Extractor {
 			Utils.readScriptOutput("analyzeResolution " + pathToRepo + " " + conflict.getMergeCommitSha() + " " + TEMP_FOLDER + "result.java " + pathToRepo + conflict.getFilePath(), false);
 			ArrayList<String> resultFile = (ArrayList<String>)Files.readAllLines(Paths.get(TEMP_FOLDER + "result.java"));
 			ArrayList<String> resultFunction = FunctionParser.extractFunction(resultFile, conflict.getFunctionName(), conflict.getParameterTypes());
-			
+			StringBuilder sb = new StringBuilder();
+			for(String line : resultFunction) {
+				sb.append(line + "\n");
+			}
+			String resultBody = sb.toString();
+			wbc.addRow(conflict.getMergeCommitSha(), resultBody, conflict.getLeftSha(), conflict.getLeftBody(), conflict.getLeftDate(), conflict.getRightSha(), conflict.getRightBody(), conflict.getRightDate());
 			
 		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (RowsExceededException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (WriteException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
