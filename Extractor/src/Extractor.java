@@ -58,7 +58,7 @@ public class Extractor {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/*private void writeFile() {
 		File file = new File("bra.csv");
 		try {
@@ -109,4 +109,16 @@ public class Extractor {
 		lines.removeIf(s -> s.startsWith("===================="));
 	}
 
+	public static int countNumberOf(String body, String word) {
+		if (!body.contains(word)) return 0; 
+		int count = 0;
+		for (int i = 0; i < body.length()-word.length(); i++) {
+			if (body.substring(i, i+word.length()).equals(word))
+				count++;
+		}
+		return count;
+	}
+	
+	
+	
 }

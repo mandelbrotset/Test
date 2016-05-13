@@ -13,8 +13,11 @@ public class Conflict {
 	private Date rightDate;
 	private String functionName;
 	private String[] parameterTypes;
+	private String resultBody;
+	private String repoPath;
 	
-	public Conflict(String conflict) {
+	public Conflict(String conflict, String repoPath) {
+		this.repoPath = repoPath;
 		parseValues(conflict);
 	}
 	
@@ -25,6 +28,7 @@ public class Conflict {
 		setBodies(conflict);
 		filePath = parseValue(conflict, "File path:");
 		filePath = filePath.split("rev_....._.....\\/rev_.....\\-.....\\/")[1];
+		
 	}
 	
 	private String parseValue(String conflict, String parameterName) {
@@ -48,6 +52,11 @@ public class Conflict {
 		ancestorBody = anc;
 	}
 
+
+	private Date getDate(String sha) {
+		return null;
+	}
+	
 	public String getLeftSha() {
 		return leftSha;
 	}
