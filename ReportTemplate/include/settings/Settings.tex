@@ -1,5 +1,6 @@
 % CREATED BY DAVID FRISK, 2015
 % BASIC SETTINGS
+\usepackage{parskip}
 \usepackage{caption}
 \usepackage{subcaption} 
 \usepackage{moreverb}								% List settings
@@ -27,7 +28,9 @@
 	\centering
 	\includegraphics[width=\paperwidth,height=\paperheight,keepaspectratio]{#3}}}}
 \usepackage{float} 									% Enables object position enforcement using [H]
-\usepackage{parskip}								% Enables vertical spaces correctly 
+%\usepackage{parskip}
+%    \setlength\parskip{\baselineskip}
+%    \parindent=10pt
 \usepackage{tabularx}
 
 
@@ -35,8 +38,8 @@
 % OPTIONAL SETTINGS (DELETE OR COMMENT TO SUPRESS)
 
 % Disable automatic indentation (equal to using \noindent)
-\setlength{\parindent}{0mm}
-\newcommand{\merman}[1]{\paragraph{#1}\mbox{}\\}
+%\setlength{\parindent}{0em}
+%\newcommand{\merman}[1]{\paragraph{#1}\mbox{}\\}
 \newcommand{\tabitem}{~~\llap{\textbullet}~~}                 
 
 
@@ -54,8 +57,8 @@
 
 
 % Define the number of section levels to be included in the t.o.c. and numbered	(3 is default)	
-\setcounter{tocdepth}{5}							
-\setcounter{secnumdepth}{5}	
+\setcounter{tocdepth}{2}							
+\setcounter{secnumdepth}{2}	
 
 
 % Chapter title settings
