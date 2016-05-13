@@ -9,14 +9,13 @@ import java.util.ArrayList;
 
 public class Extractor {
 	public final static String TEMP_FOLDER = "/tmp/";
-	public final static String REPO_PATH = "";
 	//public final static String CONFLICT_REPORT_PATH = "/home/isak/Documents/Master/Test/the/Paola/elasticsearch/ResultData/elasticsearch/ConflictsReport.csv";
 	public final static String CONFLICT_REPORT_PATH = "/home/isak/Documents/Master/Test/Paola/ResultData/atmosphere/ConflictsReport.csv";
 	private String conflictReport;
 	
 	
 	public Extractor() {
-		analyzeConflictReport(CONFLICT_REPORT_PATH);
+		analyzeConflictReport(CONFLICT_REPORT_PATH, "/home/isak/Documents/Master/projects/hej");
 	}
 	
 	private void analyzeConflictReport(String conflictReportPath, String pathToRepo) {
