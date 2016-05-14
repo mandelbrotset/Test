@@ -1,18 +1,37 @@
 import java.util.ArrayList;
 
+import javax.print.attribute.standard.PrinterState;
+
 public class FunctionParser {
 
 	public static ArrayList<String> extractFunction(ArrayList<String> lines, String name, String... params) {
 		for (int i = 0; i < lines.size(); i++) {
 			String line = lines.get(i);
-			if (line.contains(name) && containsAllParams(line, params) && containsFunction(line)) {
-				int noOfLinesOffset = linesInFunction(i, lines) + i;
-				ArrayList<String> functionCodeLines = new ArrayList<String>();
-				while (i < noOfLinesOffset) {
-					String lineToAdd = lines.get(i++);
-					functionCodeLines.add(lineToAdd);
+			try {
+				if (line.contains(name) && containsAllParams(line, params) && containsFunction(line)) {
+					int noOfLinesOffset = linesInFunction(i, lines) + i;
+					ArrayList<String> functionCodeLines = new ArrayList<String>();
+					while (i < noOfLinesOffset) {
+						String lineToAdd = lines.get(i++);
+						functionCodeLines.add(lineToAdd);
+					}
+					return functionCodeLines;
 				}
-				return functionCodeLines;
+			} catch (NullPointerException e) {
+				e.printStackTrace();
+				System.out.println("Det var det här som kraschade:");
+				System.out.println("name:" + name);
+				System.out.println("lines:");
+				for (String linee : lines) {
+					System.out.println(linee);
+				}
+				System.out.println("params:");
+				if (params != null) {
+					for (String param : params) {
+						System.out.println(param);
+					}
+				}	
+				System.out.println("Slut på krasch");
 			}
 		}
 
@@ -54,7 +73,7 @@ public class FunctionParser {
 	
 	public static boolean containsFunction(String line) {
 		line = line.trim();
-		if ((line.startsWith("private") || line.startsWith("public")) && !line.contains("class") && line.endsWith("{"))
+		if ((line.startsWith("protected") || line.startsWith("private") || line.startsWith("public")) && !line.contains("class") && line.endsWith("{"))
 			return true;
 
 		return false;
