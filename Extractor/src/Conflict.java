@@ -47,9 +47,9 @@ public class Conflict {
 	
 	private void parseFunction(String body) {
 		for(String line : body.split("\n")) {
-			if(containsFunction(line)) {
-				functionName = extractFunctionName(line);
-				parameterTypes = extractFunctionParameters(line, functionName);
+			if(FunctionParser.containsFunction(line)) {
+				functionName = FunctionParser.extractFunctionName(line);
+				parameterTypes = FunctionParser.extractFunctionParameters(line, functionName);
 			}
 		}
 	}
@@ -60,40 +60,6 @@ public class Conflict {
 
 	public String[] getParameterTypes() {
 		return parameterTypes;
-	}
-
-	private String[] extractFunctionParameters(String line, String functionName) {
-		String[] paramList = new String[1];
-		String params = line.split(functionName)[1].split("\\(")[1].split("\\)")[0];
-		if(params.contains(",")) {
-			paramList = params.split(",");
-		} else {
-			paramList[0] = params;
-		}
-		
-		for(String param : paramList) {
-			param = param.trim();
-			param = param.split(" ")[0];
-		}
-		
-		return paramList;
-	}
-	
-	private String extractFunctionName(String line) {
-		line = line.split("\\(")[0];
-		StringBuilder sb = new StringBuilder(line);
-		sb = sb.reverse();
-		String name = new StringBuilder(sb.toString().split(" ")[0]).reverse().toString();
-		
-		return name;
-	}
-	
-	private boolean containsFunction(String line) {
-		line = line.trim();
-		if ((line.startsWith("private") || line.startsWith("public")) && !line.contains("class") && line.endsWith("{"))
-			return true;
-
-		return false;
 	}
 
 	private void setBodies(String conflict) {
