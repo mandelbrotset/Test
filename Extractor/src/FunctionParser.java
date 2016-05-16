@@ -5,6 +5,9 @@ import javax.print.attribute.standard.PrinterState;
 public class FunctionParser {
 
 	public static ArrayList<String> extractFunction(ArrayList<String> lines, String name, String... params) {
+		if(name.equals("sendSuccessMessage")) {
+			System.out.println("Det är här det blir Merman");
+		}
 		for (int i = 0; i < lines.size(); i++) {
 			String line = lines.get(i);
 			try {
@@ -57,9 +60,10 @@ public class FunctionParser {
 		for (int i = startLineOfFunction; i < lines.size(); i++) {
 			String line = lines.get(i);
 
-			if (line.endsWith("{"))
+			if (line.contains("{"))
 				currentBrackets++;
-			else if (line.endsWith("}"))
+			
+			if (line.contains("}"))
 				currentBrackets--;
 
 			linesInFunction++;

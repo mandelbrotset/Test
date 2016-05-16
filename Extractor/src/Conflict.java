@@ -51,6 +51,7 @@ public class Conflict {
 			if(FunctionParser.containsFunction(line)) {
 				functionName = FunctionParser.extractFunctionName(line);
 				parameterTypes = FunctionParser.extractFunctionParameters(line, functionName);
+				break;
 			}
 		}
 	}

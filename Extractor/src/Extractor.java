@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,7 +12,7 @@ import jxl.write.biff.RowsExceededException;
 public class Extractor {
 	public final static String TEMP_FOLDER = "/tmp/";
 	//public final static String CONFLICT_REPORT_PATH = "/home/isak/Documents/Master/Test/the/Paola/elasticsearch/ResultData/elasticsearch/ConflictsReport.csv";
-	public final static String CONFLICT_REPORT_PATH = "/home/isak/Documents/Master/Test/Paola/ResultData/atmosphere/ConflictsReport.csv";
+	//public final static String CONFLICT_REPORT_PATH = "/home/isak/Documents/Master/Test/Paola/ResultData/atmosphere/ConflictsReport.csv";
 	private String conflictReport;
 	private WorkBookCreator wbc;
 	
@@ -20,7 +21,7 @@ public class Extractor {
 		wbc = new WorkBookCreator("ExtractorHactorResult.xls");
 		wbc.createSheet("Conflicts", "Project", "Merge Commit SHA", "Result Body", "Left SHA", "Left Body", "Left Date", "Right SHA", "Right Body", "Right Date");
 		analyzeConflictReport("android-async-http");
-		analyzeConflictReport("android-best-practices");
+		/*analyzeConflictReport("android-best-practices");
 		analyzeConflictReport("Android-Universal-Image-Loader");
 		analyzeConflictReport("curator");
 		analyzeConflictReport("elasticsearch");
@@ -38,17 +39,25 @@ public class Extractor {
 		analyzeConflictReport("SlidingMenu");
 		analyzeConflictReport("spring-framework");
 		analyzeConflictReport("storm");
-		analyzeConflictReport("zxing");
+		analyzeConflictReport("zxing");*/
 		
 		wbc.writeToWorkbook();
 	}
 	
 	private String getConflictReport(String project) {
-		return "/home/isak/Documents/Master/braresults/paolaboarba/" + project + "/ResultData/" + project + "/ConflictsReport.csv";
+		File file = new File("/home/isak");
+		if(file.exists())
+			return "/home/isak/Documents/Master/braresults/paolaboarba/" + project + "/ResultData/" + project + "/ConflictsReport.csv";
+		
+		return "/home/patrik/Documents/Chalmers/5an/MasterThesis/braresults/paolaboarba/" + project + "/ResultData/" + project + "/ConflictsReport.csv";
 	}
 	
 	private String getPathToRepo(String project) {
-		return "/home/isak/Documents/Master/projects/" + project;
+		File file = new File("/home/isak");
+		if(file.exists())
+			return "/home/isak/Documents/Master/projects/" + project;
+		
+		return "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/" + project;
 	}
 	
 	private void analyzeConflictReport(String project) {
