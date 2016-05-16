@@ -8,7 +8,14 @@ import javax.print.attribute.standard.PrinterState;
 
 public class FunctionParser {
 
+<<<<<<< HEAD
 	public static ArrayList<String> extractFunction(ArrayList<String> lines, String name, String... params) {
+		if(name.equals("sendSuccessMessage")) {
+			System.out.println("Det är här det blir Merman");
+		}
+=======
+	public static ArrayList<String> extractFunction(String mergecommitsha, String project, ArrayList<String> lines, String name, String... params) {
+>>>>>>> 932e87a566f9c8b84f8cb3a66e8ed005d5050183
 		for (int i = 0; i < lines.size(); i++) {
 			String line = lines.get(i);
 			try {
@@ -22,8 +29,8 @@ public class FunctionParser {
 					return functionCodeLines;
 				}
 			} catch (NullPointerException e) {
-				e.printStackTrace();
-				/*System.out.println("Det var det här som kraschade:");
+				/*e.printStackTrace();
+				System.out.println("Det var det här som kraschade:");
 				System.out.println("project:" + project);
 				System.out.println("mergecommitsha:" + mergecommitsha);
 				System.out.println("name:" + name);
@@ -38,7 +45,7 @@ public class FunctionParser {
 					}
 				}	
 				System.out.println("Slut på krasch");*/
-				//writeFile(project, mergecommitsha, lines, params, name);
+				writeFile(project, mergecommitsha, lines, params, name);
 				return null;
 			}
 		}

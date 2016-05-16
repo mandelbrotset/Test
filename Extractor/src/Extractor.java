@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -114,7 +115,7 @@ public class Extractor {
 			//System.out.println("2");
 			ArrayList<String> resultFile = (ArrayList<String>)Files.readAllLines(Paths.get(TEMP_FOLDER + "result.java"));
 			//System.out.println("3");
-			ArrayList<String> resultFunction = FunctionParser.extractFunction(conflict.getMergeCommitSha(), project, resultFile, conflict.getFunctionName(), conflict.getParameterTypes());
+			ArrayList<String> resultFunction = FunctionParser.extractFunction(resultFile, conflict.getFunctionName(), conflict.getParameterTypes());
 			//System.out.println("4");
 			if (resultFunction == null) {
 				return;

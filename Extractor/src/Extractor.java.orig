@@ -1,14 +1,10 @@
-<<<<<<< HEAD
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-=======
->>>>>>> ae760dba3f97522d123debca8809e08a9dc34ca5
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import jxl.write.WriteException;
 import jxl.write.biff.RowsExceededException;
@@ -16,48 +12,86 @@ import jxl.write.biff.RowsExceededException;
 public class Extractor {
 	public final static String TEMP_FOLDER = "/tmp/";
 	//public final static String CONFLICT_REPORT_PATH = "/home/isak/Documents/Master/Test/the/Paola/elasticsearch/ResultData/elasticsearch/ConflictsReport.csv";
-	public final static String CONFLICT_REPORT_PATH = "/home/isak/Documents/Master/Test/Paola/ResultData/atmosphere/ConflictsReport.csv";
+	//public final static String CONFLICT_REPORT_PATH = "/home/isak/Documents/Master/Test/Paola/ResultData/atmosphere/ConflictsReport.csv";
 	private String conflictReport;
-	
 	private WorkBookCreator wbc;
 	
 	public Extractor() {
-<<<<<<< HEAD
 		//analyzeConflictReport(CONFLICT_REPORT_PATH, "/home/isak/Documents/Master/projects/hej");
-<<<<<<< HEAD
-		analyzeConflictReport("/home/isak/Documents/Master/braresults/paolaboarba/EventBus/ResultData/EventBus/ConflictsReport.csv", "/home/isak/Documents/Master/projects/EventBus");
-		//analyzeConflictReport("/home/isak/Documents/Master/Test/the/Paola/elasticsearch/ResultData/elasticsearch/ConflictsReport.csv", "/home/isak/Documents/Master/projects/elasticsearch");
-=======
-		analyzeConflictReport("/home/isak/Documents/Master/Test/the/Paola/elasticsearch/ResultData/elasticsearch/ConflictsReport.csv", "/home/isak/Documents/Master/projects/elasticsearch");
 		wbc = new WorkBookCreator("ExtractorHactorResult.xls");
-		wbc.createSheet("Result", "Merge Commit SHA", "Result Body", "Left SHA", "Left Body", "Left Date", "Right SHA", "Right Body", "Right Date");
->>>>>>> 25e01f2505145004b67b5ff54e7e2b85c96b2c8e
-=======
+		wbc.createSheet("Conflicts", "Project", "Merge Commit SHA", "Result Body", "Left SHA", "Left Body", "Left Date", "Right SHA", "Right Body", "Right Date");
+		analyzeConflictReport("android-async-http");
+		/*analyzeConflictReport("android-best-practices");
+		analyzeConflictReport("Android-Universal-Image-Loader");
+		analyzeConflictReport("curator");
+		analyzeConflictReport("elasticsearch");
+		analyzeConflictReport("EventBus");
+		analyzeConflictReport("fresco");
+		analyzeConflictReport("guava");
+		analyzeConflictReport("iosched");
+		analyzeConflictReport("java-design-patterns");
+		analyzeConflictReport("leakcanary");
+		analyzeConflictReport("libgdx");
+		analyzeConflictReport("okhttp");
+		analyzeConflictReport("react-native");
+		analyzeConflictReport("retrofit");
+		analyzeConflictReport("RxJava");
+		analyzeConflictReport("SlidingMenu");
+		analyzeConflictReport("spring-framework");
+		analyzeConflictReport("storm");
 <<<<<<< HEAD
-		analyzeConflictReport(CONFLICT_REPORT_PATH, "/home/isak/Documents/Master/projects/hej");
-		wbc = new WorkBookCreator("ExtractorHactorResult.xls");
-		wbc.createSheet("Result", "Merge Commit SHA", "Result Body", "Left SHA", "Left Body", "Left Date", "Right SHA", "Right Body", "Right Date");
+		analyzeConflictReport("zxing");*/
 =======
-		//analyzeConflictReport(CONFLICT_REPORT_PATH, "/home/isak/Documents/Master/projects/hej");
-		//analyzeConflictReport("/home/isak/Documents/Master/Test/the/Paola/EventBus/ResultData/EventBus/ConflictsReport.csv", "/home/isak/Documents/Master/projects/EventBus");
-		analyzeConflictReport("/home/isak/Documents/Master/Test/the/Paola/elasticsearch/ResultData/elasticsearch/ConflictsReport.csv", "/home/isak/Documents/Master/projects/elasticsearch");
->>>>>>> 49eb89ca38984ab640544e2627eba735b767ca8e
->>>>>>> ae760dba3f97522d123debca8809e08a9dc34ca5
+		analyzeConflictReport("zxing");
+		analyzeConflictReport("atmosphere");
+>>>>>>> 932e87a566f9c8b84f8cb3a66e8ed005d5050183
+		
+		wbc.writeToWorkbook();
 	}
 	
-	private void analyzeConflictReport(String conflictReportPath, String pathToRepo) {
-		Path path = Paths.get(conflictReportPath);
+	private String getConflictReport(String project) {
+		File file = new File("/home/isak");
+		if(file.exists())
+			return "/home/isak/Documents/Master/braresults/paolaboarba/" + project + "/ResultData/" + project + "/ConflictsReport.csv";
+		
+		return "/home/patrik/Documents/Chalmers/5an/MasterThesis/braresults/paolaboarba/" + project + "/ResultData/" + project + "/ConflictsReport.csv";
+	}
+	
+	private String getPathToRepo(String project) {
+		File file = new File("/home/isak");
+		if(file.exists())
+			return "/home/isak/Documents/Master/projects/" + project;
+		
+		return "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/" + project;
+	}
+	
+	private void analyzeConflictReport(String project) {
+		Path path = Paths.get(getConflictReport(project));
+		if (!path.toFile().exists()) {
+			System.out.println(path.toString() + " not found, skipping " + project);
+			return;
+		}
+		if (!Paths.get(getConflictReport(project)).toFile().exists()) {
+			System.out.println(getConflictReport(project) + " not found, skipping " + project);
+			return;
+		}
+		System.out.println("analyzing " + project);
 		ArrayList<String> conflictReportLines;
 		try {
 			conflictReportLines = (ArrayList<String>) Files.readAllLines(path);
+			System.out.println("conflictReport has " + conflictReportLines.size() + " lines");
 			removeLines(conflictReportLines);
+			System.out.println("conflictReport has " + conflictReportLines.size() + " good lines");
 			makeString(conflictReportLines);
 			ArrayList<String> conflictStrings = splitConflicts();
+			System.out.println("found " + conflictStrings.size() + " conflicts");
 			filterConflicts(conflictStrings);
-			ArrayList<Conflict> conflicts = createConflicts(conflictStrings, pathToRepo);
-			analyzeConflicts(conflicts, pathToRepo);
-			wbc.writeToWorkbook();
-			//writeFile();
+			System.out.println(conflictStrings.size() + " of them are good");
+			System.out.println("creating conflicts");
+			ArrayList<Conflict> conflicts = createConflicts(conflictStrings, getPathToRepo(project));
+			System.out.println("analyzing..");
+			analyzeConflicts(project, conflicts, getPathToRepo(project));
+			System.out.println("done analyzing " + project);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -71,23 +105,34 @@ public class Extractor {
 		return conflicts;
 	}
 	
-	private void analyzeConflicts(ArrayList<Conflict> conflicts, String pathToRepo) {
+	private void analyzeConflicts(String project, ArrayList<Conflict> conflicts, String pathToRepo) {
 		for (Conflict conflict : conflicts) {
-			analyzeConflict(conflict, pathToRepo);
+			System.out.println("\t analyzing " + conflict.getMergeCommitSha());
+			analyzeConflict(project, conflict, pathToRepo);
 		}
 	}
 	
-	private void analyzeConflict(Conflict conflict, String pathToRepo) {
+	private void analyzeConflict(String project, Conflict conflict, String pathToRepo) {
 		try {
-			Utils.readScriptOutput("analyzeResolution " + pathToRepo + " " + conflict.getMergeCommitSha() + " " + TEMP_FOLDER + "result.java " + pathToRepo + conflict.getFilePath(), false);
+			//System.out.println("1");
+			Utils.readScriptOutput("analyzeResolution " + pathToRepo + " " + conflict.getMergeCommitSha() + " " + TEMP_FOLDER + "result.java " + pathToRepo + "/" + conflict.getFilePath(), false);
+			//System.out.println("2");
 			ArrayList<String> resultFile = (ArrayList<String>)Files.readAllLines(Paths.get(TEMP_FOLDER + "result.java"));
-			ArrayList<String> resultFunction = FunctionParser.extractFunction(resultFile, conflict.getFunctionName(), conflict.getParameterTypes());
+			//System.out.println("3");
+			ArrayList<String> resultFunction = FunctionParser.extractFunction(conflict.getMergeCommitSha(), project, resultFile, conflict.getFunctionName(), conflict.getParameterTypes());
+			//System.out.println("4");
+			if (resultFunction == null) {
+				return;
+			}
 			StringBuilder sb = new StringBuilder();
+			//System.out.println("5");
 			for(String line : resultFunction) {
 				sb.append(line + "\n");
 			}
+			//System.out.println("6");
 			String resultBody = sb.toString();
-			wbc.addRow(conflict.getMergeCommitSha(), resultBody, conflict.getLeftSha(), conflict.getLeftBody(), conflict.getLeftDate(), conflict.getRightSha(), conflict.getRightBody(), conflict.getRightDate());
+			//System.out.println("7");
+			wbc.addRow(project, conflict.getMergeCommitSha(), resultBody, conflict.getLeftSha(), conflict.getLeftBody(), conflict.getLeftDate(), conflict.getRightSha(), conflict.getRightBody(), conflict.getRightDate());
 			
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -102,7 +147,7 @@ public class Extractor {
 
 	/*private void writeFile() {
 		File file = new File("bra.csv");
-		try {
+		try {analyzeConflictReport("/home/isak/Documents/Master/braresults/paolaboarba/EventBus/ResultData/EventBus/ConflictsReport.csv", "/home/isak/Documents/Master/projects/EventBus");
 			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 			StringBuilder sb = new StringBuilder();
 			for (String conflict : conflicts) {
@@ -138,19 +183,12 @@ public class Extractor {
 		//TODO: fix
 		//~~FSTMerge~~ ##FSTMerge## ##FSTMerge## 
 		conflicts.removeIf(s -> !s.contains("Conflict type: SameSignatureCM"));
-<<<<<<< HEAD
 		conflicts.removeIf(s -> s.contains("##FSTMerge##"));
 		conflicts.removeIf(s -> !s.contains("<<<<<"));
 		//if (conflicts.removeIf(s -> s.contains("~~FSTMerge~~ ##FSTMerge##"))) {//den ska finnas i left
 			
 		//System.out.println("What the fucc???");
 		//}
-=======
-		conflicts.removeIf(s -> !s.contains("##FSTMerge## ##FSTMerge## "));//den ska inte finnas i anc
-		if (conflicts.removeIf(s -> s.contains("~~FSTMerge~~ ##FSTMerge##"))) {//den ska finnas i left
-			System.out.println("What the fucc???");
-		}
->>>>>>> ae760dba3f97522d123debca8809e08a9dc34ca5
 		
 	}
 	
