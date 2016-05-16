@@ -42,7 +42,11 @@ public class Extractor {
 		 * analyzeConflictReport("storm"); analyzeConflictReport("zxing");
 		 * analyzeConflictReport("atmosphere");
 		 */
-		analyzeConflictReport("android-async-http");
+<<<<<<< HEAD
+=======
+		//analyzeConflictReport("android-async-http");
+>>>>>>> 43237d8504548fb2cc8c46cbc57a65f8f2c67b5c
+		analyzeConflictReport("elasticsearch");
 		wbc.writeToWorkbook();
 	}
 
@@ -135,10 +139,7 @@ public class Extractor {
 			String resultBody = sb.toString();
 			conflict.setResultBody(resultBody);
 			// System.out.println("7");
-<<<<<<< HEAD
 			conflict.setResult();
-=======
->>>>>>> f7d06062e9532675b9f729d77185f6edcfaaed39
 			wbc.addRow(project, conflict.getType(), conflict.getMergeCommitSha(), conflict.getResultBody(), conflict.getLeftSha(), conflict.getLeftBody(),
 					conflict.getLeftDate(), conflict.getRightSha(), conflict.getRightBody(), conflict.getRightDate(), conflict.getResults());
 
@@ -196,7 +197,8 @@ public class Extractor {
 																			// finnas
 																			// i
 																			// left
-
+		conflicts.removeIf(s -> s.contains("; ##FSTMerge##"));
+		conflicts.removeIf(s -> s.contains(";\nFilePath"));
 		conflicts.removeIf(s -> skadentasbort(s));
 
 		// conflicts.removeIf(s -> true);
