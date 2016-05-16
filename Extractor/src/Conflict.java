@@ -29,8 +29,6 @@ public class Conflict {
 	private String resultBody;
 	private String repoPath;
 	private String tabortdennasen;
-	private boolean isIntersection;
-	private boolean isSuperset;
 	private HashSet<String> leftLines;
 	private HashSet<String> rightLines;
 	private HashSet<String> resultLines;
@@ -40,10 +38,13 @@ public class Conflict {
 	public Conflict(String conflict, String repoPath) {
 		this.repoPath = repoPath;
 		this.tabortdennasen = conflict;
+		results = new ArrayList<Result>();
 		parseValues(conflict);
 	}
 
 	private void setResult() {
+		if (isIntersection()) results.add(Result.INTERSECTION);
+		if (isSuperset()) results.add(Result.SUPERSET);
 		
 	}
 
@@ -134,8 +135,11 @@ public class Conflict {
 		leftBody = left;
 		rightBody = right;
 		ancestorBody = anc;
+		leftLines = new HashSet<String>();
+		leftLines.addAll(Arrays.asList(getLines(leftBody)));
+		rightLines = new HashSet<String>();
+		rightLines.addAll(Arrays.asList(getLines(rightBody)));
 	}
-
 
 	private String getDate(String sha) {
 		try {
@@ -214,22 +218,17 @@ public class Conflict {
 	}
 
 	private boolean isIntersection() {
-		HashSet<String> leftLines = new HashSet<String>();
-		HashSet<String> rightLines = new HashSet<String>();
-		leftLines.addAll(Arrays.asList(getLines(leftBody)));
-		rightLines.addAll(Arrays.asList(getLines(rightBody)));
-		
-		leftLines.retainAll(rightLines);
+		HashSet<String> intersectionLines = new HashSet<String>(leftLines);
+		intersectionLines.retainAll(rightLines);
 		HashSet<String> resultLines = new HashSet<String>();
 		resultLines.addAll(Arrays.asList(getLines(resultBody)));
-		intersectionLines = leftLines;
-		return resultLines.containsAll(leftLines) && resultLines.size() == leftLines.size();
+		return resultLines.containsAll(intersectionLines) && resultLines.size() == intersectionLines.size();
 	}
 	
 	private boolean isSuperset() {
 		HashSet<String> lines = new HashSet<String>();
-		lines.addAll(Arrays.asList(getLines(leftBody)));
-		lines.addAll(Arrays.asList(getLines(rightBody)));
+		lines.addAll(leftLines);
+		lines.addAll(rightLines);
 		HashSet<String> resultLines = new HashSet<String>();
 		resultLines.addAll(Arrays.asList(getLines(resultBody)));
 		return resultLines.containsAll(lines);
