@@ -47,14 +47,6 @@ public class Conflict {
 		if (isSuperset()) results.add(Result.SUPERSET);
 		
 	}
-
-	public void setIntersection() {
-		isIntersection = isIntersection();
-	}
-	
-	public void setSuperSet() {
-		isSuperset = isSuperset();
-	}
 	
 	private void parseValues(String conflict) {
 		leftSha = parseValue(conflict, "Parent1 SHA-1:");
@@ -132,13 +124,17 @@ public class Conflict {
 			
 		}
 		
-		leftBody = left;
-		rightBody = right;
-		ancestorBody = anc;
+		leftBody = left.trim();
+		rightBody = right.trim();
+		ancestorBody = anc.trim();
+		
+		
 		leftLines = new HashSet<String>();
 		leftLines.addAll(Arrays.asList(getLines(leftBody)));
+		leftLines.forEach(s -> s.trim());
 		rightLines = new HashSet<String>();
 		rightLines.addAll(Arrays.asList(getLines(rightBody)));
+		rightLines.forEach(s -> s.trim());
 	}
 
 	private String getDate(String sha) {
@@ -166,7 +162,7 @@ public class Conflict {
 		}
 		
 		
-		if(result == Result.LEFT)
+		if(whichWasChosen == Result.LEFT)
 			return lDate.after(rDate);
 		
 		return rDate.after(lDate);
@@ -222,7 +218,9 @@ public class Conflict {
 	}
 
 	public void setResultBody(String resultBody) {
-		this.resultBody = resultBody;
+		this.resultBody = resultBody.trim();
+		resultLines = new HashSet<String>(Arrays.asList(resultBody.split("\n")));
+		resultLines.forEach(s -> s.trim());
 	}
 
 	private boolean isIntersection() {
