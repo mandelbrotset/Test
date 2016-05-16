@@ -39,6 +39,7 @@ public class Extractor {
 		analyzeConflictReport("spring-framework");
 		analyzeConflictReport("storm");
 		analyzeConflictReport("zxing");
+		analyzeConflictReport("atmosphere");
 		
 		wbc.writeToWorkbook();
 	}
@@ -73,7 +74,9 @@ public class Extractor {
 			System.out.println("found " + conflictStrings.size() + " conflicts");
 			filterConflicts(conflictStrings);
 			System.out.println(conflictStrings.size() + " of them are good");
+			System.out.println("creating conflicts");
 			ArrayList<Conflict> conflicts = createConflicts(conflictStrings, getPathToRepo(project));
+			System.out.println("analyzing..");
 			analyzeConflicts(project, conflicts, getPathToRepo(project));
 			System.out.println("done analyzing " + project);
 		} catch (IOException e) {
@@ -99,7 +102,10 @@ public class Extractor {
 		try {
 			Utils.readScriptOutput("analyzeResolution " + pathToRepo + " " + conflict.getMergeCommitSha() + " " + TEMP_FOLDER + "result.java " + pathToRepo + "/" + conflict.getFilePath(), false);
 			ArrayList<String> resultFile = (ArrayList<String>)Files.readAllLines(Paths.get(TEMP_FOLDER + "result.java"));
-			ArrayList<String> resultFunction = FunctionParser.extractFunction(resultFile, conflict.getFunctionName(), conflict.getParameterTypes());
+			ArrayList<String> resultFunction = FunctionParser.extractFunction(conflict.getMergeCommitSha(), project, resultFile, conflict.getFunctionName(), conflict.getParameterTypes());
+			if (resultFunction == null) {
+				return;
+			}
 			StringBuilder sb = new StringBuilder();
 			for(String line : resultFunction) {
 				sb.append(line + "\n");

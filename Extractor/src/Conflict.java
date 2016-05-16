@@ -52,6 +52,9 @@ public class Conflict {
 				parameterTypes = FunctionParser.extractFunctionParameters(line, functionName);
 			}
 		}
+		if (functionName == null || parameterTypes == null) {
+			System.out.println("jävel");
+		}
 	}
 	
 	public String getFunctionName() {

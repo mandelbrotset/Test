@@ -33,7 +33,7 @@ public class Utils {
 		if(!readOutput) {
 			p = Runtime.getRuntime().exec("bash scripts/" + command + " &> /dev/null");
 			try {
-				p.waitFor();
+				p.waitFor(10000, TimeUnit.MILLISECONDS);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
