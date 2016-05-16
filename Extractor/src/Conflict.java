@@ -72,24 +72,35 @@ public class Conflict {
 	private void setBodies(String conflict) {
 		String left, anc, right;
 		if(conflict.contains("##FSTMerge##")) {
+			String generalBody = conflict.split("Conflict body:")[1].split("~~FSTMerge~~")[0];
 			left = conflict.split("~~FSTMerge~~")[1].split("##FSTMerge##")[0];
 			anc = conflict.split("##FSTMerge##")[1];
 			right = conflict.split("##FSTMerge##")[2].split("File path:")[0];
+			
+			left = generalBody + left;
+			anc = generalBody + anc;
+			right = generalBody + right;
+			
+			
 		} else {
+			String generalBody = conflict.split("Conflict body:")[1].split("\\<\\<\\<\\<\\<\\<\\<")[0];
+			String afterMath = conflict.split("\\>\\>\\>\\>\\>\\>\\>.*\\n")[1].split("File path:")[0];
+			
 			left = conflict.split("\\<\\<\\<\\<\\<\\<\\<")[1].split("\\|\\|\\|\\|\\|\\|\\|")[0];
 			anc = conflict.split("\\|\\|\\|\\|\\|\\|\\|")[1].split("\\=\\=\\=\\=\\=\\=\\=")[0];
 			right = conflict.split("\\=\\=\\=\\=\\=\\=\\=")[1].split("\\>\\>\\>\\>\\>\\>\\>")[0];
+			
+			left = generalBody + left + afterMath;
+			anc = generalBody + anc + afterMath;
+			right = generalBody + right + afterMath;
+			
 			left = left.substring(left.indexOf("\n"));
 			anc = anc.substring(anc.indexOf("\n"));
 		}
-		try {
-			leftBody = left;
-			rightBody = right;
-			ancestorBody = anc;
-		} catch (StringIndexOutOfBoundsException sieoobe) {
-			sieoobe.printStackTrace();
-		}
 		
+		leftBody = left;
+		rightBody = right;
+		ancestorBody = anc;
 	}
 
 
