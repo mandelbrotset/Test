@@ -14,7 +14,7 @@ public class FunctionParser {
 		for (int i = 0; i < lines.size(); i++) {
 			String line = lines.get(i);
 			try {
-				if (line.contains(name) && containsFunction(line, true) && containsAllParams(line, name, params)) {
+				if (line.contains(name) && containsFunction(line, name, true) && containsAllParams(line, name, params)) {
 					int noOfLinesOffset = linesInFunction(i, lines) + i;
 					ArrayList<String> functionCodeLines = new ArrayList<String>();
 					while (i < noOfLinesOffset) {
