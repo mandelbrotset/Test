@@ -42,7 +42,7 @@ public class Extractor {
 		 * analyzeConflictReport("storm"); analyzeConflictReport("zxing");
 		 * analyzeConflictReport("atmosphere");
 		 */
-		analyzeConflictReport("android-async-http");
+		analyzeConflictReport("elasticsearch");
 		wbc.writeToWorkbook();
 	}
 
