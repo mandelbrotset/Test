@@ -161,9 +161,11 @@ public class Conflict {
 	
 	private void removeAnnotations(String body) {
 		if(body.startsWith("@")) {
-			int paranthesisI = body.indexOf(")");
-			int spaceI = body.indexOf(" ");
-			int newLineI = body.indexOf("\n");
+			int paranthesisI = body.indexOf(")") < 0 ? 999999 : body.indexOf(")");
+			int spaceI = body.indexOf(" ") < 0 ? 999999 : body.indexOf(")");
+			int newLineI = body.indexOf("\n") < 0 ? 999999 : body.indexOf(")");
+			
+			
 			int minst = spaceI < paranthesisI ? spaceI : paranthesisI < newLineI ? paranthesisI : newLineI;
 			
 			body = body.substring(minst);
