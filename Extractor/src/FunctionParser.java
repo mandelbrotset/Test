@@ -25,18 +25,6 @@ public class FunctionParser {
 				}
 			} catch (NullPointerException e) {
 				e.printStackTrace();
-				/*
-				 * System.out.println("Det var det här som kraschade:");
-				 * System.out.println("project:" + project);
-				 * System.out.println("mergecommitsha:" + mergecommitsha);
-				 * System.out.println("name:" + name);
-				 * System.out.println("lines:"); for (String linee : lines) {
-				 * System.out.println(linee); } System.out.println("params:");
-				 * if (params != null) { for (String param : params) {
-				 * System.out.println(param); } } System.out.println(
-				 * "Slut på krasch");
-				 */
-				// writeFile(project, mergecommitsha, lines, params, name);
 				return null;
 			}
 		}
@@ -138,17 +126,6 @@ public class FunctionParser {
 
 	public static boolean containsFunction(String line, boolean splittedOnLines) {
 		return containsFunction(line, "", splittedOnLines);
-		/*line = line.trim();
-		if (line.contains("(") && line.contains(")") && line.contains("{")
-				&& line.indexOf("{") < (line.indexOf(" new ") < 0 ? 99999 : line.indexOf(" new ")))
-			if (line.indexOf("(") < line.indexOf(")") && line.indexOf(")") < line.indexOf("{"))
-				if (splittedOnLines) {
-					if (!line.endsWith(";"))
-						return true;
-				} else
-					return true;
-
-		return false;*/
 	}
 
 	public static String[] extractFunctionParameters(String line, String functionName) {
