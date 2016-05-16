@@ -12,7 +12,7 @@ public class FunctionParser {
 		for (int i = 0; i < lines.size(); i++) {
 			String line = lines.get(i);
 			try {
-				if (line.contains(name) && containsAllParams(line, params) && containsFunction(line)) {
+				if (line.contains(name) && containsAllParams(line, params) && containsFunction(line, true)) {
 					int noOfLinesOffset = linesInFunction(i, lines) + i;
 					ArrayList<String> functionCodeLines = new ArrayList<String>();
 					while (i < noOfLinesOffset) {
@@ -116,11 +116,16 @@ public class FunctionParser {
 		return linesInFunction;
 	}
 	
-	public static boolean containsFunction(String line) {
+	public static boolean containsFunction(String line, boolean splittedOnLines) {
 		line = line.trim();
 		if (line.contains("(") && line.contains(")") && line.contains("{"))
 			if(line.indexOf("(") < line.indexOf(")") && line.indexOf(")") < line.indexOf("{"))
-				return true;
+				if(splittedOnLines) {
+					if(!line.endsWith(";"))
+						return true;
+				} else
+					return true;
+		
 
 		return false;
 	}
