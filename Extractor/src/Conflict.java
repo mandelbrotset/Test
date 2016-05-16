@@ -232,6 +232,16 @@ public class Conflict {
 	public String getResultBody() {
 		return resultBody;
 	}
+	
+	public String getResults() {
+		StringBuilder sb = new StringBuilder();
+		for(Result r : results) {
+			if(sb.length() > 0)
+				sb.append(", ");
+			sb.append(r.toString());
+		}
+		return sb.toString();
+	}
 
 	public void setResultBody(String resultBody) {
 		this.resultBody = resultBody.trim();
