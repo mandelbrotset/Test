@@ -144,32 +144,35 @@ public class Conflict {
 			
 		}
 		
-		removeAnnotations(left);
-		removeAnnotations(anc);
-		removeAnnotations(right);
+		left = removeAnnotations(left.trim());
+		anc = removeAnnotations(anc.trim());
+		right = removeAnnotations(right.trim());
+		
 		
 		leftBody = left.trim();
 		rightBody = right.trim();
 		ancestorBody = anc.trim();
 		leftLines = new HashSet<String>();
-		leftLines.addAll(Arrays.asList(getLines(leftBody)));
+		leftLines.addAll(Arrays.asList(getLines(left.trim())));
 		leftLines.forEach(s -> s.trim());
 		rightLines = new HashSet<String>();
-		rightLines.addAll(Arrays.asList(getLines(rightBody)));
+		rightLines.addAll(Arrays.asList(getLines(right.trim())));
 		rightLines.forEach(s -> s.trim());
 	}
 	
-	private void removeAnnotations(String body) {
+	private String removeAnnotations(String body) {
 		if(body.startsWith("@")) {
 			int paranthesisI = body.indexOf(")") < 0 ? 999999 : body.indexOf(")");
-			int spaceI = body.indexOf(" ") < 0 ? 999999 : body.indexOf(")");
-			int newLineI = body.indexOf("\n") < 0 ? 999999 : body.indexOf(")");
+			int spaceI = body.indexOf(" ") < 0 ? 999999 : body.indexOf(" ");
+			int newLineI = body.indexOf("\n") < 0 ? 999999 : body.indexOf("\n");
 			
 			
-			int minst = spaceI < paranthesisI ? spaceI : paranthesisI < newLineI ? paranthesisI : newLineI;
+			int minst = spaceI < paranthesisI ? spaceI : paranthesisI;
+			minst = newLineI < minst ? newLineI : minst;
 			
 			body = body.substring(minst);
 		}
+		return body;
 	}
 
 	private String getDate(String sha) {
