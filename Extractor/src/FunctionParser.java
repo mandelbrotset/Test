@@ -111,7 +111,7 @@ public class FunctionParser {
 
 	public static boolean containsFunction(String line, String name, boolean splittedOnLines) {
 		line = line.trim();
-		if (line.contains("(") && line.contains(")") && line.contains("{"))
+		if (line.matches(" " + name + " ?\\(.?\\).?\\{.?"))
 			if (isBefore(line, name, "(") && isBefore(line, "{", " new ")) {
 				if (line.indexOf("(") < line.indexOf(")") && line.indexOf(")") < line.indexOf("{"))
 					if (splittedOnLines) {
