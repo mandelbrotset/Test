@@ -90,12 +90,13 @@ public class Conflict {
 			anc = conflict.split("\\|\\|\\|\\|\\|\\|\\|")[1].split("\\=\\=\\=\\=\\=\\=\\=")[0];
 			right = conflict.split("\\=\\=\\=\\=\\=\\=\\=")[1].split("\\>\\>\\>\\>\\>\\>\\>")[0];
 			
+			left = left.substring(left.indexOf("\n"));
+			anc = anc.substring(anc.indexOf("\n"));
+			
 			left = generalBody + left + afterMath;
 			anc = generalBody + anc + afterMath;
 			right = generalBody + right + afterMath;
 			
-			left = left.substring(left.indexOf("\n"));
-			anc = anc.substring(anc.indexOf("\n"));
 		}
 		
 		leftBody = left;
