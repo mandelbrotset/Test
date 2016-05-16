@@ -91,10 +91,11 @@ public class Conflict {
 			left = generalBody + left + afterMath;
 			anc = generalBody + anc + afterMath;
 			right = generalBody + right + afterMath;
+			
+			left = left.substring(left.indexOf("\n"));
+			anc = anc.substring(anc.indexOf("\n"));
 		}
 		
-		left = left.substring(left.indexOf("\n"));
-		anc = anc.substring(anc.indexOf("\n"));
 		leftBody = left;
 		rightBody = right;
 		ancestorBody = anc;
