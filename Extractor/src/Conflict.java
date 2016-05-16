@@ -1,6 +1,8 @@
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 
 public class Conflict {
 	private String leftSha;
@@ -18,11 +20,22 @@ public class Conflict {
 	private String resultBody;
 	private String repoPath;
 	private String tabortdennasen;
+	private boolean isIntersection;
+	private boolean isSuperset;
 	
 	public Conflict(String conflict, String repoPath) {
 		this.repoPath = repoPath;
 		this.tabortdennasen = conflict;
 		parseValues(conflict);
+
+	}
+
+	public void setIntersection() {
+		isIntersection = isIntersection();
+	}
+	
+	public void setSuperSet() {
+		isSuperset = isSuperset();
 	}
 	
 	private void parseValues(String conflict) {
@@ -154,6 +167,33 @@ public class Conflict {
 	}
 
 	public String getRightDate() {
+
 		return rightDate;
+	}
+
+	private boolean isIntersection() {
+		HashSet<String> leftLines = new HashSet<String>();
+		HashSet<String> rightLines = new HashSet<String>();
+		leftLines.addAll(Arrays.asList(getLines(leftBody)));
+		rightLines.addAll(Arrays.asList(getLines(rightBody)));
+		
+		leftLines.retainAll(rightLines);
+		HashSet<String> resultLines = new HashSet<String>();
+		resultLines.addAll(Arrays.asList(getLines(resultBody)));
+		
+		return resultLines.containsAll(leftLines) && resultLines.size() == leftLines.size();
+	}
+	
+	private boolean isSuperset() {
+		HashSet<String> lines = new HashSet<String>();
+		lines.addAll(Arrays.asList(getLines(leftBody)));
+		lines.addAll(Arrays.asList(getLines(rightBody)));
+		HashSet<String> resultLines = new HashSet<String>();
+		resultLines.addAll(Arrays.asList(getLines(resultBody)));
+		return resultLines.containsAll(lines);
+	}
+	
+	private String[] getLines(String body) {
+		return body.split("\n");
 	}
 }
