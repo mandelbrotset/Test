@@ -161,10 +161,14 @@ public class Conflict {
 	}
 	
 	private String removeAnnotations(String body) {
-		if(body.startsWith("@")) {
-			body = body.substring(body.indexOf("\n"));
+		StringBuilder sb = new StringBuilder();
+		for(String line : body.split("\n")) {
+			if(!line.trim().startsWith("@")) {
+				sb.append(line + "\n");
+			}
 		}
-		return body;
+		
+		return sb.toString().trim();
 	}
 
 	private String getDate(String sha) {
