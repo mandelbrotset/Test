@@ -86,21 +86,11 @@ public class FunctionParser {
 
 	private static boolean containsAllParams(String line, String functionName, String... params) {
 		int hits = 0;
-		if(functionName.equals("onSuccess"))
-			System.out.println("Merman");
 		ArrayList<String> lineParams = new ArrayList<String>(Arrays.asList(extractFunctionParameters(line, functionName)));
 		ArrayList<String> functionParams = new ArrayList<String>(Arrays.asList(params));
 		
 		if(lineParams.equals(functionParams))
 			return true;
-		
-		/*for(String p : params) {
-			if(line.contains(p))
-				hits++;
-		}
-		
-		if(params.length == hits)
-			return true;*/
 		
 		return false;
 	}
