@@ -213,6 +213,14 @@ public class Conflict {
 		return rightDate;
 	}
 
+	public String getResultBody() {
+		return resultBody;
+	}
+
+	public void setResultBody(String resultBody) {
+		this.resultBody = resultBody;
+	}
+
 	private boolean isIntersection() {
 		HashSet<String> leftLines = new HashSet<String>();
 		HashSet<String> rightLines = new HashSet<String>();
@@ -225,7 +233,7 @@ public class Conflict {
 		intersectionLines = leftLines;
 		return resultLines.containsAll(leftLines) && resultLines.size() == leftLines.size();
 	}
-	
+
 	private boolean isSuperset() {
 		HashSet<String> lines = new HashSet<String>();
 		lines.addAll(Arrays.asList(getLines(leftBody)));
