@@ -1,15 +1,20 @@
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Locale;
 
 public class Conflict {
 	enum Result {
 		LEFT, RIGHT, SUPERSET, INTERSECTION, RECENT
 	}
 	private String leftSha;
+	private String type;
 	private String rightSha;
 	private String mergeCommitSha;
 	private String ancestorSha;
@@ -41,7 +46,7 @@ public class Conflict {
 	private void setResult() {
 		
 	}
-	
+
 	public void setIntersection() {
 		isIntersection = isIntersection();
 	}
@@ -53,6 +58,7 @@ public class Conflict {
 	private void parseValues(String conflict) {
 		leftSha = parseValue(conflict, "Parent1 SHA-1:");
 		rightSha = parseValue(conflict, "Parent2 SHA-1:");
+		type = parseValue(conflict, "Conflict type:");
 		mergeCommitSha = parseValue(conflict, "Merge Commit SHA-1:");
 		setBodies(conflict);
 		parseFunction(leftBody);
@@ -130,6 +136,7 @@ public class Conflict {
 		ancestorBody = anc;
 	}
 
+
 	private String getDate(String sha) {
 		try {
 			BufferedReader br = Utils.readScriptOutput("getDate " + repoPath + " " + sha, true);
@@ -140,6 +147,25 @@ public class Conflict {
 			e.printStackTrace();
 		}
 		return "";
+	}
+	
+	private boolean isRecent(boolean leftWasChosen) {
+		DateFormat format = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss Z", Locale.ENGLISH);
+		Date lDate = new Date();
+		Date rDate = new Date();
+		try {
+			lDate = format.parse(leftDate);
+			rDate = format.parse(rightDate);
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		if(leftWasChosen)
+			return lDate.after(rDate);
+		
+		return rDate.after(lDate);
 	}
 	
 	public String getLeftSha() {
@@ -172,6 +198,10 @@ public class Conflict {
 
 	public String getFilePath() {
 		return filePath;
+	}
+
+	public String getType() {
+		return type;
 	}
 
 	public String getLeftDate() {
