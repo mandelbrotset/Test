@@ -14,7 +14,7 @@ public class FunctionParser {
 		for (int i = 0; i < lines.size(); i++) {
 			String line = lines.get(i);
 			try {
-				if (line.contains(name) && containsAllParams(line, name, params) && containsFunction(line, true)) {
+				if (line.contains(name) && containsFunction(line, true) && containsAllParams(line, name, params) ) {
 					int noOfLinesOffset = linesInFunction(i, lines) + i;
 					ArrayList<String> functionCodeLines = new ArrayList<String>();
 					while (i < noOfLinesOffset) {
@@ -86,7 +86,8 @@ public class FunctionParser {
 
 	private static boolean containsAllParams(String line, String functionName, String... params) {
 		int hits = 0;
-		
+		if(functionName.equals("onSuccess"))
+			System.out.println("Merman");
 		ArrayList<String> lineParams = new ArrayList<String>(Arrays.asList(extractFunctionParameters(line, functionName)));
 		ArrayList<String> functionParams = new ArrayList<String>(Arrays.asList(params));
 		
