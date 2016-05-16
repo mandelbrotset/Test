@@ -22,7 +22,7 @@ public class Extractor {
 		// analyzeConflictReport(CONFLICT_REPORT_PATH,
 		// "/home/isak/Documents/Master/projects/hej");
 		wbc = new WorkBookCreator("ExtractorHactorResult.xls");
-		wbc.createSheet("Conflicts", "Project", "Merge Commit SHA", "Result Body", "Left SHA", "Left Body", "Left Date",
+		wbc.createSheet("Conflicts", "Type", "Project", "Merge Commit SHA", "Result Body", "Left SHA", "Left Body", "Left Date",
 				"Right SHA", "Right Body", "Right Date");
 		// analyzeConflictReport("android-async-http");
 		// analyzeConflictReport("android-best-practices");
@@ -134,7 +134,7 @@ public class Extractor {
 			// System.out.println("6");
 			String resultBody = sb.toString();
 			// System.out.println("7");
-			wbc.addRow(project, conflict.getMergeCommitSha(), resultBody, conflict.getLeftSha(), conflict.getLeftBody(),
+			wbc.addRow(project, conflict.getType(), conflict.getMergeCommitSha(), resultBody, conflict.getLeftSha(), conflict.getLeftBody(),
 					conflict.getLeftDate(), conflict.getRightSha(), conflict.getRightBody(), conflict.getRightDate());
 
 		} catch (IOException e) {
