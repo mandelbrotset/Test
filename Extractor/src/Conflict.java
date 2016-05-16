@@ -153,7 +153,7 @@ public class Conflict {
 		return "";
 	}
 	
-	private boolean isRecent(Result result) {
+	private boolean isRecent(Result whichWasChosen) {
 		DateFormat format = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss Z", Locale.ENGLISH);
 		Date lDate = new Date();
 		Date rDate = new Date();
