@@ -181,8 +181,6 @@ public class Conflict {
 		
 		
 		if(whichWasChosen == Result.LEFT) {
-			if(functionName.equals("makeRequest"))
-				System.out.println("Merman");
 			return lDate.after(rDate);
 		}
 		
