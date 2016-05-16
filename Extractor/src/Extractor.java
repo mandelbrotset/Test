@@ -42,7 +42,8 @@ public class Extractor {
 		 * analyzeConflictReport("storm"); analyzeConflictReport("zxing");
 		 * analyzeConflictReport("atmosphere");
 		 */
-		analyzeConflictReport("android-async-http");
+		//analyzeConflictReport("android-async-http");
+		analyzeConflictReport("elasticsearch");
 		wbc.writeToWorkbook();
 	}
 
@@ -193,7 +194,8 @@ public class Extractor {
 																			// finnas
 																			// i
 																			// left
-
+		conflicts.removeIf(s -> s.contains("; ##FSTMerge##"));
+		conflicts.removeIf(s -> s.contains(";\nFilePath"));
 		conflicts.removeIf(s -> skadentasbort(s));
 
 		// conflicts.removeIf(s -> true);
