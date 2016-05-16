@@ -137,7 +137,8 @@ public class FunctionParser {
 	}
 
 	public static boolean containsFunction(String line, boolean splittedOnLines) {
-		line = line.trim();
+		return containsFunction(line, "", splittedOnLines);
+		/*line = line.trim();
 		if (line.contains("(") && line.contains(")") && line.contains("{")
 				&& line.indexOf("{") < (line.indexOf(" new ") < 0 ? 99999 : line.indexOf(" new ")))
 			if (line.indexOf("(") < line.indexOf(")") && line.indexOf(")") < line.indexOf("{"))
@@ -147,7 +148,7 @@ public class FunctionParser {
 				} else
 					return true;
 
-		return false;
+		return false;*/
 	}
 
 	public static String[] extractFunctionParameters(String line, String functionName) {
