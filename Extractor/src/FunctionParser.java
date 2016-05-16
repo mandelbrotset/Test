@@ -3,6 +3,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 
 import javax.print.attribute.standard.PrinterState;
 
@@ -12,7 +14,7 @@ public class FunctionParser {
 		for (int i = 0; i < lines.size(); i++) {
 			String line = lines.get(i);
 			try {
-				if (line.contains(name) && containsAllParams(line, params) && containsFunction(line, true)) {
+				if (line.contains(name) && containsAllParams(line, name, params) && containsFunction(line, true)) {
 					int noOfLinesOffset = linesInFunction(i, lines) + i;
 					ArrayList<String> functionCodeLines = new ArrayList<String>();
 					while (i < noOfLinesOffset) {
@@ -82,15 +84,22 @@ public class FunctionParser {
 		}
 	}
 
-	private static boolean containsAllParams(String line, String... params) {
+	private static boolean containsAllParams(String line, String functionName, String... params) {
 		int hits = 0;
-		for(String p : params) {
+		
+		HashSet<String> lineParams = new HashSet<String>(Arrays.asList(extractFunctionParameters(line, functionName)));
+		HashSet<String> functionParams = new HashSet<String>(Arrays.asList(params));
+		
+		if(lineParams.containsAll(functionParams) && lineParams.size() == functionParams.size())
+			return true;
+		
+		/*for(String p : params) {
 			if(line.contains(p))
 				hits++;
 		}
 		
 		if(params.length == hits)
-			return true;
+			return true;*/
 		
 		return false;
 	}

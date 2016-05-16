@@ -135,7 +135,6 @@ public class Extractor {
 			String resultBody = sb.toString();
 			conflict.setResultBody(resultBody);
 			// System.out.println("7");
-			
 			wbc.addRow(project, conflict.getType(), conflict.getMergeCommitSha(), conflict.getResultBody(), conflict.getLeftSha(), conflict.getLeftBody(),
 					conflict.getLeftDate(), conflict.getRightSha(), conflict.getRightBody(), conflict.getRightDate(), conflict.getResults());
 
