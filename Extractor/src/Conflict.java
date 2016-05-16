@@ -175,10 +175,8 @@ public class Conflict {
 			lDate = format.parse(leftDate);
 			rDate = format.parse(rightDate);
 		} catch (ParseException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 		
 		if(whichWasChosen == Result.LEFT)
 			return lDate.after(rDate);
@@ -244,8 +242,6 @@ public class Conflict {
 	private boolean isIntersection() {
 		HashSet<String> intersectionLines = new HashSet<String>(leftLines);
 		intersectionLines.retainAll(rightLines);
-		HashSet<String> resultLines = new HashSet<String>();
-		resultLines.addAll(Arrays.asList(getLines(resultBody)));
 		return resultLines.containsAll(intersectionLines) && resultLines.size() == intersectionLines.size();
 	}
 
@@ -253,8 +249,6 @@ public class Conflict {
 		HashSet<String> lines = new HashSet<String>();
 		lines.addAll(leftLines);
 		lines.addAll(rightLines);
-		HashSet<String> resultLines = new HashSet<String>();
-		resultLines.addAll(Arrays.asList(getLines(resultBody)));
 		return resultLines.containsAll(lines);
 	}
 	
