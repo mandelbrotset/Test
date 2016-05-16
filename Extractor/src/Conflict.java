@@ -149,7 +149,7 @@ public class Conflict {
 		return "";
 	}
 	
-	private boolean isRecent(boolean leftWasChosen) {
+	private boolean isRecent(Result result) {
 		DateFormat format = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss Z", Locale.ENGLISH);
 		Date lDate = new Date();
 		Date rDate = new Date();
@@ -162,7 +162,7 @@ public class Conflict {
 		}
 		
 		
-		if(leftWasChosen)
+		if(result == Result.LEFT)
 			return lDate.after(rDate);
 		
 		return rDate.after(lDate);
