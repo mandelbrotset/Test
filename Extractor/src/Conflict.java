@@ -144,6 +144,10 @@ public class Conflict {
 			
 		}
 		
+		removeAnnotations(left);
+		removeAnnotations(anc);
+		removeAnnotations(right);
+		
 		leftBody = left.trim();
 		rightBody = right.trim();
 		ancestorBody = anc.trim();
@@ -153,6 +157,17 @@ public class Conflict {
 		rightLines = new HashSet<String>();
 		rightLines.addAll(Arrays.asList(getLines(rightBody)));
 		rightLines.forEach(s -> s.trim());
+	}
+	
+	private void removeAnnotations(String body) {
+		if(body.startsWith("@")) {
+			int paranthesisI = body.indexOf(")");
+			int spaceI = body.indexOf(" ");
+			int newLineI = body.indexOf("\n");
+			int minst = spaceI < paranthesisI ? spaceI : paranthesisI < newLineI ? paranthesisI : newLineI;
+			
+			body = body.substring(minst);
+		}
 	}
 
 	private String getDate(String sha) {
@@ -177,8 +192,6 @@ public class Conflict {
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
-		
-		
 		
 		if(whichWasChosen == Result.LEFT) {
 			return lDate.after(rDate);
