@@ -42,7 +42,7 @@ public class Conflict {
 		parseValues(conflict);
 	}
 
-	private void setResult() {
+	public void setResult() {
 		if (isIntersection()) results.add(Result.INTERSECTION);
 		if (isSuperset()) results.add(Result.SUPERSET);
 		if (resultBody.equals(leftBody)) {
