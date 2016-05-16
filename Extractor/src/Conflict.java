@@ -68,9 +68,17 @@ public class Conflict {
 	}
 
 	private void setBodies(String conflict) {
-		String left = conflict.split("\\<\\<\\<\\<\\<\\<\\<")[1].split("\\|\\|\\|\\|\\|\\|\\|")[0];
-		String anc = conflict.split("\\|\\|\\|\\|\\|\\|\\|")[1].split("\\=\\=\\=\\=\\=\\=\\=")[0];
-		String right = conflict.split("\\=\\=\\=\\=\\=\\=\\=")[1].split("\\>\\>\\>\\>\\>\\>\\>")[0];
+		String left, anc, right;
+		if(conflict.contains("##FSTMerge##")) {
+			left = conflict.split("~~FSTMerge~~")[1].split("##FSTMerge##")[0];
+			anc = conflict.split("##FSTMerge##")[1];
+			right = conflict.split("##FSTMerge##")[2].split("File path:")[0];
+		} else {
+			left = conflict.split("\\<\\<\\<\\<\\<\\<\\<")[1].split("\\|\\|\\|\\|\\|\\|\\|")[0];
+			anc = conflict.split("\\|\\|\\|\\|\\|\\|\\|")[1].split("\\=\\=\\=\\=\\=\\=\\=")[0];
+			right = conflict.split("\\=\\=\\=\\=\\=\\=\\=")[1].split("\\>\\>\\>\\>\\>\\>\\>")[0];
+		}
+		
 		left = left.substring(left.indexOf("\n"));
 		anc = anc.substring(anc.indexOf("\n"));
 		leftBody = left;
