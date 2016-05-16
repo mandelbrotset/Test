@@ -1,3 +1,7 @@
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.print.attribute.standard.PrinterState;
@@ -5,9 +9,6 @@ import javax.print.attribute.standard.PrinterState;
 public class FunctionParser {
 
 	public static ArrayList<String> extractFunction(ArrayList<String> lines, String name, String... params) {
-		if(name.equals("sendSuccessMessage")) {
-			System.out.println("Det är här det blir Merman");
-		}
 		for (int i = 0; i < lines.size(); i++) {
 			String line = lines.get(i);
 			try {
@@ -21,8 +22,10 @@ public class FunctionParser {
 					return functionCodeLines;
 				}
 			} catch (NullPointerException e) {
-				e.printStackTrace();
+				/*e.printStackTrace();
 				System.out.println("Det var det här som kraschade:");
+				System.out.println("project:" + project);
+				System.out.println("mergecommitsha:" + mergecommitsha);
 				System.out.println("name:" + name);
 				System.out.println("lines:");
 				for (String linee : lines) {
@@ -34,11 +37,49 @@ public class FunctionParser {
 						System.out.println(param);
 					}
 				}	
-				System.out.println("Slut på krasch");
+				System.out.println("Slut på krasch");*/
+				writeFile(project, mergecommitsha, lines, params, name);
+				return null;
 			}
 		}
 
 		return null;
+	}
+	
+	private static void writeFile(String project, String mergecommit, ArrayList<String> lines, String[] params, String name) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("project: " + project + "\n");
+		sb.append("mergecommitsha:" + mergecommit + "\n");
+		sb.append("name:" + name + "\n");
+		sb.append("project: " + project + "\n");
+		sb.append("lines:\n");
+		for (String line : lines) {
+			sb.append(line);
+			sb.append("\n");
+		}
+		sb.append("params:\n");
+		if (params != null) {
+			for (String param : params) {
+				sb.append(param);
+				sb.append("\n");
+			}
+		}
+		int counter = 0;
+		try {
+			while (true) {
+				File file = new File("/tmp/cft/" + project + "-" + mergecommit + "-conflict" + counter);
+				if (file.exists()) {
+					counter++;
+				} else {
+					BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+					bw.write(sb.toString());
+					bw.close();
+					break;
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private static boolean containsAllParams(String line, String... params) {

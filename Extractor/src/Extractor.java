@@ -1,4 +1,3 @@
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,7 +20,7 @@ public class Extractor {
 		wbc = new WorkBookCreator("ExtractorHactorResult.xls");
 		wbc.createSheet("Conflicts", "Project", "Merge Commit SHA", "Result Body", "Left SHA", "Left Body", "Left Date", "Right SHA", "Right Body", "Right Date");
 		analyzeConflictReport("android-async-http");
-		/*analyzeConflictReport("android-best-practices");
+		analyzeConflictReport("android-best-practices");
 		analyzeConflictReport("Android-Universal-Image-Loader");
 		analyzeConflictReport("curator");
 		analyzeConflictReport("elasticsearch");
@@ -39,7 +38,8 @@ public class Extractor {
 		analyzeConflictReport("SlidingMenu");
 		analyzeConflictReport("spring-framework");
 		analyzeConflictReport("storm");
-		analyzeConflictReport("zxing");*/
+		analyzeConflictReport("zxing");
+		analyzeConflictReport("atmosphere");
 		
 		wbc.writeToWorkbook();
 	}
@@ -82,7 +82,9 @@ public class Extractor {
 			System.out.println("found " + conflictStrings.size() + " conflicts");
 			filterConflicts(conflictStrings);
 			System.out.println(conflictStrings.size() + " of them are good");
+			System.out.println("creating conflicts");
 			ArrayList<Conflict> conflicts = createConflicts(conflictStrings, getPathToRepo(project));
+			System.out.println("analyzing..");
 			analyzeConflicts(project, conflicts, getPathToRepo(project));
 			System.out.println("done analyzing " + project);
 		} catch (IOException e) {
@@ -100,20 +102,31 @@ public class Extractor {
 	
 	private void analyzeConflicts(String project, ArrayList<Conflict> conflicts, String pathToRepo) {
 		for (Conflict conflict : conflicts) {
+			System.out.println("\t analyzing " + conflict.getMergeCommitSha());
 			analyzeConflict(project, conflict, pathToRepo);
 		}
 	}
 	
 	private void analyzeConflict(String project, Conflict conflict, String pathToRepo) {
 		try {
+			//System.out.println("1");
 			Utils.readScriptOutput("analyzeResolution " + pathToRepo + " " + conflict.getMergeCommitSha() + " " + TEMP_FOLDER + "result.java " + pathToRepo + "/" + conflict.getFilePath(), false);
+			//System.out.println("2");
 			ArrayList<String> resultFile = (ArrayList<String>)Files.readAllLines(Paths.get(TEMP_FOLDER + "result.java"));
-			ArrayList<String> resultFunction = FunctionParser.extractFunction(resultFile, conflict.getFunctionName(), conflict.getParameterTypes());
+			//System.out.println("3");
+			ArrayList<String> resultFunction = FunctionParser.extractFunction(conflict.getMergeCommitSha(), project, resultFile, conflict.getFunctionName(), conflict.getParameterTypes());
+			//System.out.println("4");
+			if (resultFunction == null) {
+				return;
+			}
 			StringBuilder sb = new StringBuilder();
+			//System.out.println("5");
 			for(String line : resultFunction) {
 				sb.append(line + "\n");
 			}
+			//System.out.println("6");
 			String resultBody = sb.toString();
+			//System.out.println("7");
 			wbc.addRow(project, conflict.getMergeCommitSha(), resultBody, conflict.getLeftSha(), conflict.getLeftBody(), conflict.getLeftDate(), conflict.getRightSha(), conflict.getRightBody(), conflict.getRightDate());
 			
 		} catch (IOException e) {

@@ -14,11 +14,15 @@ function resetGit {
 	git reset --hard 
 	git clean -xdf
 	git reset --hard HEAD
-	sleep 1
+	cd $back
+	echo "resetting gitfan slut"
+}
+
+function pull {
+	back=$(pwd)
+	cd $1
 	git pull origin master
 	cd $back
-	sleep 1
-	echo "resetting gitfan slut"
 }
 
 function fetchFile {
@@ -34,8 +38,8 @@ function fetchFile {
 }
 
 resetGit $1
+sleep 0.5
+pull $1
+sleep 0.5
 #checkout result
 fetchFile $1 $2 $4 $3
-resetGit $1
-
-

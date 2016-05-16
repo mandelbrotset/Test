@@ -54,6 +54,9 @@ public class Conflict {
 				break;
 			}
 		}
+		if (functionName == null || parameterTypes == null) {
+			System.out.println("jävel");
+		}
 	}
 	
 	public String getFunctionName() {
