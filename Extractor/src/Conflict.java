@@ -46,7 +46,8 @@ public class Conflict {
 	}
 	
 	private void parseFunction(String body) {
-		for(String line : body.split("\n")) {
+		String unNewlinedBody = body.replace("\n", "");
+		for(String line : unNewlinedBody.split(";")) {
 			if(FunctionParser.containsFunction(line)) {
 				functionName = FunctionParser.extractFunctionName(line);
 				parameterTypes = FunctionParser.extractFunctionParameters(line, functionName);

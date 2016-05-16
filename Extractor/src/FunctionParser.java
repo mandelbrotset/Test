@@ -117,7 +117,7 @@ public class FunctionParser {
 	
 	public static boolean containsFunction(String line) {
 		line = line.trim();
-		if ((line.startsWith("protected") || line.startsWith("private") || line.startsWith("public")) && !line.contains("class") && line.endsWith("{"))
+		if ((line.contains("protected") || line.contains("private") || line.contains("public")) && !line.contains("class") && line.contains("{"))
 			return true;
 
 		return false;
