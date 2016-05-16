@@ -168,7 +168,7 @@ public class Conflict {
 	}
 	
 	private boolean isRecent(Result whichWasChosen) {
-		DateFormat format = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss Z", Locale.ENGLISH);
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.ENGLISH);
 		Date lDate = new Date();
 		Date rDate = new Date();
 		try {
@@ -178,8 +178,13 @@ public class Conflict {
 			e.printStackTrace();
 		}
 		
-		if(whichWasChosen == Result.LEFT)
+		
+		
+		if(whichWasChosen == Result.LEFT) {
+			if(functionName.equals("makeRequest"))
+				System.out.println("Merman");
 			return lDate.after(rDate);
+		}
 		
 		return rDate.after(lDate);
 	}
