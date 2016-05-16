@@ -38,8 +38,8 @@ function fetchFile {
 }
 
 resetGit $1
-sleep 0.5
+#sleep 0.5
 pull $1
-sleep 0.5
+#sleep 0.5
 #checkout result
 fetchFile $1 $2 $4 $3
