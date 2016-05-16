@@ -1,10 +1,14 @@
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 
 public class Conflict {
+	enum Result {
+		LEFT, RIGHT, SUPERSET, INTERSECTION, RECENT
+	}
 	private String leftSha;
 	private String rightSha;
 	private String mergeCommitSha;
@@ -22,14 +26,22 @@ public class Conflict {
 	private String tabortdennasen;
 	private boolean isIntersection;
 	private boolean isSuperset;
+	private HashSet<String> leftLines;
+	private HashSet<String> rightLines;
+	private HashSet<String> resultLines;
+	private HashSet<String> intersectionLines;
+	private ArrayList<Result> results;
 	
 	public Conflict(String conflict, String repoPath) {
 		this.repoPath = repoPath;
 		this.tabortdennasen = conflict;
 		parseValues(conflict);
-
 	}
 
+	private void setResult() {
+		
+	}
+	
 	public void setIntersection() {
 		isIntersection = isIntersection();
 	}
@@ -48,6 +60,7 @@ public class Conflict {
 		filePath = filePath.split("rev_....._.....\\/rev_.....\\-.....\\/")[1];
 		leftDate = getDate(leftSha);
 		rightDate = getDate(rightSha);
+		
 	}
 	
 	private String parseValue(String conflict, String parameterName) {
@@ -117,7 +130,6 @@ public class Conflict {
 		ancestorBody = anc;
 	}
 
-
 	private String getDate(String sha) {
 		try {
 			BufferedReader br = Utils.readScriptOutput("getDate " + repoPath + " " + sha, true);
@@ -180,7 +192,7 @@ public class Conflict {
 		leftLines.retainAll(rightLines);
 		HashSet<String> resultLines = new HashSet<String>();
 		resultLines.addAll(Arrays.asList(getLines(resultBody)));
-		
+		intersectionLines = leftLines;
 		return resultLines.containsAll(leftLines) && resultLines.size() == leftLines.size();
 	}
 	
