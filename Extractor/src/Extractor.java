@@ -178,9 +178,9 @@ public class Extractor {
 	private void filterConflicts(ArrayList<String> conflicts) {
 		//TODO: fix
 		//~~FSTMerge~~ ##FSTMerge## ##FSTMerge## 
-		conflicts.removeIf(s -> !s.contains("Conflict type: SameSignatureCM"));
-		conflicts.removeIf(s -> s.contains("##FSTMerge##"));
-		conflicts.removeIf(s -> !s.contains("<<<<<"));
+		conflicts.removeIf(s -> !s.contains("Conflict type: SameSignatureCM") && !s.contains("Conflict type: EditSameMC"));
+		//conflicts.removeIf(s -> s.contains("##FSTMerge##"));
+		//conflicts.removeIf(s -> !s.contains("<<<<<"));
 		//if (conflicts.removeIf(s -> s.contains("~~FSTMerge~~ ##FSTMerge##"))) {//den ska finnas i left
 			
 		//System.out.println("What the fucc???");
