@@ -179,13 +179,36 @@ public class Extractor {
 		//TODO: fix
 		//~~FSTMerge~~ ##FSTMerge## ##FSTMerge## 
 		conflicts.removeIf(s -> !s.contains("Conflict type: SameSignatureCM") && !s.contains("Conflict type: EditSameMC"));
-		//conflicts.removeIf(s -> s.contains("##FSTMerge##"));
-		//conflicts.removeIf(s -> !s.contains("<<<<<"));
-		//if (conflicts.removeIf(s -> s.contains("~~FSTMerge~~ ##FSTMerge##"))) {//den ska finnas i left
+		conflicts.removeIf(s -> !s.contains("##FSTMerge##") && !s.contains("<<<<<"));
+		
+		conflicts.removeIf(s -> s.contains("~~FSTMerge~~ ##FSTMerge##")); //den ska finnas i left
+		
+		
+			conflicts.removeIf(s -> skadentasbort(s));
 			
+			//conflicts.removeIf(s -> true);
+			//conflicts.removeIf(s -> s.split("<<<<<<<")[1].split("\\|\\|\\|\\|\\|\\|\\|")[0].split("\n").length == 1);
+		
+		//conflicts.removeIf(s -> s.contains("##FSTMerge##")); //den ska finnas i right	
 		//System.out.println("What the fucc???");
 		//}
 		
+	}
+	
+	private boolean skadentasbort(String s) {
+		try {
+			if (s.contains("4b90839035aabf36837544935ea4a7c9d7f04345")) {
+				String putte = s.split("<<<<<<<")[1].split("\\|\\|\\|\\|\\|\\|\\|")[0];
+				String[] hejputte = putte.split("\n");
+				int x = hejputte.length;
+				System.out.println(x + "");
+				return x == 1;
+			}
+		} catch (Exception e) {
+			return false;
+		}
+		
+		return false;
 	}
 	
 	private void removeLines(ArrayList<String> lines) {
@@ -194,13 +217,16 @@ public class Extractor {
 	}
 
 	public static int countNumberOf(String body, String word) {
-		if (!body.contains(word)) return 0; 
-		int count = 0;
-		for (int i = 0; i < body.length()-word.length(); i++) {
-			if (body.substring(i, i+word.length()).equals(word))
-				count++;
-		}
-		return count;
+		if (!body.contains(word)) return 0;
+		
+		
+			int count = 0;
+			for (int i = 0; i < body.length()-word.length(); i++) {
+				if (body.substring(i, i+word.length()).equals(word))
+					count++;
+			}
+			return count;
+		
 	}
 	
 	

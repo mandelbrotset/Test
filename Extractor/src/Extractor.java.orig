@@ -21,7 +21,7 @@ public class Extractor {
 		wbc = new WorkBookCreator("ExtractorHactorResult.xls");
 		wbc.createSheet("Conflicts", "Project", "Merge Commit SHA", "Result Body", "Left SHA", "Left Body", "Left Date", "Right SHA", "Right Body", "Right Date");
 		analyzeConflictReport("android-async-http");
-		/*analyzeConflictReport("android-best-practices");
+		analyzeConflictReport("android-best-practices");
 		analyzeConflictReport("Android-Universal-Image-Loader");
 		analyzeConflictReport("curator");
 		analyzeConflictReport("elasticsearch");
@@ -39,12 +39,8 @@ public class Extractor {
 		analyzeConflictReport("SlidingMenu");
 		analyzeConflictReport("spring-framework");
 		analyzeConflictReport("storm");
-<<<<<<< HEAD
-		analyzeConflictReport("zxing");*/
-=======
 		analyzeConflictReport("zxing");
 		analyzeConflictReport("atmosphere");
->>>>>>> 932e87a566f9c8b84f8cb3a66e8ed005d5050183
 		
 		wbc.writeToWorkbook();
 	}
@@ -119,7 +115,7 @@ public class Extractor {
 			//System.out.println("2");
 			ArrayList<String> resultFile = (ArrayList<String>)Files.readAllLines(Paths.get(TEMP_FOLDER + "result.java"));
 			//System.out.println("3");
-			ArrayList<String> resultFunction = FunctionParser.extractFunction(conflict.getMergeCommitSha(), project, resultFile, conflict.getFunctionName(), conflict.getParameterTypes());
+			ArrayList<String> resultFunction = FunctionParser.extractFunction(resultFile, conflict.getFunctionName(), conflict.getParameterTypes());
 			//System.out.println("4");
 			if (resultFunction == null) {
 				return;
@@ -182,9 +178,15 @@ public class Extractor {
 	private void filterConflicts(ArrayList<String> conflicts) {
 		//TODO: fix
 		//~~FSTMerge~~ ##FSTMerge## ##FSTMerge## 
+<<<<<<< HEAD
 		conflicts.removeIf(s -> !s.contains("Conflict type: SameSignatureCM"));
-		conflicts.removeIf(s -> s.contains("##FSTMerge##"));
+		//conflicts.removeIf(s -> s.contains("##FSTMerge##"));
 		conflicts.removeIf(s -> !s.contains("<<<<<"));
+=======
+		conflicts.removeIf(s -> !s.contains("Conflict type: SameSignatureCM") && !s.contains("Conflict type: EditSameMC"));
+		//conflicts.removeIf(s -> s.contains("##FSTMerge##"));
+		//conflicts.removeIf(s -> !s.contains("<<<<<"));
+>>>>>>> a07348153ac120adde31881e078540ef79171f50
 		//if (conflicts.removeIf(s -> s.contains("~~FSTMerge~~ ##FSTMerge##"))) {//den ska finnas i left
 			
 		//System.out.println("What the fucc???");

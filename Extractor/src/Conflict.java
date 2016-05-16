@@ -17,9 +17,11 @@ public class Conflict {
 	private String[] parameterTypes;
 	private String resultBody;
 	private String repoPath;
+	private String tabortdennasen;
 	
 	public Conflict(String conflict, String repoPath) {
 		this.repoPath = repoPath;
+		this.tabortdennasen = conflict;
 		parseValues(conflict);
 	}
 	
@@ -77,13 +79,17 @@ public class Conflict {
 			left = conflict.split("\\<\\<\\<\\<\\<\\<\\<")[1].split("\\|\\|\\|\\|\\|\\|\\|")[0];
 			anc = conflict.split("\\|\\|\\|\\|\\|\\|\\|")[1].split("\\=\\=\\=\\=\\=\\=\\=")[0];
 			right = conflict.split("\\=\\=\\=\\=\\=\\=\\=")[1].split("\\>\\>\\>\\>\\>\\>\\>")[0];
+			left = left.substring(left.indexOf("\n"));
+			anc = anc.substring(anc.indexOf("\n"));
+		}
+		try {
+			leftBody = left;
+			rightBody = right;
+			ancestorBody = anc;
+		} catch (StringIndexOutOfBoundsException sieoobe) {
+			sieoobe.printStackTrace();
 		}
 		
-		left = left.substring(left.indexOf("\n"));
-		anc = anc.substring(anc.indexOf("\n"));
-		leftBody = left;
-		rightBody = right;
-		ancestorBody = anc;
 	}
 
 
