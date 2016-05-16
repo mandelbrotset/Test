@@ -1,6 +1,7 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 <<<<<<< HEAD
+<<<<<<< HEAD
 import java.util.ArrayList;
 =======
 import java.text.DateFormat;
@@ -11,6 +12,18 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
+=======
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+=======
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+>>>>>>> 1354cc5b824673323d1bfa4ead7ad1cab3e86f6b
+>>>>>>> 1f52927a9c9e5ec62d86d56d0a58e8af7b5d2eb2
 
 public class Conflict {
 	enum Result {
@@ -34,16 +47,28 @@ public class Conflict {
 	private String tabortdennasen;
 	private boolean isIntersection;
 	private boolean isSuperset;
+<<<<<<< HEAD
 	private HashSet<String> leftLines;
 	private HashSet<String> rightLines;
 	private HashSet<String> resultLines;
 	private HashSet<String> intersectionLines;
 	private ArrayList<Result> results;
+=======
+>>>>>>> 1f52927a9c9e5ec62d86d56d0a58e8af7b5d2eb2
 	
 	public Conflict(String conflict, String repoPath) {
 		this.repoPath = repoPath;
 		this.tabortdennasen = conflict;
 		parseValues(conflict);
+
+	}
+
+	public void setIntersection() {
+		isIntersection = isIntersection();
+	}
+	
+	public void setSuperSet() {
+		isSuperset = isSuperset();
 	}
 
 	private void setResult() {
@@ -224,7 +249,11 @@ public class Conflict {
 		leftLines.retainAll(rightLines);
 		HashSet<String> resultLines = new HashSet<String>();
 		resultLines.addAll(Arrays.asList(getLines(resultBody)));
+<<<<<<< HEAD
 		intersectionLines = leftLines;
+=======
+		
+>>>>>>> 1f52927a9c9e5ec62d86d56d0a58e8af7b5d2eb2
 		return resultLines.containsAll(leftLines) && resultLines.size() == leftLines.size();
 	}
 	

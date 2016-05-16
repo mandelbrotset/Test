@@ -153,7 +153,7 @@ public class Conflict {
 		return "";
 	}
 	
-	private boolean isRecent(boolean leftWasChosen) {
+	private boolean isRecent(Result result) {
 		DateFormat format = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss Z", Locale.ENGLISH);
 		Date lDate = new Date();
 		Date rDate = new Date();
@@ -166,7 +166,7 @@ public class Conflict {
 		}
 		
 		
-		if(leftWasChosen)
+		if(result == Result.LEFT)
 			return lDate.after(rDate);
 		
 		return rDate.after(lDate);
@@ -217,6 +217,14 @@ public class Conflict {
 		return rightDate;
 	}
 
+	public String getResultBody() {
+		return resultBody;
+	}
+
+	public void setResultBody(String resultBody) {
+		this.resultBody = resultBody;
+	}
+
 	private boolean isIntersection() {
 		HashSet<String> intersectionLines = new HashSet<String>(leftLines);
 		intersectionLines.retainAll(rightLines);
@@ -224,7 +232,7 @@ public class Conflict {
 		resultLines.addAll(Arrays.asList(getLines(resultBody)));
 		return resultLines.containsAll(intersectionLines) && resultLines.size() == intersectionLines.size();
 	}
-	
+
 	private boolean isSuperset() {
 		HashSet<String> lines = new HashSet<String>();
 		lines.addAll(leftLines);

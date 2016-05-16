@@ -133,8 +133,9 @@ public class Extractor {
 			}
 			// System.out.println("6");
 			String resultBody = sb.toString();
+			conflict.setResultBody(resultBody);
 			// System.out.println("7");
-			wbc.addRow(project, conflict.getType(), conflict.getMergeCommitSha(), resultBody, conflict.getLeftSha(), conflict.getLeftBody(),
+			wbc.addRow(project, conflict.getType(), conflict.getMergeCommitSha(), conflict.getResultBody(), conflict.getLeftSha(), conflict.getLeftBody(),
 					conflict.getLeftDate(), conflict.getRightSha(), conflict.getRightBody(), conflict.getRightDate());
 
 		} catch (IOException e) {
