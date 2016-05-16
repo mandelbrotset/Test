@@ -94,23 +94,31 @@ public class Extractor {
 	
 	private void analyzeConflicts(String project, ArrayList<Conflict> conflicts, String pathToRepo) {
 		for (Conflict conflict : conflicts) {
+			System.out.println("\t analyzing " + conflict.getMergeCommitSha());
 			analyzeConflict(project, conflict, pathToRepo);
 		}
 	}
 	
 	private void analyzeConflict(String project, Conflict conflict, String pathToRepo) {
 		try {
+			//System.out.println("1");
 			Utils.readScriptOutput("analyzeResolution " + pathToRepo + " " + conflict.getMergeCommitSha() + " " + TEMP_FOLDER + "result.java " + pathToRepo + "/" + conflict.getFilePath(), false);
+			//System.out.println("2");
 			ArrayList<String> resultFile = (ArrayList<String>)Files.readAllLines(Paths.get(TEMP_FOLDER + "result.java"));
+			//System.out.println("3");
 			ArrayList<String> resultFunction = FunctionParser.extractFunction(conflict.getMergeCommitSha(), project, resultFile, conflict.getFunctionName(), conflict.getParameterTypes());
+			//System.out.println("4");
 			if (resultFunction == null) {
 				return;
 			}
 			StringBuilder sb = new StringBuilder();
+			//System.out.println("5");
 			for(String line : resultFunction) {
 				sb.append(line + "\n");
 			}
+			//System.out.println("6");
 			String resultBody = sb.toString();
+			//System.out.println("7");
 			wbc.addRow(project, conflict.getMergeCommitSha(), resultBody, conflict.getLeftSha(), conflict.getLeftBody(), conflict.getLeftDate(), conflict.getRightSha(), conflict.getRightBody(), conflict.getRightDate());
 			
 		} catch (IOException e) {
