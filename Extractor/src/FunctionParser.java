@@ -14,7 +14,7 @@ public class FunctionParser {
 		for (int i = 0; i < lines.size(); i++) {
 			String line = lines.get(i);
 			try {
-				if (line.contains(name) && containsFunction(line, true) && containsAllParams(line, name, params) ) {
+				if (line.contains(name) && containsFunction(line, true) && containsAllParams(line, name, params)) {
 					int noOfLinesOffset = linesInFunction(i, lines) + i;
 					ArrayList<String> functionCodeLines = new ArrayList<String>();
 					while (i < noOfLinesOffset) {
@@ -25,30 +25,27 @@ public class FunctionParser {
 				}
 			} catch (NullPointerException e) {
 				e.printStackTrace();
-				/*System.out.println("Det var det här som kraschade:");
-				System.out.println("project:" + project);
-				System.out.println("mergecommitsha:" + mergecommitsha);
-				System.out.println("name:" + name);
-				System.out.println("lines:");
-				for (String linee : lines) {
-					System.out.println(linee);
-				}
-				System.out.println("params:");
-				if (params != null) {
-					for (String param : params) {
-						System.out.println(param);
-					}
-				}	
-				System.out.println("Slut på krasch");*/
-				//writeFile(project, mergecommitsha, lines, params, name);
+				/*
+				 * System.out.println("Det var det här som kraschade:");
+				 * System.out.println("project:" + project);
+				 * System.out.println("mergecommitsha:" + mergecommitsha);
+				 * System.out.println("name:" + name);
+				 * System.out.println("lines:"); for (String linee : lines) {
+				 * System.out.println(linee); } System.out.println("params:");
+				 * if (params != null) { for (String param : params) {
+				 * System.out.println(param); } } System.out.println(
+				 * "Slut på krasch");
+				 */
+				// writeFile(project, mergecommitsha, lines, params, name);
 				return null;
 			}
 		}
 
 		return null;
 	}
-	
-	private static void writeFile(String project, String mergecommit, ArrayList<String> lines, String[] params, String name) {
+
+	private static void writeFile(String project, String mergecommit, ArrayList<String> lines, String[] params,
+			String name) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("project: " + project + "\n");
 		sb.append("mergecommitsha:" + mergecommit + "\n");
@@ -86,15 +83,16 @@ public class FunctionParser {
 
 	private static boolean containsAllParams(String line, String functionName, String... params) {
 		int hits = 0;
-		ArrayList<String> lineParams = new ArrayList<String>(Arrays.asList(extractFunctionParameters(line, functionName)));
+		ArrayList<String> lineParams = new ArrayList<String>(
+				Arrays.asList(extractFunctionParameters(line, functionName)));
 		ArrayList<String> functionParams = new ArrayList<String>(Arrays.asList(params));
-		
-		if(lineParams.equals(functionParams))
+
+		if (lineParams.equals(functionParams))
 			return true;
-		
+
 		return false;
 	}
-	
+
 	private static int linesInFunction(int startLineOfFunction, ArrayList<String> lines) {
 		int linesInFunction = 0;
 		int currentBrackets = 0;
@@ -103,7 +101,7 @@ public class FunctionParser {
 
 			if (line.contains("{"))
 				currentBrackets++;
-			
+
 			if (line.contains("}"))
 				currentBrackets--;
 
@@ -115,44 +113,66 @@ public class FunctionParser {
 
 		return linesInFunction;
 	}
-	
-	public static boolean containsFunction(String line, boolean splittedOnLines) {
+
+	private static boolean isBefore(String line, String before, String after) {
+		if (line.contains(before) && !line.contains(after))
+			return true;
+
+		return line.indexOf(before) < line.indexOf(after);
+	}
+
+	public static boolean containsFunction(String line, String name, boolean splittedOnLines) {
 		line = line.trim();
-		if (line.contains("(") && line.contains(")") && line.contains("{") && line.indexOf("{") < (line.indexOf(" new ") < 0 ? 99999 : line.indexOf(" new ")))
-			if(line.indexOf("(") < line.indexOf(")") && line.indexOf(")") < line.indexOf("{"))
-				if(splittedOnLines) {
-					if(!line.endsWith(";"))
+		if (line.contains("(") && line.contains(")") && line.contains("{"))
+			if (isBefore(line, name, "(") && isBefore(line, "{", " new ")) {
+				if (line.indexOf("(") < line.indexOf(")") && line.indexOf(")") < line.indexOf("{"))
+					if (splittedOnLines) {
+						if (!line.endsWith(";"))
+							return true;
+					} else
 						return true;
-				} else
-					return true;
-		
+			}
 
 		return false;
 	}
-	
+
+	public static boolean containsFunction(String line, boolean splittedOnLines) {
+		line = line.trim();
+		if (line.contains("(") && line.contains(")") && line.contains("{")
+				&& line.indexOf("{") < (line.indexOf(" new ") < 0 ? 99999 : line.indexOf(" new ")))
+			if (line.indexOf("(") < line.indexOf(")") && line.indexOf(")") < line.indexOf("{"))
+				if (splittedOnLines) {
+					if (!line.endsWith(";"))
+						return true;
+				} else
+					return true;
+
+		return false;
+	}
+
 	public static String[] extractFunctionParameters(String line, String functionName) {
 		String[] paramList = new String[1];
 		String funcName = functionName + "\\(";
 		String params = line.split(funcName)[1].split("\\)")[0];
-		if(params.contains(",")) {
+		if (params.contains(",")) {
 			paramList = params.split(",");
 		} else {
 			paramList[0] = params;
 		}
-		
-		for(int i = 0; i < paramList.length; i++) {
+
+		for (int i = 0; i < paramList.length; i++) {
 			paramList[i] = paramList[i].trim().split(" ")[0];
 		}
-		
+
 		return paramList;
 	}
-	
+
 	public static String extractFunctionName(String line) {
 		line = line.split("\\(")[0];
 		StringBuilder sb = new StringBuilder(line);
 		sb = sb.reverse();
 		String name = new StringBuilder(sb.toString().split(" ")[0]).reverse().toString();
-		
+
 		return name;
 	}
 
