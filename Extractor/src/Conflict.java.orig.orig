@@ -1,17 +1,33 @@
 import java.io.BufferedReader;
 import java.io.IOException;
+<<<<<<< HEAD
+<<<<<<< HEAD
+import java.util.ArrayList;
+=======
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+>>>>>>> 1f273cc5b2d8d31709832e47e9779d807290d1c2
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
+=======
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+=======
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+>>>>>>> 1354cc5b824673323d1bfa4ead7ad1cab3e86f6b
+>>>>>>> 1f52927a9c9e5ec62d86d56d0a58e8af7b5d2eb2
 
 public class Conflict {
 	enum Result {
-		LEFT, RIGHT, SUPERSET, INTERSECTION, RECENT, BOTH
+		LEFT, RIGHT, SUPERSET, INTERSECTION, RECENT
 	}
 	private String leftSha;
 	private String type;
@@ -29,43 +45,42 @@ public class Conflict {
 	private String resultBody;
 	private String repoPath;
 	private String tabortdennasen;
+	private boolean isIntersection;
+	private boolean isSuperset;
+<<<<<<< HEAD
 	private HashSet<String> leftLines;
 	private HashSet<String> rightLines;
 	private HashSet<String> resultLines;
 	private HashSet<String> intersectionLines;
 	private ArrayList<Result> results;
+=======
+>>>>>>> 1f52927a9c9e5ec62d86d56d0a58e8af7b5d2eb2
 	
 	public Conflict(String conflict, String repoPath) {
 		this.repoPath = repoPath;
 		this.tabortdennasen = conflict;
-		results = new ArrayList<Result>();
 		parseValues(conflict);
+
 	}
 
-	public void setResults() {
-		if (isIntersection()) results.add(Result.INTERSECTION);
-		if (isSuperset()) results.add(Result.SUPERSET);
-		if (resultBody.equals(leftBody)) {
-			results.add(Result.LEFT);
-		}
-		if (resultBody.equals(rightBody)) {
-			results.add(Result.RIGHT);
-		}
-		if (results.contains(Result.LEFT) && results.contains(Result.RIGHT)) {
-			results.remove(Result.LEFT);
-			results.remove(Result.RIGHT);
-			results.add(Result.BOTH);
-		}
-		if (results.contains(Result.LEFT)) {
-			if (isRecent(Result.LEFT)) {
-				results.add(Result.RECENT);
-			}	
-		}
-		if (results.contains(Result.RIGHT)) {
-			if (isRecent(Result.RIGHT)) {
-				results.add(Result.RECENT);
-			}	
-		}
+	public void setIntersection() {
+		isIntersection = isIntersection();
+	}
+	
+	public void setSuperSet() {
+		isSuperset = isSuperset();
+	}
+
+	private void setResult() {
+		
+	}
+	
+	public void setIntersection() {
+		isIntersection = isIntersection();
+	}
+	
+	public void setSuperSet() {
+		isSuperset = isSuperset();
 	}
 	
 	private void parseValues(String conflict) {
@@ -147,10 +162,6 @@ public class Conflict {
 		leftBody = left;
 		rightBody = right;
 		ancestorBody = anc;
-		leftLines = new HashSet<String>();
-		leftLines.addAll(Arrays.asList(getLines(leftBody)));
-		rightLines = new HashSet<String>();
-		rightLines.addAll(Arrays.asList(getLines(rightBody)));
 	}
 
 	private String getDate(String sha) {
@@ -165,7 +176,7 @@ public class Conflict {
 		return "";
 	}
 	
-	private boolean isRecent(Result result) {
+	private boolean isRecent(boolean leftWasChosen) {
 		DateFormat format = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss Z", Locale.ENGLISH);
 		Date lDate = new Date();
 		Date rDate = new Date();
@@ -178,7 +189,7 @@ public class Conflict {
 		}
 		
 		
-		if(result == Result.LEFT)
+		if(leftWasChosen)
 			return lDate.after(rDate);
 		
 		return rDate.after(lDate);
@@ -229,26 +240,27 @@ public class Conflict {
 		return rightDate;
 	}
 
-	public String getResultBody() {
-		return resultBody;
-	}
-
-	public void setResultBody(String resultBody) {
-		this.resultBody = resultBody;
-	}
-
 	private boolean isIntersection() {
-		HashSet<String> intersectionLines = new HashSet<String>(leftLines);
-		intersectionLines.retainAll(rightLines);
+		HashSet<String> leftLines = new HashSet<String>();
+		HashSet<String> rightLines = new HashSet<String>();
+		leftLines.addAll(Arrays.asList(getLines(leftBody)));
+		rightLines.addAll(Arrays.asList(getLines(rightBody)));
+		
+		leftLines.retainAll(rightLines);
 		HashSet<String> resultLines = new HashSet<String>();
 		resultLines.addAll(Arrays.asList(getLines(resultBody)));
-		return resultLines.containsAll(intersectionLines) && resultLines.size() == intersectionLines.size();
+<<<<<<< HEAD
+		intersectionLines = leftLines;
+=======
+		
+>>>>>>> 1f52927a9c9e5ec62d86d56d0a58e8af7b5d2eb2
+		return resultLines.containsAll(leftLines) && resultLines.size() == leftLines.size();
 	}
-
+	
 	private boolean isSuperset() {
 		HashSet<String> lines = new HashSet<String>();
-		lines.addAll(leftLines);
-		lines.addAll(rightLines);
+		lines.addAll(Arrays.asList(getLines(leftBody)));
+		lines.addAll(Arrays.asList(getLines(rightBody)));
 		HashSet<String> resultLines = new HashSet<String>();
 		resultLines.addAll(Arrays.asList(getLines(resultBody)));
 		return resultLines.containsAll(lines);
