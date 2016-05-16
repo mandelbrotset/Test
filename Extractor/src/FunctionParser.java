@@ -87,10 +87,10 @@ public class FunctionParser {
 	private static boolean containsAllParams(String line, String functionName, String... params) {
 		int hits = 0;
 		
-		HashSet<String> lineParams = new HashSet<String>(Arrays.asList(extractFunctionParameters(line, functionName)));
-		HashSet<String> functionParams = new HashSet<String>(Arrays.asList(params));
+		ArrayList<String> lineParams = new ArrayList<String>(Arrays.asList(extractFunctionParameters(line, functionName)));
+		ArrayList<String> functionParams = new ArrayList<String>(Arrays.asList(params));
 		
-		if(lineParams.containsAll(functionParams) && lineParams.size() == functionParams.size())
+		if(lineParams.equals(functionParams))
 			return true;
 		
 		/*for(String p : params) {
