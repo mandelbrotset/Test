@@ -42,7 +42,7 @@ public class Conflict {
 		parseValues(conflict);
 	}
 
-	public void setResults() {
+	private void setResult() {
 		if (isIntersection()) results.add(Result.INTERSECTION);
 		if (isSuperset()) results.add(Result.SUPERSET);
 		if (resultBody.equals(leftBody)) {
@@ -144,13 +144,15 @@ public class Conflict {
 			
 		}
 		
-		leftBody = left;
-		rightBody = right;
-		ancestorBody = anc;
+		leftBody = left.trim();
+		rightBody = right.trim();
+		ancestorBody = anc.trim();
 		leftLines = new HashSet<String>();
 		leftLines.addAll(Arrays.asList(getLines(leftBody)));
+		leftLines.forEach(s -> s.trim());
 		rightLines = new HashSet<String>();
 		rightLines.addAll(Arrays.asList(getLines(rightBody)));
+		rightLines.forEach(s -> s.trim());
 	}
 
 	private String getDate(String sha) {
@@ -165,7 +167,7 @@ public class Conflict {
 		return "";
 	}
 	
-	private boolean isRecent(Result result) {
+	private boolean isRecent(Result whichWasChosen) {
 		DateFormat format = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss Z", Locale.ENGLISH);
 		Date lDate = new Date();
 		Date rDate = new Date();
@@ -178,7 +180,7 @@ public class Conflict {
 		}
 		
 		
-		if(result == Result.LEFT)
+		if(whichWasChosen == Result.LEFT)
 			return lDate.after(rDate);
 		
 		return rDate.after(lDate);
@@ -234,7 +236,9 @@ public class Conflict {
 	}
 
 	public void setResultBody(String resultBody) {
-		this.resultBody = resultBody;
+		this.resultBody = resultBody.trim();
+		resultLines = new HashSet<String>(Arrays.asList(resultBody.split("\n")));
+		resultLines.forEach(s -> s.trim());
 	}
 
 	private boolean isIntersection() {
