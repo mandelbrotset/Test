@@ -76,7 +76,7 @@ public class Conflict {
 		mergeCommitSha = parseValue(conflict, "Merge Commit SHA-1:");
 		setBodies(conflict);
 		parseFunction(leftBody);
-		removeAnnotationsFromBodies();
+		//removeAnnotationsFromBodies();
 		initHashSets();
 		filePath = parseValue(conflict, "File path:");
 		filePath = filePath.split("rev_....._.....\\/rev_.....\\-.....\\/")[1];
@@ -149,6 +149,8 @@ public class Conflict {
 		leftBody = filterLines(left);
 		rightBody = filterLines(right);
 		ancestorBody = filterLines(anc);
+		
+		removeAnnotationsFromBodies();
 	}
 	
 	private void initHashSets() {
@@ -194,11 +196,17 @@ public class Conflict {
 		StringBuilder sb = new StringBuilder();
 		boolean weHavePassedTheFunction = false;
 		for (String line : body.split("\n")) {
+			if(FunctionParser.containsFunction(line, true)) {
+				if(line.startsWith("@")) {
+					line = line.substring(line.indexOf(" "));
+				}
+				weHavePassedTheFunction = true;
+			}
+					
 			if (!line.trim().startsWith("@") || weHavePassedTheFunction) {
 				sb.append(line + "\n");
 			}
-			if(FunctionParser.containsFunction(line, toFunctionName, true))
-				weHavePassedTheFunction = true;
+			
 		}
 
 		return sb.toString().trim();
