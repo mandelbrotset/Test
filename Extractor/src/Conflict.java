@@ -303,9 +303,12 @@ public class Conflict {
 	}
 
 	private boolean isIntersection() {
-		HashSet<String> intersectionLines = new HashSet<String>(leftLines);
-		intersectionLines.retainAll(rightLines);
-		return resultLines.containsAll(intersectionLines) && resultLines.size() == intersectionLines.size();
+		HashSet<String> resultWords = getWords(resultBody);
+		HashSet<String> leftWords = getWords(leftBody);
+		HashSet<String> rightWords = getWords(rightBody);
+		HashSet<String> parentsWords = leftWords;
+		parentsWords.retainAll(rightWords);
+		return resultWords.equals(parentsWords);
 	}
 
 	public ArrayList<Category> getCategories() {
