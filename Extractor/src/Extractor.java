@@ -30,9 +30,9 @@ public class Extractor {
 		/* analyzeConflictReport("android-async-http");
 		 analyzeConflictReport("android-best-practices");
 		 analyzeConflictReport("Android-Universal-Image-Loader");
-		 */analyzeConflictReport("curator");
+		 analyzeConflictReport("curator");*/
 		 analyzeConflictReport("elasticsearch");
-		 analyzeConflictReport("EventBus"); analyzeConflictReport("fresco");
+		 /*analyzeConflictReport("EventBus"); analyzeConflictReport("fresco");
 		 analyzeConflictReport("guava"); analyzeConflictReport("iosched");
 		 analyzeConflictReport("java-design-patterns");
 		 analyzeConflictReport("leakcanary"); 
@@ -217,6 +217,7 @@ public class Extractor {
 		conflicts.removeIf(s -> s.contains("; ##FSTMerge##"));
 		conflicts.removeIf(s -> s.contains(";\nFilePath"));
 		conflicts.removeIf(s -> skadentasbort(s));
+		conflicts.removeIf(s -> containsMoreThanOneConflict(s));
 
 		// conflicts.removeIf(s -> true);
 		// conflicts.removeIf(s ->
@@ -228,6 +229,16 @@ public class Extractor {
 		// System.out.println("What the fucc???");
 		// }
 
+	}
+	
+	private boolean containsMoreThanOneConflict(String s) {
+		if(s.contains("<<<<<<<")) {
+			return s.split("<<<<<<<").length > 2;
+		} else if(s.contains("~~ FSTMerge ~~")) {
+			return s.split("~~ FSTMerge ~~").length > 2;
+		}
+		
+		return false;
 	}
 
 	private boolean skadentasbort(String s) {
