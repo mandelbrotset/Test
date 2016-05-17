@@ -312,12 +312,21 @@ public class Conflict {
 	}
 
 	private boolean isSuperset() {
-		HashSet<String> lines = new HashSet<String>();
-
-		lines.addAll(leftLines);
-		lines.addAll(rightLines);
-
-		return resultLines.containsAll(lines);
+		HashSet<String> resultWords = getWords(resultBody);
+		HashSet<String> leftWords = getWords(leftBody);
+		HashSet<String> rightWords = getWords(rightBody);
+		HashSet<String> parentsWords = leftWords;
+		parentsWords.addAll(rightWords);
+		return resultWords.equals(parentsWords);
+		//return resultWords.containsAll(parentsWords) && parentsWords.containsAll(rightWords);
+	}
+	
+	private static HashSet<String> getWords(String body) {
+		String regex = "[^\\w_]+";
+		String[] words = body.split(regex);
+		HashSet<String> set = new HashSet<String>();
+		set.addAll(Arrays.asList(words));
+		return set;
 	}
 
 	private String[] getLines(String body) {

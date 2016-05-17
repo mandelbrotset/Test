@@ -2,6 +2,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Test;
@@ -11,7 +12,8 @@ public class ConflictTester {
 	@Test
 	public void test() {
 		// fail("Not yet implemented");
-
+		
+	
 		String conflict = "Conflict type: SameSignatureCM" + "\n"
 				+ "Merge Commit SHA-1: eed557742f5db7cd82d22b69a84220cc598fd744" + "\n"
 				+ "Parent1 SHA-1: 04681ef6165a40192a6e268ca2df861d9d017f47" + "\n"
