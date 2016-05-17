@@ -27,17 +27,17 @@ public class Extractor {
 		wbc.createSheet("Conflicts", "Project", "Type", "Merge Commit SHA", "Result Body", "Left SHA", "Left Body", "Left Date",
 				"Right SHA", "Right Body", "Right Date", "Chosen",
 				"Most recent", "Most \"if\"", "Most \"print\"", "Most \"log\"", "Most \"try\"", "Chosen: Categories");
-		 analyzeConflictReport("android-async-http");
+		/* analyzeConflictReport("android-async-http");
 		 analyzeConflictReport("android-best-practices");
 		 analyzeConflictReport("Android-Universal-Image-Loader");
-		 analyzeConflictReport("curator");
-		/* analyzeConflictReport("elasticsearch");
+		 */analyzeConflictReport("curator");
+		 analyzeConflictReport("elasticsearch");
 		 analyzeConflictReport("EventBus"); analyzeConflictReport("fresco");
 		 analyzeConflictReport("guava"); analyzeConflictReport("iosched");
 		 analyzeConflictReport("java-design-patterns");
 		 analyzeConflictReport("leakcanary"); 
 		 analyzeConflictReport("libgdx");
-		 analyzeConflictReport("okhttp");
+		 /*analyzeConflictReport("okhttp");
 		 analyzeConflictReport("react-native");
 		 analyzeConflictReport("retrofit"); analyzeConflictReport("RxJava");
 		 analyzeConflictReport("SlidingMenu");
