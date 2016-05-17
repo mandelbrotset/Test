@@ -77,6 +77,7 @@ public class Conflict {
 		setBodies(conflict);
 		parseFunction(leftBody);
 		removeAnnotationsFromBodies();
+		initHashSets();
 		filePath = parseValue(conflict, "File path:");
 		filePath = filePath.split("rev_....._.....\\/rev_.....\\-.....\\/")[1];
 		leftDate = getDate(leftSha);
@@ -145,15 +146,16 @@ public class Conflict {
 
 		}
 
-		leftBody = left.trim();
-		rightBody = right.trim();
-		ancestorBody = anc.trim();
+		leftBody = filterLines(left);
+		rightBody = filterLines(right);
+		ancestorBody = filterLines(anc);
+	}
+	
+	private void initHashSets() {
 		leftLines = new HashSet<String>();
-		leftLines.addAll(Arrays.asList(getLines(left.trim())));
-		leftLines.forEach(s -> s.trim());
+		leftLines.addAll(Arrays.asList(leftBody.split("\n")));
 		rightLines = new HashSet<String>();
-		rightLines.addAll(Arrays.asList(getLines(right.trim())));
-		rightLines.forEach(s -> s.trim());
+		rightLines.addAll(Arrays.asList(rightBody.split("\n")));
 	}
 
 	public Result hasMoreOf(String word) {
@@ -183,9 +185,9 @@ public class Conflict {
 	}
 
 	private void removeAnnotationsFromBodies() {
-		removeAnnotations(leftBody, functionName);
-		removeAnnotations(ancestorBody, functionName);
-		removeAnnotations(rightBody, functionName);
+		leftBody = removeAnnotations(leftBody, functionName);
+		ancestorBody = removeAnnotations(ancestorBody, functionName);
+		rightBody = removeAnnotations(rightBody, functionName);
 	}
 	
 	private String removeAnnotations(String body, String toFunctionName) {
@@ -296,9 +298,8 @@ public class Conflict {
 	}
 
 	public void setResultBody(String resultBody) {
-		this.resultBody = resultBody.trim();
-		resultLines = new HashSet<String>(Arrays.asList(getLines(resultBody)));
-		resultLines.forEach(s -> s.trim());
+		this.resultBody = filterLines(resultBody);
+		resultLines = new HashSet<String>(Arrays.asList(this.resultBody.split("\n")));
 	}
 
 	private boolean isIntersection() {
@@ -320,11 +321,14 @@ public class Conflict {
 		return resultLines.containsAll(lines);
 	}
 
-	private String[] getLines(String body) {
+	private String filterLines(String body) {
+		StringBuilder sb = new StringBuilder();
 		String[] split = body.split("\n");
 		for (int i = 0; i < split.length; i++) {
-			split[i] = split[i].trim();
+			String line = split[i].trim();
+			if(!line.isEmpty())
+				sb.append(line + ((i < split.length-1) ? "\n" : ""));
 		}
-		return split;
+		return sb.toString();
 	}
 }
