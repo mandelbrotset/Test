@@ -17,33 +17,35 @@ public class Extractor {
 	// "/home/isak/Documents/Master/Test/Paola/ResultData/atmosphere/ConflictsReport.csv";
 	private String conflictReport;
 	private WorkBookCreator wbc;
+	
+	public enum Keywords { TRY, IF, PRINT, LOG }
 
 	public Extractor() {
 		// analyzeConflictReport(CONFLICT_REPORT_PATH,
 		// "/home/isak/Documents/Master/projects/hej");
 		wbc = new WorkBookCreator("ExtractorHactorResult.xls");
-		wbc.createSheet("Conflicts", "Type", "Project", "Merge Commit SHA", "Result Body", "Left SHA", "Left Body", "Left Date",
-				"Right SHA", "Right Body", "Right Date", "Categories");
-		// analyzeConflictReport("android-async-http");
-		// analyzeConflictReport("android-best-practices");
-		// analyzeConflictReport("Android-Universal-Image-Loader");
-		// analyzeConflictReport("curator");
-		/*
-		 * analyzeConflictReport("elasticsearch");
-		 * analyzeConflictReport("EventBus"); analyzeConflictReport("fresco");
-		 * analyzeConflictReport("guava"); analyzeConflictReport("iosched");
-		 * analyzeConflictReport("java-design-patterns");
-		 * analyzeConflictReport("leakcanary"); analyzeConflictReport("libgdx");
-		 * analyzeConflictReport("okhttp");
-		 * analyzeConflictReport("react-native");
-		 * analyzeConflictReport("retrofit"); analyzeConflictReport("RxJava");
-		 * analyzeConflictReport("SlidingMenu");
-		 * analyzeConflictReport("spring-framework");
-		 * analyzeConflictReport("storm"); analyzeConflictReport("zxing");
-		 * analyzeConflictReport("atmosphere");
-		 */
+		wbc.createSheet("Conflicts", "Project", "Type", "Merge Commit SHA", "Result Body", "Left SHA", "Left Body", "Left Date",
+				"Right SHA", "Right Body", "Right Date", "Chosen",
+				"Most recent", "Most \"if\"", "Most \"print\"", "Most \"log\"", "Most \"try\"", "Chosen: Categories");
+		 analyzeConflictReport("android-async-http");
+		 analyzeConflictReport("android-best-practices");
+		 analyzeConflictReport("Android-Universal-Image-Loader");
+		 analyzeConflictReport("curator");
+		/* analyzeConflictReport("elasticsearch");
+		 analyzeConflictReport("EventBus"); analyzeConflictReport("fresco");
+		 analyzeConflictReport("guava"); analyzeConflictReport("iosched");
+		 analyzeConflictReport("java-design-patterns");
+		 analyzeConflictReport("leakcanary"); 
+		 analyzeConflictReport("libgdx");
+		 analyzeConflictReport("okhttp");
+		 analyzeConflictReport("react-native");
+		 analyzeConflictReport("retrofit"); analyzeConflictReport("RxJava");
+		 analyzeConflictReport("SlidingMenu");
+		 analyzeConflictReport("spring-framework");
+		 analyzeConflictReport("storm"); analyzeConflictReport("zxing");
+		 analyzeConflictReport("atmosphere");*/
+		 
 		//analyzeConflictReport("android-async-http");
-		analyzeConflictReport("elasticsearch");
 		wbc.writeToWorkbook();
 	}
 
@@ -106,6 +108,14 @@ public class Extractor {
 	}
 
 	private void analyzeConflicts(String project, ArrayList<Conflict> conflicts, String pathToRepo) {
+		try {
+			// Clean the repo
+			System.out.println("Cleaning repository...");
+			Utils.readScriptOutput("gitClean " + pathToRepo, false);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 		for (Conflict conflict : conflicts) {
 			System.out.println("\t analyzing " + conflict.getMergeCommitSha());
 			analyzeConflict(project, conflict, pathToRepo);
@@ -137,8 +147,11 @@ public class Extractor {
 			conflict.setResultBody(resultBody);
 			// System.out.println("7");
 			conflict.setResult();
-			wbc.addRow(project, conflict.getType(), conflict.getMergeCommitSha(), conflict.getResultBody(), conflict.getLeftSha(), conflict.getLeftBody(),
-					conflict.getLeftDate(), conflict.getRightSha(), conflict.getRightBody(), conflict.getRightDate(), conflict.getResults());
+			if(conflict.getResult() != Conflict.Result.BOTH)
+				wbc.addRow(project, conflict.getType(), conflict.getMergeCommitSha(), conflict.getResultBody(), conflict.getLeftSha(), conflict.getLeftBody(),
+						conflict.getLeftDate(), conflict.getRightSha(), conflict.getRightBody(), conflict.getRightDate(), conflict.getResult().toString(),
+						conflict.mostRecent().toString(), conflict.hasMoreOf("if").toString(), conflict.hasMoreOf("print").toString(), 
+						conflict.hasMoreOf("log").toString(), conflict.hasMoreOf("try").toString(), chosenProperties(conflict));
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -150,19 +163,26 @@ public class Extractor {
 			e.printStackTrace();
 		}
 	}
-
-	/*
-	 * private void writeFile() { File file = new File("bra.csv"); try
-	 * {analyzeConflictReport(
-	 * "/home/isak/Documents/Master/braresults/paolaboarba/EventBus/ResultData/EventBus/ConflictsReport.csv",
-	 * "/home/isak/Documents/Master/projects/EventBus"); BufferedWriter bw = new
-	 * BufferedWriter(new FileWriter(file)); StringBuilder sb = new
-	 * StringBuilder(); for (String conflict : conflicts) { sb.append(conflict);
-	 * } bw.write(sb.toString()); bw.close(); } catch (IOException e) {
-	 * e.printStackTrace(); }
-	 * 
-	 * }
-	 */
+	
+	private String chosenProperties(Conflict conflict) { //Keywords and categories of the chosen one
+		Conflict.Result result = conflict.getResult();
+		if(result == Conflict.Result.BOTH || result == Conflict.Result.NONE) return "";
+		Keywords[] keywordList = { Keywords.IF, Keywords.LOG, Keywords.PRINT, Keywords.TRY };
+		StringBuilder sb = new StringBuilder(conflict.getCategoryList()); 
+		
+		String[] words = { "if", "log", "print", "try" };
+		
+		for(int i = 0; i < words.length; i++) {
+			if(conflict.hasMoreOf(keywordList[i].toString().toLowerCase()) == result) {
+				if(sb.length() > 0)
+					sb.append(", ");
+				
+				sb.append(keywordList[i].toString());
+			}
+		}
+		
+		return sb.toString();
+	}
 
 	private void makeString(ArrayList<String> lines) {
 		StringBuilder sb = new StringBuilder();
@@ -234,18 +254,5 @@ public class Extractor {
 		lines.removeIf(s -> s.startsWith("===================="));
 	}
 
-	public static int countNumberOf(String body, String word) {
-		if (!body.contains(word))
-			return 0;
-		
-
-		int count = 0;
-		for (int i = 0; i < body.length() - word.length(); i++) {
-			if (body.substring(i, i + word.length()).equals(word))
-				count++;
-		}
-		return count;
-
-	}
 
 }

@@ -3,5 +3,24 @@
 #$1: path to repo
 
 cd $1
-git reset --hard origin/HEAD
-git clean -f -x -d
+function resetGit {
+	back=$(pwd)
+	cd $1
+	git rm .gitattributes
+	git add -A
+	git reset --hard 
+	git clean -xdf
+	git reset --hard HEAD
+	cd $back
+	echo "resetting gitfan slut"
+}
+
+function pull {
+	back=$(pwd)
+	cd $1
+	git pull origin master
+	cd $back
+}
+
+resetGit $1
+pull $1

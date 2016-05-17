@@ -37,9 +37,9 @@ function fetchFile {
 	cd $back
 }
 
-resetGit $1
+#resetGit $1
 #sleep 0.5
-pull $1
+#pull $1
 #sleep 0.5
 #checkout result
 fetchFile $1 $2 $4 $3

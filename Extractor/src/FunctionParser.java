@@ -135,8 +135,9 @@ public class FunctionParser {
 
 	public static String[] extractFunctionParameters(String line, String functionName) {
 		String[] paramList = new String[1];
-		String funcName = functionName + "\\(";
-		String params = line.split(funcName)[1].split("\\)")[0];
+		String splitRegex = functionName + "( \\(|\\()";
+		
+		String params = line.split(splitRegex)[1].split("\\)")[0];
 		if (params.contains(",")) {
 			paramList = params.split(",");
 		} else {

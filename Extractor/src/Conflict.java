@@ -11,8 +11,13 @@ import java.util.Locale;
 
 public class Conflict {
 	enum Result {
-		LEFT, RIGHT, SUPERSET, INTERSECTION, RECENT, BOTH
+		LEFT, RIGHT, BOTH, NONE
 	}
+
+	enum Category {
+		SUPERSET, INTERSECTION, RECENT
+	}
+
 	private String leftSha;
 	private String type;
 	private String rightSha;
@@ -33,41 +38,37 @@ public class Conflict {
 	private HashSet<String> rightLines;
 	private HashSet<String> resultLines;
 	private HashSet<String> intersectionLines;
-	private ArrayList<Result> results;
-	
+	private ArrayList<Category> categories;
+	private Result result;
+
 	public Conflict(String conflict, String repoPath) {
 		this.repoPath = repoPath;
 		this.tabortdennasen = conflict;
-		results = new ArrayList<Result>();
+		categories = new ArrayList<Category>();
 		parseValues(conflict);
 	}
 
 	public void setResult() {
-		if (isIntersection()) results.add(Result.INTERSECTION);
-		if (isSuperset()) results.add(Result.SUPERSET);
-		if (resultBody.equals(leftBody)) {
-			results.add(Result.LEFT);
+		if (isIntersection())
+			categories.add(Category.INTERSECTION);
+		if (isSuperset())
+			categories.add(Category.SUPERSET);
+
+		if (resultBody.equals(leftBody) && resultBody.equals(rightBody)) {
+			result = result.BOTH;
+		} else if (resultBody.equals(leftBody)) {
+			result = Result.LEFT;
+		} else if(resultBody.equals(rightBody)){
+			result = Result.RIGHT;
+		} else {
+			result = Result.NONE;
 		}
-		if (resultBody.equals(rightBody)) {
-			results.add(Result.RIGHT);
-		}
-		if (results.contains(Result.LEFT) && results.contains(Result.RIGHT)) {
-			results.remove(Result.LEFT);
-			results.remove(Result.RIGHT);
-			results.add(Result.BOTH);
-		}
-		if (results.contains(Result.LEFT)) {
-			if (isRecent(Result.LEFT)) {
-				results.add(Result.RECENT);
-			}	
-		}
-		if (results.contains(Result.RIGHT)) {
-			if (isRecent(Result.RIGHT)) {
-				results.add(Result.RECENT);
-			}	
+
+		if(mostRecent() == result ) {
+			categories.add(Category.RECENT);
 		}
 	}
-	
+
 	private void parseValues(String conflict) {
 		leftSha = parseValue(conflict, "Parent1 SHA-1:");
 		rightSha = parseValue(conflict, "Parent2 SHA-1:");
@@ -75,13 +76,14 @@ public class Conflict {
 		mergeCommitSha = parseValue(conflict, "Merge Commit SHA-1:");
 		setBodies(conflict);
 		parseFunction(leftBody);
+		removeAnnotationsFromBodies();
 		filePath = parseValue(conflict, "File path:");
 		filePath = filePath.split("rev_....._.....\\/rev_.....\\-.....\\/")[1];
 		leftDate = getDate(leftSha);
 		rightDate = getDate(rightSha);
-		
+
 	}
-	
+
 	private String parseValue(String conflict, String parameterName) {
 		try {
 			return conflict.split(parameterName)[1].split("\n")[0].trim();
@@ -91,11 +93,11 @@ public class Conflict {
 		}
 		return "";
 	}
-	
+
 	private void parseFunction(String body) {
 		String unNewlinedBody = body.replace("\n", "");
-		for(String line : unNewlinedBody.split(";")) {
-			if(FunctionParser.containsFunction(line, false)) {
+		for (String line : unNewlinedBody.split(";")) {
+			if (FunctionParser.containsFunction(line, false)) {
 				functionName = FunctionParser.extractFunctionName(line);
 				parameterTypes = FunctionParser.extractFunctionParameters(line, functionName);
 				break;
@@ -105,7 +107,7 @@ public class Conflict {
 			System.out.println("jävel");
 		}
 	}
-	
+
 	public String getFunctionName() {
 		return functionName;
 	}
@@ -116,39 +118,33 @@ public class Conflict {
 
 	private void setBodies(String conflict) {
 		String left, anc, right;
-		if(conflict.contains("##FSTMerge##")) {
+		if (conflict.contains("##FSTMerge##")) {
 			String generalBody = conflict.split("Conflict body:")[1].split("~~FSTMerge~~")[0];
 			left = conflict.split("~~FSTMerge~~")[1].split("##FSTMerge##")[0];
 			anc = conflict.split("##FSTMerge##")[1];
 			right = conflict.split("##FSTMerge##")[2].split("File path:")[0];
-			
+
 			left = generalBody + left;
 			anc = generalBody + anc;
 			right = generalBody + right;
-			
-			
+
 		} else {
 			String generalBody = conflict.split("Conflict body:")[1].split("\\<\\<\\<\\<\\<\\<\\<")[0];
 			String afterMath = conflict.split("\\>\\>\\>\\>\\>\\>\\>.*\\n")[1].split("File path:")[0];
-			
+
 			left = conflict.split("\\<\\<\\<\\<\\<\\<\\<")[1].split("\\|\\|\\|\\|\\|\\|\\|")[0];
 			anc = conflict.split("\\|\\|\\|\\|\\|\\|\\|")[1].split("\\=\\=\\=\\=\\=\\=\\=")[0];
 			right = conflict.split("\\=\\=\\=\\=\\=\\=\\=")[1].split("\\>\\>\\>\\>\\>\\>\\>")[0];
-			
+
 			left = left.substring(left.indexOf("\n"));
 			anc = anc.substring(anc.indexOf("\n"));
-			
+
 			left = generalBody + left + afterMath;
 			anc = generalBody + anc + afterMath;
 			right = generalBody + right + afterMath;
-			
+
 		}
-		
-		left = removeAnnotations(left.trim());
-		anc = removeAnnotations(anc.trim());
-		right = removeAnnotations(right.trim());
-		
-		
+
 		leftBody = left.trim();
 		rightBody = right.trim();
 		ancestorBody = anc.trim();
@@ -159,15 +155,50 @@ public class Conflict {
 		rightLines.addAll(Arrays.asList(getLines(right.trim())));
 		rightLines.forEach(s -> s.trim());
 	}
+
+	public Result hasMoreOf(String word) {
+		int numInLeft = countNumberOf(leftBody, word);
+		int numInRight = countNumberOf(rightBody, word);
+
+		if (numInLeft == numInRight)
+			return Result.NONE;
+
+		if (numInLeft > numInRight)
+			return Result.LEFT;
+		else
+			return Result.RIGHT;
+	}
+
+	private int countNumberOf(String body, String word) {
+		if (!body.contains(word))
+			return 0;
+
+		int count = 0;
+		for (int i = 0; i < body.length() - word.length(); i++) {
+			if (body.substring(i, i + word.length()).equals(word))
+				count++;
+		}
+		return count;
+
+	}
+
+	private void removeAnnotationsFromBodies() {
+		removeAnnotations(leftBody, functionName);
+		removeAnnotations(ancestorBody, functionName);
+		removeAnnotations(rightBody, functionName);
+	}
 	
-	private String removeAnnotations(String body) {
+	private String removeAnnotations(String body, String toFunctionName) {
 		StringBuilder sb = new StringBuilder();
-		for(String line : body.split("\n")) {
-			if(!line.trim().startsWith("@")) {
+		boolean weHavePassedTheFunction = false;
+		for (String line : body.split("\n")) {
+			if (!line.trim().startsWith("@") || weHavePassedTheFunction) {
 				sb.append(line + "\n");
 			}
+			if(FunctionParser.containsFunction(line, toFunctionName, true))
+				weHavePassedTheFunction = true;
 		}
-		
+
 		return sb.toString().trim();
 	}
 
@@ -175,15 +206,16 @@ public class Conflict {
 		try {
 			BufferedReader br = Utils.readScriptOutput("getDate " + repoPath + " " + sha, true);
 			String date = br.readLine();
-			while((br.readLine()) != null) {}
+			while ((br.readLine()) != null) {
+			}
 			return date;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		return "";
 	}
-	
-	private boolean isRecent(Result whichWasChosen) {
+
+	public Result mostRecent() {
 		DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.ENGLISH);
 		Date lDate = new Date();
 		Date rDate = new Date();
@@ -193,14 +225,17 @@ public class Conflict {
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
+
+		if(lDate.after(rDate))
+			return Result.LEFT;
 		
-		if(whichWasChosen == Result.LEFT) {
-			return lDate.after(rDate);
-		}
-		
-		return rDate.after(lDate);
+		return Result.RIGHT;
 	}
 	
+	public Result getResult() {
+		return result;
+	}
+
 	public String getLeftSha() {
 		return leftSha;
 	}
@@ -249,20 +284,20 @@ public class Conflict {
 	public String getResultBody() {
 		return resultBody;
 	}
-	
-	public String getResults() {
+
+	public String getCategoryList() {
 		StringBuilder sb = new StringBuilder();
-		for(Result r : results) {
-			if(sb.length() > 0)
+		for (Category c : categories) {
+			if (sb.length() > 0)
 				sb.append(", ");
-			sb.append(r.toString());
+			sb.append(c.toString());
 		}
 		return sb.toString();
 	}
 
 	public void setResultBody(String resultBody) {
 		this.resultBody = resultBody.trim();
-		resultLines = new HashSet<String>(Arrays.asList(resultBody.split("\n")));
+		resultLines = new HashSet<String>(Arrays.asList(getLines(resultBody)));
 		resultLines.forEach(s -> s.trim());
 	}
 
@@ -272,14 +307,24 @@ public class Conflict {
 		return resultLines.containsAll(intersectionLines) && resultLines.size() == intersectionLines.size();
 	}
 
+	public ArrayList<Category> getCategories() {
+		return categories;
+	}
+
 	private boolean isSuperset() {
 		HashSet<String> lines = new HashSet<String>();
+
 		lines.addAll(leftLines);
 		lines.addAll(rightLines);
+
 		return resultLines.containsAll(lines);
 	}
-	
+
 	private String[] getLines(String body) {
-		return body.split("\n");
+		String[] split = body.split("\n");
+		for (int i = 0; i < split.length; i++) {
+			split[i] = split[i].trim();
+		}
+		return split;
 	}
 }
