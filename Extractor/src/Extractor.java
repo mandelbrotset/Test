@@ -17,6 +17,7 @@ public class Extractor {
 	// "/home/isak/Documents/Master/Test/Paola/ResultData/atmosphere/ConflictsReport.csv";
 	private String conflictReport;
 	private WorkBookCreator wbc;
+	private int totalConflictsAnalyzed = 0;
 	
 	public enum Keywords { TRY, IF, PRINT, LOG }
 
@@ -51,6 +52,7 @@ public class Extractor {
 		 
 		//analyzeConflictReport("android-async-http");
 		wbc.writeToWorkbook();
+		System.out.println("Total number of conflicts analyzed: " + totalConflictsAnalyzed);
 	}
 
 	private String getConflictReport(String project) {
@@ -91,6 +93,7 @@ public class Extractor {
 			makeString(conflictReportLines);
 			ArrayList<String> conflictStrings = splitConflicts();
 			System.out.println("found " + conflictStrings.size() + " conflicts");
+			totalConflictsAnalyzed += conflictStrings.size();
 			filterConflicts(conflictStrings);
 			System.out.println(conflictStrings.size() + " of them are good");
 			System.out.println("creating conflicts");
