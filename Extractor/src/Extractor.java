@@ -29,7 +29,7 @@ public class Extractor {
 				"Right SHA", "Right Body", "Right Date", "Chosen",
 				"Most recent", "Most \"if\"", "Most \"print\"", "Most \"log\"", "Most \"try\"", "Chosen: Categories");
 		 analyzeConflictReport("android-async-http");
-		 analyzeConflictReport("android-best-practices");
+		 /*analyzeConflictReport("android-best-practices");
 		 analyzeConflictReport("Android-Universal-Image-Loader");
 		 analyzeConflictReport("curator");
 		 analyzeConflictReport("elasticsearch");
@@ -48,7 +48,7 @@ public class Extractor {
 		 analyzeConflictReport("spring-framework");
 		 analyzeConflictReport("storm");
 		 analyzeConflictReport("zxing");
-		 //analyzeConflictReport("atmosphere");
+		 //analyzeConflictReport("atmosphere");*/
 		 
 		//analyzeConflictReport("android-async-http");
 		wbc.writeToWorkbook();
@@ -56,21 +56,24 @@ public class Extractor {
 	}
 
 	private String getConflictReport(String project) {
-		File file = new File("/home/isak");
-		if (file.exists())
-			return "/home/isak/Documents/Master/braresults/paolaboarba/" + project + "/ResultData/" + project
-					+ "/ConflictsReport.csv";
-
-		return "/home/patrik/Documents/Chalmers/5an/MasterThesis/braresults/paolaboarba/" + project + "/ResultData/"
-				+ project + "/ConflictsReport.csv";
+		String reportPath = project + "/ResultData/" + project
+				+ "/ConflictsReport.csv";
+		if (new File("/home/isak").exists())
+			return "/home/isak/Documents/Master/braresults/paolaboarba/" + reportPath;
+		else if(new File("/home/patrik").exists())
+			return "/home/patrik/Documents/Chalmers/5an/MasterThesis/braresults/paolaboarba/" + reportPath;
+		
+		return "/home/mediaserver/Documents/MasterThesis/braresults/paolaboarba/" + reportPath;
 	}
 
 	private String getPathToRepo(String project) {
 		File file = new File("/home/isak");
-		if (file.exists())
+		if (new File("/home/isak").exists())
 			return "/home/isak/Documents/Master/projects/" + project;
-
-		return "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/" + project;
+		else if(new File("/home/patrik").exists())
+			return "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/" + project;
+		
+		return "/home/mediaserver/Documents/MasterThesis/GHProject/" + project;
 	}
 
 	private void analyzeConflictReport(String project) {
