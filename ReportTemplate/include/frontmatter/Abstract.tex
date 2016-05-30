@@ -1,18 +1,18 @@
 % CREATED BY DAVID FRISK, 2015
-An Informative Headline describing the Content of the Report\\
-A Subtitle that can be Very Much Longer if Necessary\\
-Isak Eriksson and Patrik Wållgren\\
+Merge-Conflict Resolution Patterns\\
+A Study on Merge-Conflict Resolution Patterns in Open-Source Projects\\
+ISAK ERIKSSON\\
+PATRIK WÅLLGREN\\
 Department of Computer Science and Engineering\\
 Chalmers University of Technology \setlength{\parskip}{0.5cm}
 
 \thispagestyle{plain}			% Supress header 
 %\setlength{\parskip}{0pt plus 1.0pt}
 \section*{Abstract}
- 
+In collaborative software development, conflicts often arise when merging different versions of the code. These are often solved manually, which slows down productivity. To develop a tool that assists in the resolution process, we aim to study how developers resolve conflicts and try to identify patterns in the resolutions. We do this by studying large open-source projects on GitHub.
 
-% KEYWORDS (MAXIMUM 10 WORDS)
-\vfill
-Keywords: 
+We found that for conflicts regarding code inside methods or constructors, the currently checked out version was chosen in 75\% of the cases. We also found that if one of these versions contain more instances of the keyword if, that version was chosen in 84\% of the cases.
+
 
 \newpage				% Create empty back of side
 \thispagestyle{empty}
