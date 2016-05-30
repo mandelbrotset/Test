@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2016.4.23)  30 MAY 2016 19:20
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/Debian) (preloaded format=pdflatex 2016.4.23)  30 MAY 2016 21:00
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -40,31 +40,14 @@ Missing character: There is no r in font nullfont!
 Missing character: There is no i in font nullfont!
 Missing character: There is no e in font nullfont!
 Missing character: There is no s in font nullfont!
-
-Overfull \hbox (20.0pt too wide) in paragraph at lines 2--3
-[] 
- []
-
 ! Undefined control sequence.
-l.4 \section
+l.3 \section
             {Git}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
 spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
-
-
-! LaTeX Error: Missing \begin{document}.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.4 \section{G
-              it}
-You're in trouble here.  Try typing  <return>  to proceed.
-If that doesn't work, type  X <return>  to quit.
 
 Missing character: There is no G in font nullfont!
 Missing character: There is no i in font nullfont!
@@ -1278,82 +1261,82 @@ Missing character: There is no e in font nullfont!
 Missing character: There is no r in font nullfont!
 Missing character: There is no . in font nullfont!
 
-Overfull \hbox (20.0pt too wide) in paragraph at lines 4--6
+Overfull \hbox (20.0pt too wide) in paragraph at lines 2--5
 []
  []
 
 
-Overfull \hbox (22.736pt too wide) in paragraph at lines 4--6
+Overfull \hbox (22.736pt too wide) in paragraph at lines 2--5
 \OT1/cmr/bx/n/10 How
  []
 
 
-Overfull \hbox (24.27765pt too wide) in paragraph at lines 4--6
+Overfull \hbox (24.27765pt too wide) in paragraph at lines 2--5
 \OT1/cmr/bx/n/10 Con-
  []
 
 
-Overfull \hbox (23.70264pt too wide) in paragraph at lines 4--6
+Overfull \hbox (23.70264pt too wide) in paragraph at lines 2--5
 \OT1/cmr/bx/n/10 flicts
  []
 
 
-Overfull \hbox (26.43181pt too wide) in paragraph at lines 4--6
+Overfull \hbox (26.43181pt too wide) in paragraph at lines 2--5
 \OT1/cmr/bx/n/10 Arise
  []
 
 
-Overfull \hbox (9.58328pt too wide) in paragraph at lines 4--6
+Overfull \hbox (9.58328pt too wide) in paragraph at lines 2--5
 \OT1/cmr/bx/n/10 in
  []
 
 
-Overfull \hbox (5.59023pt too wide) in paragraph at lines 4--6
+Overfull \hbox (5.59023pt too wide) in paragraph at lines 2--5
 \OT1/cmr/bx/n/10 a
  []
 
 
-Overfull \hbox (25.23596pt too wide) in paragraph at lines 4--6
+Overfull \hbox (25.23596pt too wide) in paragraph at lines 2--5
 \OT1/cmr/bx/n/10 GIT-
  []
 
 
-Overfull \hbox (28.17482pt too wide) in paragraph at lines 4--6
+Overfull \hbox (28.17482pt too wide) in paragraph at lines 2--5
 \OT1/cmr/bx/n/10 based
  []
 
 
-Overfull \hbox (39.9095pt too wide) in paragraph at lines 4--6
+Overfull \hbox (39.9095pt too wide) in paragraph at lines 2--5
 \OT1/cmr/bx/n/10 Branch-
  []
 
 
-Overfull \hbox (15.33325pt too wide) in paragraph at lines 4--6
+Overfull \hbox (15.33325pt too wide) in paragraph at lines 2--5
 \OT1/cmr/bx/n/10 ing
  []
 
 
-Overfull \hbox (18.36794pt too wide) in paragraph at lines 4--6
+Overfull \hbox (18.36794pt too wide) in paragraph at lines 2--5
 \OT1/cmr/bx/n/10 and
  []
 
 
-Overfull \hbox (30.5068pt too wide) in paragraph at lines 4--6
+Overfull \hbox (30.5068pt too wide) in paragraph at lines 2--5
 \OT1/cmr/bx/n/10 Merg-
  []
 
 
-Overfull \hbox (15.33325pt too wide) in paragraph at lines 4--6
+Overfull \hbox (15.33325pt too wide) in paragraph at lines 2--5
 \OT1/cmr/bx/n/10 ing
  []
 
 
-Overfull \hbox (20.60406pt too wide) in paragraph at lines 4--6
+Overfull \hbox (20.60406pt too wide) in paragraph at lines 2--5
 \OT1/cmr/bx/n/10 Sce-
  []
 
 
-Overfull \hbox (28.854pt too wide) in paragraph at lines 4--6
+Overfull \hbox (28.854pt too wide) in paragraph at lines 2--5
 \OT1/cmr/bx/n/10 nario.
  []
 
@@ -1364,7 +1347,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.7 \textbf{Possibilities and limitations of Git.}
+l.6 \textbf{Possibilities and limitations of Git.}
                                                    As git is a fully distrib...
 
 You're in trouble here.  Try typing  <return>  to proceed.
@@ -1601,47 +1584,47 @@ Missing character: There is no v in font nullfont!
 Missing character: There is no e in font nullfont!
 Missing character: There is no . in font nullfont!
 
-Overfull \hbox (79.00381pt too wide) in paragraph at lines 7--8
+Overfull \hbox (79.00381pt too wide) in paragraph at lines 6--7
 []\OT1/cmr/bx/n/10 Possibilities
  []
 
 
-Overfull \hbox (18.36794pt too wide) in paragraph at lines 7--8
+Overfull \hbox (18.36794pt too wide) in paragraph at lines 6--7
 \OT1/cmr/bx/n/10 and
  []
 
 
-Overfull \hbox (19.80545pt too wide) in paragraph at lines 7--8
+Overfull \hbox (19.80545pt too wide) in paragraph at lines 6--7
 \OT1/cmr/bx/n/10 lim-
  []
 
 
-Overfull \hbox (7.02774pt too wide) in paragraph at lines 7--8
+Overfull \hbox (7.02774pt too wide) in paragraph at lines 6--7
 \OT1/cmr/bx/n/10 i-
  []
 
 
-Overfull \hbox (13.89574pt too wide) in paragraph at lines 7--8
+Overfull \hbox (13.89574pt too wide) in paragraph at lines 6--7
 \OT1/cmr/bx/n/10 ta-
  []
 
 
-Overfull \hbox (24.34152pt too wide) in paragraph at lines 7--8
+Overfull \hbox (24.34152pt too wide) in paragraph at lines 6--7
 \OT1/cmr/bx/n/10 tions
  []
 
 
-Overfull \hbox (9.26384pt too wide) in paragraph at lines 7--8
+Overfull \hbox (9.26384pt too wide) in paragraph at lines 6--7
 \OT1/cmr/bx/n/10 of
  []
 
 
-Overfull \hbox (19.90266pt too wide) in paragraph at lines 7--8
+Overfull \hbox (19.90266pt too wide) in paragraph at lines 6--7
 \OT1/cmr/bx/n/10 Git.
  []
 
 ! Undefined control sequence.
-l.9 \section
+l.8 \section
             {Merging}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
@@ -1656,7 +1639,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.9 \section{M
+l.8 \section{M
               erging}
 You're in trouble here.  Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
@@ -1933,32 +1916,32 @@ Missing character: There is no s in font nullfont!
 Missing character: There is no s in font nullfont!
 Missing character: There is no . in font nullfont!
 
-Overfull \hbox (20.0pt too wide) in paragraph at lines 9--11
+Overfull \hbox (20.0pt too wide) in paragraph at lines 8--10
 []
  []
 
 
-Overfull \hbox (29.8679pt too wide) in paragraph at lines 9--11
+Overfull \hbox (29.8679pt too wide) in paragraph at lines 8--10
 \OT1/cmr/bx/n/10 Code-
  []
 
 
-Overfull \hbox (28.90958pt too wide) in paragraph at lines 9--11
+Overfull \hbox (28.90958pt too wide) in paragraph at lines 8--10
 \OT1/cmr/bx/n/10 Clone
  []
 
 
-Overfull \hbox (26.729pt too wide) in paragraph at lines 9--11
+Overfull \hbox (26.729pt too wide) in paragraph at lines 8--10
 \OT1/cmr/bx/n/10 Man-
  []
 
 
-Overfull \hbox (20.44432pt too wide) in paragraph at lines 9--11
+Overfull \hbox (20.44432pt too wide) in paragraph at lines 8--10
 \OT1/cmr/bx/n/10 age-
  []
 
 
-Overfull \hbox (28.59013pt too wide) in paragraph at lines 9--11
+Overfull \hbox (28.59013pt too wide) in paragraph at lines 8--10
 \OT1/cmr/bx/n/10 ment.
  []
 
@@ -1969,7 +1952,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.12 W
+l.11 W
       ith the use of a version control system, cloning can be managed in a m...
 
 You're in trouble here.  Try typing  <return>  to proceed.
@@ -2328,7 +2311,7 @@ Missing character: There is no 6 in font nullfont!
 Missing character: There is no ] in font nullfont!
 Missing character: There is no . in font nullfont!
 
-Overfull \hbox (20.0pt too wide) in paragraph at lines 12--13
+Overfull \hbox (20.0pt too wide) in paragraph at lines 11--12
 []
  []
 
@@ -2339,7 +2322,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.14 \textbf{Textual Merging.}
+l.13 \textbf{Textual Merging.}
                                The most commonly used merging technique is t...
 
 You're in trouble here.  Try typing  <return>  to proceed.
@@ -2719,17 +2702,17 @@ Missing character: There is no 8 in font nullfont!
 Missing character: There is no ] in font nullfont!
 Missing character: There is no . in font nullfont!
 
-Overfull \hbox (58.02756pt too wide) in paragraph at lines 14--15
+Overfull \hbox (58.02756pt too wide) in paragraph at lines 13--14
 []\OT1/cmr/bx/n/10 Textual
  []
 
 
-Overfull \hbox (30.5068pt too wide) in paragraph at lines 14--15
+Overfull \hbox (30.5068pt too wide) in paragraph at lines 13--14
 \OT1/cmr/bx/n/10 Merg-
  []
 
 
-Overfull \hbox (18.52768pt too wide) in paragraph at lines 14--15
+Overfull \hbox (18.52768pt too wide) in paragraph at lines 13--14
 \OT1/cmr/bx/n/10 ing.
  []
 
@@ -2740,7 +2723,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.16 \textbf{Fast Forward.}
+l.15 \textbf{Fast-Forward.}
                             When merging two branches, Git first attempts to...
 
 You're in trouble here.  Try typing  <return>  to proceed.
@@ -2808,6 +2791,7 @@ Missing character: There is no f in font nullfont!
 Missing character: There is no a in font nullfont!
 Missing character: There is no s in font nullfont!
 Missing character: There is no t in font nullfont!
+Missing character: There is no - in font nullfont!
 Missing character: There is no f in font nullfont!
 Missing character: There is no o in font nullfont!
 Missing character: There is no r in font nullfont!
@@ -3078,7 +3062,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.17 \begin{figure}
+l.16 \begin{figure}
                    [h]
 Your command was ignored.
 Type  I <command> <return>  to replace it with another command,
@@ -3094,7 +3078,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.19    \begin{subfigure}
+l.18    \begin{subfigure}
                          [b]{0.3\textwidth}
 Your command was ignored.
 Type  I <command> <return>  to replace it with another command,
@@ -3109,7 +3093,7 @@ Missing character: There is no 3 in font nullfont!
 ! Missing number, treated as zero.
 <to be read again> 
                    }
-l.19    \begin{subfigure}[b]{0.3\textwidth}
+l.18    \begin{subfigure}[b]{0.3\textwidth}
                                            
 A number should have been here; I inserted `0'.
 (If you can't figure out why I needed to see a number,
@@ -3118,7 +3102,7 @@ look up `weird error' in the index to The TeXbook.)
 ! Illegal unit of measure (pt inserted).
 <to be read again> 
                    }
-l.19    \begin{subfigure}[b]{0.3\textwidth}
+l.18    \begin{subfigure}[b]{0.3\textwidth}
                                            
 Dimensions can be in units of em, ex, in, pt, pc,
 cm, mm, dd, cc, nd, nc, bp, or sp; but yours is a new one!
@@ -3128,7 +3112,7 @@ delete the erroneous units; e.g., type `2' to delete
 two letters. (See Chapter 27 of The TeXbook.)
 
 ! Undefined control sequence.
-l.20        \includegraphics
+l.19        \includegraphics
                             [width=200pt]{figure/ff1.png}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
@@ -3170,7 +3154,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.21        \caption
+l.20        \caption
                     {Before merge}
 You're in trouble here.  Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
@@ -3193,7 +3177,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.23    \end{subfigure}
+l.22    \end{subfigure}
                        
 Your command was ignored.
 Type  I <command> <return>  to replace it with another command,
@@ -3206,7 +3190,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.24    \begin{subfigure}
+l.23    \begin{subfigure}
                          [b]{0.3\textwidth}
 Your command was ignored.
 Type  I <command> <return>  to replace it with another command,
@@ -3221,7 +3205,7 @@ Missing character: There is no 3 in font nullfont!
 ! Missing number, treated as zero.
 <to be read again> 
                    }
-l.24    \begin{subfigure}[b]{0.3\textwidth}
+l.23    \begin{subfigure}[b]{0.3\textwidth}
                                            
 A number should have been here; I inserted `0'.
 (If you can't figure out why I needed to see a number,
@@ -3230,7 +3214,7 @@ look up `weird error' in the index to The TeXbook.)
 ! Illegal unit of measure (pt inserted).
 <to be read again> 
                    }
-l.24    \begin{subfigure}[b]{0.3\textwidth}
+l.23    \begin{subfigure}[b]{0.3\textwidth}
                                            
 Dimensions can be in units of em, ex, in, pt, pc,
 cm, mm, dd, cc, nd, nc, bp, or sp; but yours is a new one!
@@ -3240,7 +3224,7 @@ delete the erroneous units; e.g., type `2' to delete
 two letters. (See Chapter 27 of The TeXbook.)
 
 ! Undefined control sequence.
-l.25        \includegraphics
+l.24        \includegraphics
                             [width=200pt]{figure/ff2.png}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
@@ -3282,7 +3266,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.26        \caption
+l.25        \caption
                     {After merge}
 You're in trouble here.  Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
@@ -3304,7 +3288,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.28    \end{subfigure}
+l.27    \end{subfigure}
                        
 Your command was ignored.
 Type  I <command> <return>  to replace it with another command,
@@ -3317,8 +3301,8 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.29    \caption
-                {Fast Forward Merge}\label{fig:fastforward}
+l.28    \caption
+                {Fast-forward merge}\label{fig:fastforward}
 You're in trouble here.  Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
 
@@ -3326,14 +3310,15 @@ Missing character: There is no F in font nullfont!
 Missing character: There is no a in font nullfont!
 Missing character: There is no s in font nullfont!
 Missing character: There is no t in font nullfont!
-Missing character: There is no F in font nullfont!
+Missing character: There is no - in font nullfont!
+Missing character: There is no f in font nullfont!
 Missing character: There is no o in font nullfont!
 Missing character: There is no r in font nullfont!
 Missing character: There is no w in font nullfont!
 Missing character: There is no a in font nullfont!
 Missing character: There is no r in font nullfont!
 Missing character: There is no d in font nullfont!
-Missing character: There is no M in font nullfont!
+Missing character: There is no m in font nullfont!
 Missing character: There is no e in font nullfont!
 Missing character: There is no r in font nullfont!
 Missing character: There is no g in font nullfont!
@@ -3345,25 +3330,20 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.30 \end{figure}
+l.29 \end{figure}
                  
 Your command was ignored.
 Type  I <command> <return>  to replace it with another command,
 or  <return>  to continue without it.
 
 
-Overfull \hbox (40.87624pt too wide) in paragraph at lines 16--31
-[]\OT1/cmr/bx/n/10 Fast
+Overfull \hbox (44.70955pt too wide) in paragraph at lines 15--30
+[]\OT1/cmr/bx/n/10 Fast-
  []
 
 
-Overfull \hbox (20.59712pt too wide) in paragraph at lines 16--31
-\OT1/cmr/bx/n/10 For-
- []
-
-
-Overfull \hbox (27.89568pt too wide) in paragraph at lines 16--31
-\OT1/cmr/bx/n/10 ward.
+Overfull \hbox (44.65948pt too wide) in paragraph at lines 15--30
+\OT1/cmr/bx/n/10 Forward.
  []
 
 
@@ -3373,7 +3353,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.32 \textbf{Three-Way Merge.}
+l.31 \textbf{Three-Way Merge.}
                                If fast forward fails, that is, when commits ...
 
 You're in trouble here.  Try typing  <return>  to proceed.
@@ -3751,17 +3731,17 @@ Missing character: There is no l in font nullfont!
 Missing character: There is no y in font nullfont!
 Missing character: There is no . in font nullfont!
 
-Overfull \hbox (53.49985pt too wide) in paragraph at lines 32--33
+Overfull \hbox (53.49985pt too wide) in paragraph at lines 31--32
 []\OT1/cmr/bx/n/10 Three-
  []
 
 
-Overfull \hbox (22.27069pt too wide) in paragraph at lines 32--33
+Overfull \hbox (22.27069pt too wide) in paragraph at lines 31--32
 \OT1/cmr/bx/n/10 Way
  []
 
 
-Overfull \hbox (35.13873pt too wide) in paragraph at lines 32--33
+Overfull \hbox (35.13873pt too wide) in paragraph at lines 31--32
 \OT1/cmr/bx/n/10 Merge.
  []
 
@@ -3772,7 +3752,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.34 \textbf{Parents.}
+l.33 \textbf{Parents.}
                        The two commits that are to be merged are called the ...
 
 You're in trouble here.  Try typing  <return>  to proceed.
@@ -4249,7 +4229,7 @@ Missing character: There is no e in font nullfont!
 Missing character: There is no d in font nullfont!
 Missing character: There is no . in font nullfont!
 
-Overfull \hbox (61.41087pt too wide) in paragraph at lines 34--35
+Overfull \hbox (61.41087pt too wide) in paragraph at lines 33--34
 []\OT1/cmr/bx/n/10 Parents.
  []
 
@@ -4260,7 +4240,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.36 \textbf{Git Conflicts.}
+l.35 \textbf{Git Conflicts.}
                              If the two commits, that are to be merged, have...
 
 You're in trouble here.  Try typing  <return>  to proceed.
@@ -4818,17 +4798,17 @@ Missing character: There is no s in font nullfont!
 Missing character: There is no ) in font nullfont!
 Missing character: There is no . in font nullfont!
 
-Overfull \hbox (36.70824pt too wide) in paragraph at lines 36--37
+Overfull \hbox (36.70824pt too wide) in paragraph at lines 35--36
 []\OT1/cmr/bx/n/10 Git
  []
 
 
-Overfull \hbox (24.27765pt too wide) in paragraph at lines 36--37
+Overfull \hbox (24.27765pt too wide) in paragraph at lines 35--36
 \OT1/cmr/bx/n/10 Con-
  []
 
 
-Overfull \hbox (26.89706pt too wide) in paragraph at lines 36--37
+Overfull \hbox (26.89706pt too wide) in paragraph at lines 35--36
 \OT1/cmr/bx/n/10 flicts.
  []
 
@@ -4839,7 +4819,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.38 \textbf{Semistructured Merging.}
+l.37 \textbf{Semistructured Merging.}
                                       Furthermore, there exist merge tools t...
 
 You're in trouble here.  Try typing  <return>  to proceed.
@@ -5467,22 +5447,22 @@ Missing character: There is no t in font nullfont!
 Missing character: There is no s in font nullfont!
 Missing character: There is no . in font nullfont!
 
-Overfull \hbox (96.9385pt too wide) in paragraph at lines 38--39
+Overfull \hbox (96.9385pt too wide) in paragraph at lines 37--38
 []\OT1/cmr/bx/n/10 Semistructured
  []
 
 
-Overfull \hbox (30.5068pt too wide) in paragraph at lines 38--39
+Overfull \hbox (30.5068pt too wide) in paragraph at lines 37--38
 \OT1/cmr/bx/n/10 Merg-
  []
 
 
-Overfull \hbox (18.52768pt too wide) in paragraph at lines 38--39
+Overfull \hbox (18.52768pt too wide) in paragraph at lines 37--38
 \OT1/cmr/bx/n/10 ing.
  []
 
 ! Undefined control sequence.
-l.40 \section
+l.39 \section
              {Conflict Patterns}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
@@ -5497,7 +5477,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.40 \section{C
+l.39 \section{C
                onflict Patterns}
 You're in trouble here.  Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
@@ -5670,7 +5650,7 @@ Missing character: There is no e in font nullfont!
 Missing character: There is no r in font nullfont!
 Missing character: There is no . in font nullfont!
 
-Overfull \hbox (20.0pt too wide) in paragraph at lines 40--42
+Overfull \hbox (20.0pt too wide) in paragraph at lines 39--41
 []
  []
 
@@ -5681,7 +5661,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.43 I
+l.42 I
       n her study, Accioly lists conflict patterns that describe types of co...
 
 You're in trouble here.  Try typing  <return>  to proceed.
@@ -6279,7 +6259,7 @@ Missing character: There is no d in font nullfont!
 Missing character: There is no y in font nullfont!
 Missing character: There is no . in font nullfont!
 
-Overfull \hbox (20.0pt too wide) in paragraph at lines 43--44
+Overfull \hbox (20.0pt too wide) in paragraph at lines 42--43
 []
  []
 
@@ -6290,7 +6270,7 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.45 T
+l.44 T
       he conflict patterns are derived from the conflicts that SSMerge can d...
 
 You're in trouble here.  Try typing  <return>  to proceed.
@@ -6447,6 +6427,19 @@ Missing character: There is no d in font nullfont!
 Missing character: There is no i in font nullfont!
 Missing character: There is no x in font nullfont!
 Missing character: There is no : in font nullfont!
+
+! LaTeX Error: Environment table undefined.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.45 \begin{table}
+                  
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <7> on input line 46.
 LaTeX Font Info:    External font `cmex10' loaded for size
@@ -7005,6 +6998,47 @@ Missing character: There is no a in font nullfont!
 Missing character: There is no l in font nullfont!
 Missing character: There is no u in font nullfont!
 Missing character: There is no e in font nullfont!
+
+! LaTeX Error: \caption outside float.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.58 \caption
+             {Conflict patterns}\label{table:conflictpatterns}
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+Missing character: There is no C in font nullfont!
+Missing character: There is no o in font nullfont!
+Missing character: There is no n in font nullfont!
+Missing character: There is no f in font nullfont!
+Missing character: There is no l in font nullfont!
+Missing character: There is no i in font nullfont!
+Missing character: There is no c in font nullfont!
+Missing character: There is no t in font nullfont!
+Missing character: There is no p in font nullfont!
+Missing character: There is no a in font nullfont!
+Missing character: There is no t in font nullfont!
+Missing character: There is no t in font nullfont!
+Missing character: There is no e in font nullfont!
+Missing character: There is no r in font nullfont!
+Missing character: There is no n in font nullfont!
+Missing character: There is no s in font nullfont!
+
+! LaTeX Error: \begin{document} ended by \end{table}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.59 \end{table}
+                
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+
 Missing character: There is no F in font nullfont!
 Missing character: There is no r in font nullfont!
 Missing character: There is no o in font nullfont!
@@ -7094,12 +7128,12 @@ Missing character: There is no e in font nullfont!
 Missing character: There is no e in font nullfont!
 Missing character: There is no . in font nullfont!
 
-Overfull \hbox (20.0pt too wide) in paragraph at lines 45--59
+Overfull \hbox (20.0pt too wide) in paragraph at lines 44--61
 []
  []
 
 
-Overfull \hbox (379.90508pt too wide) in paragraph at lines 45--59
+Overfull \hbox (379.90508pt too wide) in paragraph at lines 44--61
 []
  []
 
@@ -7111,11 +7145,11 @@ Overfull \hbox (379.90508pt too wide) in paragraph at lines 45--59
 
  
 Here is how much of TeX's memory you used:
- 14 strings out of 494910
- 219 string characters out of 6179836
+ 16 strings out of 494910
+ 232 string characters out of 6179836
  49398 words of memory out of 5000000
- 3405 multiletter control sequences out of 15000+600000
+ 3407 multiletter control sequences out of 15000+600000
  3948 words of font info for 15 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 19i,8n,12p,1557b,165s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 19i,8n,12p,1557b,169s stack positions out of 5000i,500n,10000p,200000b,80000s
 !  ==> Fatal error occurred, no output PDF file produced!
