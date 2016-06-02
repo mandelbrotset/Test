@@ -27,9 +27,9 @@ public class Extractor {
 		wbc = new WorkBookCreator("ExtractorHactorResult.xls");
 		wbc.createSheet("Conflicts", "Project", "Type", "Merge Commit SHA", "Result Body", "Left SHA", "Left Body", "Left Date",
 				"Right SHA", "Right Body", "Right Date", "Chosen",
-				"Most recent", "Most \"if\"", "Most \"print\"", "Most \"log\"", "Most \"try\"", "Chosen: Categories");
+				"Most recent", "Most \"if\"", "Most \"print\"", "Most \"log\"", "Most \"try\"", "Result: Categories", "Chosen: Categories");
 		 analyzeConflictReport("android-async-http");
-		 /*analyzeConflictReport("android-best-practices");
+		 analyzeConflictReport("android-best-practices");
 		 analyzeConflictReport("Android-Universal-Image-Loader");
 		 analyzeConflictReport("curator");
 		 analyzeConflictReport("elasticsearch");
@@ -48,7 +48,6 @@ public class Extractor {
 		 analyzeConflictReport("spring-framework");
 		 analyzeConflictReport("storm");
 		 analyzeConflictReport("zxing");
-		 //analyzeConflictReport("atmosphere");*/
 		 
 		//analyzeConflictReport("android-async-http");
 		wbc.writeToWorkbook();
@@ -161,7 +160,7 @@ public class Extractor {
 				wbc.addRow(project, conflict.getType(), conflict.getMergeCommitSha(), conflict.getResultBody(), conflict.getLeftSha(), conflict.getLeftBody(),
 						conflict.getLeftDate(), conflict.getRightSha(), conflict.getRightBody(), conflict.getRightDate(), conflict.getResult().toString(),
 						conflict.mostRecent().toString(), conflict.hasMoreOf("if").toString(), conflict.hasMoreOf("print").toString(), 
-						conflict.hasMoreOf("log").toString(), conflict.hasMoreOf("try").toString(), chosenProperties(conflict));
+						conflict.hasMoreOf("log").toString(), conflict.hasMoreOf("try").toString(), conflict.getCategoryList(), chosenProperties(conflict));
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -178,7 +177,7 @@ public class Extractor {
 		Conflict.Result result = conflict.getResult();
 		if(result == Conflict.Result.BOTH || result == Conflict.Result.NONE) return "";
 		Keywords[] keywordList = { Keywords.IF, Keywords.LOG, Keywords.PRINT, Keywords.TRY };
-		StringBuilder sb = new StringBuilder(conflict.getCategoryList()); 
+		StringBuilder sb = new StringBuilder(conflict.getCategoryList());
 		
 		String[] words = { "if", "log", "print", "try" };
 		
