@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.function.Function;
 
 import jxl.write.WriteException;
 import jxl.write.biff.RowsExceededException;
@@ -27,7 +28,7 @@ public class Extractor {
 		wbc = new WorkBookCreator("ExtractorHactorResult.xls");
 		wbc.createSheet("Conflicts", "Project", "Type", "Merge Commit SHA", "Result Body", "Left SHA", "Left Body", "Left Date",
 				"Right SHA", "Right Body", "Right Date", "Chosen",
-				"Most recent", "Most \"if\"", "Most \"print\"", "Most \"log\"", "Most \"try\"", "Result: Categories", "Chosen: Categories");
+				"Most recent", "Most \"if\"", "Most \"print\"", "Most \"log\"", "Most \"try\"", "Superset", "Intersection", "Result: Categories", "Chosen: Categories");
 		 analyzeConflictReport("android-async-http");
 		 analyzeConflictReport("android-best-practices");
 		 analyzeConflictReport("Android-Universal-Image-Loader");
@@ -160,7 +161,7 @@ public class Extractor {
 				wbc.addRow(project, conflict.getType(), conflict.getMergeCommitSha(), conflict.getResultBody(), conflict.getLeftSha(), conflict.getLeftBody(),
 						conflict.getLeftDate(), conflict.getRightSha(), conflict.getRightBody(), conflict.getRightDate(), conflict.getResult().toString(),
 						conflict.mostRecent().toString(), conflict.hasMoreOf("if").toString(), conflict.hasMoreOf("print").toString(), 
-						conflict.hasMoreOf("log").toString(), conflict.hasMoreOf("try").toString(), conflict.getCategoryList(), chosenProperties(conflict));
+						conflict.hasMoreOf("log").toString(), conflict.hasMoreOf("try").toString(), getPutteSup(conflict), getPutteInt(conflict), conflict.getCategoryList(), chosenProperties(conflict));
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -171,6 +172,28 @@ public class Extractor {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	private String getPutteInt(Conflict conflict) {
+		if (conflict.isLeftIntersection() && conflict.isRightIntersection())
+			return "LEFT, RIGHT";
+		else if (conflict.isLeftIntersection())
+			return "LEFT";
+		else if(conflict.isRightIntersection())
+			return "RIGHT";
+		else
+			return "NONE";
+	}
+	
+	private String getPutteSup(Conflict conflict) {
+		if (conflict.isLeftSuperset() && conflict.isRightSuperset())
+			return "LEFT, RIGHT";
+		else if (conflict.isLeftSuperset())
+			return "LEFT";
+		else if(conflict.isRightSuperset())
+			return "RIGHT";
+		else
+			return "NONE";
 	}
 	
 	private String chosenProperties(Conflict conflict) { //Keywords and categories of the chosen one

@@ -1,23 +1,18 @@
 \chapter{Introduction}
 \setlength{\parindent}{0pt}
-When developing software products using a version-control system, branching is often used, both to support variability [1] and to develop new features. It is of vital importance that the merging of these branches works smoothly, even when a conflict occurs.
+When developing software products using a version-control system, branching is often used, both to support variability [1], and to develop new features, that is “A distinguishing characteristic of a software item (e.g., performance, portability, or functionality”[2]. It is of vital importance that the merging of these branches works smoothly, even when a conflict occurs.
 
-Resolving merge conflicts, such as those arising from changes to different variants of features, is difficult. Merging might require refactoring the class hierarchy, introducing design patterns, or adding parameters to the feature. If it would be possible to develop a tool that can provide automated conflict resolution in this case, it would be of great value, since resolving such conflicts is a recurring problem that is solved manually today. The problem is that the development of such a tool requires more understanding of how the merge-conflict resolution is performed. For having representative results, one would need to study the resolutions in large codebases, such as from GitHub/BitBucket. This requires some automated analysis.
+Resolving merge conflicts, such as those arising from changes to different variants of features, is difficult. Merging might require refactoring the class hierarchy, introducing design patterns, or adding parameters to the feature. If it would be possible to develop a tool that can provide automated conflict resolution in this case, it would be of great value, since resolving such conflicts is a recurring problem that is solved manually today. The problem is that the development of such a tool requires more understanding of how merge-conflict resolutions are currently performed by developers. For having representative results, one would need to study the resolutions in large codebases, such as from GitHub. To acquire accurate results on large codebases, some automated analysis is required.
 
-The goal of this work is to conduct a feasibility study that aims at investigating whether analysis of merge-conflict resolutions in large codebases can be automated. We focus on open-source projects, such as those being hosted on GitHub or BitBucket.
+The goal of this work is to conduct a feasibility study that aims at investigating whether analysis of merge-conflict resolutions in large codebases can be automated. We focus on open-source projects, such as those being hosted on GitHub.
 
-Understanding how merge conflicts are resolved allows for future development of an autonomous merge-conflict tool which is our long-term goal. Towards this end, this study aims at answering the following research questions:
+Understanding how merge conflicts are resolved allows for future development of an autonomous merge-conflict tool, which is our long-term goal. Towards this end, this study aims at answering the following research questions:
 \begin{itemize}
 \item RQ1. Is it feasible to identify variant- and feature-branching related conflicts?
 \item RQ2. Is it feasible to statically analyze conflict resolutions in real-world, large version histories of open-source projects, and how?
 \item RQ3. Is it feasible to categorize resolution conflicts?
 \end{itemize}
 
-Our main working hypothesis is that it is in fact feasible to automatically analyze conflict resolutions and categorize them from all the metadata available about projects and from statically analyzing code. By studying examples of popular projects with many branches or forks, by developing a mining infrastructure, and by investigating to what extent static code-analysis tools can be utilized for categorizing the conflict resolutions, we will work towards testing this hypothesis.
+Our main working hypothesis is that it is in fact feasible to automatically analyze conflict resolutions and categorize them from all the metadata available about projects and from statically analyzing code. By studying examples of popular projects with many branches or forks, developing a mining infrastructure, and investigating to what extent static code-analysis tools can be utilized for categorizing the conflict resolutions, we will work towards testing this hypothesis.
 
-
-
-
-
-
-
+The automated analysis in this study was conducted on a total of 1964 conflicts in 20 projects on GitHub. The Preliminaries section gives the reader the knowledge needed to grasp the content of this study. We also conducted a Pre study on the feasability of identifying variant- and feature-branching related conflicts. The Methods section describe how an initial manual analysis of merge-conflict resolutions were made, and also the steps in performing the automatic analysis. Last but not least, we list the results of our findings and discuss our conclusions.

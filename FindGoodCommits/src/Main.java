@@ -13,7 +13,7 @@ import findParametersInMerge.ParameterFinder;
 import getConflictCommits.ConflictFileTree;
 import getVariantParameter.VariantParameter;
 import mergeConflicts.ConflictAnalyzer;
-import paola.CSVExtractor;
+//import paola.CSVExtractor;
 
 
 public class Main {
@@ -33,7 +33,7 @@ public class Main {
 	
 	public static void main(String args[]) {
 		args = new String[1];
-		args[0] = conflictAnalyzer;
+		args[0] = createConflictFileTree;
 		
 		machine = Machine.getInstance();
 		
@@ -45,7 +45,7 @@ public class Main {
 			analyzeRepos();
 		} else if(args[0].equals(createConflictFileTree)) {
 			ConflictFileTree cft = new ConflictFileTree(machine.getRepoPath());
-			cft.createTree("libgdx");
+			cft.createTree("leakcanary");
 		} else if(args[0].equals(getVariantParameter)) {
 			String pathToRepo = "/home/patrik/Documents/Chalmers/5an/MasterThesis/GHProject/elasticsearch";
 			VariantParameter vp = new VariantParameter();
@@ -57,8 +57,8 @@ public class Main {
 			ConflictAnalyzer conflictAnalyzer = new ConflictAnalyzer();
 			conflictAnalyzer.produceAnalyzement(machine.getCftFolderPath() + "/libgdx", machine.getRepoPath() + "/libgdx");
 		} else if(args[0].equals(extractFromCA)) {
-			CSVExtractor csvExtractor = new CSVExtractor();
-			csvExtractor.extractResult();
+		//	CSVExtractor csvExtractor = new CSVExtractor();
+		//	csvExtractor.extractResult();
 		} else {
 			System.out.println("Please enter a valid command!");
 		}

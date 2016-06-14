@@ -8,7 +8,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
-
+import java.util.function.Function;
+import java.util.function.*;
 public class Conflict {
 	enum Result {
 		LEFT, RIGHT, BOTH, NONE
@@ -161,8 +162,15 @@ public class Conflict {
 	}
 
 	public Result hasMoreOf(String word) {
-		int numInLeft = countNumberOf(leftBody, word);
-		int numInRight = countNumberOf(rightBody, word);
+		int numInLeft;
+		int numInRight;
+		if (word.equals("if")) {
+			numInLeft = countIfs(leftBody);
+			numInRight = countIfs(rightBody);
+		} else {
+			numInLeft = countNumberOf(leftBody, word);
+			numInRight = countNumberOf(rightBody, word);
+		}
 
 		if (numInLeft == numInRight)
 			return Result.NONE;
@@ -184,6 +192,16 @@ public class Conflict {
 		}
 		return count;
 
+	}
+	
+	private int countIfs(String body) {
+		if (!body.contains("if"))
+			return 0;
+		//[ |\n|\)|\(|\{|\}]if[ |\()|\n]
+		int count = 0;
+		String[] list = body.split("[ |\\n|\\)|\\(|\\{|\\}]if[ |\\()|\\n]");
+		count = list.length - 1;
+		return count;
 	}
 
 	private void removeAnnotationsFromBodies() {
@@ -318,7 +336,23 @@ public class Conflict {
 		parentsWords.retainAll(rightWords);
 		return resultWords.equals(parentsWords);
 	}
-
+	
+	public boolean isLeftIntersection() {
+		HashSet<String> leftWords = getWords(leftBody);
+		HashSet<String> rightWords = getWords(rightBody);
+		HashSet<String> parentsWords = new HashSet<String>(leftWords);
+		parentsWords.retainAll(rightWords);
+		return leftWords.equals(parentsWords);
+	}
+	
+	public boolean isRightIntersection() {
+		HashSet<String> leftWords = getWords(leftBody);
+		HashSet<String> rightWords = getWords(rightBody);
+		HashSet<String> parentsWords = new HashSet<String>(leftWords);
+		parentsWords.retainAll(rightWords);
+		return rightWords.equals(parentsWords);
+	}
+	
 	public ArrayList<Category> getCategories() {
 		return categories;
 	}
@@ -327,10 +361,26 @@ public class Conflict {
 		HashSet<String> resultWords = getWords(resultBody);
 		HashSet<String> leftWords = getWords(leftBody);
 		HashSet<String> rightWords = getWords(rightBody);
-		HashSet<String> parentsWords = leftWords;
+		HashSet<String> parentsWords = new HashSet<String>(leftWords);
 		parentsWords.addAll(rightWords);
 		return resultWords.equals(parentsWords);
 		//return resultWords.containsAll(parentsWords) && parentsWords.containsAll(rightWords);
+	}
+	
+	public boolean isLeftSuperset() {
+		HashSet<String> leftWords = getWords(leftBody);
+		HashSet<String> rightWords = getWords(rightBody);
+		HashSet<String> parentsWords = new HashSet<String>(leftWords);
+		parentsWords.addAll(rightWords);
+		return leftWords.equals(parentsWords);
+	}
+	
+	public boolean isRightSuperset() {
+		HashSet<String> leftWords = getWords(leftBody);
+		HashSet<String> rightWords = getWords(rightBody);
+		HashSet<String> parentsWords = new HashSet<String>(leftWords);
+		parentsWords.addAll(rightWords);
+		return rightWords.equals(parentsWords);
 	}
 	
 	private static HashSet<String> getWords(String body) {

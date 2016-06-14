@@ -67,7 +67,7 @@ public class MergeConflicter{
 		}
 		
 		if(conflictingFilePaths.size() > 0) {
-			//createConflicts();
+			createConflicts();
 			return true;
 		}
 		

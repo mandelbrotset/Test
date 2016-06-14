@@ -1,11 +1,13 @@
 \chapter{Conclusion}
-The most important result in this study is that in cases of conflicting code in methods or constructors, when the conflict is caused not only by different spacing, in 3 out of 4 cases, developers tend to choose the left version when merging. The reasons for this is unclear, but there are two main scenarios that need to be considered; when pulling a remote branch and when merging a local branch into another one.
+The goal of our thesis was to answer the following three research questions:
+\begin{itemize}
+\item RQ1. Is it feasible to identify variant- and feature-branching related conflicts?
+\item RQ2. Is it feasible to statically analyze conflict resolutions in real-world, large version histories of open-source projects, and how?
+\item RQ3. Is it feasible to categorize resolution conflicts?
+\end{itemize}
 
-The left version is the commit that the developer who performs the merge has checked out when merging. If the conflicting merge is a result of pulling a remote branch, the left version is likely his own code, and the right version someone else’s code. This study has not gone into why developers resolves conflicts this way, but it might be interesting for future studies to investigate this further. If the conflicting merge is a result of merging a local branch into another one, the left version is the branch which the other branch was merged into.
+To answer RQ1, a pre study was conducted. As stated in Chapter \ref{cha:prestudy}, the pre study showed that it is not feasible to identify variant- and feature-branching related conflicts. To answer RQ2 and RQ3, we conducted a quantitative analysis based on the results of our manual analysis, described in Section \ref{sec:manual}. Our findings are that it is feasible to both statically analyze conflict resolutions in real-world, large version histories of open-source projects and to categorize resolution conflicts. We also showed how this could be done by analyzing output from Conflicts Analyzer.
 
-Another interesting note about the results is that versions containing more of the keywords print and log are only chosen about 1 out of 4 times. This might be because printouts and logging statements are removed at the time of the merge, when hopefully the newly implemented code is working as intended and tested, thus printouts and logs is no longer needed. Furthermore, it is very popular to choose a version containing more of the keyword if. The reason may be that one version has a check for an exception that the other version has forgotten, such as a null-check. It might also be because a new parameter has been implemented that switches a feature on and off, or related to variance.
+Our study contributes to the long term goal of creating an automatic merge tool by increasing the understanding of how developers solve merge-conflicts. As shown in Figure \ref{fig:groups}, developers tend to choose their own code when resolving conflicts.
 
-
-
-
-
+For conflicts regarding code inside methods or constructors, we have shown that the currently checked out version is chosen in more than 3 out of 4 cases and that the chosen version often is the most recent one. Therefore, we conclude that developers tend to choose their own version of the code when resolving merge-conflicts.
