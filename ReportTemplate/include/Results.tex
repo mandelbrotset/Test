@@ -52,18 +52,18 @@ The automatic analysis that was conducted on the 20 top starred Java projects on
 \FloatBarrier
 \begin{figure}
 \begin{tikzpicture}
-   \begin{axis}[
-       symbolic x coords={LEFT, RIGHT, NONE},
-       xtick=data,
-       xlabel=\textbf{Group},
-       ylabel=\textbf{Chosen resolutions}
-     ]
-       \addplot[ybar,fill=blue] coordinates {
-           (LEFT,   1509)
-           (RIGHT,  77)
-           (NONE,   378)
-       };
-   \end{axis}
+  \begin{axis}[
+      symbolic x coords={LEFT, RIGHT, NONE},
+      xtick=data,
+      xlabel=\textbf{Group},
+      ylabel=\textbf{Chosen resolutions}
+    ]
+      \addplot[ybar,fill=blue] coordinates {
+          (LEFT,   1509)
+          (RIGHT,  77)
+          (NONE,   378)
+      };
+  \end{axis}
 \end{tikzpicture}
 \caption{Number of chosen resolutions for each group}\label{fig:groups}
 \end{figure}
@@ -72,13 +72,13 @@ For cases where one of the versions was chosen completely, we can show that this
 
 \begin{figure}
 \begin{tikzpicture}
-  \begin{axis}[ybar stacked,symbolic x coords={LEFT,RIGHT},xtick=data,enlarge x limits={abs=1.5cm},xlabel=\textbf{Group},ylabel=\textbf{Chosen resolutions},legend pos=outer north east]
-      \addplot[black!40,fill=blue] coordinates
+ \begin{axis}[ybar stacked,symbolic x coords={LEFT,RIGHT},xtick=data,enlarge x limits={abs=1.5cm},xlabel=\textbf{Group},ylabel=\textbf{Chosen resolutions},legend pos=outer north east]
+     \addplot[black!40,fill=blue] coordinates
 {(LEFT,1161)(RIGHT,40)};
-      \addplot[black!40,fill=red]  coordinates
+     \addplot[black!40,fill=red]  coordinates
 {(LEFT,348)(RIGHT,37)};
 \legend{Recent, Non recent}
-  \end{axis}
+ \end{axis}
 \end{tikzpicture}
 \caption{Number of most recent versions chosen}\label{fig:recent}
 \end{figure}
@@ -87,12 +87,12 @@ For some cases, the left and the right version differ in how many instances of s
 
 \begin{figure}
 \begin{tikzpicture}
-  \begin{axis}[ybar stacked,symbolic x coords={if,print,log,try},xtick=data,enlarge x limits={abs=1.5cm},xlabel=\textbf{Keyword},ylabel=\textbf{Chosen resolutions with different keyword occurrences},legend pos=outer north east]
-      \addplot[black!40,fill=blue] coordinates{(if,39)(print,6)(log,4)(try,17)};
+ \begin{axis}[ybar stacked,symbolic x coords={if,print,log,try},xtick=data,enlarge x limits={abs=1.5cm},xlabel=\textbf{Keyword},ylabel=\textbf{Chosen resolutions with different keyword occurrences},legend pos=outer north east]
+     \addplot[black!40,fill=blue] coordinates{(if,39)(print,6)(log,4)(try,17)};
 		\addplot[black!40,fill=red] coordinates{(if,26)(print,2)(log,5)(try,11)};
 		\addplot[black!40,fill=white] coordinates{(if,67)(print,13)(log,7)(try,7)};
 \legend{Most instances, Least instances, Neither}
-  \end{axis}
+ \end{axis}
 \end{tikzpicture}
 \caption{Number of chosen resolutions with different number of instances of keywords}\label{fig:keywords}
 \end{figure}
@@ -101,24 +101,41 @@ Chart \ref{fig:setleft} and Chart \ref{fig:setright} show how often the left ver
 
 \begin{figure}
 \begin{tikzpicture}
-  \begin{axis}[ybar stacked,symbolic x coords={Superset,Intersection},xtick=data,enlarge x limits={abs=1.5cm},xlabel=\textbf{Category},ylabel=\textbf{Chosen resolutions},legend pos=outer north east]
-      \addplot[black!40,fill=blue] coordinates{(Superset,253)(Intersection,108)};
-      \addplot[black!40,fill=red] coordinates{(Superset,29)(Intersection,29)};
+ \begin{axis}[ybar stacked,symbolic x coords={Superset,Intersection},xtick=data,enlarge x limits={abs=1.5cm},xlabel=\textbf{Category},ylabel=\textbf{Left versions},legend pos=outer north east]
+     \addplot[black!40,fill=blue] coordinates{(Superset,253)(Intersection,108)};
+     \addplot[black!40,fill=red] coordinates{(Superset,29)(Intersection,29)};
 \legend{Chosen, Not chosen}
-  \end{axis}
+ \end{axis}
 \end{tikzpicture}
-\caption{Number of chosen left versions that are either a superset or an intersection}\label{fig:setleft}
+\caption{Number of left versions that are either a superset or an intersection}\label{fig:setleft}
 \end{figure}
 
 \begin{figure}
 \begin{tikzpicture}
-  \begin{axis}[ybar stacked,symbolic x coords={Superset,Intersection},xtick=data,enlarge x limits={abs=1.5cm},xlabel=\textbf{Category},ylabel=\textbf{Chosen resolutions},legend pos=outer north east]
-      \addplot[black!40,fill=blue] coordinates{(Superset,9)(Intersection,7)};
-      \addplot[black!40,fill=red] coordinates{(Superset,128)(Intersection,275)};
+ \begin{axis}[ybar stacked,symbolic x coords={Superset,Intersection},xtick=data,enlarge x limits={abs=1.5cm},xlabel=\textbf{Category},ylabel=\textbf{Right versions},legend pos=outer north east]
+     \addplot[black!40,fill=blue] coordinates{(Superset,9)(Intersection,7)};
+     \addplot[black!40,fill=red] coordinates{(Superset,128)(Intersection,275)};
 \legend{Chosen, Not chosen}
-  \end{axis}
+ \end{axis}
 \end{tikzpicture}
-\caption{Number of chosen right versions that are either a superset or an intersection}\label{fig:setright}
+\caption{Number of right versions that are either a superset or an intersection}\label{fig:setright}
+\end{figure}
+
+%Total:
+%TOT: flest,		färst, 		ingen, Non applicable
+%	 recent, 	not recent		 , Non applicable
+%	 sup/int	den andra	none , Non applicable
+
+
+\begin{figure}
+\begin{tikzpicture}
+ \begin{axis}[ybar stacked,symbolic x coords={Recent,Superset,Intersection,if-statements,print-instances,log-instances,try-instances},xtick=data,enlarge x limits={abs=1.5cm},xlabel=\textbf{Category},ylabel=\textbf{Conflicts},legend pos=outer north east]
+     \addplot[black!40,fill=blue] coordinates{(Recent,1201)(Superset,333)(Intersection,186)(if-statements,39)(print-instances,6)(log-instances,4)(try-instances,17)};
+     \addplot[black!40,fill=red] coordinates{(Superset,128)(Intersection,275)};
+\legend{Chosen, Not chosen}
+ \end{axis}
+\end{tikzpicture}
+\caption{Number of right versions that are either a superset or an intersection}\label{fig:setright}
 \end{figure}
 
 \section{Discussion}
@@ -127,3 +144,10 @@ The most important result in this study is that in cases of conflicting code in 
 The left version is the commit that the developer who performs the merge has checked out when merging. If the conflicting merge is a result of pulling a remote branch, the left version is likely his own code, and the right version is someone else’s code. Table \ref{fig:recent} shows that the chosen version also often is the most recent version. This in combination with that the left version most often is chosen indicates that developers tend to choose their own code as resolution. This study has not gone into why developers resolve conflicts this way, but it might be interesting for future studies to investigate this further. If the conflicting merge is a result of merging a local branch into another one, the left version is the branch which the other branch was merged into.
 
 Another interesting note about the results is that versions containing more of the keywords print and log are only chosen in about 1 out of 4 times. This might be because printouts and logging statements are removed at the time of the merge, when hopefully the newly implemented code is working as intended and tested, thus printouts and logs is no longer needed.
+
+\subsection{Threats to Validity}
+Our results are based on a sample of 20 projects, and a total of 1964 conflicts were analyzed. The results might differ if other projects were to be analyzed. The 20 top starred projects were all java projects, we can not say if our results hold for other languages. Also, these were all open-source projects. Inside companies, development can be done in other ways, thus our results might not be the same if analyzing in non open-source projects.
+
+The Conflicts Analyzer tool are not developed by us and when running it for the first times, it contained some bugs which we had to solve. Although we managed to solve them, if there still are any bugs present in the tool, then it would be a threat to validity to our own results.
+
+
