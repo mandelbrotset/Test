@@ -1,19 +1,19 @@
 \chapter{Results}
-For RQ2, our study has shown a way of analyzing conflict resolutions in large-scale codebases, and this can be achieved by parsing output from Conflicts Analyzer. Likewise, for RQ3, our study has indeed showed that it is possible to create a meaningful categorization of merge-conflict resolutions which could be used in future studies to, for instance, create an automatic merge tool. This section explains the frequencies of the categories that were found in this study.
+For RQ2, our study has shown a way of analyzing conflict resolutions in large-scale codebases, and this can be achieved by parsing output from Conflicts Analyzer. Likewise, for RQ3, our study has indeed showed that it is possible to create a meaningful categorization of merge-conflict resolutions which could be used in future studies to, for instance, create an automatic merge tool. This chapter shows the results of the manual- and automatic analysis.
 \section{Manual Analysis}
-For conflicts in the category SameSignatureCM, we found that if one of the two versions had the same code as the other version but with some additional code, that version was often chosen as resolution. This can be seen in Table \ref{table:rcsitma} where the resolution was a superset in 69\% of the cases. Table \ref{table:rcsitma} lists how many resolutions, in the 26 cases that were analyzed, were \textit{Superset}, \textit{Intersection} and/or \textit{Recent}. As a resolution can be both recent and a superset or an intersection at the same time, the percentage add up to more than 100\%.
+For conflicts in the conflict pattern SameSignatureCM, we found that if one of the two versions had the same code as the other version but with some additional code, that version was often chosen as resolution. This can be seen in Table \ref{table:rcsitma} where the resolution was a superset in 69\% of the cases. Table \ref{table:rcsitma} lists how many resolutions, in the 26 cases that were analyzed, were \textit{Superset}, \textit{Intersection} and/or \textit{Recent}. As a resolution can be both recent and a superset or an intersection at the same time, the percentage add up to more than 100\%.
 \begin{table}
-\caption{Resolution categories statistics in the manual analysis}\label{table:rcsitma}
+\caption{Results of the manual analysis for the properties in Table \ref{table:pproperties}}\label{table:rcsitma}
 \begin{tabular}{ p{6cm} p{6cm} }
 \hline
-\multicolumn{1}{c}{\textbf{Category}} & \multicolumn{1}{c}{\textbf{Number of cases (total 26 cases)}}\\
+\multicolumn{1}{c}{\textbf{Property}} & \multicolumn{1}{c}{\textbf{Number of cases (total 26 cases)}}\\
 Superset & 18 (~69\%)\\
 Recent & 15 (~58\%)\\
 Intersection & 4 (~15\%)\\
 \end{tabular}
 \end{table}
 \FloatBarrier
-For some of the cases that were chosen as resolution, one or more if-statements had been introduced in the version that was chosen which the other version did not have. We also saw that one of the cases chose a version with more error handling than the version that was not chosen.
+For some of the cases that were chosen as resolution, one or more if-statements had been introduced in the version that was chosen which the other version did not have. We also saw an example of a case where the chosen version had more error handling than the other version.
 
 An example can be seen from the repository Android-async-http, where two versions that resulted in a conflict when being merged looked like this:\\
 \textbf{Left version:}
@@ -44,11 +44,13 @@ protected void sendSuccessMessage(int statusCode, Header[] headers, String respo
 	}
 }
 \end{lstlisting}
-Here, all the words in the left version are also in the right version, hence the right is a superset of the left version. In this example, the right version was chosen as the resolution, therefore, the resolution is categorized as a superset. As can also be seen, in the right version there is a check by an if-statement that is not present in the left version.
+Here, all the words in the left version are also in the right version, hence the right is a superset of the left version. In this example, the right version was chosen as the resolution. As can also be seen, in the right version there is a check by an if-statement that is not present in the left version.
 \FloatBarrier
 \section{Automatic Analysis}
 \FloatBarrier
-The automatic analysis that was conducted on the 20 top starred Java projects on GitHub yielded, after our filtering, 1964 conflicts. The resolutions can be divided into three groups depending on which of the versions developers chose; left version, right version, or none of them. If resolution is not equal to either the left or right version, it is added to the none group. The none-group includes cases where parts from both were taken, where no parts from any versions were taken and when new code was introduced. In 1509 cases (77\% of the studied cases), the left version was chosen that is, the version in the commit that was checked out at the time of merging. Figure \ref{fig:groups} shows how many cases there are in each group.
+The automatic analysis that was conducted on the 20 top starred Java projects on GitHub yielded, after our filtering, 1964 conflicts. For each property (see Table \ref{table:propdef}), the resolutions for the 1964 conflicts was categorized according to Table \ref{table:pproperties2} and the results are presented in this section.
+
+In 1509 cases (77\% of the studied cases), the left version was chosen that is, the version in the commit that was checked out at the time of merging. Figure \ref{fig:groups} shows how many cases there are in each group.
 \FloatBarrier
 \begin{figure}
 \begin{tikzpicture}
