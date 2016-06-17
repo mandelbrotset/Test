@@ -1,4 +1,4 @@
-\chapter{Analyzing Merge-Conflict Resolutions}
+\chapter{Method - Analyzing Merge-Conflict Resolutions}
 In this section we describe how we analyzed merge-conflict resolutions. A manual analysis was conducted and the result of this, which is presented in the Result chapter, was used in an automatic analysis.
 \section{Conflict File Tree}\label{sec:cft}
 To get a better overview of how the different versions of a file look, we developed a tool to create a file tree of all conflicts of a given project. We call this file tree the Conflict File Tree. The leaves of the tree consist of the left-, right-, common ancestor- and merge commit version of a conflicting file when re-creating merge commits, as shown in Figure \ref{fig:cft}.
@@ -48,11 +48,11 @@ The output in the conflict report contains the following information:
 
 \section{Manual Analysis}\label{sec:manual}
 \FloatBarrier
-When manually analyzing the output of Conflicts Analyzer, we found that it may be possible to categorize the resolutions for the conflict pattern SameSignatureCM (see Table \ref{table:conflictpatterns}) by comparing the two conflicting versions with the resolution. This conflict pattern means that two versions was added for the same method or constructor, i.e the method did not exist in the common ancestor. 
+When manually analyzing the output of Conflicts Analyzer, we found that it may be possible to categorize the resolutions for the conflict pattern SameSignatureCM (see Table \ref{table:conflictpatterns}) by comparing the two conflicting versions with the resolution. This conflict pattern means that two versions was added for the same method or constructor, i.e the method did not exist in the common ancestor.
 
 We examined twenty-six randomly sampled examples of SameSignatureCM conflicts from 9 different projects. These projects were Atmosphere, Activiti, Blueprints, BroadLeadCommerce, Buildcraft, EventBus, android-async-http, RxJava, Elasticsearch. For each conflict, we looked at the two versions of the method or constructor, and tried to understand why they chose the one they did. What do the versions they chose have in common?
 
-To categorize the merge-conflict resolutions, we proposed some categories which we wanted to test in a quantitative analysis. 
+To categorize the merge-conflict resolutions, we proposed some categories which we wanted to test in a quantitative analysis.
 \begin{table}
 \caption{Proposed categories}\label{table:pcategories}
 \begin{tabular}{ p{7cm} p{7cm} }
@@ -84,19 +84,28 @@ We analyzed the extracted files manually to see whether the categories described
 To see whether the results from the manual analysis still apply in a large-scale analysis, we developed a tool that reads the output of Conflicts Analyzer. The tool then filters out those conflicts we are interested in. Those conflicts are then analyzed and the result is printed in a spreadsheet.
 
 From the qualitative analysis, we saw that sometimes the version that is chosen has more if-statements than the other version. We decided that it would be interesting to see whether choosing such a version reoccurs in many cases. It would also be interesting to see other cases where the version chosen had more of error handling and log printouts. Therefore, we proposed a list of keywords to search for in the versions. Thus, the complete list of categories we analyze is as shown in Table \ref{table:pcategories2}.
+
 \begin{table}
 \caption{Proposed categories}\label{table:pcategories2}
-\begin{tabular}{ p{7cm} p{7cm} }
+\begin{tabularx}{\textwidth}{ | X | X | X | X | X |}
+\hline & \textbf{Chosen} & \textbf{Other chosen} & \textbf{None chosen} & \textbf{Not applicable}\\
 \hline
-\multicolumn{1}{c}{\textbf{Category}} & \multicolumn{1}{c}{\textbf{Description}}\\
-Recent & The result is equal to the most recent version\\
-Superset & The result is a superset of the code in both versions\\
-Intersection & The result is an intersection of the code in both versions\\
-if & The result is equal to the version which contains most if-statements\\
-print & The result is equal to the version which contains most instances of the keyword print\\
-log & The result is equal to the version which contains most instances of the keyword log\\
-try & The result is equal to the version which contains most instances of the keyword try\\
-\end{tabular}
+\textbf{Recent} & The most recent version was chosen & The least recent version was chosen & None of the versions were chosen & N/A\\
+\hline
+\textbf{Superset} & The superset version was chosen & The version that was not a superset was chosen & None of the versions were chosen & No version was a superset\\
+\hline
+\textbf{Intersection} & The intersection version was chosen & The version that was not an intersection were chosen & None of the versions were chosen & No version was an
+intersection\\
+\hline
+\textbf{if-statements} & The version with most instances of if-statements was chosen & The version with least instances of if-statements was chosen & None of the versions were chosen & The versions had equal amount of instances\\
+\hline
+\textbf{print-instances} & The version with most instances of print was chosen & The version with least instances of print was chosen & None of the versions were chosen & The versions had equal amount of instances\\
+\hline
+\textbf{log-instances} & The version with most instances of log was chosen & The version with least instances of log was chosen & None of the versions were chosen & The versions had equal amount of instances\\
+\hline
+\textbf{try-instances} & The version with most instances of try was chosen & The version with least instances of try was chosen & None of the versions were chosen & The versions had equal amount of instances\\
+\hline
+\end{tabularx}
 \end{table}
 
 \subsection{Input}
@@ -144,4 +153,9 @@ The left version contains all code from the right version plus a check for the i
 git log -1 <hash> --format=%ci
 \end{lstlisting}
 
-\textbf{Keywords and if-statements.} Lastly, for each version of the method or constructor, we calculate the number of occurrences of each keyword and the number of if-statements (see Table \ref{table:pcategories2}). 
+\textbf{Keywords and if-statements.} Lastly, for each version of the method or constructor, we calculate the number of occurrences of each keyword and the number of if-statements (see Table \ref{table:pcategories2}).
+
+
+
+
+

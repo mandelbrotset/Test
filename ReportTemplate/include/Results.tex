@@ -52,18 +52,18 @@ The automatic analysis that was conducted on the 20 top starred Java projects on
 \FloatBarrier
 \begin{figure}
 \begin{tikzpicture}
-  \begin{axis}[
-      symbolic x coords={LEFT, RIGHT, NONE},
-      xtick=data,
-      xlabel=\textbf{Group},
-      ylabel=\textbf{Chosen resolutions}
-    ]
-      \addplot[ybar,fill=blue] coordinates {
-          (LEFT,   1509)
-          (RIGHT,  77)
-          (NONE,   378)
-      };
-  \end{axis}
+ \begin{axis}[
+     symbolic x coords={LEFT, RIGHT, NONE},
+     xtick=data,
+     xlabel=\textbf{Group},
+     ylabel=\textbf{Chosen resolutions}
+   ]
+     \addplot[ybar,fill=blue] coordinates {
+         (LEFT,   1509)
+         (RIGHT,  77)
+         (NONE,   378)
+     };
+ \end{axis}
 \end{tikzpicture}
 \caption{Number of chosen resolutions for each group}\label{fig:groups}
 \end{figure}
@@ -72,54 +72,22 @@ For cases where one of the versions was chosen completely, we can show that this
 
 \begin{figure}
 \begin{tikzpicture}
- \begin{axis}[ybar stacked,symbolic x coords={LEFT,RIGHT},xtick=data,enlarge x limits={abs=1.5cm},xlabel=\textbf{Group},ylabel=\textbf{Chosen resolutions},legend pos=outer north east]
-     \addplot[black!40,fill=blue] coordinates
+\begin{axis}[ybar stacked,symbolic x coords={LEFT,RIGHT},xtick=data,enlarge x limits={abs=1.5cm},xlabel=\textbf{Group},ylabel=\textbf{Chosen resolutions},legend pos=outer north east]
+    \addplot[black!40,fill=blue] coordinates
 {(LEFT,1161)(RIGHT,40)};
-     \addplot[black!40,fill=red]  coordinates
+    \addplot[black!40,fill=red]  coordinates
 {(LEFT,348)(RIGHT,37)};
 \legend{Recent, Non recent}
- \end{axis}
+\end{axis}
 \end{tikzpicture}
 \caption{Number of most recent versions chosen}\label{fig:recent}
 \end{figure}
 
 For some cases, the left and the right version differ in how many instances of specific keywords they contain. Figure \ref{fig:keywords} shows how often the version with most instances and the version with least instances of each keyword was chosen. \textit{Neither} means that the resolution is in the group \textit{None}, see Figure \ref{fig:groups}.
 
-\begin{figure}
-\begin{tikzpicture}
- \begin{axis}[ybar stacked,symbolic x coords={if,print,log,try},xtick=data,enlarge x limits={abs=1.5cm},xlabel=\textbf{Keyword},ylabel=\textbf{Chosen resolutions with different keyword occurrences},legend pos=outer north east]
-     \addplot[black!40,fill=blue] coordinates{(if,39)(print,6)(log,4)(try,17)};
-		\addplot[black!40,fill=red] coordinates{(if,26)(print,2)(log,5)(try,11)};
-		\addplot[black!40,fill=white] coordinates{(if,67)(print,13)(log,7)(try,7)};
-\legend{Most instances, Least instances, Neither}
- \end{axis}
-\end{tikzpicture}
-\caption{Number of chosen resolutions with different number of instances of keywords}\label{fig:keywords}
-\end{figure}
 
 Chart \ref{fig:setleft} and Chart \ref{fig:setright} show how often the left version and the right version is a superset or an intersection, and how often those versions are chosen as resolution.
 
-\begin{figure}
-\begin{tikzpicture}
- \begin{axis}[ybar stacked,symbolic x coords={Superset,Intersection},xtick=data,enlarge x limits={abs=1.5cm},xlabel=\textbf{Category},ylabel=\textbf{Left versions},legend pos=outer north east]
-     \addplot[black!40,fill=blue] coordinates{(Superset,253)(Intersection,108)};
-     \addplot[black!40,fill=red] coordinates{(Superset,29)(Intersection,29)};
-\legend{Chosen, Not chosen}
- \end{axis}
-\end{tikzpicture}
-\caption{Number of left versions that are either a superset or an intersection}\label{fig:setleft}
-\end{figure}
-
-\begin{figure}
-\begin{tikzpicture}
- \begin{axis}[ybar stacked,symbolic x coords={Superset,Intersection},xtick=data,enlarge x limits={abs=1.5cm},xlabel=\textbf{Category},ylabel=\textbf{Right versions},legend pos=outer north east]
-     \addplot[black!40,fill=blue] coordinates{(Superset,9)(Intersection,7)};
-     \addplot[black!40,fill=red] coordinates{(Superset,128)(Intersection,275)};
-\legend{Chosen, Not chosen}
- \end{axis}
-\end{tikzpicture}
-\caption{Number of right versions that are either a superset or an intersection}\label{fig:setright}
-\end{figure}
 
 %Total:
 %TOT: flest,		färst, 		ingen, Non applicable
@@ -128,14 +96,62 @@ Chart \ref{fig:setleft} and Chart \ref{fig:setright} show how often the left ver
 
 
 \begin{figure}
+\resizebox {\columnwidth} {!} {
 \begin{tikzpicture}
- \begin{axis}[ybar stacked,symbolic x coords={Recent,Superset,Intersection,if-statements,print-instances,log-instances,try-instances},xtick=data,enlarge x limits={abs=1.5cm},xlabel=\textbf{Category},ylabel=\textbf{Conflicts},legend pos=outer north east]
-     \addplot[black!40,fill=blue] coordinates{(Recent,1201)(Superset,333)(Intersection,186)(if-statements,39)(print-instances,6)(log-instances,4)(try-instances,17)};
-     \addplot[black!40,fill=red] coordinates{(Superset,128)(Intersection,275)};
-\legend{Chosen, Not chosen}
- \end{axis}
+\begin{axis}[ybar stacked,symbolic x coords={Recent,Superset,Intersection,if-statements,print-instances,log-instances,try-instances},xtick=data,enlarge x limits={abs=1.5cm},xlabel=\textbf{Category},ylabel=\textbf{Conflicts},legend pos=outer north east,
+   xticklabel style={
+           inner sep=0pt,
+           anchor=north east,
+           rotate=45 }
+   ]
+]
+    \addplot[black!40,fill=blue] coordinates{(Recent,1201)(Superset,333)(Intersection,186)(if-statements,39)(print-instances,6)(log-instances,4)(try-instances,17)};
+    \addplot[black!40,fill=red] coordinates{(Recent,385)(Superset,186)(Intersection,333)(if-statements,26)(print-instances,2)(log-instances,5)(try-instances,11)};
+    \addplot[black!40,fill=green] coordinates{(Recent,378)(Superset,184)(Intersection,184)(if-statements,67)(print-instances,13)(log-instances,7)(try-instances,7)};
+    \addplot[black!40,fill=white] coordinates{(Recent,0)(Superset,1261)(Intersection,1261)(if-statements,1832)(print-instances,1943)(log-instances,1948)(try-instances,1929)};
+\legend{Chosen, Other chosen, None chosen, Not applicable}
+\end{axis}
 \end{tikzpicture}
-\caption{Number of right versions that are either a superset or an intersection}\label{fig:setright}
+}
+\caption{Classification of conflicts in for each category.}\label{fig:setright}
+\end{figure}
+
+\begin{figure}
+\resizebox {\columnwidth} {!} {
+\begin{tikzpicture}
+\begin{axis}[ybar stacked,symbolic x coords={Recent,Superset,Intersection,if-statements,print-instances,log-instances,try-instances},xtick=data,enlarge x limits={abs=1.5cm},xlabel=\textbf{Category},ylabel=\textbf{Conflicts},legend pos=outer north east,
+xticklabel style={
+           inner sep=0pt,
+           anchor=north east,
+           rotate=45 }]
+    \addplot[black!40,fill=blue] coordinates{(Recent,1161)(Superset,305)(Intersection,160)(if-statements,32)(print-instances,6)(log-instances,2)(try-instances,13)};
+    \addplot[black!40,fill=red] coordinates{(Recent,37)(Superset,26)(Intersection,28)(if-statements,13)(print-instances,0)(log-instances,0)(try-instances,4)};
+    \addplot[black!40,fill=green] coordinates{(Recent,252)(Superset,93)(Intersection,91)(if-statements,32)(print-instances,10)(log-instances,5)(try-instances,4)};
+    \addplot[black!40,fill=white] coordinates{(Recent,514)(Superset,1540)(Intersection,1685)(if-statements,1887)(print-instances,1948)(log-instances,1957)(try-instances,1943)};
+\legend{Chosen, Other chosen, None chosen, Not applicable}
+\end{axis}
+\end{tikzpicture}
+}
+\caption{Classification of conflicts in for each category for the LEFT versions..}\label{fig:setright}
+\end{figure}
+
+\begin{figure}
+\resizebox {\columnwidth} {!} {
+\begin{tikzpicture}
+\begin{axis}[ybar stacked,symbolic x coords={Recent,Superset,Intersection,if-statements,print-instances,log-instances,try-instances},xtick=data,enlarge x limits={abs=1.5cm},xlabel=\textbf{Category},ylabel=\textbf{Conflicts},legend pos=outer north east,
+xticklabel style={
+           inner sep=0pt,
+           anchor=north east,
+           rotate=45 }]
+    \addplot[black!40,fill=blue] coordinates{(Recent,40)(Superset,28)(Intersection,26)(if-statements,7)(print-instances,0)(log-instances,2)(try-instances,4)};
+    \addplot[black!40,fill=red] coordinates{(Recent,348)(Superset,160)(Intersection,305)(if-statements,13)(print-instances,2)(log-instances,5)(try-instances,7)};
+    \addplot[black!40,fill=green] coordinates{(Recent,126)(Superset,91)(Intersection,93)(if-statements,35)(print-instances,3)(log-instances,2)(try-instances,3)};
+    \addplot[black!40,fill=white] coordinates{(Recent,1450)(Superset,1685)(Intersection,1540)(if-statements,1909)(print-instances,1959)(log-instances,1955)(try-instances,1950)};
+\legend{Chosen, Other chosen, None chosen, Not applicable}
+\end{axis}
+\end{tikzpicture}
+}
+\caption{Classification of conflicts in for each category for the RIGHT versions.}\label{fig:setright}
 \end{figure}
 
 \section{Discussion}
@@ -149,5 +165,4 @@ Another interesting note about the results is that versions containing more of t
 Our results are based on a sample of 20 projects, and a total of 1964 conflicts were analyzed. The results might differ if other projects were to be analyzed. The 20 top starred projects were all java projects, we can not say if our results hold for other languages. Also, these were all open-source projects. Inside companies, development can be done in other ways, thus our results might not be the same if analyzing in non open-source projects.
 
 The Conflicts Analyzer tool are not developed by us and when running it for the first times, it contained some bugs which we had to solve. Although we managed to solve them, if there still are any bugs present in the tool, then it would be a threat to validity to our own results.
-
 
