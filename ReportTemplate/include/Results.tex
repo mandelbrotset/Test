@@ -113,7 +113,7 @@ Chart \ref{fig:setleft} and Chart \ref{fig:setright} show how often the left ver
 \end{axis}
 \end{tikzpicture}
 }
-\caption{Classification of conflicts in for each category.}\label{fig:setright}
+\caption{Classification of conflicts for each category.}\label{fig:setright}
 \end{figure}
 
 \begin{figure}
@@ -132,7 +132,7 @@ xticklabel style={
 \end{axis}
 \end{tikzpicture}
 }
-\caption{Classification of conflicts in for each category for the LEFT versions..}\label{fig:setright}
+\caption{Classification of conflicts for each category for the LEFT versions.}\label{fig:setright}
 \end{figure}
 
 \begin{figure}
@@ -151,7 +151,7 @@ xticklabel style={
 \end{axis}
 \end{tikzpicture}
 }
-\caption{Classification of conflicts in for each category for the RIGHT versions.}\label{fig:setright}
+\caption{Classification of conflicts for each category for the RIGHT versions.}\label{fig:setright}
 \end{figure}
 
 \section{Discussion}
@@ -162,7 +162,7 @@ The left version is the commit that the developer who performs the merge has che
 Another interesting note about the results is that versions containing more of the keywords print and log are only chosen in about 1 out of 4 times. This might be because printouts and logging statements are removed at the time of the merge, when hopefully the newly implemented code is working as intended and tested, thus printouts and logs is no longer needed.
 
 \subsection{Threats to Validity}
-Our results are based on a sample of 20 projects, and a total of 1964 conflicts were analyzed. The results might differ if other projects were to be analyzed. The 20 top starred projects were all java projects, we can not say if our results hold for other languages. Also, these were all open-source projects. Inside companies, development can be done in other ways, thus our results might not be the same if analyzing in non open-source projects.
+Our results are based on a sample of 20 projects, and a total of 1964 conflicts were analyzed. The results might differ if other projects were to be analyzed. The 20 top starred projects were all java projects, we can not say if our results hold for other languages. Also, these were all open-source projects. Inside companies, development can be done in other ways, thus our results might not be the same if analyzing in non open-source projects. The projects analyzed varies in size. 
 
 The Conflicts Analyzer tool are not developed by us and when running it for the first times, it contained some bugs which we had to solve. Although we managed to solve them, if there still are any bugs present in the tool, then it would be a threat to validity to our own results.
 

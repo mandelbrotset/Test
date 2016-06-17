@@ -10,23 +10,30 @@ With the use of a version control system, cloning can be managed in a more smoot
 Many software projects follow a branching model when using Git, such as the one explained by Giessen [4]. In these models, users create feature branches that provide an environment where new features can be implemented and tested without affecting the end-user version of the software [5]. There are various ways to use branches. A branch can be created for each new feature, in this document called \textit{feature-branching}. A branch may also be created for each new product that is to be developed, or each variant of an existing product. Such a branch is in this document called \textit{variance-related branching} [1], for example, for supporting new hardware in an existing product.
 
 When a new feature has been implemented in a new branch, the branch needs to be merged into another branch, such as the main branch. \textit{Merging} is the process of joining two branches together, both in case of two local branches or a local and a remote branch [6]. Local branches are branches in the client’s copy of the repository, whereas the remote branches are branches in the remote repository. In GitHub, merging is usually done using a pull request. A \textit{pull request} is made to let the collaborators in the repository know that the commits in a branch are ready to be merged. The collaborators can review the new code and input their feedback until it is finally approved for merging into the end-user branch [7].
+\FloatBarrier
+The two commits that are to be merged are called the \textit{parents} of the textit{merge commit} that is created when the merge is made. In this document, the parents will often be referred to as the left- and the right version. The \textit{left version} is the commit that was checked out at the time of the merge, and the \textit{right version} is the commit that is being merged into the currently checked out branch. For instance, when pulling the remote branch to merge with the local branch, the left version will be the local version and the right version will be the remote version that is being pulled. The commit that two branches originates from is called the \textit{common ancestor}. Figure \ref{fig:merging} illustrates a merge and the terms common ancestor, left- and right version, and merge commit.
 
-The two commits that are to be merged are called the \textit{parents} of the merge commit that is created when the merge is made. In this document, the parents will often be referred to as the left- and the right version. The \textit{left version} is the commit that was checked out at the time of the merge, and the \textit{right version} is the commit that is being merged into the currently checked out branch. For instance, when pulling the remote branch to merge with the local branch, the left version will be the local version and the right version will be the remote version that is being pulled. The commit that two branches originates from is called the common ancestor.
-
+\begin{figure}[H]
+\centering
+%\includegraphics[width=0.45\linewidth, trim=3cm 11cm 3cm 11cm]{figure/conflicts.png}
+\includegraphics[width=400pt]{figure/merge.png}
+\caption{Merging of two branches}\label{fig:merging}
+\end{figure}
+\FloatBarrier
 \textbf{Textual Merging.} The most commonly used merging technique is textual merging [8]. \textit{Textual merging} is based on the history and on textual differences. It does not make use of any knowledge of the syntax or semantic. One must also distinguish between two-way merging and three-way merging. In \textit{two-way merging}, only the two conflicting clones are analyzed to resolve the conflict. In \textit{three-way merging}, also the common ancestor is used, which is more powerful [9].
 
 \textbf{Fast-Forward.} When merging two branches, Git first attempts to perform a so-called fast-forward merge. \textit{Fast-forward} is a way of simplifying merges in cases where at least one of the branches still points to the common ancestor. Since only one version has changed, there can not be any conflicts when merging. In such a case, all that has to be done, is to change both branches to point at the latest commit, as shown in Figure \ref{fig:fastforward}.
 \begin{figure}[H]
 \centering
 \begin{subfigure}[b]{0.3\textwidth}
-    \includegraphics[width=150pt]{figure/ff1.png}
-    \caption{Before merge}
-    \label{fig:fbranch1}
+   \includegraphics[width=150pt]{figure/ff1.png}
+   \caption{Before merge}
+   \label{fig:fbranch1}
 \end{subfigure}
 \begin{subfigure}[b]{0.3\textwidth}
-    \includegraphics[width=150pt]{figure/ff2.png}
-    \caption{After merge}
-    \label{fig:fbranch3}
+   \includegraphics[width=150pt]{figure/ff2.png}
+   \caption{After merge}
+   \label{fig:fbranch3}
 \end{subfigure}
 \caption{Fast-forward merge}\label{fig:fastforward}
 \end{figure}
@@ -76,5 +83,3 @@ While Guimaraes and Silva strive to avoid conflicts, our long term goal is to ea
 Dubinsky et. al. [1] have conducted an exploratory study of cloning in industrial software product lines. In their study, they state that it is difficult to propagate changes between clones. They have also interviewed developers who say that “\textit{If we find a bug then many times it can be here and also in other places. The new product contains code that exists also in the old product. So, if we fix the old one then we also fix the new or vice versa}”. Moreover, they say that sometimes they find the same bug in different variants which nobody thought about before.
 
 We believe that our study can build on Dubinsky et. al’s. study by answering RQ1. Identifying variance-related branches will ease the process of propagating changes between clones in an industrial software product line since the developers would know which branches they should propagate.
-
-
