@@ -34,7 +34,7 @@ git merge-file -p --diff3 <left> <ancestor> <right>
 \end{lstlisting}
 Initially, we used the CFT to study the merge-conflicts and their resolutions. However, we found the tool Conflicts Analyzer which classifies merge-conflicts, and therefore we decided to use the already existing tool to analyze the merge-conflicts. We incorporated our re-creation of merge-commits method in the Conflicts Analyzer tool so that it analyzes only Git conflicts (see Section \ref{sec:cmc}).
 
-\section{Classify Merge-Conflicts}\label{sec:cmc]
+\section{Classify Merge-Conflicts}\label{sec:cmc}
 To classify conflicts, we used the tool Conflicts Analyzer developed by Accioly. The tool produces a conflict report with information of each conflict of a specified project. We extended the tool to add additional information as follows; the merge commit hash, the parent 1 hash, and the parent 2 hash. Since the tool uses a merge technique different from that used in Git, it finds conflicts that are not a conflict in Git. As we are interested in how the developers themselves solve conflicts, we are not interested in these additional conflicts. Therefore we also modified the tool to only analyze conflicts from merges that also yield a conflict when merged by Git. We did this by reusing our code that re-creates merges (see Section \ref{sec:cft}).
 
 The output in the conflict report contains the following information:
