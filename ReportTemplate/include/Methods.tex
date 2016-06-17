@@ -8,18 +8,18 @@ To do this, we first needed to find the two parents of a merge commit, that is, 
 \begin{lstlisting}[frame=single,breaklines=true,tabsize=2]
 git --no-pager log --merges --format=%p <hash> | head -n1
 \end{lstlisting}
-where <hash> is the merge commit hash. The two parent commits are hereby referred to as C1 and C2. We then re-create the merge using the following:
+where <hash> is the merge commit hash. We then re-create the merge using the following:
 \lstset{language=Bash,numbers=left,xleftmargin=2em,frame=single,framexleftmargin=1.5em}
 \begin{lstlisting}[frame=single,breaklines=true,tabsize=2]
-git reset --hard <hash of C1>
+git reset --hard <hash of RIGHT>
 git clean -f
 git branch <temp branch name>
-git checkout <hash of C2>
+git checkout <hash of LEFT>
 git merge <temp branch name>
 \end{lstlisting}
-In line 1, we set HEAD to commit C1, which changes the working copy to the state of that C1. In line 2,  the working copy is cleaned to be ready for the merge. In line 3, a new branch is created which points at commit C1. In line 4, we checkout commit C2. In line 5, we merge the two commits by merging the newly created branch into commit C2. Git will now print out the conflicting files, which we parse. Afterwards, we abort the merge and delete the branch.
+In line 1, we set HEAD to RIGHT, which changes the working copy to the state of that commit. In line 2,  the working copy is cleaned to be ready for the merge. In line 3, a new branch is created which points at RIGHT. In line 4, we checkout LEFT. In line 5, we merge the two commits by merging the newly created branch into commit LEFT. Git will now print out the conflicting files, which we parse. Afterwards, we abort the merge and delete the branch.
 
-The common ancestor-, local- and remote file, along with the resulting resolution file in the merge commit, are copied and saved in the Conflict file tree. The Conflict File Tree consist of folders and the versions of the conflicting files, structured according to Figure \ref{fig:cft}.\\
+The common ancestor-, left- and right file, along with the resulting resolution file in the merge commit, are copied and saved in the Conflict file tree. The Conflict File Tree consist of folders and the versions of the conflicting files, structured according to Figure \ref{fig:cft}.\\
 \begin{figure}[H]
 \centering
 %\includegraphics[width=0.45\linewidth, trim=3cm 11cm 3cm 11cm]{figure/conflicts.png}
@@ -35,21 +35,21 @@ git merge-file -p --diff3 <left> <ancestor> <right>
 Initially, we used the CFT to study the merge-conflicts and their resolutions. However, we found the tool Conflicts Analyzer which classifies merge-conflicts, and therefore we decided to use the already existing tool to analyze the merge-conflicts. We incorporated our re-creation of merge-commits method in the Conflicts Analyzer tool so that it analyzes only Git conflicts (see Section \ref{sec:cmc}).
 
 \section{Classify Merge-Conflicts}\label{sec:cmc}
-To classify conflicts, we used the tool Conflicts Analyzer developed by Accioly. The tool produces a conflict report with information of each conflict of a specified project. We extended the tool to add additional information as follows; the merge commit hash, the parent 1 hash, and the parent 2 hash. Since the tool uses a merge technique different from that used in Git, it finds conflicts that are not a conflict in Git. As we are interested in how the developers themselves solve conflicts, we are not interested in these additional conflicts. Therefore we also modified the tool to only analyze conflicts from merges that also yield a conflict when merged by Git. We did this by reusing our code that re-creates merges (see Section \ref{sec:cft}).
+To classify conflicts, we used the tool Conflicts Analyzer developed by Accioly. The tool produces a conflict report with information of each conflict of a specified project. We extended the tool to add additional information as follows; the merge commit hash, the left commit hash, and the right commit hash. Since the tool uses a merge technique different from that used in Git, it finds conflicts that are not a conflict in Git. As we are interested in how the developers themselves solve conflicts, we are not interested in these additional conflicts. Therefore we also modified the tool to only analyze conflicts from merges that also yield a conflict when merged by Git. We did this by reusing our code that re-creates merges (see Section \ref{sec:cft}).
 
 The output in the conflict report contains the following information:
 \begin{itemize}
 \item Conflict type
 \item Merge commit hash
-\item Parent1 hash
-\item Parent2 hash
+\item Left commit hash
+\item Right commit hash
 \item Conflict body
 \item File path
 \end{itemize}
 
 \section{Manual Analysis}\label{sec:manual}
 \FloatBarrier
-We began by reading through the output of Conflicts Analyzer from a randomly selected project called Blueprints. We found that for the conflict pattern SameSignatureCM (see Table \ref{table:conflictpatterns}), the resolution was often equal to one of the versions and that version was often a superset of the other. That version was also often the more recent version. For some observations, there were also cases where the chosen version was an intersection of the two versions. We decided to test if these types of resolutions are common by doing a qualitative analysis. As a resolution can for example, be both the most recent version and a superset, we call them properties that a resolution can have. Based on the observations when reading through the output of Conflicts Analyzer, we proposed properties to check how common they are in a qualitative analysis (see Table \ref{table:pproperties}).
+We began by reading through the output of Conflicts Analyzer from a randomly selected project called Blueprints. We found that for the conflict pattern SameSignatureCM (see Table \ref{table:conflictpatterns}), the resolution was often equal to one of the versions and that version was often a superset of the other. That version was also often the more recent version. For some observations, there were also cases where the chosen version was an intersection of the two versions. We decided to test if these types of resolutions are common by doing a qualitative analysis. As a resolution can for example be both the most recent version and a superset, we call them properties that a resolution can have. Based on the observations when reading through the output of Conflicts Analyzer, we proposed properties to check how common they are in a qualitative analysis (see Table \ref{table:pproperties}).
 \begin{table}
 \caption{Proposed properties}\label{table:pproperties}
 \begin{tabular}{ p{7cm} p{7cm} }
@@ -62,7 +62,7 @@ Intersection & The resolution is an intersection of the code in both versions\\
 \end{table}
 \FloatBarrier
 
-We examined twenty-six randomly sampled examples of SameSignatureCM conflicts from 9 different projects. These projects were Atmosphere, Activiti, Blueprints, BroadLeadCommerce, Buildcraft, EventBus, android-async-http, RxJava, Elasticsearch. For each conflict, we looked at the two versions of the method or constructor, and tried to understand why they chose the one they did. What do the versions they chose have in common?
+We examined twenty-six randomly sampled examples of SameSignatureCM conflicts from 9 different projects. These projects were Atmosphere, Activiti, Blueprints, BroadLeadCommerce, Buildcraft, EventBus, android-async-http, RxJava and Elasticsearch. For each conflict, we looked at the two versions of the method or constructor, and tried to understand why they chose the one they did. What do the versions they chose have in common?
 
 To be able to analyze conflicts from the output of Conflicts Analyzer, we wrote a Bash script to automatically extract the Java-files that conflicted in the merge, as well as the common ancestor file and the resolution file after the merge was made.
 
@@ -74,11 +74,11 @@ git --no-pager log --merges --format=%p <hash> | head -n1
 where \textit{hash} is the merge commit hash. We then parse the two commits and perform the merge using the following sequence of commands:\\
 \lstset{language=Bash,numbers=left,xleftmargin=2em,frame=single,framexleftmargin=1.5em}
 \begin{lstlisting}[frame=single,breaklines=true,tabsize=2]
-git merge-base <C1> <C2>
+git merge-base <LEFT> <RIGHT>
 \end{lstlisting}
-Where \textit{C1} and \textit{C2} refer to the hashes of the parents.  Then, the two parent commits, the merge commit, and the common ancestor commit are checked out respectively and the desired file is copied to a specified output folder. Finally, the script parses the date of the parent commits and prints it to a file in the specified output folder.
+where \textit{LEFT} and \textit{RIGHT} refer to the hashes of the parents.  Then, the two parent commits, the merge commit, and the common ancestor commit are checked out respectively and the desired file is copied to a specified output folder. Finally, the script parses the date of the parent commits and prints it to a file in the specified output folder.
 
-We analyzed the extracted files manually to see whether the categories described in Table \ref{table:pcategories} would emerge repeatedly in many resolutions. The data gathered in the manual analysis consisted of Project name, Function name, Merge hash, Merge commit message, Parent1 hash, Parent2 hash, Parent1 date, Parent2 date, Conflict pattern, Resolution categories, Comment. We also found out that we can apply these same proposed categories for the conflict pattern EditSameMC (see Table \ref{table:conflictpatterns}). For EditSameMC, the method existed in the common ancestor but was modified in both versions.
+We analyzed the extracted files manually to see whether the properties described in Table \ref{table:pproperties} would emerge repeatedly in many resolutions. The data gathered in the manual analysis consisted of Project name, Function name, Merge hash, Merge commit message, Left commit hash, Right commit hash, Left commit date, Right commit date, Conflict pattern, Resolution properties, Comment. We also found out that we can apply these same proposed properties for the conflict pattern EditSameMC (see Table \ref{table:conflictpatterns}). For EditSameMC, the method existed in the common ancestor but was modified in both versions.
 \FloatBarrier
 \section{Automatic Analysis}
 To see whether the results from the manual analysis still apply in a large-scale analysis, we developed a tool that reads the output of Conflicts Analyzer. The tool then filters out those conflicts we are interested in. Those conflicts are then analyzed and the result is printed in a spreadsheet.
@@ -107,7 +107,7 @@ intersection\\
 \hline
 \end{tabularx}
 \end{table}
-
+\FloatBarrier
 \subsection{Repositories to analyze}
 We want to analyze fairly big projects that contain many commits and many forks along with many branches. To satisfy these requirements, we chose the 20 top starred Java repositories on GitHub.
 
@@ -188,3 +188,4 @@ git log -1 <hash> --format=%ci
 \end{lstlisting}
 
 \textbf{Keywords and if-statements.} Lastly, for each version of the method or constructor, we calculate the number of occurrences of each keyword and the number of if-statements (see Table \ref{table:pcategories2}).
+
