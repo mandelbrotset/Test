@@ -1,5 +1,7 @@
 \chapter{Method - Analyzing Merge-Conflict Resolutions}
-In this section we describe how we analyzed merge-conflict resolutions. A manual analysis was conducted and the result of this, which is presented in the Result chapter, was used in an automatic analysis.
+In this section we describe how we analyzed merge-conflict resolutions. A manual analysis was conducted and the result of this, which is presented in the Result chapter, was used in an automatic analysis. In the pre study we answered RQ1, and in this chapter we aim to answer RQ2 and RQ3.
+
+The tools used throughout the method, Conflicts Analyzer [15] and Resolutions Analyzer [16], as well as the results from the analyses [16] are available online.
 \section{Conflict File Tree}\label{sec:cft}
 To get a better overview of how the different versions of a file look, we developed a tool to create a file tree of all conflicts of a given project. We call this file tree the Conflict File Tree. The leaves of the tree consist of the left-, right-, common ancestor- and merge commit version of a conflicting file when re-creating merge commits, as shown in Figure \ref{fig:cft}.
 
@@ -78,12 +80,12 @@ git merge-base <LEFT> <RIGHT>
 \end{lstlisting}
 where \textit{LEFT} and \textit{RIGHT} refer to the hashes of the parents.  Then, the two parent commits, the merge commit, and the common ancestor commit are checked out respectively and the desired file is copied to a specified output folder. Finally, the script parses the date of the parent commits and prints it to a file in the specified output folder.
 
-We analyzed the extracted files manually to see whether the properties described in Table \ref{table:pproperties} would emerge repeatedly in many resolutions. The data gathered in the manual analysis consisted of Project name, Function name, Merge hash, Merge commit message, Left commit hash, Right commit hash, Left commit date, Right commit date, Conflict pattern and Resolution properties. We also found out that we can apply these same proposed properties for the conflict pattern EditSameMC (see Table \ref{table:conflictpatterns}). For EditSameMC, the method existed in the common ancestor but was modified in both versions.
+We analyzed the extracted files manually to see whether the properties described in Table \ref{table:pproperties} would emerge repeatedly in many resolutions. The data gathered in the manual analysis consisted of Project name, Function name, Merge hash, Merge commit message, Left commit hash, Right commit hash, Left commit date, Right commit date, Conflict pattern and Resolution properties. We also found out that we can apply these same proposed properties for the conflict pattern EditSameMC (see Table \ref{table:conflictpatterns}). For EditSameMC, the method existed in the common ancestor but was modified in both versions. Since both EditSameMC and SameSignatureCM are patterns that concern conflicts inside methods and constructors, the only difference being that the method or constructor did not exist in the common ancestor in the SameSignatureCM pattern. Therefore we chose to not treat them differently when analyzing their resulutions.
 \FloatBarrier
 \section{Automatic Analysis}
-To see whether the results from the manual analysis still apply in a large-scale analysis, we developed a tool that reads the output of Conflicts Analyzer. The tool then filters out those conflicts we are interested in. Those conflicts are then analyzed and the result is printed in a spreadsheet.
+To see whether the results from the manual analysis still apply in a large-scale analysis, we developed a tool, which we named Resolution Analyzer, that reads the output of Conflicts Analyzer. The tool then filters out those conflicts we are interested in. Those conflicts are then analyzed and the result is printed in a spreadsheet.
 
-As aforementioned in Section \ref{sec:manual}, we saw that the developer in many cases choose one of the versions completely. We also saw that sometimes the version that is chosen has more if-statements than the other version. We decided that it would be interesting to see whether choosing such a version recurs in many cases. It would also be interesting to see other cases where the version chosen had more of error handling and log printouts. From these observations, we extended and formalized our list of properties, by adding the properties if-statements, print-instances, log-instances and try-instances. The properties are defined in Table \ref{table:propdef}, where X and Y refers to the two versions. For each property the conflict resolutions are categorized as explained in Table \ref{table:pproperties2}.
+As aforementioned in Section \ref{sec:manual}, we saw that the developer in many cases choose one of the versions completely. We also saw that sometimes the version that is chosen has more if-statements than the other version. We decided that it would be interesting to see whether choosing such a version recurs in many cases. It would also be interesting to see other cases where the version chosen had more of error handling and log printouts. From these observations, we extended and formalized our list of properties, by adding the properties if-statements, print-instances, log-instances and try-instances. The properties are defined in Table \ref{table:propdef}, where X and Y refer to the two versions. For each property the conflict resolutions are categorized as explained in Table \ref{table:pproperties2}.
 
 \FloatBarrier
 \begin{table}
@@ -101,30 +103,18 @@ try-instances & X has more instances of the keyword ‘try’ than Y\\
 \end{tabular}
 \end{table}
 \FloatBarrier
-
-
 \begin{table}
-\caption{Explanation of categories for each property}\label{table:pproperties2}
-\begin{tabularx}{\textwidth}{| X | X | X | X | X |}
-\hline & \textbf{X chosen} & \textbf{Y chosen} & \textbf{None chosen} & \textbf{Not applicable}\\
+\caption{Definition of the categories}\label{table:pproperties2}
+\begin{tabular}{ l l }
 \hline
-\textbf{Recent} & The most recent version was chosen & The least recent version was chosen & None of the versions were chosen & N/A\\
-\hline
-\textbf{Superset} & The superset version was chosen & The version that was not a superset was chosen & None of the versions were chosen & No version was a superset\\
-\hline
-\textbf{Intersection} & The intersection version was chosen & The version that was not an intersection were chosen & None of the versions were chosen & No version was an
-intersection\\
-\hline
-\textbf{if-statements} & The version with most instances of if-statements was chosen & The version with least instances of if-statements was chosen & None of the versions were chosen & The versions had equal amount of instances\\
-\hline
-\textbf{print-instances} & The version with most instances of print was chosen & The version with least instances of print was chosen & None of the versions were chosen & The versions had equal amount of instances\\
-\hline
-\textbf{log-instances} & The version with most instances of log was chosen & The version with least instances of log was chosen & None of the versions were chosen & The versions had equal amount of instances\\
-\hline
-\textbf{try-instances} & The version with most instances of try was chosen & The version with least instances of try was chosen & None of the versions were chosen & The versions had equal amount of instances\\
-\hline
-\end{tabularx}
+\multicolumn{1}{c}{\textbf{Category}} & \multicolumn{1}{c}{\textbf{Description}}\\
+X chosen & The resolution is equal to X\\
+Y chosen & The resolution is equal to Y\\
+None chosen & Property satisfied but the resolution is not equal to any of the versions\\
+Not applicable & Property not satisfied\\
+\end{tabular}
 \end{table}
+
 \FloatBarrier
 \subsection{Repositories to analyze}
 We want to analyze fairly big projects that contain many commits and many forks along with many branches. To satisfy these requirements, we chose the 20 top starred Java repositories on GitHub.
@@ -205,3 +195,4 @@ The left version contains all code from the right version plus a check for the i
 \textbf{Intersection.} Similarly to how we detect a superset, we also consider the sets of words to detect whether a version is an intersection of the left and the right versions. A version is an intersection if and only if that version’s set of words is equal to the intersection of the sets of words in the left and right code.
 
 \textbf{if-statements, print-instances, log-instances and try-instances.} Lastly, for each version of the method or constructor, we calculate the number of occurrences of each keyword and the number of if-statements (see Table \ref{table:propdef}).
+

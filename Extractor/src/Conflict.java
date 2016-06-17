@@ -1,3 +1,21 @@
+/*
+Copyright (C) 2016 Isak Eriksson, Patrik Wållgren
+
+This file is part of ResolutionsAnalyzer.
+
+    ResolutionsAnalyzer is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ResolutionsAnalyzer is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with ResolutionsAnalyzer.  If not, see <http://www.gnu.org/licenses/>.
+*/
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -8,8 +26,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
-import java.util.function.Function;
-import java.util.function.*;
+
 public class Conflict {
 	enum Result {
 		LEFT, RIGHT, BOTH, NONE
@@ -34,17 +51,13 @@ public class Conflict {
 	private String[] parameterTypes;
 	private String resultBody;
 	private String repoPath;
-	private String tabortdennasen;
 	private HashSet<String> leftLines;
 	private HashSet<String> rightLines;
-	private HashSet<String> resultLines;
-	private HashSet<String> intersectionLines;
 	private ArrayList<Category> categories;
 	private Result result;
 
 	public Conflict(String conflict, String repoPath) {
 		this.repoPath = repoPath;
-		this.tabortdennasen = conflict;
 		categories = new ArrayList<Category>();
 		parseValues(conflict);
 	}
@@ -56,7 +69,7 @@ public class Conflict {
 			categories.add(Category.SUPERSET);
 
 		if (resultBody.equals(leftBody) && resultBody.equals(rightBody)) {
-			result = result.BOTH;
+			result = Result.BOTH;
 		} else if (resultBody.equals(leftBody)) {
 			result = Result.LEFT;
 		} else if(resultBody.equals(rightBody)){
@@ -77,13 +90,11 @@ public class Conflict {
 		mergeCommitSha = parseValue(conflict, "Merge Commit SHA-1:");
 		setBodies(conflict);
 		parseFunction(leftBody);
-		//removeAnnotationsFromBodies();
 		initHashSets();
 		filePath = parseValue(conflict, "File path:");
 		filePath = filePath.split("rev_....._.....\\/rev_.....\\-.....\\/")[1];
 		leftDate = getDate(leftSha);
 		rightDate = getDate(rightSha);
-
 	}
 
 	private String parseValue(String conflict, String parameterName) {
@@ -191,13 +202,11 @@ public class Conflict {
 				count++;
 		}
 		return count;
-
 	}
 	
 	private int countIfs(String body) {
 		if (!body.contains("if"))
 			return 0;
-		//[ |\n|\)|\(|\{|\}]if[ |\()|\n]
 		int count = 0;
 		String[] list = body.split("[ |\\n|\\)|\\(|\\{|\\}]if[ |\\()|\\n]");
 		count = list.length - 1;
@@ -212,16 +221,16 @@ public class Conflict {
 	
 	private String removeAnnotations(String body, String toFunctionName) {
 		StringBuilder sb = new StringBuilder();
-		boolean weHavePassedTheFunction = false;
+		boolean functionPassed = false;
 		for (String line : body.split("\n")) {
 			if(FunctionParser.containsFunction(line, true)) {
 				if(line.startsWith("@")) {
 					line = line.substring(line.indexOf(" "));
 				}
-				weHavePassedTheFunction = true;
+				functionPassed = true;
 			}
 					
-			if (!line.trim().startsWith("@") || weHavePassedTheFunction) {
+			if (!line.trim().startsWith("@") || functionPassed) {
 				sb.append(line + "\n");
 			}
 			
@@ -325,14 +334,13 @@ public class Conflict {
 
 	public void setResultBody(String resultBody) {
 		this.resultBody = filterLines(resultBody);
-		resultLines = new HashSet<String>(Arrays.asList(this.resultBody.split("\n")));
 	}
 
 	private boolean isIntersection() {
 		HashSet<String> resultWords = getWords(resultBody);
 		HashSet<String> leftWords = getWords(leftBody);
 		HashSet<String> rightWords = getWords(rightBody);
-		HashSet<String> parentsWords = leftWords;
+		HashSet<String> parentsWords = new HashSet<String>(leftWords);
 		parentsWords.retainAll(rightWords);
 		return resultWords.equals(parentsWords);
 	}
@@ -364,7 +372,6 @@ public class Conflict {
 		HashSet<String> parentsWords = new HashSet<String>(leftWords);
 		parentsWords.addAll(rightWords);
 		return resultWords.equals(parentsWords);
-		//return resultWords.containsAll(parentsWords) && parentsWords.containsAll(rightWords);
 	}
 	
 	public boolean isLeftSuperset() {

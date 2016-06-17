@@ -1,6 +1,0 @@
-#!/bin/bash
-#Abort started merge
-#$1: path to repo
-
-cd $1
-git merge --abort

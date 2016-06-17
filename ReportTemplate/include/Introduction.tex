@@ -6,11 +6,11 @@ Resolving merge conflicts, such as those arising from changes to different varia
 
 The goal of this work is to conduct a feasibility study that aims at investigating whether analysis of merge-conflict resolutions in large codebases can be automated. We focus on open-source projects, such as those being hosted on GitHub.
 
-Understanding how merge conflicts are resolved allows for future development of an autonomous merge-conflict tool, which is our long-term goal. Towards this end, this study aims at answering the following research questions:
+Understanding how merge conflicts are resolved allows for future development of an automatic merge-conflict resolution tool, which is our long-term goal. Towards this end, this study aims at answering the following research questions:
 \begin{itemize}
-\item RQ1. Is it feasible to identify variant- and feature-branching related conflicts?
-\item RQ2. Is it feasible to statically analyze conflict resolutions in real-world, large version histories of open-source projects, and how?
-\item RQ3. Is it feasible to categorize resolution conflicts?
+\item RQ1. Can we identify variant- and feature-branching related conflicts?
+\item RQ2. How can we statically analyze merge-conflict resolutions in real-world, large version histories of open-source projects?
+\item RQ3. Can we make a meaningful categorization of how developers resolve merge-conflicts?
 \end{itemize}
 
 Our main working hypothesis is that it is in fact feasible to automatically analyze conflict resolutions and categorize them from all the metadata available about projects and from statically analyzing code. By studying examples of popular projects with many branches or forks, developing a mining infrastructure, and investigating to what extent static code-analysis tools can be utilized for categorizing the conflict resolutions, we will work towards testing this hypothesis.

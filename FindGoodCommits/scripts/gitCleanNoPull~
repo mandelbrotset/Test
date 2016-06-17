@@ -1,8 +1,0 @@
-#!/bin/bash
-#Resets git repository and pulls the latest
-#$1: path to repo
-
-cd $1
-git reset --hard origin/HEAD
-git clean -f -x -d
-git pull origin master

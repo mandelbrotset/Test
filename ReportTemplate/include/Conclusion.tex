@@ -1,13 +1,13 @@
 \chapter{Conclusion}
 The goal of our thesis was to answer the following three research questions:
 \begin{itemize}
-\item RQ1. Is it feasible to identify variant- and feature-branching related conflicts?
-\item RQ2. Is it feasible to statically analyze conflict resolutions in real-world, large version histories of open-source projects, and how?
-\item RQ3. Is it feasible to categorize resolution conflicts?
+\item RQ1. Can we identify variant- and feature-branching related conflicts?
+\item RQ2. How can we statically analyze merge-conflict resolutions in real-world, large version histories of open-source projects?
+\item RQ3. Can we make a meaningful categorization of how developers resolve merge-conflicts?
 \end{itemize}
 
-To answer RQ1, a pre study was conducted. As stated in Chapter \ref{cha:prestudy}, the pre study showed that it is not feasible to identify variant- and feature-branching related conflicts. To answer RQ2 and RQ3, we conducted a quantitative analysis based on the results of our manual analysis, described in Section \ref{sec:manual}. Our findings are that it is feasible to both statically analyze conflict resolutions in real-world, large version histories of open-source projects and to categorize resolution conflicts. We also showed how this could be done by analyzing output from Conflicts Analyzer.
+To answer RQ1, a pre study was conducted. As stated in Chapter \ref{cha:prestudy}, the pre study showed that we were not able to identify variant- and feature-branching related conflicts. To answer RQ2 and RQ3, we conducted a quantitative analysis based on the results of our manual analysis, described in Section \ref{sec:manual}. We showed how to statically analyze conflict resolutions in real-world, large version histories of open-source projects and how they could be categorized by analyzing output from Conflicts Analyzer.
 
-Our study contributes to the long term goal of creating an automatic merge tool by increasing the understanding of how developers solve merge-conflicts. As shown in Figure \ref{fig:groups}, developers tend to choose their own code when resolving conflicts.
+Our study contributes to the long term goal of creating an automatic merge tool by increasing the understanding of how developers resolve merge-conflicts. As shown in Figure \ref{fig:groups}, developers tend to choose their own code when resolving conflicts.
 
-For conflicts regarding code inside methods or constructors, we have shown that the currently checked out version is chosen in more than 3 out of 4 cases and that the chosen version often is the most recent one. Therefore, we conclude that developers tend to choose their own version of the code when resolving merge-conflicts.
+For conflicts regarding code inside methods or constructors, we have shown that the currently checked out version is chosen in more than 3 out of 4 cases and that the chosen version often is the most recent one. Therefore, we conclude that developers tend to choose their own version of the code when resolving merge-conflicts. If developers choose their own versions instead of choosing the best code, our long term goal of an automatic merge-conflict resolution tool is even more important. For future studies, it would be interesting to see if our results hold for the other conflict patterns other than EditSameMC and SameSignatureCM, as described in Table \ref{table:conflictpatterns}.

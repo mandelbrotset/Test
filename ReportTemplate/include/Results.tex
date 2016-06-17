@@ -1,5 +1,5 @@
 \chapter{Results}
-For RQ2, our study has shown a way of analyzing conflict resolutions in large-scale codebases, and this can be achieved by parsing output from Conflicts Analyzer. Likewise, for RQ3, our study has indeed showed that it is possible to create a meaningful categorization of merge-conflict resolutions which could be used in future studies to, for instance, create an automatic merge tool. This chapter shows the results of the manual- and automatic analysis.
+For RQ2, our study has shown a way of analyzing conflict resolutions in large-scale codebases, and this can be achieved by parsing output from Conflicts Analyzer. Likewise, for RQ3, we have created a categorization for merge-conflicts resolved by developers which can be used in future studies to, for instance, create an automatic merge tool. This chapter shows the results of the manual- and automatic analysis.
 \section{Manual Analysis}
 For conflicts in the conflict pattern SameSignatureCM, we found that if one of the two versions had the same code as the other version but with some additional code, that version was often chosen as resolution. This can be seen in Table \ref{table:rcsitma} where the resolution was a superset in 69\% of the cases. Table \ref{table:rcsitma} lists how many resolutions, in the 26 cases that were analyzed, were \textit{Superset}, \textit{Intersection} and/or \textit{Recent}. As a resolution can be both recent and a superset or an intersection at the same time, the percentage add up to more than 100\%.
 \begin{table}
@@ -49,15 +49,16 @@ Here, all the words in the left version are also in the right version, hence the
 \section{Automatic Analysis}
 \FloatBarrier
 The automatic analysis that was conducted on the 20 top starred Java projects on GitHub yielded, after our filtering, 1964 conflicts. For each property (see Table \ref{table:propdef}), the resolutions for the 1964 conflicts was categorized according to Table \ref{table:pproperties2} and the results are presented in this section.
+\subsection{Developers often choose one version completely}
 \FloatBarrier
-In 1509 cases (77\% of the studied cases), the left version was chosen that is, the version in the commit that was checked out at the time of merging. Figure \ref{fig:groups} shows how many cases there are in each group.
+In 1509 cases (77\% of the studied cases), the left version was chosen as resolution, that is, the version that was checked out at the time of merging. Figure \ref{fig:groups} shows how many cases where the left- and right version was chosen completely as the resolution and in how many cases none of them were chosen completely.
 
 \begin{figure}
 \begin{tikzpicture}
  \begin{axis}[
      symbolic x coords={LEFT, RIGHT, NONE},
      xtick=data,
-     xlabel=\textbf{Group},
+     xlabel=\textbf{Version},
      ylabel=\textbf{Chosen resolutions}
    ]
      \addplot[ybar,fill=blue] coordinates {
@@ -67,35 +68,19 @@ In 1509 cases (77\% of the studied cases), the left version was chosen that is, 
      };
  \end{axis}
 \end{tikzpicture}
-\caption{Number of chosen resolutions for each group}\label{fig:groups}
+\caption{Number of chosen resolutions}\label{fig:groups}
 \end{figure}
 \FloatBarrier
-For cases where one of the versions was chosen completely, we can show that this chosen version ofter is the most recent version, as can be seen in Figure \ref{fig:recent}.
-
-\begin{figure}
-\begin{tikzpicture}
-\begin{axis}[ybar stacked,symbolic x coords={LEFT,RIGHT},xtick=data,enlarge x limits={abs=1.5cm},xlabel=\textbf{Group},ylabel=\textbf{Chosen resolutions},legend pos=outer north east]
-    \addplot[black!40,fill=blue] coordinates
-{(LEFT,1161)(RIGHT,40)};
-    \addplot[black!40,fill=red]  coordinates
-{(LEFT,348)(RIGHT,37)};
-\legend{Recent, Non recent}
-\end{axis}
-\end{tikzpicture}
-\caption{Number of most recent versions chosen}\label{fig:recent}
-\end{figure}
-\FloatBarrier
-For some cases, the left and the right version differ in how many instances of specific keywords they contain. Figure \ref{fig:keywords} shows how often the version with most instances and the version with least instances of each keyword was chosen. \textit{Neither} means that the resolution is in the group \textit{None}, see Figure \ref{fig:groups}.
-
-
-Chart \ref{fig:setleft} and Chart \ref{fig:setright} show how often the left version and the right version is a superset or an intersection, and how often those versions are chosen as resolution.
-
 
 %Total:
 %TOT: flest,		färst, 		ingen, Non applicable
 %	 recent, 	not recent		 , Non applicable
 %	 sup/int	den andra	none , Non applicable
 
+\subsection{Properties}
+Chart \ref{set} shows the resolution categorization, as defined in Table \ref{table:pproperties2} for each property, as defined in Table \ref{table:propdef}. The chart shows that the chosen version often is the more recent. It also shows that if one of the versions is a superset of the other, the version that is the superset is often chosen. On the contrary, if one version is an intersection of the two versions, the other version is more often chosen. For the if-statements, print-instances, log-instances and try-instances there were too many resolutions in the Not applicable category to draw any conclusions. 
+
+Chart \ref{setleft} shows the resolution categorization where X is the left version and Y is the right version, and Chart \ref{setright} shows the resolution categorizations where X is the right version and Y is the left version. From these charts, one can see that the left version more often is a superset of the right version than the other way around. On the contrary, the right version 
 
 \begin{figure}
 \resizebox {\columnwidth} {!} {
@@ -111,11 +96,11 @@ Chart \ref{fig:setleft} and Chart \ref{fig:setright} show how often the left ver
     \addplot[black!40,fill=red] coordinates{(Recent,385)(Superset,186)(Intersection,333)(if-statements,26)(print-instances,2)(log-instances,5)(try-instances,11)};
     \addplot[black!40,fill=green] coordinates{(Recent,378)(Superset,184)(Intersection,184)(if-statements,67)(print-instances,13)(log-instances,7)(try-instances,7)};
     \addplot[black!40,fill=white] coordinates{(Recent,0)(Superset,1261)(Intersection,1261)(if-statements,1832)(print-instances,1943)(log-instances,1948)(try-instances,1929)};
-\legend{Chosen, Other chosen, None chosen, Not applicable}
+\legend{X chosen, Y chosen, None chosen, Not applicable}
 \end{axis}
 \end{tikzpicture}
 }
-\caption{Classification of conflicts for each category.}\label{fig:setright}
+\caption{Classification of conflicts for each category.}\label{fig:set}
 \end{figure}
 
 \begin{figure}
@@ -130,11 +115,11 @@ xticklabel style={
     \addplot[black!40,fill=red] coordinates{(Recent,37)(Superset,26)(Intersection,28)(if-statements,13)(print-instances,0)(log-instances,0)(try-instances,4)};
     \addplot[black!40,fill=green] coordinates{(Recent,252)(Superset,93)(Intersection,91)(if-statements,32)(print-instances,10)(log-instances,5)(try-instances,4)};
     \addplot[black!40,fill=white] coordinates{(Recent,514)(Superset,1540)(Intersection,1685)(if-statements,1887)(print-instances,1948)(log-instances,1957)(try-instances,1943)};
-\legend{Chosen, Other chosen, None chosen, Not applicable}
+\legend{X chosen, Y chosen, None chosen, Not applicable}
 \end{axis}
 \end{tikzpicture}
 }
-\caption{Classification of conflicts for each category for the LEFT versions.}\label{fig:setright}
+\caption{Resolution categorization where X is the left version and Y is the right version.}\label{fig:setleft}
 \end{figure}
 
 \begin{figure}
@@ -149,22 +134,19 @@ xticklabel style={
     \addplot[black!40,fill=red] coordinates{(Recent,348)(Superset,160)(Intersection,305)(if-statements,13)(print-instances,2)(log-instances,5)(try-instances,7)};
     \addplot[black!40,fill=green] coordinates{(Recent,126)(Superset,91)(Intersection,93)(if-statements,35)(print-instances,3)(log-instances,2)(try-instances,3)};
     \addplot[black!40,fill=white] coordinates{(Recent,1450)(Superset,1685)(Intersection,1540)(if-statements,1909)(print-instances,1959)(log-instances,1955)(try-instances,1950)};
-\legend{Chosen, Other chosen, None chosen, Not applicable}
+\legend{X chosen, Y chosen, None chosen, Not applicable}
 \end{axis}
 \end{tikzpicture}
 }
-\caption{Classification of conflicts for each category for the RIGHT versions.}\label{fig:setright}
+\caption{Resolution categorization where X is the right version and Y is the left version.}\label{fig:setright}
 \end{figure}
 
 \section{Discussion}
-The most important result in this study is that in cases of conflicting code in methods or constructors in 3 out of 4 cases, developers tend to choose the left version when merging. The reasons for this is unclear, but there are two main scenarios; when pulling a remote branch and when merging a local branch into another one.
+The most significant result in this study is that in cases of conflicting code in methods or constructors, in 3 out of 4 cases that we studied, developers chose the left version when merging. The reasons for this is unclear, but there are two main scenarios; when pulling a remote branch and when merging a local branch into another one.
 
-The left version is the commit that the developer who performs the merge has checked out when merging. If the conflicting merge is a result of pulling a remote branch, the left version is likely his own code, and the right version is someone else’s code. Table \ref{fig:recent} shows that the chosen version also often is the most recent version. This in combination with that the left version most often is chosen indicates that developers tend to choose their own code as resolution. This study has not gone into why developers resolve conflicts this way, but it might be interesting for future studies to investigate this further. If the conflicting merge is a result of merging a local branch into another one, the left version is the branch which the other branch was merged into.
-
-Another interesting note about the results is that versions containing more of the keywords print and log are only chosen in about 1 out of 4 times. This might be because printouts and logging statements are removed at the time of the merge, when hopefully the newly implemented code is working as intended and tested, thus printouts and logs is no longer needed.
+The left version is the commit that the developer who performs the merge has checked out when merging. If the conflicting merge is a result of pulling a remote branch, the left version is likely his own code, and the right version is someone else’s code. Chart \ref{fig:set} shows that the chosen version also often is the most recent version. This in combination with that the left version most often is chosen indicates that developers tend to choose their own code as resolution. This study has not gone into why developers resolve conflicts this way, but it might be interesting for future studies to investigate this further. If the conflicting merge is a result of merging a local branch into another one, the left version is the branch which the other branch was merged into.
 
 \subsection{Threats to Validity}
-Our results are based on a sample of 20 projects, and a total of 1964 conflicts were analyzed. The results might differ if other projects were to be analyzed. The 20 top starred projects were all java projects, we can not say if our results hold for other languages. Also, these were all open-source projects. Inside companies, development can be done in other ways, thus our results might not be the same if analyzing in non open-source projects. The projects analyzed varies in size. 
+Our results are based on a sample of 20 projects of different sizes, and a total of 1964 conflicts were analyzed. The results might differ if other projects were to be analyzed. The 20 top starred projects were all Java projects. Thus we can not say if our results hold for other languages. Also, these were all open-source projects and may not hold for closed-source projects. The fact that the projects are the 20 most top starred projects on Github might also affect the results.
 
-The Conflicts Analyzer tool are not developed by us and when running it for the first times, it contained some bugs which we had to solve. Although we managed to solve them, if there still are any bugs present in the tool, then it would be a threat to validity to our own results.
-
+There is also the possibility that the tools we used in the study contain bugs which may affect the result.

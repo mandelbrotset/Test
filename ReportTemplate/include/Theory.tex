@@ -11,7 +11,7 @@ Many software projects follow a branching model when using Git, such as the one 
 
 When a new feature has been implemented in a new branch, the branch needs to be merged into another branch, such as the main branch. \textit{Merging} is the process of joining two branches together, both in case of two local branches or a local and a remote branch [6]. Local branches are branches in the client’s copy of the repository, whereas the remote branches are branches in the remote repository. In GitHub, merging is usually done using a pull request. A \textit{pull request} is made to let the collaborators in the repository know that the commits in a branch are ready to be merged. The collaborators can review the new code and input their feedback until it is finally approved for merging into the end-user branch [7].
 \FloatBarrier
-The two commits that are to be merged are called the \textit{parents} of the textit{merge commit} that is created when the merge is made. In this document, the parents will often be referred to as the left- and the right version. The \textit{left version} is the commit that was checked out at the time of the merge, and the \textit{right version} is the commit that is being merged into the currently checked out branch. For instance, when pulling the remote branch to merge with the local branch, the left version will be the local version and the right version will be the remote version that is being pulled. The commit that two branches originates from is called the \textit{common ancestor}. Figure \ref{fig:merging} illustrates a merge and the terms common ancestor, left- and right version, and merge commit.
+The two commits that are to be merged are called the \textit{parents} of the \textit{merge commit} that is created when the merge is made. In this document, the parents will often be referred to as the left- and the right version. The \textit{left version} is the commit that was checked out at the time of the merge, and the \textit{right version} is the commit that is being merged into the currently checked out branch. For instance, when pulling the remote branch to merge with the local branch, the left version will be the local version and the right version will be the remote version that is being pulled. The commit that two branches originates from is called the \textit{common ancestor}. Figure \ref{fig:merging} illustrates a merge and the terms common ancestor, left- and right version, and merge commit.
 
 \begin{figure}[H]
 \centering
@@ -70,7 +70,7 @@ ExtendsList & Different edits to the same extends declaration\\
 DefaultValueA & Different edits to the same annotation method default value
 \end{tabular}
 \end{table}
-From Table \ref{table:conflictpatterns}, it is the EditSameMC- and SameSignatureCM patterns that concern the leaves of the tree.
+From Table \ref{table:conflictpatterns}, it is the EditSameMC- and SameSignatureCM patterns that concern the leaves of the tree and they make up 84\% of the total number of conflicts [12] and this is the main reason why our study focuses only on these patterns.
 
 \subsection{Avoiding Software Merge-Conflicts}
 There exist numerous practices to reduce merge-conflicts, such as continuous integration[13] in an Agile development process. The continuous integration practice makes sure that developers merge their code in short intervals and therefore the conflicts does not become as many at a given time as it would if merges were done less frequently.

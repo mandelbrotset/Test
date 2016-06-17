@@ -1,12 +1,23 @@
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+/*
+Copyright (C) 2016 Isak Eriksson, Patrik Wållgren
+
+This file is part of ResolutionsAnalyzer.
+
+    ResolutionsAnalyzer is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ResolutionsAnalyzer is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with ResolutionsAnalyzer.  If not, see <http://www.gnu.org/licenses/>.
+*/
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
-
-import javax.print.attribute.standard.PrinterState;
 
 public class FunctionParser {
 
@@ -28,49 +39,10 @@ public class FunctionParser {
 				return null;
 			}
 		}
-
 		return null;
 	}
 
-	private static void writeFile(String project, String mergecommit, ArrayList<String> lines, String[] params,
-			String name) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("project: " + project + "\n");
-		sb.append("mergecommitsha:" + mergecommit + "\n");
-		sb.append("name:" + name + "\n");
-		sb.append("project: " + project + "\n");
-		sb.append("lines:\n");
-		for (String line : lines) {
-			sb.append(line);
-			sb.append("\n");
-		}
-		sb.append("params:\n");
-		if (params != null) {
-			for (String param : params) {
-				sb.append(param);
-				sb.append("\n");
-			}
-		}
-		int counter = 0;
-		try {
-			while (true) {
-				File file = new File("/tmp/cft/" + project + "-" + mergecommit + "-conflict" + counter);
-				if (file.exists()) {
-					counter++;
-				} else {
-					BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-					bw.write(sb.toString());
-					bw.close();
-					break;
-				}
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
 	private static boolean containsAllParams(String line, String functionName, String... params) {
-		int hits = 0;
 		ArrayList<String> lineParams = new ArrayList<String>(
 				Arrays.asList(extractFunctionParameters(line, functionName)));
 		ArrayList<String> functionParams = new ArrayList<String>(Arrays.asList(params));
@@ -94,11 +66,9 @@ public class FunctionParser {
 				currentBrackets--;
 
 			linesInFunction++;
-
 			if (currentBrackets == 0)
 				break;
 		}
-
 		return linesInFunction;
 	}
 
@@ -111,11 +81,11 @@ public class FunctionParser {
 
 	public static boolean containsFunction(String line, String name, boolean splittedOnLines) {
 		line = line.trim();
-		String hej = name;
-		if (hej.equals("")) {
-			hej = ".*";
+		String s = name;
+		if (s.equals("")) {
+			s = ".*";
 		}
-		String regex = "(.* " + hej + "|" + hej + ")( \\(|\\().*\\).*\\{.*";
+		String regex = "(.* " + s + "|" + s + ")( \\(|\\().*\\).*\\{.*";
 		if (line.matches(regex))
 			if (isBefore(line, name, "(") && isBefore(line, "{", " new ")) {
 				if (line.indexOf("(") < line.indexOf(")") && line.indexOf(")") < line.indexOf("{"))
