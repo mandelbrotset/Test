@@ -49,9 +49,9 @@ Here, all the words in the left version are also in the right version, hence the
 \section{Automatic Analysis}
 \FloatBarrier
 The automatic analysis that was conducted on the 20 top starred Java projects on GitHub yielded, after our filtering, 1964 conflicts. For each property (see Table \ref{table:propdef}), the resolutions for the 1964 conflicts was categorized according to Table \ref{table:pproperties2} and the results are presented in this section.
-
-In 1509 cases (77\% of the studied cases), the left version was chosen that is, the version in the commit that was checked out at the time of merging. Figure \ref{fig:groups} shows how many cases there are in each group.
 \FloatBarrier
+In 1509 cases (77\% of the studied cases), the left version was chosen that is, the version in the commit that was checked out at the time of merging. Figure \ref{fig:groups} shows how many cases there are in each group.
+
 \begin{figure}
 \begin{tikzpicture}
  \begin{axis}[
@@ -69,7 +69,7 @@ In 1509 cases (77\% of the studied cases), the left version was chosen that is, 
 \end{tikzpicture}
 \caption{Number of chosen resolutions for each group}\label{fig:groups}
 \end{figure}
-
+\FloatBarrier
 For cases where one of the versions was chosen completely, we can show that this chosen version ofter is the most recent version, as can be seen in Figure \ref{fig:recent}.
 
 \begin{figure}
@@ -84,7 +84,7 @@ For cases where one of the versions was chosen completely, we can show that this
 \end{tikzpicture}
 \caption{Number of most recent versions chosen}\label{fig:recent}
 \end{figure}
-
+\FloatBarrier
 For some cases, the left and the right version differ in how many instances of specific keywords they contain. Figure \ref{fig:keywords} shows how often the version with most instances and the version with least instances of each keyword was chosen. \textit{Neither} means that the resolution is in the group \textit{None}, see Figure \ref{fig:groups}.
 
 
