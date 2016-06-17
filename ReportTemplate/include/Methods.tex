@@ -49,7 +49,7 @@ The output in the conflict report contains the following information:
 
 \section{Manual Analysis}\label{sec:manual}
 \FloatBarrier
-We began by reading through the output of Conflicts Analyzer from a randomly selected project called Blueprints. We found that for the conflict pattern SameSignatureCM (see Table \ref{table:conflictpatterns}), the resolution was often equal to one of the versions and that version was often a superset of the other. That version was also often the more recent version. For some observations, there were also cases where the chosen version was an intersection of the two versions. We decided to test if these types of resolutions are common by doing a qualitative analysis. As a resolution can for example be both the most recent version and a superset, we call them properties that a resolution can have. Based on the observations when reading through the output of Conflicts Analyzer, we proposed properties to check how common they are in a qualitative analysis (see Table \ref{table:pproperties}).
+We began by reading through the output of Conflicts Analyzer from a randomly selected project called Blueprints. We found that for the conflict pattern SameSignatureCM (see Table \ref{table:conflictpatterns}), the resolution was often equal to one of the versions, i.e. the developer chose one of the versions completely, and that version was often a superset of the other. That version was also often the more recent version. For some observations, there were also cases where the chosen version was an intersection of the two versions. We decided to test if these types of resolutions are common by doing a qualitative analysis. As a resolution can for example be both the most recent version and a superset, we call them properties that a resolution can have. Based on the observations when reading through the output of Conflicts Analyzer, we proposed properties to check how common they are in a qualitative analysis (see Table \ref{table:pproperties}).
 \begin{table}
 \caption{Proposed properties}\label{table:pproperties}
 \begin{tabular}{ p{7cm} p{7cm} }
@@ -78,17 +78,35 @@ git merge-base <LEFT> <RIGHT>
 \end{lstlisting}
 where \textit{LEFT} and \textit{RIGHT} refer to the hashes of the parents.  Then, the two parent commits, the merge commit, and the common ancestor commit are checked out respectively and the desired file is copied to a specified output folder. Finally, the script parses the date of the parent commits and prints it to a file in the specified output folder.
 
-We analyzed the extracted files manually to see whether the properties described in Table \ref{table:pproperties} would emerge repeatedly in many resolutions. The data gathered in the manual analysis consisted of Project name, Function name, Merge hash, Merge commit message, Left commit hash, Right commit hash, Left commit date, Right commit date, Conflict pattern, Resolution properties, Comment. We also found out that we can apply these same proposed properties for the conflict pattern EditSameMC (see Table \ref{table:conflictpatterns}). For EditSameMC, the method existed in the common ancestor but was modified in both versions.
+We analyzed the extracted files manually to see whether the properties described in Table \ref{table:pproperties} would emerge repeatedly in many resolutions. The data gathered in the manual analysis consisted of Project name, Function name, Merge hash, Merge commit message, Left commit hash, Right commit hash, Left commit date, Right commit date, Conflict pattern and Resolution properties. We also found out that we can apply these same proposed properties for the conflict pattern EditSameMC (see Table \ref{table:conflictpatterns}). For EditSameMC, the method existed in the common ancestor but was modified in both versions.
 \FloatBarrier
 \section{Automatic Analysis}
 To see whether the results from the manual analysis still apply in a large-scale analysis, we developed a tool that reads the output of Conflicts Analyzer. The tool then filters out those conflicts we are interested in. Those conflicts are then analyzed and the result is printed in a spreadsheet.
 
-From the qualitative analysis, we saw that sometimes the version that is chosen has more if-statements than the other version. We decided that it would be interesting to see whether choosing such a version reoccurs in many cases. It would also be interesting to see other cases where the version chosen had more of error handling and log printouts. Therefore, we proposed a list of keywords to search for in the versions. Thus, the complete list of categories we analyze is as shown in Table \ref{table:pcategories2}.
+As aforementioned in Section \ref{sec:manual}, we saw that the developer in many cases choose one of the versions completely. We also saw that sometimes the version that is chosen has more if-statements than the other version. We decided that it would be interesting to see whether choosing such a version recurs in many cases. It would also be interesting to see other cases where the version chosen had more of error handling and log printouts. From these observations, we extended and formalized our list of properties, by adding the properties if-statements, print-instances, log-instances and try-instances. The properties are defined in Table \ref{table:propdef}, where X and Y refers to the two versions. For each property the conflict resolutions are categorized as explained in Table \ref{table:pproperties2}.
+
+\FloatBarrier
+\begin{table}
+\caption{Definition of the properties}\label{table:propdef}
+\begin{tabular}{ l l }
+\hline
+\multicolumn{1}{c}{\textbf{Property}} & \multicolumn{1}{c}{\textbf{Description}}\\
+Recent & X is more recent than Y\\
+Superset & X is a superset of Y\\
+Intersection & X is an intersection of Y\\
+if-statements & X has more if-statements than Y\\
+print-instances & X has more instances of the keyword ‘print’ than Y\\
+log-instances & X has more instances of the keyword ‘log’ than Y\\
+try-instances & X has more instances of the keyword ‘try’ than Y\\
+\end{tabular}
+\end{table}
+\FloatBarrier
+
 
 \begin{table}
-\caption{Proposed categories}\label{table:pcategories2}
-\begin{tabularx}{\textwidth}{ | X | X | X | X | X |}
-\hline & \textbf{Chosen} & \textbf{Other chosen} & \textbf{None chosen} & \textbf{Not applicable}\\
+\caption{Explanation of categories for each property}\label{table:pproperties2}
+\begin{tabularx}{\textwidth}{| X | X | X | X | X |}
+\hline & \textbf{X chosen} & \textbf{Y chosen} & \textbf{None chosen} & \textbf{Not applicable}\\
 \hline
 \textbf{Recent} & The most recent version was chosen & The least recent version was chosen & None of the versions were chosen & N/A\\
 \hline
@@ -143,7 +161,7 @@ Zxing & 3203 & 3 & 4730
 \FloatBarrier
 
 \subsection{Input}
-We use the data from Conflicts Analyzer as input for our tool. As stated in Section \ref{sec:cp}, we are only interested in conflicts that are of the types SameSignatureCM or EditSameMC. Therefore, our tool filters out conflicts that are not of these patterns. It also removes conflicts in which any version of the function is empty, ie. the function was removed in one version. Conflicts that contain obscure output data from Conflicts Analyzer, such as if the conflict is not a git conflict, are also skipped.
+We use the data from Conflicts Analyzer as input for our tool. As stated in Section \ref{sec:cp}, we are only interested in conflicts that are of the types SameSignatureCM or EditSameMC. Therefore, our tool filters out conflicts that are not of these patterns. It also removes conflicts in which any version of the function is empty, ie. the function was removed in one version. Conflicts that contain obscure output data from Conflicts Analyzer, such as if the conflict is not a Git conflict, are also skipped.
 
 Figure \ref{fig:screenshot} shows a screenshot of an example output from Conflicts Analyzer. The data surrounded by a red border are the data we use as input for our tool.
 \begin{figure}[H]
@@ -157,11 +175,16 @@ From the “Conflict body” in the output, the name and signature of the confli
 
 This information is then used to find the result from the resolution function in the merge-commit. The different versions of the function are extracted and saved. To filter out the conflicts that arose only due to different spacing or new lines on different places, each line in the extracted functions are trimmed and empty lines are removed. The conflicts in which the conflicting versions of the function thereafter are equal, are removed.
 
-\subsection{Classifying Conflict Resolutions}
-The automatic tool now classifies the merge-conflict resolutions according to the categories listed in Table \ref{table:pcategories2}. To do that, our tool first compares the left and right version of the function, to the function in the result. First they are checked for equality, ie. is the result equal to the left, right, both or none of the versions. This is used to see if they chose one version completely. By doing that, we can find out which categories that version belongs to.
+\subsection{Categorizing Conflict Resolutions}
+The automatic tool now categorizes the merge-conflict resolutions according to the properties listed in Table \ref{table:pproperties2}. To do that, our tool first compares the left and right version of the function, to the function in the result. First they are checked for equality, ie. is the result equal to the left, right, both or none of the versions. This is used to see if they chose one version completely. By doing that, we can find out which category that version belongs to for each property.
 
-\textbf{Superset.} To see if the result is a superset of the code in the left and right versions, first consider the following example of a superset:
+\textbf{Recent.} Then, the tool extracts the commit date of the parents to see if the chosen version was the most recent one. The date of the commits are extracted using the command:
+\lstset{language=Bash,numbers=left,xleftmargin=2em,frame=single,framexleftmargin=1.5em}
+\begin{lstlisting}[frame=single,breaklines=true,tabsize=2]
+git log -1 <hash> --format=%ci
+\end{lstlisting}
 
+\textbf{Superset.} To see if the code in one version is a superset of the code in the other versions, first consider the following example of a superset:
 Left version:
 \lstset{language=Java,numbers=left,xleftmargin=2em,frame=single,framexleftmargin=1.5em}
 \begin{lstlisting}[frame=single,breaklines=true,tabsize=2]
@@ -177,15 +200,8 @@ private int getValue(int index) {
 	return values[index];
 }
 \end{lstlisting}
-The left version contains all code from the right version plus a check for the index size. To detect that this is a superset it is not enough to compare them line by line. We solved this by instead considering the set of words in the code. All code in the left, right and result versions are therefore split into words and added to a hashset. A version is a superset if and only if the  that version’s set of words is equal to the set of all words in the left and right code.
+The left version contains all code from the right version plus a check for the index size. To detect that this is a superset it is not enough to compare them line by line. We solved this by instead considering the set of words in the code. All code in the left- and the right version are therefore split into words and added to a hashset. A version is a superset if and only if the  that version’s set of words is equal to the set of all words in the left and right code.
 
 \textbf{Intersection.} Similarly to how we detect a superset, we also consider the sets of words to detect whether a version is an intersection of the left and the right versions. A version is an intersection if and only if that version’s set of words is equal to the intersection of the sets of words in the left and right code.
 
-\textbf{Recent.} Then, the tool extracts the commit date of the parents to see if the chosen version was the most recent one. The date of the commits are extracted using the command:
-\lstset{language=Bash,numbers=left,xleftmargin=2em,frame=single,framexleftmargin=1.5em}
-\begin{lstlisting}[frame=single,breaklines=true,tabsize=2]
-git log -1 <hash> --format=%ci
-\end{lstlisting}
-
-\textbf{Keywords and if-statements.} Lastly, for each version of the method or constructor, we calculate the number of occurrences of each keyword and the number of if-statements (see Table \ref{table:pcategories2}).
-
+\textbf{if-statements, print-instances, log-instances and try-instances.} Lastly, for each version of the method or constructor, we calculate the number of occurrences of each keyword and the number of if-statements (see Table \ref{table:propdef}).
