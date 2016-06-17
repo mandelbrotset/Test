@@ -32,8 +32,9 @@ Having all the conflicting file versions in a structured manner made it easier t
 \begin{lstlisting}[frame=single,breaklines=true,tabsize=2]
 git merge-file -p --diff3 <left> <ancestor> <right>
 \end{lstlisting}
-The CFT was used in our manual analysis, see Section \ref{sec:manual}.
-\section{Classify Merge-Conflicts}
+Initially, we used the CFT to study the merge-conflicts and their resolutions. However, we found the tool Conflicts Analyzer which classifies merge-conflicts, and therefore we decided to use the already existing tool to analyze the merge-conflicts. We incorporated our re-creation of merge-commits method in the Conflicts Analyzer tool so that it analyzes only Git conflicts (see Section \ref{sec:cmc}).
+
+\section{Classify Merge-Conflicts}\label{sec:cmc]
 To classify conflicts, we used the tool Conflicts Analyzer developed by Accioly. The tool produces a conflict report with information of each conflict of a specified project. We extended the tool to add additional information as follows; the merge commit hash, the parent 1 hash, and the parent 2 hash. Since the tool uses a merge technique different from that used in Git, it finds conflicts that are not a conflict in Git. As we are interested in how the developers themselves solve conflicts, we are not interested in these additional conflicts. Therefore we also modified the tool to only analyze conflicts from merges that also yield a conflict when merged by Git. We did this by reusing our code that re-creates merges (see Section \ref{sec:cft}).
 
 The output in the conflict report contains the following information:
@@ -48,22 +49,21 @@ The output in the conflict report contains the following information:
 
 \section{Manual Analysis}\label{sec:manual}
 \FloatBarrier
-When manually analyzing the output of Conflicts Analyzer, we found that it may be possible to categorize the resolutions for the conflict pattern SameSignatureCM (see Table \ref{table:conflictpatterns}) by comparing the two conflicting versions with the resolution. This conflict pattern means that two versions was added for the same method or constructor, i.e the method did not exist in the common ancestor.
-
-We examined twenty-six randomly sampled examples of SameSignatureCM conflicts from 9 different projects. These projects were Atmosphere, Activiti, Blueprints, BroadLeadCommerce, Buildcraft, EventBus, android-async-http, RxJava, Elasticsearch. For each conflict, we looked at the two versions of the method or constructor, and tried to understand why they chose the one they did. What do the versions they chose have in common?
-
-To categorize the merge-conflict resolutions, we proposed some categories which we wanted to test in a quantitative analysis.
+We began by reading through the output of Conflicts Analyzer from a randomly selected project called Blueprints. We found that for the conflict pattern SameSignatureCM (see Table \ref{table:conflictpatterns}), the resolution was often equal to one of the versions and that version was often a superset of the other. That version was also often the more recent version. For some observations, there were also cases where the chosen version was an intersection of the two versions. We decided to test if these types of resolutions are common by doing a qualitative analysis. As a resolution can for example, be both the most recent version and a superset, we call them properties that a resolution can have. Based on the observations when reading through the output of Conflicts Analyzer, we proposed properties to check how common they are in a qualitative analysis (see Table \ref{table:pproperties}).
 \begin{table}
-\caption{Proposed categories}\label{table:pcategories}
+\caption{Proposed properties}\label{table:pproperties}
 \begin{tabular}{ p{7cm} p{7cm} }
 \hline
-\multicolumn{1}{c}{\textbf{Category}} & \multicolumn{1}{c}{\textbf{Description}}\\
-Recent & The result is equal to the most recent version\\
-Superset & The result is a superset of the code in both versions\\
-Intersection & The result is an intersection of the code in both versions\\
+\multicolumn{1}{c}{\textbf{Property}} & \multicolumn{1}{c}{\textbf{Description}}\\
+Recent & The resolution is equal to the most recent version\\
+Superset & The resolution is a superset of the code in both versions\\
+Intersection & The resolution is an intersection of the code in both versions\\
 \end{tabular}
 \end{table}
 \FloatBarrier
+
+We examined twenty-six randomly sampled examples of SameSignatureCM conflicts from 9 different projects. These projects were Atmosphere, Activiti, Blueprints, BroadLeadCommerce, Buildcraft, EventBus, android-async-http, RxJava, Elasticsearch. For each conflict, we looked at the two versions of the method or constructor, and tried to understand why they chose the one they did. What do the versions they chose have in common?
+
 To be able to analyze conflicts from the output of Conflicts Analyzer, we wrote a Bash script to automatically extract the Java-files that conflicted in the merge, as well as the common ancestor file and the resolution file after the merge was made.
 
 To extract the files, the script first resets the git repository so that HEAD points to the same commit as the latest commit on the remote master branch. Since the output from Conflicts Analyzer strip down the commit hash, our script parses the full commit hash of the parents from the git log. From the git log, the hash of the merge commit is also parsed. Using the git command:
@@ -107,6 +107,40 @@ intersection\\
 \hline
 \end{tabularx}
 \end{table}
+
+\subsection{Repositories to analyze}
+We want to analyze fairly big projects that contain many commits and many forks along with many branches. To satisfy these requirements, we chose the 20 top starred Java repositories on GitHub.
+
+The projects listed in Table \ref{table:repositories} were cloned so that they could be analyzed for conflict patterns by the Conflicts Analyzer tool.
+\FloatBarrier
+\begin{table}
+\caption{GitHub repositories (As of 23/3-16))}\label{table:repositories}
+\begin{tabular}{ l l l l}
+\hline
+\multicolumn{1}{c}{\textbf{Name}} & \multicolumn{1}{c}{\textbf{Commits}} & \multicolumn{1}{c}{\textbf{Branches}} & \multicolumn{1}{c}{\textbf{Forks}}\\
+Elasticsearch & 20712 & 46 & 5229\\
+Android-async-http & 856 & 3 & 4024\\
+Android-best-practices & 201 & 1 & 1696\\
+Android-universal-image-loader & 1025 & 3 & 5640\\
+Curator & 1050 & 9 & 304\\
+Eventbus & 404 & 5 & 2493\\
+Fresco & 494 & 3 & 2453\\
+Guava & 3372 & 4 & 1862\\
+Iosched & 129 & 2 & 4071\\
+Java-design-patterns & 1196 & 6 & 3495\\
+Leakcanary & 238 & 15 & 1291\\
+Libgdx & 12247 & 4 & 4479\\
+Okhttp & 2449 & 37 & 2518\\
+React-native & 5707 & 23 & 5609\\
+Retrofit & 1285 & 21 & 2081\\
+Rxjava & 4630 & 24 & 1919\\
+Slidingmenu & 336 & 8 & 5306\\
+Spring-framework & 11825 & 10 & 6860\\
+Storm & 1764 & 44 & 1760\\
+Zxing & 3203 & 3 & 4730
+\end{tabular}
+\end{table}
+\FloatBarrier
 
 \subsection{Input}
 We use the data from Conflicts Analyzer as input for our tool. As stated in Section \ref{sec:cp}, we are only interested in conflicts that are of the types SameSignatureCM or EditSameMC. Therefore, our tool filters out conflicts that are not of these patterns. It also removes conflicts in which any version of the function is empty, ie. the function was removed in one version. Conflicts that contain obscure output data from Conflicts Analyzer, such as if the conflict is not a git conflict, are also skipped.
@@ -154,8 +188,3 @@ git log -1 <hash> --format=%ci
 \end{lstlisting}
 
 \textbf{Keywords and if-statements.} Lastly, for each version of the method or constructor, we calculate the number of occurrences of each keyword and the number of if-statements (see Table \ref{table:pcategories2}).
-
-
-
-
-

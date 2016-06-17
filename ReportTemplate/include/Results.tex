@@ -1,5 +1,5 @@
 \chapter{Results}
-For RQ2, our study has shown that it is feasible to analyze conflict resolutions in large-scale codebases and this can be achieved by parsing output from Conflicts Analyzer. Likewise, for RQ3, our study has shown that it is feasible to categorize conflict resolutions. This section explains the frequencies of the categories that were found in this study.
+For RQ2, our study has shown a way of analyzing conflict resolutions in large-scale codebases, and this can be achieved by parsing output from Conflicts Analyzer. Likewise, for RQ3, our study has indeed showed that it is possible to create a meaningful categorization of merge-conflict resolutions which could be used in future studies to, for instance, create an automatic merge tool. This section explains the frequencies of the categories that were found in this study.
 \section{Manual Analysis}
 For conflicts in the category SameSignatureCM, we found that if one of the two versions had the same code as the other version but with some additional code, that version was often chosen as resolution. This can be seen in Table \ref{table:rcsitma} where the resolution was a superset in 69\% of the cases. Table \ref{table:rcsitma} lists how many resolutions, in the 26 cases that were analyzed, were \textit{Superset}, \textit{Intersection} and/or \textit{Recent}. As a resolution can be both recent and a superset or an intersection at the same time, the percentage add up to more than 100\%.
 \begin{table}
@@ -165,4 +165,3 @@ Another interesting note about the results is that versions containing more of t
 Our results are based on a sample of 20 projects, and a total of 1964 conflicts were analyzed. The results might differ if other projects were to be analyzed. The 20 top starred projects were all java projects, we can not say if our results hold for other languages. Also, these were all open-source projects. Inside companies, development can be done in other ways, thus our results might not be the same if analyzing in non open-source projects. The projects analyzed varies in size. 
 
 The Conflicts Analyzer tool are not developed by us and when running it for the first times, it contained some bugs which we had to solve. Although we managed to solve them, if there still are any bugs present in the tool, then it would be a threat to validity to our own results.
-
