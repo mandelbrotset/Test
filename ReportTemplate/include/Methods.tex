@@ -1,5 +1,5 @@
 \chapter{Method - Analyzing Merge-Conflict Resolutions}
-In this section we describe how we analyzed merge-conflict resolutions. A manual analysis was conducted and the result of this, which is presented in the Result chapter, was used in an automatic analysis. In the pre study we answered RQ1, and in this chapter we aim to answer RQ2 and RQ3.
+In this section we describe how we analyzed merge-conflict resolutions. A manual analysis was conducted and the result of this, which is presented in the Result chapter, was used in an automatic analysis. In this chapter we aim to answer RQ1 and RQ2.
 
 The tools used throughout the method, Conflicts Analyzer [15] and Resolutions Analyzer [16], as well as the results from the analyses [16] are available online.
 \section{Conflict File Tree}\label{sec:cft}
@@ -94,8 +94,8 @@ As aforementioned in Section \ref{sec:manual}, we saw that the developer in many
 \hline
 \multicolumn{1}{c}{\textbf{Property}} & \multicolumn{1}{c}{\textbf{Description}}\\
 Recent & X is more recent than Y\\
-Superset & X is a superset of Y\\
-Intersection & X is an intersection of Y\\
+Superset & X is a superset of Y and Y is not a superset of X\\
+Intersection & X is an intersection of Y and Y is not an intersection of X\\
 if-statements & X has more if-statements than Y\\
 print-instances & X has more instances of the keyword ‘print’ than Y\\
 log-instances & X has more instances of the keyword ‘log’ than Y\\
@@ -195,4 +195,7 @@ The left version contains all code from the right version plus a check for the i
 \textbf{Intersection.} Similarly to how we detect a superset, we also consider the sets of words to detect whether a version is an intersection of the left and the right versions. A version is an intersection if and only if that version’s set of words is equal to the intersection of the sets of words in the left and right code.
 
 \textbf{if-statements, print-instances, log-instances and try-instances.} Lastly, for each version of the method or constructor, we calculate the number of occurrences of each keyword and the number of if-statements (see Table \ref{table:propdef}).
+
+
+
 
